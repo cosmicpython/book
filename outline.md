@@ -1,62 +1,62 @@
-Proposed Book Title:
-Proposed Book Subtitle: 
+# Proposed Book Title:
 
-* The Clean Architecture in Python
-* Ports and Adapters with Python
-* Enterprise Design Patterns in Python
+## Proposed Book Subtitle: 
 
 
 
-Author(s): 
-Author title(s) and affiliation(s): 
-Preferred mailing address(es): 
-Preferred phone number: 
-Preferred Email address(es):
+# Author(s): 
 
-Author Platform details:
-Author biography and LinkedIn profile: 
-
-
-Author Web site/blog/Twitter: 
+* Author title(s) and affiliation(s):
+* Preferred mailing address(es): 
+* Preferred phone number: 
+* Preferred Email address(es):  harry.percival@gmail.com, bob.gregory@made.com
+* Author Platform details:
+* Author biography and LinkedIn profile: 
+* Author Web site/blog/Twitter: 
 
 
-Why are you the best person to write this book?
+# Why are you the best person to write this book?
 
 
-Book Summary:
-In one sentence, tell us why the audience will want to buy your book.
+# Book Summary:
 
-Summarize what the book is about, like you would pitch it to a potential reader on the back cover.  What makes your book unique in the marketplace?
+* In one sentence, tell us why the audience will want to buy your book.
 
-Briefly explain the technology and why it is important.
+* Summarize what the book is about, like you would pitch it to a potential reader on the back cover.  What makes your book unique in the marketplace?
 
-Audience:
-Explain who the primary audience is for your book. What skills can you assume they have mastered?
+* Briefly explain the technology and why it is important.
 
+# Audience:
 
-Please estimate as best you can how many people will use this technology? Please state any applicable statistics (e.g., web searches, web site traffic, blogs) indicating market use or market growth.
+* Explain who the primary audience is for your book. What skills can you assume they have mastered?
 
+* Please estimate as best you can how many people will use this technology? Please state any applicable statistics (e.g., web searches, web site traffic, blogs) indicating market use or market growth.
 
-Please provide some scenarios that indicate how the audience will use your book. For example, will readers refer to it daily as a reference? Will they read it once to learn the concepts and then refer to it occasionally?
+* Please provide some scenarios that indicate how the audience will use your book. For example, will readers refer to it daily as a reference? Will they read it once to learn the concepts and then refer to it occasionally?
 
-Key Topic Coverage:
-What problems does this book solve for its users?
+# Key Topic Coverage:
 
-List the four or five topics covered or features included that will provide the greatest benefit to readers or will be the most likely to excite them? 
+* What problems does this book solve for its users?
 
-Other Book Features and Video Offerings:
-Is there a companion web site? If so, what do you plan to include on the site? Would you be willing to participate in video offerings as well as workshops and training seminars?
+* List the four or five topics covered or features included that will provide the greatest benefit to readers or will be the most likely to excite them? 
 
-Competition:
-What books or online resources compete with this book? Please list the title and author. In each case, how will your book be different or better in timing, content, coverage, approach, or tone?
+# Other Book Features and Video Offerings:
 
+* Is there a companion web site? If so, what do you plan to include on the site? Would you be willing to participate in video offerings as well as workshops and training seminars?
 
 
-Book Outline (chapter level is fine):
+# Competition:
+
+* What books or online resources compete with this book? Please list the title and author. In each case, how will your book be different or better in timing, content, coverage, approach, or tone?
 
 
-Specs and Schedule:
-How many pages do you expect the book to be?
 
-How long do you expect it to take you to write the book?
+# Book Outline (chapter level is fine):
+
+
+# Specs and Schedule:
+
+* How many pages do you expect the book to be?
+
+* How long do you expect it to take you to write the book?
 
