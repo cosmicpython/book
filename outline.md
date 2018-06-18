@@ -6,6 +6,8 @@
 
 ## Proposed Book Subtitle: 
 
+"The Clean Architecture in Python"
+How to apply DDD, Ports and Adapters and more enterprise architecture design patterns in a Pythonic way.
 
 
 # Author(s): 
@@ -18,7 +20,8 @@ Software Developer and Architect (respectively) at MADE.com
 
 > Preferred mailing address(es): 
 > Preferred phone number: 
-> Preferred Email address(es):  harry.percival@gmail.com, bob.gregory@made.com
+> Preferred Email address(es):
+harry.percival@gmail.com, bob.gregory@made.com
 > Author Platform details:
 > Author biography and LinkedIn profile: 
 
@@ -33,7 +36,7 @@ http://www.obeythetestinggoat.com/
 
 # Why are you the best person to write this book?
 
-Harry has already written one excellent Python book for O'Reilly,  this will make a nice sequel.
+Harry has already written one excellent Python book for O'Reilly,  this will make a nice sequel (in fact it covers some of the further reading subjects suggested in the final chapter of said book).
 Bob knows more than Harry about the subject matter though.
 
 
@@ -53,6 +56,9 @@ This book will provide an introduction to architectural topics using concrete ex
 
 > Briefly explain the technology and why it is important.
 
+In the Python world, we often quote the Zen of Python:  "there should be one--preferably on only one--obvious way to do it".  Unfortunately, as project complexity grows, the most obvious way of doing things isn't always the way that helps you manage complexity and evolving requirements.  Implementing software architecture patterns always seems like more work, and more complexity at first, but this book will show how and why they actually lead to a world that's more simple and easier to work with in the long term.
+
+
 
 # Audience:
 
@@ -64,6 +70,8 @@ This is an intermediate-level book.  It will be of interest to anyone working on
 
 
 > Please provide some scenarios that indicate how the audience will use your book. For example, will readers refer to it daily as a reference? Will they read it once to learn the concepts and then refer to it occasionally?
+
+I expect most readers will read it all the way through once.  Some may decide to follow along with the code examples in some or all of the chapters.  Then, they are likely to come back and look at the code examples in more detail as they come to try and implement the various patterns in their day-to-day jobs.
 
 
 # Key Topic Coverage:
@@ -86,6 +94,7 @@ This is an intermediate-level book.  It will be of interest to anyone working on
 > Is there a companion web site? If so, what do you plan to include on the site? Would you be willing to participate in video offerings as well as workshops and training seminars?
 
 - a website with access to source code examples, and follow-on blog posts and materials is likely.
+- it could also include "alternative implementations" showing some other ways of achieving the same goals, compared to the examples given in the book.
 - not entirely sure that video is the right medium for getting these kinds of concepts across, but up for trying.
 
 
