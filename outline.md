@@ -3,25 +3,12 @@
 * The Clean Architecture in Python?
 * Ports and Adapters with Python?
 * Enterprise Design Patterns in Python?
+* Enterprise Software Architecture in Python?
+* Software Architecture in Python?
 
 ## Proposed Book Subtitle: 
 
-"The Clean Architecture in Python"
-How to apply DDD, Ports and Adapters and more enterprise architecture design patterns in a Pythonic way.
-
-It's a shame there's no way to annotate a file in github shy of creating a new PR. I've checked through the nubook outline, and it looks basically sane?I think that:
-
-1. I wouldn't bother talking about Clean vs Onion vs Ports + Adapters. They're the same thing with different spellings. The _real_ pattern is just a strict adherence to the Dependency Inversion Principle. Clean explicitly calls out use-cases, which what we model as command handlers.
-2. I guess actually that makes your title less good, uh .. sorry ... we can haggle
-3. Shit, now I'm totally stuck in a bullet-pointed stream of consciousness schtick, which wasn't my intention.
-4. Okay, cool. Uh, I like the summary and the audience. I LOVE the Key topics except for "Concretely, what is a Port and what is an Adapter in Python?" which is a boring question because it's not like a precise definitional thing, and it takes a couple of pages, max to explain. The guy who introduced the terminology said:
-
-> What exactly a port is and isn't is largely a matter of taste. At the one extreme, every use case could be given its own port, producing hundreds of ports for many applications.
-
-— Alistair Cockburn thanks Al.
-
-I think we need to talk more about the proposed book outline. Event-driven architecture, for example, is not the same as an internal command-bus style architecture, it refers to a style where individual systems communicate via asynchonous messaging, rather than point-to-point web service calls or whatever. I think it's a great start, though.
-
+*How to apply DDD, Ports and Adapters and more enterprise architecture design patterns in a Pythonic way.*
 
 # Author(s): 
 
@@ -29,7 +16,7 @@ Bob Gregory, Harry Percival
 
 > Author title(s) and affiliation(s):
 
-Software Developer and Architect (respectively) at MADE.com
+Lead Architect and Software Developer (respectively) at MADE.com
 
 > Preferred mailing address(es): 
 > Preferred phone number: 
@@ -66,7 +53,7 @@ As Python grows in popularity as a language, typical projects are getting larger
 
 In the Python world, we often quote the Zen of Python:  "there should be one--preferably on only one--obvious way to do it".  Unfortunately, as project complexity grows, the most obvious way of doing things isn't always the way that helps you manage complexity and evolving requirements.
 
-This book will provide an introduction to architectural design patterns that help you manage complexity, using concrete examples written in Python. It will explaining how to avoid some of the particularities of Java and C# syntax and implement these patterns in a "Pythonic" way.
+This book will provide an introduction to proven architectural design patterns that help you manage complexity, using concrete examples written in Python. It will explain how to avoid some of the unnecessary particularities of Java and C# syntax and implement these patterns in a "Pythonic" way.
 
 
 # Technology summary.
@@ -95,7 +82,7 @@ These people might have read:
 
 > Please estimate as best you can how many people will use this technology? Please state any applicable statistics (e.g., web searches, web site traffic, blogs) indicating market use or market growth.
 
-Hard to say.  salesrank data from amazon suggest books like "Buiding evolutionary architectures" https://www.novelrank.com/asin/1491986360 and "Patterns of Enterprise Application Architecture" https://www.novelrank.com/asin/0321127420 are selling well, certainly compared to my existing book.
+Hard to say.  salesrank data from amazon suggest books like "Buiding evolutionary architectures" (O'Reilly, https://www.novelrank.com/asin/1491986360) and "Patterns of Enterprise Application Architecture" (a classic, https://www.novelrank.com/asin/0321127420) are selling well (compared to my existing book lol)
 
 Other than that, informally, several people have reached out to us in response to our existing 5-part blog post series on the made.com blog, saying how much they'd like to see that content extended to book length, and complaining about the lack of similar resources in the Python world
 
@@ -117,13 +104,15 @@ see above.
  
 > What conferences do they attend?
 
-pycon...
+pycon(s), oreilly software architecture conference, oscon, fosdem, 
  
  
 > Who are the leaders and key influencers in the field who would review or endorse your book?
 
-fowler, bernhardt
- 
+I could reach out via some contacts at Thoughtworks to see if Martin Fowler might give it a read.  That would be a great name to have on the cover.
+
+In the Python world, Harry's existing Python contacts should be prepared to take a look -- Kenneth Reitz, Gary Bernhanrdt, Michael Foord.
+
  
  
 
@@ -187,12 +176,13 @@ patterns of enteprise arch?
 2. domain model
 3. dependency injection and inversion of control
 4. persistence and unit of work
-5. event-driven architecture: commands & queries, handlers, message bus
+5. commands & events, handlers, message bus
 6. (ports and) adapters
-7. the proof is in the pudding 1: implementing a new feature
-8. the proof is in the pudding 2: refactoring an infrastructure layer
-9. comparison with the simple approach
-10. conclusions: when to use this pattern
+7. command-query separation.
+8. the proof is in the pudding 1: implementing a new feature
+9. the proof is in the pudding 2: refactoring an infrastructure layer
+10. comparison with the simple approach
+11. conclusions: when to use these patterns
 A. appendix: functional core, imperative shell
 B. appendix: more design patterns
 C. alternatives
@@ -205,5 +195,15 @@ C. alternatives
 > How many pages do you expect the book to be?
 200-250?
 
-> How long do you expect it to take you to write the book?
-9 months - 1yr
+> What use you will make of illustrations or screenshots? Approximately how many illustrations do you anticipate using?
+
+Several code listings per chapter, and maybe a few diagrams which we can produce ourselves...
+
+> What special considerations apply to your plans for the book, including unusual format, use of color, hard-to-get illustrations, or anything else calling for unusual resources?
+
+nothing extraordinary is anticipated
+ 
+> When do you anticipate delivering a complete draft of the manuscript or technical review?
+
+9 months' time?
+
