@@ -75,12 +75,12 @@ code examples:  CQRS / raw sql queries
 
 ## Chapter 7: event-driven architecture part 1: domain events and the message bus
 
-Another new requirement:  in the case that an allocation fails, someone should be emailed.  But we don't want to have email-sending code be a potential cause of bugs/failures in our core model/state changes.  introduce domain events and a message bus as a pattern for kicking off async/retriable events after a use case is complete.
+Another new requirement:  when allocation succeeds, someone should be emailed.  But we don't want to have email-sending code be a potential cause of bugs/failures in our core model/state changes.  introduce domain events and a message bus as a pattern for kicking off async/retriable events after a use case is complete.
 
 code examples: domain events, handlers, message bus
 
 
-## Chapter 8: event-driven architecture part 2: a econd use case, cancel_shipment -- command handler pattern
+## Chapter 8: event-driven architecture part 2: a second use case, cancel_shipment -- command handler pattern
 
 now we want to be able to cancel a shipment.  maybe a boat sank and all the orders allocated to it need re-allocating.  but we don't want to do the reallocation and the cancellation in the same transaction.  So a command "cancel shipment" that raises a number of independent "reallocate" commands makes sense
 
