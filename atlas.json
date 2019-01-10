@@ -6,13 +6,15 @@
     "toc.html",
     "preface.asciidoc",
     "ch01.asciidoc",
-    "author_bio.html"
+    "ix.html",
+    "author_bio.html",
+    "colo.html"
   ],
   "formats": {
     "pdf": {
       "version": "web",
       "color_count": "1",
-      "index": false,
+      "index": true,
       "toc": true,
       "syntaxhighlighting": true,
       "show_comments": false,
@@ -20,7 +22,7 @@
       "antennahouse_version": "AHFormatterV62_64-MR4"
     },
     "epub": {
-      "index": false,
+      "index": true,
       "toc": true,
       "epubcheck": true,
       "syntaxhighlighting": true,
@@ -29,7 +31,7 @@
       "mathmlreplacement": false
     },
     "mobi": {
-      "index": false,
+      "index": true,
       "toc": true,
       "syntaxhighlighting": true,
       "show_comments": false,
