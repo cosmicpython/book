@@ -1,0 +1,54 @@
+{
+  "branch": "master",
+  "files": [
+    "titlepage.html",
+    "copyright.html",
+    "toc.html",
+    "preface.asciidoc",
+    "ch01.asciidoc",
+    "ix.html",
+    "author_bio.html",
+    "colo.html"
+  ],
+  "formats": {
+    "pdf": {
+      "version": "web",
+      "color_count": "1",
+      "index": true,
+      "toc": true,
+      "syntaxhighlighting": true,
+      "show_comments": false,
+      "trim_size": "7inx9.1875in",
+      "antennahouse_version": "AHFormatterV62_64-MR4"
+    },
+    "epub": {
+      "index": true,
+      "toc": true,
+      "epubcheck": true,
+      "syntaxhighlighting": true,
+      "show_comments": false,
+      "downsample_images": false,
+      "mathmlreplacement": false
+    },
+    "mobi": {
+      "index": true,
+      "toc": true,
+      "syntaxhighlighting": true,
+      "show_comments": false,
+      "downsample_images": false
+    },
+    "html": {
+      "index": false,
+      "toc": true,
+      "syntaxhighlighting": true,
+      "show_comments": false,
+      "consolidated": false
+    }
+  },
+  "theme": "oreillymedia/animal_theme_sass",
+  "title": "Lightweight Enterprise Architecture Patterns with Python",
+  "print_isbn13": "9781492052203",
+  "lang": "en",
+  "accent_color": "",
+  "templating": true
+}
