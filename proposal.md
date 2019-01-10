@@ -194,42 +194,6 @@ B. appendix: more design patterns
 C. alternatives
 
 
-# Book Outline (new):
-
-1. Chapter 1 - the joy of domain modelling, and why do we always make it so hard for ourselves?
-
-  tdd kata, allocation, models, maybe stateful vs stateless models, use cases / service functions?
-
-2. Chapter 2 - testing techniques: mocks vs dependency injection (?)
-
-  with snakes and ladders we had the dice example, might be nice to find some parallel here
-
-3. Chapter 3 - ports and adapters part 1: unit of work + repository patterns
-
-  how do we persist our pure python models?
-  could be two chapters tbh
-  also cover bootsrap.py
-
-4. Chapter 4 - CQRS -- ui to show list of shipments and allocation state.
-
-  discuss n+1 problem, maybe even do a couple of perf. analyses
-
-5. Chapter 5 - commands and events, message bus
-
-  needs an example use case -- cancel shipment?  set all order states to unallocated in one transaction, trigger reallocates in separate handlers?
-  also show how we tie events to the unit of work
-
-6. Appendix 1: proof is in the pudding, swapping out the database for, eg, filesystem (too silly?)
-7. Appendix 2: dependency injection with and without a framework
-8. Appendix 3: 12-factor env vars and config?
-
-TODO TOPICS:
-
-* event sourcing?
-* events as an integration tool for (reactive) microservices?
-
-
-
 # Specs and Schedule:
 
 > How many pages do you expect the book to be?
