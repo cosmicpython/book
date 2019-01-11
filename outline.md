@@ -30,27 +30,39 @@ But you don't have to!  Demonstrate the alternative way to do metadata/mapping.
 ==> our ORM depends on the domain model, and not the other way around. an illustration of one of our key patterns/principles, the  _Dependency Inversion Principle_ (the D in SOLID)
 
 Also: repository pattern.  choosing a simple abstraction (it's a dictionary)
+Also: first integration test
 
 code examples: sqlalchemy metadata/mapping, repository pattern
 
 
-## Chapter 3: making ourselves available via a web API.  Flask as a port (as in ports-and-adapters)
+## Chapter 3: making ourselves available via a web API.  Flask as a port (as in ports-and-adapters). Our first use case.  Orchestration. Service layer
 
-Show how flask becomes a thin wrapper that talks to the use cases provided by our domain model
-Contrast this to the way it's usually done the other way around -- the use cases are defined in the flask controller/view functions, and are tightly coupled to them
+We have a use case in mind, and a domain model that can do it, but how do we make it available to the outside world?
+
+start with a naive flask controller.  evolve it to flask being an adapter to a use case function in our service/orchestration layer.
+
+* happy path, show the basic use case moving parts:  create a database session, initialise our repository, load some objects, invoke our domain function, commit.
+* first acceptance test
+* handle error case, eg product does not exist.  handle `KeyError` from repository, flask returns a 400 with nice erro json
+* but what if we have more error cases at this orchestration level? it'll be annoying to test everything with acceptance tests, and hard to unit test.
+
+==> introduce service layer.  flask becomes an adapter.  flask depends on the service layer, rather than the other way around (DIP once again)
+
 (later in the book we'll swap flask for asyncio, and show how easy it is)
 
-patterns: port/adapter pattern for web
+patterns: use case, service layer, port/adapter pattern for web,
 
 
 ## Chapter 4: data integrity concerns 1: unit of work pattern
 
-What happens if we encounter an error during our allocation?  We'd like to wrap our work up so that, either the entire order is allocated, or we abort and leave things in a "clean" state if anything goes wrong -- a classic case for a transaction/rollback.
+What happens if we encounter an error during our allocation?  eg out of stock, a domain error?  We'd like to wrap our work up so that, either the entire order is allocated, or we abort and leave things in a "clean" state if anything goes wrong -- a classic case for a transaction/rollback.
 
 What's a Pythonic way of "doing transactions"?  A context manager.  demonstrate the _Unit of Work Pattern_ and show how it fits with _Repository_
 But we also want a nice, Pythonic way of "doing transactions", of wrapping a block of code up into an atomic whole.
 
 code examples: Unit Of Work (using a context manager)
+
+discuss different options of unit of work, explicit/implicit rollbacks, dependency-inject uow.
 
 
 ## Chapter 5: data integrity concerns 2: choosing the right consistency boundary (Aggregate pattern)
@@ -73,34 +85,46 @@ The business comes along and supplies a new requirement:  a dashboard showing th
 code examples:  CQRS / raw sql queries
 
 
-## Chapter 7: event-driven architecture part 1: domain events and the message bus
+## Chapter 7: event-driven architecture part 1: events and the message bus
 
-Another new requirement:  when allocation succeeds, someone should be emailed.  But we don't want to have email-sending code be a potential cause of bugs/failures in our core model/state changes.  introduce domain events and a message bus as a pattern for kicking off async/retriable events after a use case is complete.
+Another new requirement:  when allocation succeeds, someone should be emailed.  But we don't want to have email-sending code be a potential cause of bugs/failures in our core model/state changes.  introduce domain events and a message bus as a pattern for kicking off related work after a use case is complete.
 
-code examples: domain events, handlers, message bus
+* discuss SRP, use case shouldn't have an _and_. leads naturally to events.
+
+code examples: events, handlers, message bus
 
 
-## Chapter 8: event-driven architecture part 2: a second use case, cancel_shipment -- command handler pattern
+## Chapter 8: event-driven architecture part 2: domain events
+
+currently events are raised at the service layer.  but what about something like "out of stock"?  maybe that's an event that really belongs inside our domain, something that has business logic, not just orchestration.  
+
+code examples:  domain events raised by aggregate, unit of work with event tracking/ message bus integration
+
+
+## Chapter 9: event-driven architecture part 2: a second use case, cancel_shipment -- command handler pattern
 
 now we want to be able to cancel a shipment.  maybe a boat sank and all the orders allocated to it need re-allocating.  but we don't want to do the reallocation and the cancellation in the same transaction.  So a command "cancel shipment" that raises a number of independent "reallocate" commands makes sense
 
-We also decide we don't need a web api for this, a command-line interface makes sense.  but what's a sensible abstraction that gives use access to our use cases from both the command-line and a flask api?  commands.
+
+We also decide we don't need a web api for this, a command-line interface makes sense.  but what's a sensible abstraction that gives use access to our use cases from both the command-line and a flask api?  commands.  we've been talking about them for a while, time to make them into a real thing.
+
+==> show how commands can be put on the message bus just like events.
 
 code examples: commands
 
 
-## Chapter 9: event-driven architecture part 3: reactive microservices
+## Chapter 10: event-driven architecture part 3: reactive microservices
 
 We've got a microservice, but we've so far glossed over how it actually gets data about the outside world -- how does it know about new shipments?
 Show how the event-driven system we've built so far is a great way of integrating between separate applications:  our logistics app can emit events about new shipments, and our app can consume them in exactly the same way that it consumes its internal events and commands.
 
-code examples: eventstore as a microservices integration platform
+code examples: events as a microservices integration platform
 
  
 
 ## Appendix 1: swap out the database for the filesystem
 
-demonstrate how our layered arhitecture makes it easy to do infrastructure changes whilst keeping our business logic intact
+demonstrate how our layered architecture makes it easy to do infrastructure changes whilst keeping our business logic intact
 
 this could be an exercise for the reader tbh.  or a video
 
