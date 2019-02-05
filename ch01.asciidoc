@@ -1,8 +1,11 @@
 [[chapter_01]]
+== Domain modelling
 
-== What is a domain model?
 
 In the prologue, we used the term "business logic layer" to describe the central layer of a three-layered architecture. For the rest of the book we're going to use the term "domain model" instead. This is a term from the DDD community that does a better job of capturing our intended meaning.
+
+
+=== What is a domain model?
 
 The "domain" is a fancy way of saying "the problem you're trying to solve". I currently work for an online retailer of furniture. Depending on which system I'm talking about, the domain might be purchasing and procurement, or product design, or logistics and delivery. Most programmers spend their days trying to improve or automate business processes; the domain is the set of activities that those processes support.
 
@@ -20,7 +23,7 @@ The Availability system has two jobs to perform. Firstly, it needs to match inco
 
 We're going to start the book in earnest by asking you to write some code to solve this business need.
 
-=== Allocation Version 1.0 ===
+=== Allocation Version 1.0
 
 ```
 * *Customers* place *orders*. An order has multiple *order lines*, where each line has a unique id, a *product code* and a *quantity*, eg. 10 units of RED-CHAIR, or 1 unit of TASTELESS-LAMP.
