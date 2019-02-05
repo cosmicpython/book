@@ -1,8 +1,79 @@
 [[chapter_01]]
+[preface]
+== Why do our designs go wrong?
+
+What comes to mind when you hear the word "chaos"? Perhaps you think of a noisy stock exchange, or your kitchen in the morning - everything confused and jumbled. When you think of the word "order" perhaps you think of an empty room, serene and calm. For scientists, though, chaos is characterised by homogeneity, and order by complexity.
+
+For example, you are a highly ordered system. Your body has a rigid structure provided by your skeleton, which supports your organs, which are made up of differentiated tissues, which are composed of cells, which comprise organelles. By contrast, if we took all of your component atoms and stirred them into a bucket full of goop, you would be in a disordered, chaotic state. The natural tendency of things is to collapse into chaos because it requires energy to introduce order. For example, we could take all of your constituent atoms and move them so that the iron was over on one side of the bucket, and the water over on the other, but the moment we stop applying force, the whole thing will collapse once again to primordial ooze.
+
+Software systems, too, tend toward chaos. When we first start building a new system, we have grand ideas that our code will be clean and well-ordered, but over time we find that it gathers cruft and edge cases, and ends up a confusing morass of manager classes and utils modules. We find that our sensibly layered architecture has collapsed into itself like an over-soggy trifle. Chaotic software systems are characterised by a sameness of function: API handlers that have domain knowledge, and send emails and perform logging; "business logic" classes that perform no calculations but do perform IO; and everything coupled to everything else so that changing any part of the system becomes fraught with danger. This is so common that software engineers have their own word for chaos: The Big Ball of Mud anti-pattern.
+
+Big ball of mud is the natural state of software in the same way that goop in a bucket is the natural state of your constituent atoms. It takes energy and direction to prevent the collapse. Fortunately, the techniques to avoid creating a big ball of mud aren't complex.
+
+=== Encapsulation
+
+The term "encapsulation" covers two closely related ideas, simplifying behaviour and hiding data. When we encapsulate behaviour, we take a complex algorithm and place it behind a simpler abstraction. Consider the following two snippets of Python code.
+
+```
+import urllib
+import urllib2
+
+# do horrible things to make a post to duck duck go and read the json
+```
+
+```
+import requests
+
+# do pleasant things to achieve the same
+```
+
+Both of these code listings do the same thing: they submit form encoded values to a URL in order to perform a Google search, but the second is simpler to read and understand because it operates at a higher level of abstraction. We can take this one step further still by identifying the role the code is playing and making it explicit.
+
+```
+import duckduckgo
+
+result = duckduckgo.search('sausages')
+```
+
+Encapsulating the behaviour by identifying roles is a powerful tool for making our code more expressive, more testable, and easier to maintain.
+
+When we encapsulate data, we reduce the scope where variables are available.
+
+
+=== Layering
+
+Encapsulation helps us by hiding details and protecting the consistency of our data, but we also need to pay attention to the interactions between our objects and functions. When one function or object refers to another, we say that the one *depends on* the other. These dependencies form a kind of network, a graph, where the nodes are functions and classes, and the edges are the calls betwen them.
+
+In a big ball of mud, the dependencies are out of control. Changing one node of the graph becomes difficult because it has the potential to affect many other parts of the system. Layered architectures are one way of tackling this problem. In a layered architecture, we divide our code into discrete categories or roles and we introduce rules about which categories of code can call each other.
+
+For example most people are familiar with the three layered architecture:
+
+[three-layered architecture]
+
+This is perhaps the most common pattern for building business software. In this model we have user-interface components, which could be a web page, or an API, or a command line; these user-interface components communicate with a business logic layer that contains our business rules and our workflows; and finally we have a data layer that's responsible for storing and retrieving data. For the rest of this book, we're going to be systematically turning this model inside out by obeying one simple principle.
+
+=== The Dependency Inversion Principle
+
+You might be familiar with the dependency inversion principle already, because it's the D in the SOLID mnemonic. Formally, the DIP says:
+
+1. High-level modules should not depend on low-level modules. Both should depend on abstractions.
+2. Abstractions should not depend on details. Details should depend on abstractions.
+
+But what does this mean? Let's take it bit by bit.
+
+"High level modules" are the code that your organisation really cares about. Perhaps you work for a pharmaceutical company, and your high-level modules deal with patients and trials. Perhaps you work for a bank, and your high level modules manage trades and exchanges. The high-level modules of a software system are the functions, classes, and packages that deal with our real world concepts.
+
+By contrast, "low-level modules" are the code that your organisation doesn't care about. It's unlikely that your HR department get excited about file systems, or network sockets. It's not often that you can discuss SMTP, or HTTP, or AMQP with your finance team. For our non-technical stakeholders, these low-level concepts aren't interesting or relevant. All they care about is whether the high-level concepts work correctly. If payroll runs on time, your business is unlikely to care whether that's a cron job or a transient function running on Kubernetes.
+
+We already know what abstractions are: they're simplified interfaces that encapsulate some role, in the way that our duckduckgo module encapsulated a search engine's API.
+
+So the first part of the DIP says that our business code shouldn't depend on technical details, instead they should both use abstractions.
+
+The second part is even more mysterious. "Abstractions should not depend on details" seems clear enough, but "Details should depend on abstractions" is hard to imagine. How can we have an abstraction that doesn't depend on the details it's abstracting? We'll come to that shortly, but before we can turn our three-layered architecture inside out, we need to talk more about that middle layer.
 
 == What is a domain model?
 
-In the prologue, we used the term "business logic layer" to describe the central layer of a three-layered architecture. For the rest of the book we're going to use the term "domain model" instead. This is a term from the DDD community that does a better job of capturing our intended meaning.
+In the previous chapter, we used the term "business logic layer" to describe the central layer of a three-layered architecture. For the rest of the book we're going to use the term "domain model" instead. This is a term from the DDD community that does a better job of capturing our intended meaning.
 
 The "domain" is a fancy way of saying "the problem you're trying to solve". I currently work for an online retailer of furniture. Depending on which system I'm talking about, the domain might be purchasing and procurement, or product design, or logistics and delivery. Most programmers spend their days trying to improve or automate business processes; the domain is the set of activities that those processes support.
 
