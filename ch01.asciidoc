@@ -17,80 +17,215 @@ We're going to use a real-world domain model throughout this book, specifically 
 
 [Context diagram for allocation]
 
-At a high level, we have separate systems that are responsible for buying stock, selling stock to customers, and shipping goods to customers. There's a system in the middle that needs to coordinate the process by allocating stock to a customer's orders. Our business works by purchasing small quantities of stock at a time, which we call batches. These batches of stock are shipped from the supplier to our warehouse. At any time, we have thousands of different batches on their way. Some of those batches are only days away from delivery, others might be three months away by ship. Our aim is to predict how much stock we need to buy so that we can sell all of our stock just before it arrives at the warehouse. This keeps our warehouse costs down, making us more efficient as a business.
+At a high level, we have separate systems that are responsible for buying stock, selling stock to customers, and shipping goods to customers. There's a system in the middle that needs to coordinate the process by allocating stock to a customer's orders. 
 
-The Availability system has two jobs to perform. Firstly, it needs to match incoming stock with incoming orders so that we minimise the time customers are waiting. We need to handle problems like damaged goods, or shipping delays, or cancelled orders. Secondly, it needs to answer the question "if I buy three cushions and a sofa, how long will they take to arrive?".
+For the purposes of this book, we're imagining a situation where the business decide to implement an exciting new way of allocating stock.  Until now, the business has been presenting stock and lead times based on what is physically available in the warehouse.  If and when the warehouse runs out, a product is listed as "out of stock" until the next shipment arrives from the manufacturer.
 
-We're going to start the book in earnest by asking you to write some code to solve this business need.
+The innovation is: if we have a system that can keep track of all our shipments and when they're due to arrive, then we can treat the goods on those ships as real stock, and part of our inventory, just with slightly longer lead times.  Fewer goods will appear to be out of stock, we'll sell more, and the business can save money by keeping lower inventory in the domestic warehouse.
+
+But allocating orders is no longer a trivial matter of decrementing a single quantity in the warehouse system.  We need a more complex allocation mechanism.  Time for some domain modelling.
+
 
 === Allocation Version 1.0
 
+* _Customers_ place _orders_. An order has multiple _order lines_, where each line refers to a _product code_ (or "SKU") and a _quantity_, eg. 10 units of RED-CHAIR, or 1 unit of TASTELESS-LAMP.
+* Warehouse _Stock_ is tracked in terms of _product code_ and _available quantity_
+* The purchasing department order _Shipments_ of stock. A _Shipment_ also consists of a number of different _quantities_ of particular _products_
+* When we allocate an order to stock or to a shipment, the _available quantity_ should be reduced correspondingly; you can't allocate more than the _available quantity_
+* The business wants to allocate in such a way as to minimise lead times for individual customers, but also overall:
+    - if _Stock_ is available, then use that
+    - otherwise, prefer earlier _Shipments_ to later ones but,
+    - if an order can be allocated entirely to a single shipment, then prefer a single, later shipment to a mixture of different shipments
+
+
+Why not have a go at solving this problem yourself?  Write a few unit tests and see if you can capture the essence of these business rules in some nice, clean code.
+
+
+=== Some unit tests
+
+If you're anything like us, you might have ended up with some tests a little like this:
+
+[[unit_tests]]
+.A first set of unit tests
+====
+[source,python]
+----
+def test_can_allocate_to_stock():
+def test_can_allocate_to_shipment():
+def test_ignores_stock_with_wrong_skus():
+def test_can_allocate_to_shipment_with_correct_sku():
+def test_allocates_to_stock_in_preference_to_shipment():
+def test_can_allocate_multiple_lines_to_stock():
+def test_can_allocate_multiple_lines_to_shipment():
+def test_can_allocate_to_both():
+def test_can_allocate_to_both_preferring_stock():
+def test_mixed_allocation_are_avoided_if_possible():
+def test_allocated_to_earliest_suitable_shipment_in_list():
+def test_still_chooses_earliest_if_split_across_shipments():
+def test_stock_not_quite_enough_means_we_use_shipment():
+def test_cannot_allocate_if_insufficent_quantity_in_stock():
+def test_cannot_allocate_if_insufficent_quantity_in_shipment():
+----
+====
+
+
+What kind of model did you come up with?
+
+Maybe, like Harry, you went down a minimal path -- orders, stock and shipments are all just
+mappings, `{sku: quantity}`, so they can be plain old dicts.  Our entire domain
+model can consist of one primary function called `allocate`, which takes a dict
+representing the order, a list of dicts for stock and shipments, and returns 
+a dict mapping `sku` to `shipment or stock` instances, to represent the allocation:
+
+
+[[dict_model]]
+.A minimal, procedural model
+====
+[source,python]
+----
+def allocate(order, stock, shipments):
+    allocations = []
+    for source in [stock] + shipments:
+        allocation = allocate_to(order, source)
+        if allocated_completely(order, allocation):
+            return allocation
+        allocations.append(allocation)
+    return merge(reversed(allocations))
+
+def allocate_to(order, source):
+    return {
+        sku: source
+        for sku, quantity in order.items()
+        if sku in source
+        and source[sku] > quantity
+    }
+
+def allocated_completely(order, allocation):
+    return order.keys() == allocation.keys()
+
+def merge(allocations):
+    return {
+        k: v
+        for d in allocations
+        for k, v in d.items()
+    }
+----
+====
+
+
+OK, `allocate` doesn't decrement `available_quantity`, but it returns you all the information
+you need to be able to do that in a higher layer.  It also assumes that the caller has already
+sorted shipments by their ETA.  But it certainly captures the raw essence of the key aspect
+of the domain, which is an algorithm for allocating orders to stock and shipments, following
+some business rules.  There's not much code, so bugs should be few and easy to understand.
+
+On the other hand, perhaps like Bob you leaned more naturally towards an OO solution.  You
+might have anticipated that such an anaemic model will be hard to read in 6 months' time.
+We haven't really translated the language of the domain into our model.  How about something
+like this instead?
+
+
 ```
-* *Customers* place *orders*. An order has multiple *order lines*, where each line has a unique id, a *product code* and a *quantity*, eg. 10 units of RED-CHAIR, or 1 unit of TASTELESS-LAMP.
-* The purchasing department order *Batches* of stock. A *Batch* of stock also has a unique id, a *Product Code* and a *Quantity*.
-* We need to *allocate* *order lines* to *batches*.
-* When I allocate 1 unit of stock to a *batch*, the *available quantity* is reduced. Eg. I have a *Batch* of 20 SMALL-TABLE, and I *allocate* an *order line* for 2 SMALL-TABLE. The *batch* should have 18 SMALL-TABLE remaining.
-* I can't *allocate* to a *batch* if the *available quantity* is less than the *quantity* of the *order line*. Eg. I have a batch of 1 CURIOUS-POUFFE, and an *order line* for 2 CURIOUS-POUFFE. I should not be able to *allocate* the *line* to the *batch*.
-* Customers can cancel *orders*. When an order is cancelled, we need to *deallocate* the *order lines*.
-* When I *deallocate* an *order line* from a *batch*, the *available quantity* is incremented by the *quantity* of the *order line*; eg. I have a *batch* of 3 CRIMSON-TOWEL and I *allocate* 1 CRIMSON-TOWEL to the *batch*. When I *deallocate* the *order line* from the *batch*, the *available quantity* is 3.
-* I can't *deallocate* an *order line* from a *batch* unless I first *allocate* the *order line*, eg. I have a *batch* of 12 GAUCHE-PAINTING with no *allocations*. When I deallocate an *order line* of 1 GAUCHE-PAINTING, the *available quantity* should still be 12.
-* I can't the same line twice; eg, I have a batch of 10 BLUE-VASE, and I allocate an order line for 2 BLUE-VASE. When I allocate the order line again, the batch should still have an available quantity of 8.
-```
+[[oo_model]]
+.A rich, object-oriented model.
+====
+[source,python]
+----
+class Allocation(dict):
+
+    def __init__(self, d, order):
+        self.order = order
+        super().__init__(d)
+
+    @property
+    def skus(self):
+        return self.keys()
+
+    @staticmethod
+    def for_(order, source):
+        return Allocation({
+            sku: source
+            for sku, quantity in order.items()
+            if source.can_allocate(sku, quantity)
+        }, order=order)
+
+    def supplement_with(self, allocation):
+        for sku, quantity in allocation.items():
+            if sku in self:
+                continue
+            self[sku] = quantity
+
+    @property
+    def is_complete(self):
+        return self.skus == self.order.skus
+
+    def apply(self):
+        for sku, source in self.items():
+            source[sku] -= self.order[sku]
 
 
-[TODO: The following blobs are future requirements of the allocator program that motivate us to make things more complex]
+class Order(dict):
 
-``` (aggregates)
-* A *product* has many *batches* at a time.
-* When *allocating* an *order line* to a *product* we should prefer the *batch* with the earliest *arrival date*.
-* I should be able to ask a *Product* for the earliest *arrival date* for a *quantity*. Eg. I have a *product* with a batch of 1 BIG-RUG arriving in 3 days, and another batch of 2 BIG-RUG arriving in 8 days. When I ask for the arrival time of 1 BIG-RUG, the answer should be 3 days; when I ask for the arrival time of 2 BIG-RUG, the answer should be 3 days.
-* The arrival time of a *batch* might change due to manufacturing problems or shipping delays. When I change the arrival time of a batch, the allocations should not change.
-```
+    @property
+    def skus(self):
+        return self.keys()
 
-``` (events)
-* The quantity of a batch might change due to manufacturing problems, or damage caused during transit. If the quantity of a batch changes, we might need to deallocate some order lines.
-```
+    @property
+    def fully_allocated(self):
+        return self.allocation.is_complete
 
-How did you go about tackling the problem? Whenever I have a complex domain, my first step is to write a unit test.
-
-```
-def test_when_allocating_an_order_to_a_batch():
-    batch = Batch(20, "SMALL-TABLE")
-    line = OrderLine(2, "SMALL-TABLE")
-    batch.allocate(line)
-
-    assert batch.available == 18
-```
-
-The name of my unit test describes the behaviour that I want to see from the system, and the names of the classes and variables that I use are taken from the business jargon. I could show this code to a non-technical co-worker, and he would agree that this correctly describes the behaviour of the system.
-
-```
-from dataclasses import dataclass
+    def allocate(self, stock, shipments):
+        self.allocation = Allocation({}, order=self)
+        for source in [stock] + sorted(shipments):
+            source_allocation = Allocation.for_(self, source)
+            if source_allocation.is_complete:
+                self.allocation = source_allocation
+                self.allocation.apply()
+                return
+            self.allocation.supplement_with(source_allocation)
+        self.allocation.apply()
 
 
-@dataclass
-class OrderLine:
+class Stock(dict):
 
-    quantity: int
-    product_code: str
+    def can_allocate(self, sku, quantity):
+        return sku in self and self[sku] > quantity
+
+    def allocate(self, sku, quantity):
+        self[sku] -= quantity
 
 
-class Batch:
-    def __init__(self, quantity: int, product_code: str) -> None:
-        self.available = quantity
+class Shipment(Stock):
 
-    def allocate(self, order: OrderLine) -> None:
-        self.available -= order.quantity
-```
+    def __init__(self, lines, eta):
+        self.eta = eta
+        super().__init__(lines)
 
-The implementation is straightforward. Our Batch class is really just wrapping a single integer `available` which it decrements whenever we allocate some stock to it. Our OrderLine class doesn't have any behaviour at all, so we'll just use a dataclass for now. Some of you might have used a tuple, or even just an integer to represent the line. My preference is to use named typing where I can because I want to be able to read this code in 6 months time without having to remember that `line[0]` is the quantity.
+    def __lt__(self, other):
+        return self.eta < other.eta
+----
+====
 
-Let's write a breaking test.
+//TODO: get rid of all the dicts, for a bigger contrast
 
-```
-def test_when_a_batch_has_insufficient_stock():
-    batch = Batch(1, "CURIOUS-POUFFE")
-    line = OrderLine(2, "CURIOUS-POUFFE")
-    with pytest.raises(ValueError):
-        batch.allocate(line)
-```
+The core algorithm (in `Order.allocate()`) is essentially the same, but this
+model is much richer.  The key concepts of the business are represented,
+the code uses the domain language and is thus likely to remain readable
+in 6 months' time, and it actually delivers the requirements of sorting by ETA
+and decrementing available quantities.
+
+Perhaps you prefer one or the other. Maybe you'd start with the minimal
+implementation and grow into a more complex one over time.  But either way,
+the critical thing about the domain is that it captures the core understanding
+of the business, and it should be the most important part of our code.  It's
+the place where we want to have maximum flexibility in evolving over time.
+It's the place where we expect to get the most value out of unit testing.
+It's not something we want tied down with infrastructure constraints.
+
+Refactoring from the Harry model to the Bob model took all of 2 hours. How
+long do you think it would have taken if all the models were Django models,
+tightly coupled to the database and any number of presentation concerns,
+and the core algorithm was buried inside a view controller, surrounded by
+authentication, validation and HTTP request/response transformation code?
+
+
