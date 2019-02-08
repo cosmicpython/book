@@ -69,6 +69,36 @@ def test_cannot_allocate_if_insufficent_quantity_in_shipment():
 ====
 
 
+
+==== Good practices for unit testing Domain Models.
+
+Let's take a look at an example test
+
+
+[[example_unit_test]]
+.Example unit test
+====
+[source,python]
+----
+def test_allocates_to_stock_in_preference_to_shipment():
+    order = Order({'sku1': 10})
+    stock = Stock({'sku1': 1000})
+    shipment = Shipment({'sku1': 1000}, eta=tomorrow)
+
+    order.allocate(stock, shipments=[shipment])
+
+    assert order.allocation.sources['sku1'] == stock
+    assert stock.quantities['sku1'] == 990
+    assert shipment.quantities['sku1'] == 1000
+----
+====
+
+The name of my unit test describes the behaviour that I want to see from the system, and the names of the classes and variables are taken from the business jargon or "ubiquitous language", in DDD terms. I could show this code to a non-technical co-worker, and he would agree that this correctly describes the behaviour of the system.
+
+
+
+==== Writing Pythonic Domain Models.
+
 What kind of model did you come up with?
 
 Maybe, like Harry, you went down a minimal path -- orders, stock and shipments are all just
@@ -90,7 +120,7 @@ def allocate(order, stock, shipments):
         if allocated_completely(order, allocation):
             return allocation
         allocations.append(allocation)
-    return merge(reversed(allocations))
+    return combine_preferring_first(allocations)
 
 def allocate_to(order, source):
     return {
@@ -103,21 +133,30 @@ def allocate_to(order, source):
 def allocated_completely(order, allocation):
     return order.keys() == allocation.keys()
 
-def merge(allocations):
+def combine_preferring_first(allocations):
     return {
         k: v
-        for d in allocations
+        for d in reversed(allocations)
         for k, v in d.items()
     }
 ----
 ====
-
 
 OK, `allocate` doesn't decrement `available_quantity`, but it returns you all the information
 you need to be able to do that in a higher layer.  It also assumes that the caller has already
 sorted shipments by their ETA.  But it certainly captures the raw essence of the key aspect
 of the domain, which is an algorithm for allocating orders to stock and shipments, following
 some business rules.  There's not much code, so bugs should be few and easy to understand.
+
+Note that the code isn't completely minimal however -- the total amount of code is probably
+low enough that we could have delivered everything in a single function, but by factoring out
+helper functions like `allocate_to` and `allocated_completely` (which is only a
+one-liner), we've tried as much as possible to express the algorithm in terms of the business
+domain.
+
+TIP: Even when investigating functional/procedural solutions, use domain language wherever
+    possible
+
 
 On the other hand, perhaps like Bob you leaned more naturally towards an OO solution.  You
 might have anticipated that such an anaemic model will be hard to read in 6 months' time.
