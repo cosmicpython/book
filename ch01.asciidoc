@@ -11,6 +11,23 @@ The "domain" is a fancy way of saying "the problem you're trying to solve". I cu
 
 A model is a map of a process or phenomenon that captures some useful property. Humans are exceptionally good at producing models of things in their heads. For example, when someone throws a ball toward you, you're able to predict its movement almost unconsciously, because you have a model of how objects move in space. Your model isn't perfect by any means. Humans have terrible intuitions about how objects behave at near-light speeds or in a vacuum because our model was never designed to cover those cases. That doesn't mean the model is wrong, but it does mean that some predictions fall outside of its domain.
 
+
+.This is not a DDD book.  You should read a DDD book.
+*****************************************************************
+Domain-Driven Design, or DDD, is where the concept of domain modelling came from, and it's been a hugely successful movement in transforming the way people design software by focusing on the core business domain.  Many of the architecture patterns that we cover in this book, like Entity, Aggregate and Value Objects (see <<chapter_04>>),
+Repository (in <<chapter_02,the next chapter>>) all come from the DDD tradition.
+
+This book really can't give a proper overview of the DDD philosophy, and the
+associated tools and techniques for developing a domain model.  We really hope
+to give you a taste for it though, and cannot encourage you enough to go on and
+read a proper DDD book.
+
+* The original https://domainlanguage.com/ddd/[DDD "blue book"] by Eric Evans
+* Or some people seem to prefer the https://amzn.to/2tidSLb["red book"], by
+  Vaughn Vernon
+
+*****************************************************************
+
 The domain model is the mental map that business owners have of their processes. All business people have these mental maps, they're how humans think about complex processes. [TODO: Listening for business jargon].
 
 We're going to use a real-world domain model throughout this book, specifically a model from our current employment. Made.com are a successful furniture retailer. When you buy a sofa or a coffee table, we have to figure out how best to get your goods to your home.
