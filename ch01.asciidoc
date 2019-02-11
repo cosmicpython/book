@@ -32,7 +32,7 @@ The domain model is the mental map that business owners have of their processes.
 
 We're going to use a real-world domain model throughout this book, specifically a model from our current employment. Made.com are a successful furniture retailer. When you buy a sofa or a coffee table, we have to figure out how best to get your goods to your home.
 
-[Context diagram for allocation]
+* TODO: [Context diagram for allocation]
 
 At a high level, we have separate systems that are responsible for buying stock, selling stock to customers, and shipping goods to customers. There's a system in the middle that needs to coordinate the process by allocating stock to a customer's orders. 
 
@@ -252,7 +252,8 @@ class Shipment(_Stock):
 ----
 ====
 
-//TODO; aside on allocate still being a function
+TODO: aside on allocate still being a function.  not everything has to be a
+    class.  _Domain Service_ in DDD terms
 
 Moving to an object-oriented model is buying us lots of things here, and Python helps us do it
 in a nice, expressive way. Shipments now have an ETA, and we can use the
@@ -392,7 +393,39 @@ class _Stock(_Lines):
 ----
 ====
 
-TOOD: explain `line.sku` or change to using `.items()`
+
+==== Datclasses are great for Value Objects (tbc?)
+
+TODO: explain `line.sku` or change to using `.items()`
+
+[[id_here]]
+.Placeholder re: Line value object shall we keep it?
+====
+[source,python]
+----
+@dataclass
+class Line:
+    sku: str
+    qty: int
+
+
+class _Lines:
+    #...
+
+    @property
+    def lines(self):
+        return [
+            Line(sku, qty)
+            for sku, qty in self._lines.items()
+        ]
+----
+====
+
+could talk about...?
+
+* value objects
+* dataclass
+* one day wanting to sum lines for total available quantity of a sku across all shipments
 
 
 The core algorithm (in `allocate()`) is essentially the same, but this
@@ -415,12 +448,32 @@ tightly coupled to the database and any number of presentation concerns,
 and the core algorithm was buried inside a view controller, surrounded by
 authentication, validation and HTTP request/response transformation code?
 
+=== Wrap-up
 
-=== Possible sources of complexity
+// IRL sources of complexity from Csaba:
+// maybe one could be used as a further examples of when classes are useful
+// * Made to Order
+// * Hold Until
+// * reallocate other orders after order cancelled??
+// * grouped
+// * countries
 
-* Made to Order
-* Hold Until
-* reallocate other orders after order cancelled??
-* grouped
-* countries
+.Key things (example formatting for end-of-chapter glossary/recap)
+*****************************************************************
+Domain modelling::
+    This is the part of your code that is closest to the business,
+    the most likely to change, and the place where you deliver the
+    most value to the business.  Make it easy to understand and modify
 
+Not everything has to be an object::
+    Python is a multi-paradigm language, so let the "verbs" in your
+    code be functions.  Classes called "Manager" or "Builder" or
+    "Factory" are a code smell.
+
+This is the time to apply your best OO design principles::
+    revise SOLID.  has-a vs is-a.  composition over inheritance. etc etc.
+
+Datclasses for value objects::
+    yes indeed.
+
+*****************************************************************
