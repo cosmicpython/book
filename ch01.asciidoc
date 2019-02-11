@@ -45,15 +45,12 @@ But allocating orders is no longer a trivial matter of decrementing a single qua
 
 === Allocation Version 1.0
 
-* _Customers_ place _orders_. An order has multiple _order lines_, where each line refers to a _product code_ (or "SKU") and a _quantity_, eg. 10 units of RED-CHAIR, or 1 unit of TASTELESS-LAMP.
-* Warehouse _Stock_ is tracked in terms of _product code_ and _available quantity_
-* The purchasing department order _Shipments_ of stock. A _Shipment_ also consists of a number of different _quantities_ of particular _products_
-* When we allocate an order to stock or to a shipment, the _available quantity_ should be reduced correspondingly; you can't allocate more than the _available quantity_
-* The business wants to allocate in such a way as to minimise lead times for individual customers, but also overall:
-    - if _Stock_ is available, then use that
-    - otherwise, prefer earlier _Shipments_ to later ones but,
-    - if an order can be allocated entirely to a single shipment, then prefer a single, later shipment to a mixture of different shipments
-
+* _Customers_ place _orders_. An order has multiple _order lines_, where each line refers to a _SKU_ and a _quantity_, eg. 10 units of RED-CHAIR, or 1 unit of TASTELESS-LAMP.
+* A _SKU_ or "Stock Keeping Unit", is a unique id representing a specific product.
+* The purchasing department order _Shipments_ of stock. A _Shipment_ also consists of a number of different _quantities_ of particular _products_.  It has an _ETA_, estimate time of arrival.
+* When a shipment arrives and is unloaded, it becomes "normal" _Warehouse_ Stock, still inventoried by _SKU_ and _quantity_.
+* When we allocate an order to warehouse stock or to a shipment, the _available quantity_ should be reduced correspondingly; you can't allocate more than the _available quantity_
+* The business wants to allocate in such a way as to minimise lead times for individual customers, so allocate to warehouse stock in preference to shipments, and then allocate to shipments in order of their _ETA_
 
 Why not have a go at solving this problem yourself?  Write a few unit tests and see if you can capture the essence of these business rules in some nice, clean code.
 
@@ -67,20 +64,19 @@ If you're anything like us, you might have ended up with some tests a little lik
 ====
 [source,python]
 ----
-def test_can_allocate_to_stock():
+def test_can_allocate_to_warehouse():
 def test_can_allocate_to_shipment():
-def test_ignores_stock_with_wrong_skus():
-def test_can_allocate_to_shipment_with_correct_sku():
-def test_allocates_to_stock_in_preference_to_shipment():
-def test_can_allocate_multiple_lines_to_stock():
+def test_ignores_irrelevant_warehouse_stock():
+def test_can_allocate_to_correct_shipment():
+def test_allocates_to_warehouse_in_preference_to_shipment():
+def test_can_allocate_multiple_lines_to_warehouse():
 def test_can_allocate_multiple_lines_to_shipment():
 def test_can_allocate_to_both():
-def test_can_allocate_to_both_preferring_stock():
-def test_mixed_allocation_are_avoided_if_possible():
-def test_allocated_to_earliest_suitable_shipment_in_list():
-def test_still_chooses_earliest_if_split_across_shipments():
-def test_stock_not_quite_enough_means_we_use_shipment():
-def test_cannot_allocate_if_insufficent_quantity_in_stock():
+def test_can_allocate_to_both_preferring_warehouse():
+def test_allocated_to_first_suitable_shipment_in_list():
+def test_still_preserves_ordering_if_split_across_shipments():
+def test_warehouse_not_quite_enough_means_we_use_shipment():
+def test_cannot_allocate_if_insufficent_quantity_in_warehouse():
 def test_cannot_allocate_if_insufficent_quantity_in_shipment():
 ----
 ====
@@ -121,18 +117,50 @@ What kind of model did you come up with?
 Maybe, like Harry, you went down a minimal path -- orders, stock and shipments are all just
 mappings, `{sku: quantity}`, so they can be plain old dicts.  Our entire domain
 model can consist of one primary function called `allocate`, which takes a dict
-representing the order, a list of dicts for stock and shipments, and returns 
-a dict mapping `sku` to `shipment or stock` instances, to represent the allocation:
-
+representing the order, a list of dicts for warehouse and shipments, and returns
+a dict mapping `sku` to `warehouse or shipment` instances, to represent the allocation.
 
 [[dict_model]]
-.A minimal, procedural model
+.A minimal, procedural/functional model
 ====
 [source,python]
 ----
-def allocate(order, stock, shipments):
+def allocate(order, warehouse, shipments):
+    allocation = {}
+    for source in shipments + [warehouse]:
+        allocation.update(allocation_from(order, source))
+    return allocation
+
+def allocation_from(order, source):
+    return {
+        sku: source
+        for sku, quantity in order.items()
+        if sku in source
+        and source[sku] > quantity
+    }
+----
+
+This minimal dict-based model only really works if you rule sorting by ETA to
+be out of scope (shipments are assumed to be sorted already), and you assume
+that someone else is in charge of actually decrementing quantities.  But the
+point is that thinking about the problem domain without immediately involving
+classes can actually get you pretty far.  For example, the choice of dict as
+the fundamental data type for stock, order and allocation is probably useful.
+
+If the core of the domain really is an algorithm, you can actually capture
+quite complex requirements this way too.  Here's a draft from an earlier
+version of the book, where there was an additional requirement that orders
+should be allocated to a single source if possible:
+
+
+[[dict_model]]
+.Using domain language in a functional model
+====
+[source,python]
+----
+def allocate(order, warehouse, shipments):
     allocations = []
-    for source in [stock] + shipments:
+    for source in [warehouse] + shipments:
         allocation = allocate_to(order, source)
         if allocated_completely(order, allocation):
             return allocation
@@ -159,112 +187,215 @@ def combine_preferring_first(allocations):
 ----
 ====
 
-OK, `allocate` doesn't decrement `available_quantity`, but it returns you all the information
-you need to be able to do that in a higher layer.  It also assumes that the caller has already
-sorted shipments by their ETA.  But it certainly captures the raw essence of the key aspect
-of the domain, which is an algorithm for allocating orders to stock and shipments, following
-some business rules.  There's not much code, so bugs should be few and easy to understand.
+Note that the code isn't completely minimal however--the total amount of code
+is probably low enough that we could have delivered everything in a single
+function, but by factoring out helper functions like `allocate_to` and
+`allocated_completely` (which is only a one-liner), we've tried as much as
+possible to express the algorithm in terms of the business domain.
 
-Note that the code isn't completely minimal however -- the total amount of code is probably
-low enough that we could have delivered everything in a single function, but by factoring out
-helper functions like `allocate_to` and `allocated_completely` (which is only a
-one-liner), we've tried as much as possible to express the algorithm in terms of the business
-domain.
-
-TIP: Even when investigating functional/procedural solutions, use domain language wherever
-    possible
+TIP: Even when investigating functional/procedural solutions, use domain
+    language wherever possible
 
 
-On the other hand, perhaps like Bob you leaned more naturally towards an OO solution.  You
-might have anticipated that such an anaemic model will be hard to read in 6 months' time.
-We haven't really translated the language of the domain into our model.  How about something
-like this instead?
+But for most domain modelling problems, an object-oriented approach is usually
+going to be the way to go.
+
+// On the other hand, perhaps like Bob you leaned more naturally towards an OO solution.  You might have anticipated that such an anaemic model will be hard to read in 6 months' time. We haven't really fully translated the language of the domain into our model.  How about something like this instead?
 
 
-```
-[[oo_model]]
-.A rich, object-oriented model.
+If you've done a bit of modelling using primitive data types, it can be tempting
+to go down a path like this:
+
+
+[[id_here]]
+.Starting on an OO path, but everything is still a dict
 ====
 [source,python]
 ----
-class Allocation(dict):
-
-    def __init__(self, d, order):
-        self.order = order
-        super().__init__(d)
-
-    @property
-    def skus(self):
-        return self.keys()
-
-    @staticmethod
-    def for_(order, source):
-        return Allocation({
-            sku: source
-            for sku, quantity in order.items()
-            if source.can_allocate(sku, quantity)
-        }, order=order)
-
-    def supplement_with(self, allocation):
-        for sku, quantity in allocation.items():
-            if sku in self:
-                continue
-            self[sku] = quantity
-
-    @property
-    def is_complete(self):
-        return self.skus == self.order.skus
-
-    def apply(self):
-        for sku, source in self.items():
-            source[sku] -= self.order[sku]
+def allocate(order, warehouse, shipments):
+    ordered_sources = [warehouse] + sorted(shipments)
+    allocation = {}
+    for source in reversed(ordered_sources):
+        allocation.update(source.allocation_for(order))
+    allocation.decrement_available_quantities()
+    return allocation
 
 
 class Order(dict):
-
-    @property
-    def skus(self):
-        return self.keys()
-
-    @property
-    def fully_allocated(self):
-        return self.allocation.is_complete
-
-    def allocate(self, stock, shipments):
-        self.allocation = Allocation({}, order=self)
-        for source in [stock] + sorted(shipments):
-            source_allocation = Allocation.for_(self, source)
-            if source_allocation.is_complete:
-                self.allocation = source_allocation
-                self.allocation.apply()
-                return
-            self.allocation.supplement_with(source_allocation)
-        self.allocation.apply()
+    # ...
 
 
-class Stock(dict):
+class _Stock(dict):
 
-    def can_allocate(self, sku, quantity):
-        return sku in self and self[sku] > quantity
+    def allocation_for(self, order):
+        return {
+            sku: self
+            for sku, quantity in order.items()
+            if sku in self
+            and self[sku] > quantity
+        }
 
-    def allocate(self, sku, quantity):
-        self[sku] -= quantity
+
+class Warehouse(_Stock):
+    pass
 
 
-class Shipment(Stock):
 
-    def __init__(self, lines, eta):
+class Shipment(_Stock):
+
+    def __init__(self, d, eta):
         self.eta = eta
-        super().__init__(lines)
+        super().__init__(d)
 
     def __lt__(self, other):
         return self.eta < other.eta
 ----
 ====
 
-//TODO: get rid of all the dicts, for a bigger contrast
+//TODO; aside on allocate still being a function
 
-The core algorithm (in `Order.allocate()`) is essentially the same, but this
+Moving to an object-oriented model is buying us lots of things here, and Python helps us do it
+in a nice, expressive way. Shipments now have an ETA, and we can use the
+`__lt__` magic function to make them sortable.  We identify a common parent class for warehouse
+stock and shipment stock, and we can give it some behaviour -- it knows how to build a partial
+allocation.
+
+However, subclassing `dict` isn't usually going to be a good idea.  Domain models aren't usually
+going to inherit from existing primitive types (unless they're _Value Objects_, more on this in
+<<chapter_03>>).
+
+Harry's made the classic _is-a_ vs _has-a_ conflation.  Should a shipment _be_ a dict?  Do we
+really want it to have all the attributes and methods a dict has?  What would it mean to call
+`.update()` on a shipment?  Or even if you can figure out some reasonable semantics for that,
+what about `.values()` or `.keys()`?  Those really don't have any meaning in the terminology
+of the domain.
+
+A dict might be the right data structure to store information about the content of a shipment,
+but a Shipment should _have_ a dict rather than _be_ one:
+
+
+```
+[[oo_model]]
+.Has-a vs Is-a
+====
+[source,python]
+----
+class _Lines:
+
+    def __init__(self, lines: dict):
+        self._lines = lines
+
+    def __getitem__(self, sku):
+        return self._lines[sku]
+
+    def __contains__(self, sku):
+        return sku in self._lines
+
+
+class Order(_Lines):
+    pass
+----
+====
+
+The `_Lines` base class, which is used by `Order`, `Warehouse` and `Shipment`, lets its subclasses
+use _some_ dict methods, the ones that make semantic sense in the domain.  "getting" a sku from
+an order means retrieving the quantity ordered for that sku.  Checking if a sku is `in` an order is
+also meaningful.  But other dict methods like `.update()` and `.values()` don't have a clear or
+unambiguous meaning, so those methods aren't supported.
+
+// TODO aside on Line dataclass and modifying iteration
+
+
+
+[[id_here]]
+.allocate is still a function, but we have a richer model for an Allocation
+====
+[source,python]
+----
+def allocate(order, warehouse, shipments):
+    ordered_sources = [warehouse] + sorted(shipments)  #<3>
+    allocation = Allocation(order)  #<2>
+    for source in ordered_sources:
+        allocation.supplement_with(source.allocation_for(order))  #<3>
+    allocation.decrement_available_quantities()  #<4>
+    return allocation
+
+
+class Allocation:
+
+    def __init__(self, order):  #<2>
+        self.order = order
+        self._sources = {}  #<1>
+
+    def __getitem__(self, sku):  #<1>
+        return self._sources[sku]
+
+    def __contains__(self, sku):  #<1>
+        return sku in self._sources
+
+    def with_sources(self, sources: dict):  #<5>
+        self._sources = sources
+        return self
+
+    def supplement_with(self, other):  #<3>
+        for sku, source in other._sources.items():
+            if sku not in self:
+                self._sources[sku] = source
+
+    def decrement_available_quantities(self):  #<4>
+        for sku, source in self._sources.items():
+            source.decrement_available(sku, self.order[sku])
+----
+====
+
+<1> An allocation _has_ sources, and we use similar duck-typing methods to
+    support checking whether a sku is in an allocation, and retrieving the
+    source for a particular sku.  
+
+<2> An allocation is always _for_ an order,
+    so it's a required argument in the constructor.
+
+<3> We can also build some nice, meaningful helper methods. _supplement_with_
+    makes our algorithm for building up an allocation from several different
+    smaller allocations more readable. The top-level `allocate` function no
+    longer needs to use the hack of reversing the sources list so that
+    `dict.update()` works, giving preference to the last source in the list.
+    Instead, an allocation knows how to conditionally supplement itself.
+
+<4> `decrement_available_quantities` and `decrement_available` on individual
+    Stock objects similarly encapsulates the knowledge about how to make
+    quantity updates
+
+<5> `with_sources` uses method chaining to make a nice, readable syntax
+    for the individual `Stock` objects to be able to build up an allocation
+
+
+
+[[id_here]]
+.Listing title
+====
+[source,python]
+----
+
+class _Stock(_Lines):
+
+    def decrement_available(self, sku, qty):
+        self._lines[sku] -= qty
+
+    def allocation_for(self, order: Order):
+        return Allocation(order).with_sources({
+            line.sku: self
+            for line in order.lines
+            if line.sku in self
+            and self[line.sku] > line.qty
+        })
+----
+====
+
+TOOD: explain `line.sku` or change to using `.items()`
+
+
+The core algorithm (in `allocate()`) is essentially the same, but this
 model is much richer.  The key concepts of the business are represented,
 the code uses the domain language and is thus likely to remain readable
 in 6 months' time, and it actually delivers the requirements of sorting by ETA
