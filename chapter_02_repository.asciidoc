@@ -1,0 +1,139 @@
+[[chapter_02]]
+== Repository Pattern
+
+We expect to be working in an agile manner, so our priority is to get to an MVP
+as quickly as possible.  Once we've identified the first use case we want to
+support and we've built a service in the domain for it (the `allocate()` function),
+we want to start thinking about exposing it to users as quickly as possible.
+
+In our case that's going to be a web API, and there's a good case for saying that,
+in a real project, you might dive straight in with some end-to-end tests and
+start plugging in a web framework, test-driving things outside-in.
+
+But we know that, no matter what, we're going to need some form of persistent
+storage, and this is a textbook, so we can allow ourselves a tiny bit more
+bottom-up development, and start to think about storage and databases.
+
+
+=== The database as a Port: Applying the Dependency Inversion Principle
+
+We're all reasonably familiar with the best practice for a system
+with a UI, some logic, and a database:  the "layered architecture".
+
+
+[[layered_architecture]]
+.Layered Architecture
+====
+[source,text]
+----
++------------------------------------------------------------+
+|                  Presentation Layer                        |
++------------------------------------------------------------+
+                          |
+                          V
++------------------------------------------------------------+
+|                   Business Logic                           |
++------------------------------------------------------------+
+                          |
+                          V
++------------------------------------------------------------+
+|                    Database Layer                          |
++------------------------------------------------------------+
+----
+====
+
+You might think of it as Model-View-Controller, and have more
+layers, but the essential principle is to keep the layers
+separate (which is a good thing), and to have each layer
+depend only on the one below...
+
+But we want our domain model to have _no dependencies whatsoever_.
+We don't want infrastructure concerns bleeding over into our
+domain model and slowing down our unit tests or our ability to
+make changes.
+
+Instead, as discussed in the prologue, we'll think of our
+model as being on the "inside", and dependencies flowing
+inwards to it.  This is the "ports and adapters" or "hexagonal"
+architecture.
+
+==== The "normal" ORM way, model depends on ORM.
+
+How to implement it when we want to use a tool like an ORM though?
+We don't want to be hand-coding SQL (at least, not yet!).  But
+if you follow the typical SQLAlchemy tutorial, you'll end up with
+something like this:
+
+
+[[typical_sqlalchemy_example]]
+.Listing title
+====
+[source,python]
+----
+from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
+
+Base = declarative_base()
+
+class Order(Base):
+    id = Column(Integer, primary_key=True)
+
+class OrderLine(Base):
+    id = Column(Integer, primary_key=True)
+    sku = Column(String(250))
+    qty = Integer(String(250))
+    order_id = Column(Integer, ForeignKey('order.id'))
+    order = relationship(Order)
+
+class Allocation(Base):
+    #... and so on
+----
+====
+
+And our pristine model is now full of dependencies on the
+ORM, and is starting to look ugly as hell.
+
+
+
+==== Inverting the dependency: ORM depends on model.
+
+But that's not the only way to use SQLAlchemy.  The alternative
+is to define your schema separately, and an explicit _mapper_
+for how to convert between the schema and our domain model:
+
+https://docs.sqlalchemy.org/en/latest/orm/mapping_styles.html#classical-mappings
+
+
+
+[[sqlalchemy_classical_mapper]]
+.Explicit ORM Mapping with SQLALchemy Table objects
+====
+[source,python]
+----
+from sqlalchemy.orm import mapper, relationship
+from domain_model import Order, Line
+
+
+metadata = MetaData()
+
+order = Table(
+    'order', metadata,
+    Column('id', Integer, primary_key=True, autoincrement=True),
+)
+
+order_lines = Table(
+    'order_lines', metadata,
+    Column('order_id', ForeignKey('order.id'), primary_key=True),
+    Column('sku', String(255), primary_key=True),
+    Column('qty', Integer),
+)
+
+
+mapper(Line, order_lines)
+mapper(Order, order, properties={
+    'lines': relationship(Line, cascade="all, delete-orphan")
+})
+----
+====
+

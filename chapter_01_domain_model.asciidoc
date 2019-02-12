@@ -352,6 +352,8 @@ class Order(_Lines):
 ----
 ====
 
+TODO: update listing above for new duck-typing approach
+
 The `_Lines` base class, which is used by `Order`, `Warehouse` and `Shipment`, lets its subclasses
 use _some_ dict methods, the ones that make semantic sense in the domain.  "getting" a sku from
 an order means retrieving the quantity ordered for that sku.  Checking if a sku is `in` an order is
