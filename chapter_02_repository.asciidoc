@@ -86,7 +86,7 @@ something like this:
 
 
 [[typical_sqlalchemy_example]]
-.Listing title
+.SQLAlchemy "declarative" syntax, model depends on ORM
 ====
 [source,python]
 ----
@@ -136,12 +136,12 @@ from domain_model import Order  #<1>
 
 metadata = MetaData()
 
-order = Table(
+order = Table(  #<2>
     'order', metadata,
     Column('id', Integer, primary_key=True, autoincrement=True),
 )
 
-order_lines = Table(
+order_lines = Table(  #<2>
     'order_lines', metadata,
     Column('order_id', ForeignKey('order.id'), primary_key=True),
     Column('sku', String(255), primary_key=True),
@@ -151,8 +151,8 @@ order_lines = Table(
 
 
 def start_mappers():
-    mapper(Line, order_lines)  #<2>
-    mapper(Order, order, properties={  #<2>
+    mapper(Line, order_lines)  #<3>
+    mapper(Order, order, properties={  #<3>
         'lines': relationship(Order.Line, cascade="all, delete-orphan")
     })
     #...
@@ -160,14 +160,16 @@ def start_mappers():
 ====
 
 <1> The ORM imports the domain model, and not the other way around
-<2> And when we call the `mapper` function, SqlAlchemy binds our
+<2> We define our database tables and columns using SQLAlchemy's
+    Pythonic DDL.
+<3> And when we call the `mapper` function, SqlAlchemy binds our
     domain model classes to the various tables we've defined.
 
 This gives us all the benefits of SQLAlchemy, including the ability
-to use _alembic_ for migrations, and the ability to transparently
-query using our domain classes.
+to use `alembic` for migrations, and the ability to transparently
+query using our domain classes, as we'll see.
 
-As you're first trying to build your ORM config, it can be useful
+When you're first trying to build your ORM config, it can be useful
 to write some tests for it, as in <<orm_tests>>:
 
 
