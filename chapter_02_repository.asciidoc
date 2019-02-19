@@ -15,7 +15,7 @@ storage, and this is a textbook, so we can allow ourselves a tiny bit more
 bottom-up development, and start to think about storage and databases.
 
 
-=== The database as a Port: Applying the Dependency Inversion Principle
+=== Applying the Dependency Inversion Principle to the Database
 
 We're all reasonably familiar with the best practice for a system
 with a UI, some logic, and a database:  the "layered architecture".
@@ -54,10 +54,30 @@ make changes.
 
 Instead, as discussed in the prologue, we'll think of our
 model as being on the "inside", and dependencies flowing
-inwards to it.  This is the "ports and adapters" or "hexagonal"
-architecture.
+inwards to it;  what people sometimes call "ports and adapters".
 
-==== The "normal" ORM way, model depends on ORM.
+
+.Is this Ports and Adapters?
+*******************************************************************************
+> "Is this Ports and Adapters?  Or is it hexagonal architecture?  Is it the same
+> as the Onion architecture?  What about the Clean architecture?  What's a Port
+> and what's an Adapter?  Why do you people have so many words for the same thing?
+
+...we hear you ask.  The answer to all these questions is yes, pretty much. Well,
+apart from the what-is-a-port-and-what-is-an-adapter question, which we'll
+come back to later, but the short answer to that one is that it doesn't really
+matter.
+
+Although some people like to nitpick over the differences, all these are
+pretty much names for the same thing, and they all boil down to the
+Dependency Inversion Principle--high-level modules (the domain) should
+not depend on low-level ones (the infrastructure).
+
+We'll get into some of the nitty-gritty around "depending on abstractions",
+and whether there is a Pythonic equivalent of interfaces, later in the book.
+*******************************************************************************
+
+==== The "normal" ORM way: model depends on ORM.
 
 How to implement it when we want to use a tool like an ORM though?
 We don't want to be hand-coding SQL (at least, not yet!).  But
@@ -91,7 +111,7 @@ class Allocation(Base):
 ----
 ====
 
-And our pristine model is now full of dependencies on the
+....And our pristine model is now full of dependencies on the
 ORM, and is starting to look ugly as hell.
 
 
