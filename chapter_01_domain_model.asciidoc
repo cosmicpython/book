@@ -394,7 +394,7 @@ class Allocation:
         self._sources = sources
         return self
 
-    def supplement_with(self, other):  #<3>
+    def supplement_with(self, other: Allocation):  #<3>
         for sku, source in other._sources.items():
             if sku not in self:
                 self._sources[sku] = source
@@ -449,6 +449,13 @@ class _Stock(_Lines):
 ----
 ====
 
+
+.On Type hints
+*******************************************************************************
+
+TODO: sidebar on the good and bad.
+
+*******************************************************************************
 
 ==== Datclasses are great for Value Objects (tbc?)
 
