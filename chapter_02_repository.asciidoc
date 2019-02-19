@@ -105,14 +105,13 @@ for how to convert between the schema and our domain model:
 https://docs.sqlalchemy.org/en/latest/orm/mapping_styles.html#classical-mappings
 
 
-
 [[sqlalchemy_classical_mapper]]
 .Explicit ORM Mapping with SQLALchemy Table objects
 ====
 [source,python]
 ----
 from sqlalchemy.orm import mapper, relationship
-from domain_model import Order, Line
+from domain_model import Order  #<1>
 
 
 metadata = MetaData()
@@ -128,12 +127,92 @@ order_lines = Table(
     Column('sku', String(255), primary_key=True),
     Column('qty', Integer),
 )
+#...
 
 
-mapper(Line, order_lines)
-mapper(Order, order, properties={
-    'lines': relationship(Line, cascade="all, delete-orphan")
-})
+def start_mappers():
+    mapper(Line, order_lines)  #<2>
+    mapper(Order, order, properties={  #<2>
+        'lines': relationship(Order.Line, cascade="all, delete-orphan")
+    })
+    #...
 ----
 ====
+
+<1> The ORM imports the domain model, and not the other way around
+<2> And when we call the `mapper` function, SqlAlchemy binds our
+    domain model classes to the various tables we've defined.
+
+This gives us all the benefits of SQLAlchemy, including the ability
+to use _alembic_ for migrations, and the ability to transparently
+query using our domain classes.
+
+As you're first trying to build your ORM config, it can be useful
+to write some tests for it, as in <<orm_tests>>:
+
+
+[[orm_tests]]
+.Testing the ORM directly (throwaway tests)
+====
+[source,python]
+----
+
+def test_order_mapper_can_load_lines(session):
+    session.execute('INSERT INTO "order" VALUES (1)')
+    session.execute('INSERT INTO "order" VALUES (2)')
+    session.execute('INSERT INTO "order_lines" VALUES (1, "sku1", 12)')
+    session.execute('INSERT INTO "order_lines" VALUES (1, "sku2", 13)')
+    session.execute('INSERT INTO "order_lines" VALUES (2, "sku3", 14)')
+    expected_order = Order({'sku1': 12, 'sku2': 13})
+    retrieved_order = session.query(Order).first()
+    assert retrieved_order.lines == expected_order.lines
+
+
+def test_order_mapper_can_save_lines(session):
+    new_order = Order({'sku1': 12, 'sku2': 13})
+    session.add(new_order)
+    session.commit()
+
+    rows = list(session.execute('SELECT * FROM "order_lines"'))
+    assert rows == [
+        (1, 'sku1', 12),
+        (1, 'sku2', 13),
+    ]
+----
+====
+
+But you probably wouldn't keep these tests around--as we'll see shortly,
+once you've taken the step of inverting the dependency of ORM and
+domain model, it's only a small additional step to implement an additional
+abstraction called the Repository pattern, which will be easier to write
+tests against, and will provide a simple, common interface for faking out
+later in tests.
+
+But we've already achieved our objective of inverting the traditional
+dependency: the domain model stays "pure" and free from infrastructure
+concerns.  We could throw away SQLAlchemy and use a different ORM, or a totally
+different persistence system, and the domain model doesn't need to change at
+all.
+
+We are glossing over some complexity here.  If we want to stick to using
+dicts as our primary data structure, there is some slightly tricky config
+to get right.  For the curious, there's more example code at
+https://github.com/python-leap/code/blob/orm-experiments-backtodicts/orm.py
+
+//TODO: fix link.
+
+Depending on what you're doing in your domain model, and especially if you
+stray far from the OO paradigm, you may find it increasingly hard to get
+the ORM to produce the exact behaviour you need,  and you may need to modify
+your domain modelfootnote:[Harry came extremely close to giving up his beloved
+dicts, but thanks to the amazingly helpful SQLAlchemy maintainers, he didn't
+have to, or at least not yet.  Shout out to Mike Bayer!].  As so often with
+architectural decisions, there is a trade-off you'll need to consider.  As
+the Zen of Python says, "Practicality beats purity!"
+
+
+
+=== Introducing Repository Pattern.
+
+bla!
 
