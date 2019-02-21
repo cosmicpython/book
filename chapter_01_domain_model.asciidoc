@@ -309,7 +309,7 @@ class Shipment(_Stock):
 TODO: aside on allocate still being a function.  not everything has to be a
     class.  _Domain Service_ in DDD terms
 
-TODO: backport `Order.reference`, discuss entity vs value objetcs
+TODO: backport `Order.reference`, discuss entity vs value objects
 
 Moving to an object-oriented model is buying us lots of things here, and Python helps us do it
 in a nice, expressive way. Shipments now have an ETA, and we can use the
