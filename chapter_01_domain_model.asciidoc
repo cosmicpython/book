@@ -114,7 +114,7 @@ code.
 If you're anything like us, you might have ended up with some tests a little like this:
 
 [[unit_tests]]
-.A first set of unit tests
+.A first set of unit tests (test_allocation.py)
 ====
 [source,python]
 ----
@@ -139,7 +139,7 @@ def test_cannot_allocate_if_insufficent_quantity_in_shipment():
 Let's take a look at an example test
 
 [[example_unit_test]]
-.Example unit test
+.Example unit test (test_allocation.py)
 ====
 [source,python]
 ----
@@ -173,7 +173,7 @@ shipments, and returns a dict mapping `sku` to `warehouse or shipment`
 instances, to represent the allocation.
 
 [[dict_model]]
-.A minimal, procedural/functional model
+.A minimal, procedural/functional model (domain_model.py)
 ====
 [source,python]
 ----
