@@ -24,7 +24,7 @@ def check_listing(listing, chapter):
             print('\n'.join(missing_lines))
             assert listing.lines == actual_lines
 
-    elif listing.contents not in actual_contents:
+    elif listing.fixed_contents not in actual_contents:
         assert listing.lines == actual_lines
 
 
@@ -35,8 +35,12 @@ class Listing:
     classes: list
 
     @property
+    def fixed_contents(self):
+        return re.sub(r'  \(\d\)$', '', self.contents, flags=re.MULTILINE)
+
+    @property
     def lines(self):
-        return self.contents.split('\n')
+        return self.fixed_contents.split('\n')
 
 
 def parse_listings(chapter_name):
