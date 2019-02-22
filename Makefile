@@ -1,2 +1,3 @@
 html:
-	asciidoctor *.asciidoc
+	asciidoctor -a source-highlighter=coderay -a '!example-caption' *.asciidoc
+
