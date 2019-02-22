@@ -2,11 +2,14 @@ from pathlib import Path
 from lxml import html
 
 def parse_listings(chapter_name):
-    raw_contents = Path(filename + '.asciidoc').read_text()
+    raw_contents = Path(f'{chapter_name}.asciidoc').read_text()
     parsed_html = html.fromstring(raw_contents)
-    listing_nodes = parsed_html.cssselect('.listingblock')
+
+    for listing_node in parsed_html.cssselect('.listingblock'):
+        [content_node] = listing_node.cssselect('.content')
+        yield content_node.text_content()
 
 def test_chapter_01():
-    listings = parse_listings('chapter_01_domain_model')
-    assert 0
+    for l in parse_listings('chapter_01_domain_model'):
+        assert 'test' in l
 
