@@ -1,0 +1,2 @@
+html:
+	asciidoctor *.asciidoc
