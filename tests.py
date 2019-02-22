@@ -2,24 +2,26 @@ from pathlib import Path
 from lxml import html
 import subprocess
 import re
-# import difflib
 from dataclasses import dataclass
 
 def test_chapter_01():
     chapter = 'chapter_01_domain_model'
     for listing in parse_listings(chapter):
-        actual_contents = file_contents_for_branch(listing.filename, chapter)
-        print('classes', listing.classes)
-        actual_lines = actual_contents.split('\n')
-        listing_lines = listing.contents.split('\n')
-        missing_lines = [l for l in listing_lines if l not in actual_lines]
-        if 'noncontinuous' in listing.classes:
-            if missing_lines:
-                print('\n'.join(missing_lines))
-                assert listing_lines == actual_lines
+        check_listing(listing, chapter)
 
-        elif listing.contents not in actual_contents:
-            assert listing_lines == actual_lines
+def check_listing(listing, chapter):
+    actual_contents = file_contents_for_branch(listing.filename, chapter)
+    actual_lines = actual_contents.split('\n')
+    if 'skip' in listing.classes:
+        return
+    if 'noncontinuous' in listing.classes:
+        missing_lines = [l for l in listing.lines if l not in actual_lines]
+        if missing_lines:
+            print('\n'.join(missing_lines))
+            assert listing.lines == actual_lines
+
+    elif listing.contents not in actual_contents:
+        assert listing.lines == actual_lines
 
 
 @dataclass
@@ -28,6 +30,10 @@ class Listing:
     contents: str
     classes: list
 
+    @property
+    def lines(self):
+        return self.contents.split('\n')
+
 
 def parse_listings(chapter_name):
     raw_contents = Path(f'{chapter_name}.html').read_text()
@@ -35,7 +41,10 @@ def parse_listings(chapter_name):
 
     for listing_node in parsed_html.cssselect('.exampleblock'):
         [title_node] = listing_node.cssselect('.title')
-        filename = re.search(r'.+ \((.+)\)', title_node.text_content()).group(1)
+        try:
+            filename = re.search(r'.+ \((.+)\)', title_node.text_content()).group(1)
+        except AttributeError as e:
+            raise AssertionError(f'Could not find filename in title {title_node.text_content()}') from e
 
         [block_node] = listing_node.cssselect('.listingblock')
         classes = block_node.get('class').split()

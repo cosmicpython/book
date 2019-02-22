@@ -144,16 +144,16 @@ Let's take a look at an example test
 ====
 [source,python]
 ----
-def test_allocates_to_stock_in_preference_to_shipment():
-    order = Order({'sku1': 10})
-    stock = Stock({'sku1': 1000})
-    shipment = Shipment({'sku1': 1000}, eta=tomorrow)
+def test_allocates_to_warehouse_in_preference_to_shipment():
+    order = Order('oref', {'sku1': 10})
+    warehouse = Warehouse({'sku1': 1000})
+    shipment = Shipment('sref', {'sku1': 1000}, eta=tomorrow)
 
-    order.allocate(stock, shipments=[shipment])
+    allocation = allocate(order, warehouse, shipments=[shipment])
 
-    assert order.allocation.sources['sku1'] == stock
-    assert stock.quantities['sku1'] == 990
-    assert shipment.quantities['sku1'] == 1000
+    assert allocation['sku1'] == warehouse
+    assert warehouse['sku1'] == 990
+    assert shipment['sku1'] == 1000
 ----
 ====
 
@@ -176,6 +176,7 @@ instances, to represent the allocation.
 [[dict_model]]
 .A minimal, procedural/functional model (domain_model.py)
 ====
+[role="skip"]
 [source,python]
 ----
 def allocate(order, warehouse, shipments):
@@ -208,8 +209,9 @@ should be allocated to a single source if possible:
 
 
 [[dict_model_with_well_named_functions]]
-.Using domain language in a functional model
+.Using domain language in a functional model (domain_model.py)
 ====
+[role="skip"]
 [source,python]
 ----
 def allocate(order, warehouse, shipments):
@@ -260,13 +262,14 @@ going to be the way to go.
 
 
 If you've done a bit of modelling using primitive data types, it can be
-tempting to go down a path like this:
+tempting to go down a path like <<domain_model_still_dictey>>:
 
 
-[[id_here]]
-.Starting on an OO path, but everything is still a dict
+[[domain_model_still_dictey]]
+.Starting on an OO path, but everything is still a dict (domain_model.py)
 ====
 [source,python]
+[role="skip"]
 ----
 def allocate(order, warehouse, shipments):
     ordered_sources = [warehouse] + sorted(shipments)
@@ -276,13 +279,10 @@ def allocate(order, warehouse, shipments):
     allocation.decrement_available_quantities()
     return allocation
 
-
 class Order(dict):
     # ...
 
-
 class _Stock(dict):
-
     def allocation_for(self, order):
         return {
             sku: self
@@ -291,14 +291,10 @@ class _Stock(dict):
             and self[sku] > quantity
         }
 
-
 class Warehouse(_Stock):
     pass
 
-
-
 class Shipment(_Stock):
-
     def __init__(self, d, eta):
         self.eta = eta
         super().__init__(d)
@@ -334,7 +330,7 @@ but a Shipment should _have_ a dict rather than _be_ one:
 
 
 [[oo_model]]
-.Has-a vs Is-a
+.Has-a vs Is-a (domain_model.py)
 ====
 [source,python]
 ----
