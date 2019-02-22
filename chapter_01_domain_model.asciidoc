@@ -191,6 +191,7 @@ def allocation_from(order, source):
         and source[sku] > quantity
     }
 ----
+====
 
 This minimal dict-based model only really works if you rule sorting by ETA to
 be out of scope (shipments are assumed to be sorted already), and you assume
@@ -331,7 +332,6 @@ A dict might be the right data structure to store information about the content 
 but a Shipment should _have_ a dict rather than _be_ one:
 
 
-```
 [[oo_model]]
 .Has-a vs Is-a
 ====
@@ -366,7 +366,7 @@ unambiguous meaning, so those methods aren't supported.
 
 
 
-[[id_here]]
+[[richer_model]]
 .allocate is still a function, but we have a richer model for an Allocation
 ====
 [source,python]
@@ -430,12 +430,11 @@ class Allocation:
 
 
 
-[[id_here]]
+[[stock_model]]
 .Listing title
 ====
 [source,python]
 ----
-
 class _Stock(_Lines):
 
     def decrement_available(self, sku, qty):
@@ -463,7 +462,7 @@ TODO: sidebar on the good and bad.
 
 TODO: explain `line.sku` or change to using `.items()`
 
-[[id_here]]
+[[value_objects]]
 .Placeholder re: Line value object shall we keep it?
 ====
 [source,python]
