@@ -5,5 +5,5 @@ test:
 	pytest tests.py --tb=short -vv
 
 update:
-	git submodule update --init --recursive
+	# git submodule update --init --recursive
 	cd code && git fetch

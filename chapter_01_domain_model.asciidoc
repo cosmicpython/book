@@ -116,6 +116,7 @@ If you're anything like us, you might have ended up with some tests a little lik
 [[unit_tests]]
 .A first set of unit tests (test_allocation.py)
 ====
+[role="noncontinuous"]
 [source,python]
 ----
 def test_can_allocate_to_warehouse():
@@ -127,8 +128,8 @@ def test_can_allocate_multiple_lines_to_warehouse():
 def test_can_allocate_multiple_lines_to_shipment():
 def test_can_allocate_to_both():
 def test_can_allocate_to_both_preferring_warehouse():
-def test_allocated_to_first_suitable_shipment_in_list():
-def test_still_preserves_ordering_if_split_across_shipments():
+def test_allocated_to_earliest_suitable_shipment_in_list():
+def test_still_chooses_earliest_if_split_across_shipments():
 def test_warehouse_not_quite_enough_means_we_use_shipment():
 def test_cannot_allocate_if_insufficent_quantity_in_warehouse():
 def test_cannot_allocate_if_insufficent_quantity_in_shipment():
