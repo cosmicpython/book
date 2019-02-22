@@ -24,6 +24,7 @@ with a UI, some logic, and a database:  the "layered architecture".
 [[layered_architecture]]
 .Layered Architecture
 ====
+[role="skip"]
 [source,text]
 ----
 +------------------------------------------------------------+
@@ -86,8 +87,9 @@ something like this:
 
 
 [[typical_sqlalchemy_example]]
-.SQLAlchemy "declarative" syntax, model depends on ORM
+.SQLAlchemy "declarative" syntax, model depends on ORM (orm.py)
 ====
+[role="skip"]
 [source,python]
 ----
 from sqlalchemy import Column, ForeignKey, Integer, String
@@ -124,26 +126,30 @@ for how to convert between the schema and our domain model:
 
 https://docs.sqlalchemy.org/en/latest/orm/mapping_styles.html#classical-mappings
 
+//TODO: test this listing using an intermediary tag.
 
 [[sqlalchemy_classical_mapper]]
-.Explicit ORM Mapping with SQLALchemy Table objects
+.Explicit ORM Mapping with SQLALchemy Table objects (orm.py)
 ====
+[role="skip"]
 [source,python]
 ----
+from sqlalchemy import Table, MetaData, Column, Integer, String, ForeignKey, Date
 from sqlalchemy.orm import mapper, relationship
-from domain_model import Order  #<1>
+
+import domain_model  #<1>
 
 
 metadata = MetaData()
 
 order = Table(  #<2>
     'order', metadata,
-    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('reference', String(255), primary_key=True),
 )
 
 order_lines = Table(  #<2>
     'order_lines', metadata,
-    Column('order_id', ForeignKey('order.id'), primary_key=True),
+    Column('order_reference', ForeignKey('order.reference'), primary_key=True),
     Column('sku', String(255), primary_key=True),
     Column('qty', Integer),
 )
@@ -160,8 +166,10 @@ def start_mappers():
 ====
 
 <1> The ORM imports the domain model, and not the other way around
+
 <2> We define our database tables and columns using SQLAlchemy's
     Pythonic DDL.
+
 <3> And when we call the `mapper` function, SqlAlchemy binds our
     domain model classes to the various tables we've defined.
 
@@ -174,11 +182,11 @@ to write some tests for it, as in <<orm_tests>>:
 
 
 [[orm_tests]]
-.Testing the ORM directly (throwaway tests)
+.Testing the ORM directly (throwaway tests) (test_orm.py)
 ====
 [source,python]
+[role="skip"]
 ----
-
 def test_order_mapper_can_load_lines(session):
     session.execute('INSERT INTO "order" VALUES (1)')
     session.execute('INSERT INTO "order" VALUES (2)')
@@ -268,15 +276,15 @@ if any parts of your domain model mean the object-relational map is nontrivial.
 
 
 [[repo_test_save]]
-.Repository test for saving an object
+.Repository test for saving an object (test_repository.py)
 ====
 [source,python]
 ----
 def test_repository_can_save_an_order_to_the_database(session):
-    order = domain_model.Order({'sku1': 12, 'sku2': 13})
+    order = Order("orderref", {'sku1': 12, 'sku2': 13})
 
-    repo = repository.Repository(session)
-    repo.orders.add(order)
+    repo = repository.OrderRepository(session)
+    repo.add(order)
     session.commit()  #TODO: does this belong in repository?
 
     rows = list(session.execute('SELECT * FROM "order_lines"'))
@@ -290,7 +298,7 @@ def test_repository_can_save_an_order_to_the_database(session):
 
 
 [[repo_test_retrieve]]
-.Repository test for retrieving an object
+.Repository test for retrieving an object (test_repository.py)
 ====
 [source,python]
 ----
@@ -301,36 +309,36 @@ def test_repository_can_get_an_existing_order(session):
     session.execute('INSERT INTO "order_lines" VALUES ("ref2", "sku2", 13)')
     session.execute('INSERT INTO "order_lines" VALUES ("ref2", "sku3", 14)')
 
-    repo = repository.Repository(session)
-    retrieved_order = repo.orders.get("ref2")
+    repo = repository.OrderRepository(session)
+    retrieved_order = repo.get("ref2")
 
-    expected_order = domain_model.Order({'sku2': 13, 'sku3': 14}, reference="ref2")
-    assert retrieved_order.lines == expected_order.lines
+    expected_order = Order('ref2', {'sku2': 13, 'sku3': 14})
+    assert retrieved_order._lines == expected_order._lines
 ----
 ====
 
 
 [[repo_test_update]]
-.Repository test for updating an object
+.Repository test for updating an object (test_repository.py)
 ====
 [source,python]
 ----
 def test_repository_can_modify_an_existing_order(session):
-    session.execute('INSERT INTO "order" VALUES ("ref1")')
-    session.execute('INSERT INTO "order_lines" VALUES ("ref1", "oldsku1", 12)')
-    session.execute('INSERT INTO "order_lines" VALUES ("ref1", "oldsku2", 12)')
+    session.execute('INSERT INTO "order" VALUES ("r1")')
+    session.execute('INSERT INTO "order_lines" VALUES ("r1", "oldsku1", 12)')
+    session.execute('INSERT INTO "order_lines" VALUES ("r1", "oldsku2", 12)')
 
-    repo = repository.Repository(session)
-    order = repo.orders.get("ref1")
+    repo = repository.OrderRepository(session)
+    order = repo.get("r1")
     order['oldsku2'] = 100
     order['newsku'] = 14
     session.commit()  #TODO: does this belong in repository?
 
     rows = list(session.execute('SELECT * FROM "order_lines"'))
     assert rows == [
-        (order.reference, 'sku1', 12),
-        (order.reference, 'sku2', 100),
-        (order.reference, 'sku3', 14),
+        (order.reference, 'oldsku1', 12),
+        (order.reference, 'oldsku2', 100),
+        (order.reference, 'newsku', 14),
     ]
 ----
 ====

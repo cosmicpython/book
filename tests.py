@@ -14,10 +14,10 @@ def test_chapter(chapter):
         check_listing(listing, chapter)
 
 def check_listing(listing, chapter):
-    actual_contents = file_contents_for_branch(listing.filename, chapter)
-    actual_lines = actual_contents.split('\n')
     if 'skip' in listing.classes:
         return
+    actual_contents = file_contents_for_branch(listing.filename, chapter)
+    actual_lines = actual_contents.split('\n')
     if 'noncontinuous' in listing.classes:
         missing_lines = [l for l in listing.lines if l not in actual_lines]
         if missing_lines:
@@ -48,14 +48,17 @@ def parse_listings(chapter_name):
     parsed_html = html.fromstring(raw_contents)
 
     for listing_node in parsed_html.cssselect('.exampleblock'):
+        [block_node] = listing_node.cssselect('.listingblock')
+        classes = block_node.get('class').split()
+
         [title_node] = listing_node.cssselect('.title')
         try:
             filename = re.search(r'.+ \((.+)\)', title_node.text_content()).group(1)
         except AttributeError as e:
-            raise AssertionError(f'Could not find filename in title {title_node.text_content()}') from e
-
-        [block_node] = listing_node.cssselect('.listingblock')
-        classes = block_node.get('class').split()
+            if 'skip' in classes:
+                filename = None
+            else:
+                raise AssertionError(f'Could not find filename in title {title_node.text_content()}') from e
 
         [code_node] = block_node.cssselect('.content pre')
         yield Listing(filename, contents=code_node.text_content(), classes=classes)
