@@ -1,11 +1,15 @@
-from pathlib import Path
-from lxml import html
-import subprocess
+import pytest
 import re
+import subprocess
 from dataclasses import dataclass
+from lxml import html
+from pathlib import Path
 
-def test_chapter_01():
-    chapter = 'chapter_01_domain_model'
+@pytest.mark.parametrize('chapter', [
+    'chapter_01_domain_model',
+    'chapter_02_repository',
+])
+def test_chapter(chapter):
     for listing in parse_listings(chapter):
         check_listing(listing, chapter)
 
