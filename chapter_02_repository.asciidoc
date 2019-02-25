@@ -467,3 +467,43 @@ def allocate_endpoint():
     return 201
 ----
 ====
+
+=== Building a fake repository for tests is now trivial!
+
+Here's one of the biggest benefits of Repository pattern.
+
+
+[[fake_repository]]
+.A simple fake repository subclassing set
+====
+[source,python]
+----
+class FakeRepository(set):
+
+    def get(self, reference):
+        return next(obj for obj in self if obj.reference == reference)
+
+----
+====
+
+Because we subclass `set` we get the `.add()` method for free, and
+`.get()` is a one-liner.
+
+Using a fake repo in tests is really easy, and we have a simple
+abstraction that's easy to use and reason about:
+
+[[fake_repository_example]]
+.Example usage of fake repository
+====
+[source,python]
+----
+fake_repo = FakeRepository([shipment1, shipment2, shipment3])
+----
+====
+
+
+How do we actually instantiate these repositories, fake or real?
+What will our flask app actually look like?  Find out in the next
+exciting installment...
+
+
