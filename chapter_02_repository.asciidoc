@@ -15,6 +15,36 @@ storage, and this is a textbook, so we can allow ourselves a tiny bit more
 bottom-up development, and start to think about storage and databases.
 
 
+=== Some pseudocode: what are we going to need?
+
+When we build our first API endpoint, we know we're going to have
+some code that looks more or less like <<api_endpoint_pseudocode>>:
+
+
+[[api_endpoint_pseudocode]]
+.What our first API endpoint will look like
+====
+[role="skip"]
+[source,python]
+----
+@flask.route.gubbbins
+def allocate_endpoint():
+    order = # ... fetch order from db, or maybe 
+            # just instantiate it from request params
+    warehouse = # ... retrieve warehouse from db
+    shipments = # ... load all shipments from
+    new_allocation = allocate(order, warehouse, shipments)
+    # .. and then save the allocation back to the database somehow
+    return 201
+----
+====
+
+We'll need a way to retrieve warehouse, shipment and order info
+from the DB and instantiate our domain model objects from them,
+and we'll also need a way of saving them back to the database.
+
+
+
 === Applying the Dependency Inversion Principle to the Database
 
 We're all reasonably familiar with the best practice for a system
@@ -235,7 +265,26 @@ have to, or at least not yet.  Shout out to Mike Bayer!].  As so often with
 architectural decisions, there is a trade-off you'll need to consider.  As the
 Zen of Python says, "Practicality beats purity!"
 
+At this point though, our flask API endpoint might look something like
+<<api_endpoint_with_session>>, and we could get it to work just fine.
 
+[[api_endpoint_with_session]]
+.Using SQLAlchemy directly in our API endpoint
+====
+[role="skip"]
+[source,python]
+----
+@flask.route.gubbbins
+def allocate_endpoint():
+    order = Order(request.params['order_id'], request.params['lines'])
+    warehouse = session.query(Warehouse).one()
+    shipments = session.query(Shipment).all()
+    new_allocation = allocate(order, warehouse, shipments)
+    session.add(new_allocation)
+    session.commit()
+    return 201
+----
+====
 
 === Introducing Repository Pattern.
 
@@ -252,7 +301,7 @@ ongoing maintenance.
 Repository pattern is probably one of the easiest choices in the book though,
 if you've already heading down the DDD and dependency inversion route.  As far
 as our code is concerned, we're really just swapping the SQLAlchemy abstraction
-(`session.query(Order)`) for a different one (`repo.orders.get`) which we
+(`session.query(Shipment)`) for a different one (`shipments_repo.get`) which we
 designed.
 
 We will have to write a few lines of code in our repository class each time we
@@ -268,7 +317,6 @@ worlds, they're likely to recognise it.
 As always we start with a test.  Unlike the ORM tests from earlier, these tests
 are good candidates for staying part of your codebase longer term, particularly
 if any parts of your domain model mean the object-relational map is nontrivial.
-
 
 
 [[repo_test_save]]
@@ -375,6 +423,8 @@ AllocationRepository = lambda s: _ModelRepository(domain_model.Allocation, s)
 ----
 ====
 
+TODO: add `.list()` option to shipments repository?
+
 Because our warehouse is a sort of global singleton, it gets treated
 slightly differently:
 
@@ -398,4 +448,22 @@ class WarehouseRepository:
 ----
 ====
 
+And now our flask endpoint might look something like <<api_endpoint_with_repo>>:
 
+[[api_endpoint_with_repo]]
+.Using our repository directly in our API endpoint
+====
+[role="skip"]
+[source,python]
+----
+@flask.route.gubbbins
+def allocate_endpoint():
+    order = Order(request.params['order_id'], request.params['lines'])
+    warehouse = warehouse_repo.get()
+    shipments = shipment_repo.list()
+    new_allocation = allocate(order, warehouse, shipments)
+    allocation_repo.add(new_allocation)
+    session.commit()  # TODO: still need to fix this
+    return 201
+----
+====
