@@ -43,19 +43,17 @@ with a UI, some logic, and a database:  the "layered architecture".
 ----
 ====
 
-You might think of it as Model-View-Controller, and have more
-layers, but the essential principle is to keep the layers
-separate (which is a good thing), and to have each layer
-depend only on the one below...
+You might think of it as Model-View-Controller, and have more layers, but the
+essential principle is to keep the layers separate (which is a good thing), and
+to have each layer depend only on the one below...
 
-But we want our domain model to have _no dependencies whatsoever_.
-We don't want infrastructure concerns bleeding over into our
-domain model and slowing down our unit tests or our ability to
-make changes.
+But we want our domain model to have _no dependencies whatsoever_. We don't
+want infrastructure concerns bleeding over into our domain model and slowing
+down our unit tests or our ability to make changes.
 
-Instead, as discussed in the prologue, we'll think of our
-model as being on the "inside", and dependencies flowing
-inwards to it;  what people sometimes call "ports and adapters".
+Instead, as discussed in the prologue, we'll think of our model as being on the
+"inside", and dependencies flowing inwards to it;  what people sometimes call
+"ports and adapters".
 
 
 .Is this Ports and Adapters?
@@ -80,10 +78,9 @@ and whether there is a Pythonic equivalent of interfaces, later in the book.
 
 ==== The "normal" ORM way: model depends on ORM.
 
-How to implement it when we want to use a tool like an ORM though?
-We don't want to be hand-coding SQL (at least, not yet!).  But
-if you follow the typical SQLAlchemy tutorial, you'll end up with
-something like this:
+How to implement it when we want to use a tool like an ORM though? We don't
+want to be hand-coding SQL (at least, not yet!).  But if you follow the typical
+SQLAlchemy tutorial, you'll end up with something like this:
 
 
 [[typical_sqlalchemy_example]]
@@ -113,16 +110,16 @@ class Allocation(Base):
 ----
 ====
 
-....And our pristine model is now full of dependencies on the
-ORM, and is starting to look ugly as hell.
+....And our pristine model is now full of dependencies on the ORM, and is
+starting to look ugly as hell.
 
 
 
 ==== Inverting the dependency: ORM depends on model.
 
-But that's not the only way to use SQLAlchemy.  The alternative
-is to define your schema separately, and an explicit _mapper_
-for how to convert between the schema and our domain model:
+But that's not the only way to use SQLAlchemy.  The alternative is to define
+your schema separately, and an explicit _mapper_ for how to convert between the
+schema and our domain model:
 
 https://docs.sqlalchemy.org/en/latest/orm/mapping_styles.html#classical-mappings
 
@@ -167,18 +164,17 @@ def start_mappers():
 
 <1> The ORM imports the domain model, and not the other way around
 
-<2> We define our database tables and columns using SQLAlchemy's
-    Pythonic DDL.
+<2> We define our database tables and columns using SQLAlchemy's Pythonic DDL.
 
-<3> And when we call the `mapper` function, SqlAlchemy binds our
-    domain model classes to the various tables we've defined.
+<3> And when we call the `mapper` function, SqlAlchemy binds our domain model
+    classes to the various tables we've defined.
 
-This gives us all the benefits of SQLAlchemy, including the ability
-to use `alembic` for migrations, and the ability to transparently
-query using our domain classes, as we'll see.
+This gives us all the benefits of SQLAlchemy, including the ability to use
+`alembic` for migrations, and the ability to transparently query using our
+domain classes, as we'll see.
 
-When you're first trying to build your ORM config, it can be useful
-to write some tests for it, as in <<orm_tests>>:
+When you're first trying to build your ORM config, it can be useful to write
+some tests for it, as in <<orm_tests>>:
 
 
 [[orm_tests]]
@@ -211,12 +207,11 @@ def test_order_mapper_can_save_lines(session):
 ----
 ====
 
-But you probably wouldn't keep these tests around--as we'll see shortly,
-once you've taken the step of inverting the dependency of ORM and
-domain model, it's only a small additional step to implement an additional
-abstraction called the Repository pattern, which will be easier to write
-tests against, and will provide a simple, common interface for faking out
-later in tests.
+But you probably wouldn't keep these tests around--as we'll see shortly, once
+you've taken the step of inverting the dependency of ORM and domain model, it's
+only a small additional step to implement an additional abstraction called the
+Repository pattern, which will be easier to write tests against, and will
+provide a simple, common interface for faking out later in tests.
 
 But we've already achieved our objective of inverting the traditional
 dependency: the domain model stays "pure" and free from infrastructure
@@ -224,40 +219,41 @@ concerns.  We could throw away SQLAlchemy and use a different ORM, or a totally
 different persistence system, and the domain model doesn't need to change at
 all.
 
-We are glossing over some complexity here.  If we want to stick to using
-dicts as our primary data structure, there is some slightly tricky config
-to get right.  For the curious, there's more example code at
+We are glossing over some complexity here.  If we want to stick to using dicts
+as our primary data structure, there is some slightly tricky config to get
+right.  For the curious, there's more example code at
 https://github.com/python-leap/code/blob/orm-experiments-backtodicts/orm.py
 
 //TODO: fix link.
 
 Depending on what you're doing in your domain model, and especially if you
-stray far from the OO paradigm, you may find it increasingly hard to get
-the ORM to produce the exact behaviour you need,  and you may need to modify
-your domain modelfootnote:[Harry came extremely close to giving up his beloved
+stray far from the OO paradigm, you may find it increasingly hard to get the
+ORM to produce the exact behaviour you need,  and you may need to modify your
+domain modelfootnote:[Harry came extremely close to giving up his beloved
 dicts, but thanks to the amazingly helpful SQLAlchemy maintainers, he didn't
 have to, or at least not yet.  Shout out to Mike Bayer!].  As so often with
-architectural decisions, there is a trade-off you'll need to consider.  As
-the Zen of Python says, "Practicality beats purity!"
+architectural decisions, there is a trade-off you'll need to consider.  As the
+Zen of Python says, "Practicality beats purity!"
 
 
 
 === Introducing Repository Pattern.
 
-Whenever we introduce an architectural pattern in this book, we'll always
-be trying to ask: "what do we get for this?  And what does it cost us?".
-Rich Hickey once said "programmers know the benefits of everything and the
-tradeoffs of nothing".
+Whenever we introduce an architectural pattern in this book, we'll always be
+trying to ask: "what do we get for this?  And what does it cost us?". Rich
+Hickey once said "programmers know the benefits of everything and the tradeoffs
+of nothing".
 
 Usually at the very least we'll be introducing an extra layer of abstraction,
-and although we may hope it will be reducing complexity overall, it does
-add complexity locally, and it has a cost in terms raw numbers of moving parts
-and ongoing maintenance.
+and although we may hope it will be reducing complexity overall, it does add
+complexity locally, and it has a cost in terms raw numbers of moving parts and
+ongoing maintenance.
 
 Repository pattern is probably one of the easiest choices in the book though,
 if you've already heading down the DDD and dependency inversion route.  As far
 as our code is concerned, we're really just swapping the SQLAlchemy abstraction
-(`session.query(Order)`) for a different one (`repo.orders.get`) which we designed.
+(`session.query(Order)`) for a different one (`repo.orders.get`) which we
+designed.
 
 We will have to write a few lines of code in our repository class each time we
 add a new domain object that we want to retrieve, but in return we get a very
@@ -340,6 +336,65 @@ def test_repository_can_modify_an_existing_order(session):
         (order.reference, 'oldsku2', 100),
         (order.reference, 'newsku', 14),
     ]
+----
+====
+
+
+Whether or not you painstakingly write tests for every model is
+a judgement call.  Once you have one class tested for create/modify/save,
+you might be happy to go on and do the others with a minimal roundtrip
+test, or even nothing at all, if they all follow a similar pattern.
+
+
+You end up with something like <<simple_model_repositories>>:
+
+
+[[simple_model_repositories]]
+.Many repositories look similar
+====
+[source,python]
+----
+class _ModelRepository:
+    def __init__(self, model_class, session):
+        self._model_class = model_class
+        self.session = session
+
+    def get(self, reference):
+        return self.session.query(self._model_class).filter_by(
+            reference=reference
+        ).one()
+
+    def add(self, obj):
+        assert isinstance(obj, self._model_class)
+        self.session.add(obj)
+
+
+OrderRepository = lambda s: _ModelRepository(domain_model.Order, s)
+ShipmentRepository = lambda s: _ModelRepository(domain_model.Shipment, s)
+AllocationRepository = lambda s: _ModelRepository(domain_model.Allocation, s)
+----
+====
+
+Because our warehouse is a sort of global singleton, it gets treated
+slightly differently:
+
+[[warehouse_repository]]
+.Although there are some special-cases
+====
+[source,python]
+----
+class WarehouseRepository:
+    def __init__(self, session):
+        self.session = session
+
+    def get(self):
+        wh = self.session.query(domain_model.Warehouse).one()
+        assert wh.reference == 'warehouse'
+        return wh
+
+    def add(self, warehouse):
+        warehouse.reference = 'warehouse'
+        self.session.add(warehouse)
 ----
 ====
 
