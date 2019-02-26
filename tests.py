@@ -13,6 +13,7 @@ def test_chapter(chapter):
     for listing in parse_listings(chapter):
         check_listing(listing, chapter)
 
+
 def check_listing(listing, chapter):
     if 'skip' in listing.classes:
         return
@@ -52,6 +53,7 @@ def parse_listings(chapter_name):
         classes = block_node.get('class').split()
 
         [title_node] = listing_node.cssselect('.title')
+        print('found listing', title_node.text_content())
         try:
             filename = re.search(r'.+ \((.+)\)', title_node.text_content()).group(1)
         except AttributeError as e:
@@ -66,11 +68,9 @@ def parse_listings(chapter_name):
 
 def file_contents_for_branch(filename, chapter_name):
     return subprocess.run(
-        ['git', 'show', f'origin/{chapter_name}:{filename}'],
+        ['git', 'show', f'{chapter_name}:{filename}'],
         cwd=Path(__file__).parent / 'code',
         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         check=True
     ).stdout.decode()
-
-
 

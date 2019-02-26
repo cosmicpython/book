@@ -398,7 +398,7 @@ You end up with something like <<simple_model_repositories>>:
 
 
 [[simple_model_repositories]]
-.Many repositories look similar
+.Many repositories look similar (repository.py)
 ====
 [source,python]
 ----
@@ -429,7 +429,7 @@ Because our warehouse is a sort of global singleton, it gets treated
 slightly differently:
 
 [[warehouse_repository]]
-.Although there are some special-cases
+.Although there are some special-cases (repository.py)
 ====
 [source,python]
 ----
@@ -474,7 +474,7 @@ Here's one of the biggest benefits of Repository pattern.
 
 
 [[fake_repository]]
-.A simple fake repository subclassing set
+.A simple fake repository subclassing set (repository.py)
 ====
 [source,python]
 ----
@@ -493,8 +493,9 @@ Using a fake repo in tests is really easy, and we have a simple
 abstraction that's easy to use and reason about:
 
 [[fake_repository_example]]
-.Example usage of fake repository
+.Example usage of fake repository (test_api.py)
 ====
+[role="skip"]
 [source,python]
 ----
 fake_repo = FakeRepository([shipment1, shipment2, shipment3])
@@ -504,6 +505,6 @@ fake_repo = FakeRepository([shipment1, shipment2, shipment3])
 
 How do we actually instantiate these repositories, fake or real?
 What will our flask app actually look like?  Find out in the next
-exciting installment...
+exciting instalment...
 
 
