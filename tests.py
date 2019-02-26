@@ -8,6 +8,7 @@ from pathlib import Path
 @pytest.mark.parametrize('chapter', [
     'chapter_01_domain_model',
     'chapter_02_repository',
+    "chapter_03_flask_api_and_service_layer",
 ])
 def test_chapter(chapter):
     for listing in parse_listings(chapter):
