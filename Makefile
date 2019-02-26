@@ -1,7 +1,7 @@
 html:
 	asciidoctor -a source-highlighter=coderay -a '!example-caption' *.asciidoc
 
-test:
+test: html
 	pytest tests.py --tb=short -vv
 
 update:
