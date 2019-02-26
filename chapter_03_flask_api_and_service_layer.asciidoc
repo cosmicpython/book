@@ -1,4 +1,28 @@
 [[chapter_03]]
 == Our first use case:  Flask API and service layer.
 
+Like any good agile team, we're hussling to try and get an MVP out and
+in front of the users to start gathering feedback.  We have the core
+of our domain model and the domain service we need to allocate orders,
+and we have the Repository interface for permanent storage.
+
+Let's try and plug all the moving parts together as quickly as we
+can, and then refactor towards a cleaner architecture.
+
+
+=== A first end-to-end (E2E) test
+
+No-one is interested in getting into a long terminology debate about what
+counts as an E2E test vs a functional test vs an acceptance test vs an
+integration test vs unit tests.  Different projects need different combinations
+of tests, and we've seen perfectly successful projects just split things into
+"fast tests" and "slow tests".
+
+For now we want to write one or maybe two tests that are going to exercise
+a "real" API endpoint (using HTTP) and talk to a real database. Let's call
+them end-to-end tests because it's one of the most self-explanatory names.
+
+
+
+
 
