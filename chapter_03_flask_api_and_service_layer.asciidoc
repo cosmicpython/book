@@ -22,7 +22,42 @@ For now we want to write one or maybe two tests that are going to exercise
 a "real" API endpoint (using HTTP) and talk to a real database. Let's call
 them end-to-end tests because it's one of the most self-explanatory names.
 
+<<first_api_test>> shows a first cut:
 
 
+
+
+[[first_api_test]]
+.A first API test (test_api.py)
+====
+[source,python]
+----
+def random_ref():
+    return uuid.uuid4().hex[:10]
+
+@pytest.mark.usefixtures('restart_api')
+def test_api_returns_allocation_info(add_stock):
+    sku1, sku2 = random_ref(), random_ref()
+    add_stock([
+        ('warehouse', sku1, 100),
+        ('shipment1', sku1, 100),
+        ('shipment2', sku2, 100),
+    ])
+    data = {
+        'order_reference': random_ref(),
+        'lines': {sku1: 3, sku2: 12},
+    }
+    url = get_api_url()
+    r = requests.post(f'{url}/allocate', json=data)
+    assert r.status_code == 201
+    assert r.json()[sku1] == 'warehouse'
+    assert r.json()[sku2] == 'shipment2'
+----
+====
+
+Everyone solves these problems in different ways, but you're going
+to need some way of spinning up Flask, possibly in a container, and
+also talking to a postgres database.  If you want to see how we did
+it, check out TODO: repo tag
 
 
