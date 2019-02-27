@@ -9,6 +9,7 @@ from pathlib import Path
     'chapter_01_domain_model',
     'chapter_02_repository',
     "chapter_03_flask_api_and_service_layer",
+    "appendix_project_structure",
 ])
 def test_chapter(chapter):
     for listing in parse_listings(chapter):
