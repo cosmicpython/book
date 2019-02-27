@@ -1,0 +1,77 @@
+[[appendix]]
+[appendix_project_structure]
+== A template project structure
+
+Around <<chapter_03_flask_api_and_service_layer>> we moved from just having
+everything in one folder to a more structured tree, and we thought it might
+be of interest to outline the moving parts in case it's of use.
+
+[[id_here]]
+.project tree
+====
+[source,text]
+----
+.
+├── docker-compose.yml  <1>
+├── Dockerfile  <1>
+├── Makefile  <2>
+├── requirements.common.txt  <3>
+├── requirements.dev.txt  <3>
+├── requirements.prod.txt  <3>
+├── src  <4>
+│   ├── allocation
+│   │   ├── config.py
+│   │   ├── domain_model.py
+│   │   ├── flask_app.py
+│   │   ├── orm.py
+│   │   └── repository.py
+│   └── setup.py  <4>
+└── tests  <5>
+    ├── conftest.py <6>
+    ├── e2e
+    │   └── test_api.py
+    ├── integration
+    │   └── test_repository.py
+    ├── pytest.ini <6>
+    └── unit
+        └── test_domain_model.py
+----
+====
+
+<1> Our _docker-compose.yml_ and our _Dockerfile_ are the main bits of configuration
+    for the containers that run our app, and can also run the tests (for CI).  A
+    more complex project might have several Dockerfiles, although we've found that
+    minimising the number of images is usually a good idea.
+
+<2> A _Makefile_ provides the entrypoint for all the typical commands a developer
+    (or a CI server) migth want to run during their normal worfklow.  `make build`,
+    `make test`, and so on.
+
+<3> The only thing that really made it necessary to have a different version of
+    _requirements.txt_ for prod and dev was using `psycopg2-binary`, which won't
+    work in the containers.  TODO: _requirements-pinned.txt_ and discuss `pipenv`.
+
+<4> All the actual source code for our app, including the domain model, the
+    flask app, and infrastructure code, lives in a Python package inside _src_,
+    which we install using `pip install -e` and the _setup.py_ file.  This makes
+    imports easy.
+
+<5> Tests live in their own folder, with subfolders to distinguish different test
+    types, and allow you to run them separately.  We can keep shared fixtures
+    (_conftest.py_) in the main tests folder, and nest more specific ones if we wish.
+    This is also the place to keep _pytest.ini_
+
+Let's look at a few of these in more detail.
+
+
+=== Docker-compose, 12-factor, env vars, and config.
+
+TODO:
+
+=== Installing your source as a package
+
+TODO:
+
+=== Tests
+
+TODO:
