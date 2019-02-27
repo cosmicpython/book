@@ -166,7 +166,7 @@ behaviour of the system.
 
 
 
-==== Writing Pythonic Domain Models.
+=== Writing Pythonic Domain Models.
 
 What kind of model did you come up with?
 
@@ -364,9 +364,9 @@ also meaningful.  But other dict methods like `.update()` and `.values()` don't 
 unambiguous meaning, so those methods aren't supported.
 
 
-==== Not everything has to be a function
+==== Not everything has to be a class
 
-But we don't have to make everything a function.  Our top-level entrypoint is
+But we don't have to make everything a class.  Our top-level entrypoint is
 still the `allocate` function, but by making our domain model classes more
 expressive, it can be much more readable, <<allocate_is_still_a_function>>. 
 
