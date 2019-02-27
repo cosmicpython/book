@@ -42,7 +42,13 @@ be of interest to outline the moving parts in case it's of use.
 <1> Our _docker-compose.yml_ and our _Dockerfile_ are the main bits of configuration
     for the containers that run our app, and can also run the tests (for CI).  A
     more complex project might have several Dockerfiles, although we've found that
-    minimising the number of images is usually a good idea.
+    minimising the number of images is usually a good ideafootnote:[It often
+    seems like a good idea to split out different images for app and test, say
+    or for async processing containers vs ones with web dependencies, because then
+    you can tell yourself each container will only install the dependencies it needs.
+    Why install pytest on your prod webapp containers?  But in our experience that
+    actually gains you very little, whilst costing a lot in build times and complexity.
+    Single image ftw.].
 
 <2> A _Makefile_ provides the entrypoint for all the typical commands a developer
     (or a CI server) migth want to run during their normal worfklow.  `make build`,
