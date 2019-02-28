@@ -7,7 +7,7 @@ everything in one folder to a more structured tree, and we thought it might
 be of interest to outline the moving parts in case it's of use.
 
 [[id_here]]
-.project tree
+.Project tree
 ====
 [role="skip"]
 [source,text]
@@ -51,8 +51,11 @@ be of interest to outline the moving parts in case it's of use.
     Single image ftw.].
 
 <2> A _Makefile_ provides the entrypoint for all the typical commands a developer
-    (or a CI server) migth want to run during their normal worfklow.  `make build`,
-    `make test`, and so on.
+    (or a CI server) might want to run during their normal worfklow.  `make build`,
+    `make test`, and so on.  This is optional, you could just use `docker-compose`
+    and `pytest` directly, but if nothing else it's nice to have all the
+    "common commands" in a list somewhere, and unlike documentation, a Makefile is
+    code so it has less tendency to go out of date.
 
 <3> The only thing that really made it necessary to have a different version of
     _requirements.txt_ for prod and dev was using `psycopg2-binary`, which won't
@@ -61,24 +64,263 @@ be of interest to outline the moving parts in case it's of use.
 <4> All the actual source code for our app, including the domain model, the
     flask app, and infrastructure code, lives in a Python package inside _src_,
     which we install using `pip install -e` and the _setup.py_ file.  This makes
-    imports easy.
+    imports easy. Currently the structure within this module is totally flat,
+    but for a more complex project you'd expect to grow a folder hierarchy
+    including _domain_model/_, _infrastructure/_, _services/_, _api/_
 
 <5> Tests live in their own folder, with subfolders to distinguish different test
     types, and allow you to run them separately.  We can keep shared fixtures
-    (_conftest.py_) in the main tests folder, and nest more specific ones if we wish.
-    This is also the place to keep _pytest.ini_
+    (_conftest.py_) in the main tests folder, and nest more specific ones if we
+    wish. This is also the place to keep _pytest.ini_
 
 Let's look at a few of these in more detail.
 
+TODO: add more subfolders/structure inside our main source tree?
 
-=== Docker-compose, 12-factor, env vars, and config.
 
-TODO:
+=== env vars, 12-factor, and config, inside and outside containers.
+
+The basic problem we're trying to solve here is that we need different
+config settings for:
+
+- running code or tests directly from your own dev machine, perhaps
+  talking to mapped ports from docker containers
+- running on the containers themselves, with "real" ports and hostnames
+- and different settings for different container environments, dev,
+  staging, prod, and so on.
+
+
+Configuration through environment variables as suggested by the
+https://12factor.net/config[12-factor] manifesto will solve this problem,
+but concretely, how do we implement it in our code and our containers?
+
+
+=== Config.py
+
+Whenever our application code needs access to some config, it's going to
+get it from a file called _config.py__. <<config_dot_py>> shows a couple of
+examples from our app:
+
+[[config_dot_py]]
+.Sample config functions (config.py)
+====
+[source,python]
+----
+import os
+
+def get_postgres_uri():  #<1>
+    host = os.environ.get('DB_HOST', 'localhost')  #<2>
+    port = 54321 if host == 'localhost' else 5432
+    password = os.environ.get('DB_PASSWORD', 'abc123')
+    user, db_name = 'allocation', 'allocation'
+    return f"postgresql://{user}:{password}@{host}:{port}/{db_name}"
+
+def get_api_url():
+    host = os.environ.get('API_HOST', 'localhost')
+    port = 5005 if host == 'localhost' else 80
+    return f"http://{host}:{port}"
+----
+====
+
+<1> We use functions for getting the current config, rather than constants
+    available at import time, because that allows client code to modify
+    `os.environ` if it needs to.
+
+<2> _config.py_ also defines some default settings, designed to work when
+    running the code from the developer's local machinefootnote:[You might prefer
+    to fail hard if an env var is not set, but this gives us a local dev
+    setup that "just works" (as much as possible).].
+
+
+=== docker-compose and containers config
+
+
+[[id_here]]
+.Listing title
+====
+[source,yaml]
+----
+version: "3"
+services:
+
+  app:  #<1>
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - postgres
+    environment:  #<3>
+      - DB_HOST=postgres  <4>
+      - DB_PASSWORD=abc123
+      - API_HOST=app
+      - PYTHONDONTWRITEBYTECODE=1  #<5>
+    volumes:  #<6>
+      - ./src:/src
+      - ./tests:/tests
+    ports:
+      - "5005:80"  <7>
+
+
+  postgres:
+    image: postgres:9.6  #<2>
+    environment:
+      - POSTGRES_USER=allocation
+      - POSTGRES_PASSWORD=abc123
+    ports:
+      - "54321:5432"
+----
+====
+
+<1> In the docker-compose file, we define the different "services"
+    (containers) that we need for our app.  Usually one main image
+    contains all our code, and we can use it to run our API, our tests,
+    or any other service that needs access to the domain model.
+
+<2> You'll probably have some other infrastructure services like a database.
+    In production you may not use containers for this, you might have a cloud
+    provider instead, but _docker-compose_ gives us a way of producing a
+    similar service for dev or CI.
+
+<3> The `environment` stanza lets you set the environment variables for your
+    containers, the hostnames and ports as seen from inside the docker cluster.
+    If you have enough containers that information starts to be duplicated in
+    these sections, you can use `environment_file` instead.  We usually call
+    ours _container.env_.
+
+<4> Inside a cluster, docker-compose sets up networking such that containers are
+    available to each other via hostnames named after their service name.
+
+<5> Protip: if you're mounting volumes to share source folders between your
+    local dev machine and the container, the `PYTHONDONTWRITEBYTECODE` env
+    var tells Python to not write `.pyc` files, and that will save you from
+    having millions of root-owned files sprinkled all over your local filesystem,
+    being all annoying to delete, and causing weird python compiler errors besides.
+
+<6> Mounting our source and test code as `volumes` means we don't need to rebuild
+    our containers every time we make a code change.
+
+<7> And the `ports` section allows us to expose the ports from inside the containers
+    to the outside world -- these correspond to the default ports we set in _config.py_.
+
+NOTE: Inside docker, other containers are available through hostnames named after
+    their service name. Outside docker, they are available on `localhost`, at the
+    port defined in the `ports` section.
+
 
 === Installing your source as a package
 
-TODO:
+All our application code (everything except tests really) lives inside an
+_src_ folder, as in <<src_folder_tree>>:
+
+[[src_folder_tree]]
+.The src folder
+====
+[source,text]
+----
+├── src
+│   ├── allocation  #<1>
+│   │   ├── config.py
+│   │   └── ...
+│   └── setup.py  <2>
+----
+====
+
+<1> Subfolders define top-level module names.  You can have multiple if you like.
+<2> And _setup.py_ is the file you need to make it pip-installable.  See
+    <<setup_dot_py>>.
+
+[[setup_dot_py]]
+.pip-installable modules in 3 lines  (setup.py)
+====
+[source,python]
+----
+from setuptools import setup, find_packages
+
+setup(
+    name='allocation',
+    version='0.1',
+    packages=find_packages(),
+)
+----
+====
+
+That's all you need.  `find_packages()` will find the subfolders and install
+them as top-level modules.  The `name` entry is just cosmetic.
+
+
+=== Dockerfile
+
+Dockerfiles are going to be very project-specific, but here's a few key stages
+you'll expect to see:
+
+[[dockerfile]]
+.Listing title
+====
+[source,dockerfile]
+----
+FROM python:3.7-alpine
+
+<1>
+RUN apk add --no-cache --virtual .build-deps gcc postgresql-dev musl-dev python3-dev
+RUN apk add libpq
+
+<2>
+COPY requirements*.txt /tmp/
+RUN pip install -r /tmp/requirements.prod.txt
+
+RUN apk del --no-cache .build-deps
+
+<3>
+RUN mkdir -p /src
+COPY src/ /src/
+COPY tests/ /tests/
+RUN pip install -e /src
+
+<4>
+WORKDIR /src
+ENV FLASK_APP=allocation/flask_app.py FLASK_DEBUG=1 PYTHONUNBUFFERED=1
+CMD flask run --host=0.0.0.0 --port=80
+----
+====
+
+<1> Installing system-level dependencies
+<2> Installing our Python dependencies
+<3> Copying and installing our source
+<4> Optionally configuring a default startup command (you'll probably override
+    this a lot from the command-line)
+
+TIP: One thing to note is that we install things in the order of how frequently they
+    are likely to change.  This allows us to maximise docker build cache reuse.
+
 
 === Tests
 
-TODO:
+Our tests are kept alongside everything else, as in <<tests_folder>>:
+
+[[tests_folder]]
+.Tests folder tree
+====
+[source,text]
+----
+└── tests  <5>
+    ├── conftest.py <6>
+    ├── e2e
+    │   └── test_api.py
+    ├── integration
+    │   └── test_repository.py
+    ├── pytest.ini <6>
+    └── unit
+        └── test_domain_model.py
+----
+====
+
+Nothing particularly clever here, just some separation of different test types
+that you're likely to want to run separately, and some files for common fixtures,
+config and so on.
+
+We've not needed to make tests pip-installable, but if you have difficulties with
+import paths, you might find it helps.
+
+
+TODO: _.env_ and _.dockerignore_?
+
