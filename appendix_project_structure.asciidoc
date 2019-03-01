@@ -79,7 +79,9 @@ config settings for:
 
 - running code or tests directly from your own dev machine, perhaps
   talking to mapped ports from docker containers
+
 - running on the containers themselves, with "real" ports and hostnames
+
 - and different settings for different container environments, dev,
   staging, prod, and so on.
 
@@ -194,7 +196,11 @@ services:
     our containers every time we make a code change.
 
 <7> And the `ports` section allows us to expose the ports from inside the containers
-    to the outside world -- these correspond to the default ports we set in _config.py_.
+    to the outside worldfootnote:[On a CI server you may not be able to expose
+    arbitrary ports reliably, but it's only a convenience for local dev. You
+    can find ways of making these port mappings optional, eg with
+    docker-compose.override.yml]--these correspond to the default ports we set
+    in _config.py_.
 
 NOTE: Inside docker, other containers are available through hostnames named after
     their service name. Outside docker, they are available on `localhost`, at the
@@ -239,7 +245,8 @@ setup(
 ====
 
 That's all you need.  `find_packages()` will find the subfolders and install
-them as top-level modules.  The `name` entry is just cosmetic.
+them as top-level modules.  The `name` entry is just cosmetic, but it's required.
+For a package that's never actually going to hit PyPI, this is all you need.
 
 
 === Dockerfile
@@ -284,7 +291,8 @@ CMD flask run --host=0.0.0.0 --port=80
     this a lot from the command-line)
 
 TIP: One thing to note is that we install things in the order of how frequently they
-    are likely to change.  This allows us to maximise docker build cache reuse.
+    are likely to change.  This allows us to maximise docker build cache reuse. I
+    can't tell you how much pain and frustration belies this lesson.
 
 
 === Tests
