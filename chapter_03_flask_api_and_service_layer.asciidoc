@@ -83,15 +83,45 @@ def allocate_endpoint():
         session = get_session()
         warehouse = repository.WarehouseRepository(session).get()
         shipments = repository.ShipmentRepository(session).list()
-        order = domain_model.Order(request.json['order_reference'], request.json['lines'])
+        order = domain_model.Order(
+            request.json['order_reference'],
+            request.json['lines']
+        )
 
         allocation = domain_model.allocate(order, warehouse, shipments)
 
         repository.AllocationRepository(session).add(allocation)
         session.commit()
-        return jsonify({l.sku: l.source.reference for l in allocation.lines}), 201
+        return jsonify(
+            {l.sku: l.source.reference for l in allocation.lines}
+        ), 201
     finally:
         session.close()
 ----
 ====
+
+So far so good.  No need for too much of your "architecture astronaut"
+nonsense, Bob and Harry, you may be thinking.  But let's just see, not quite
+all of this code was justified by a single test, was it?  Where did that
+`try/finally` come from?  Where's the test for that?   And what about
+adding the allocation to the repo, the current test doesn't explicitly
+test for that?  Sure enough, I wrote a few more tests on the way to even this
+naive solution, <<3_e2e_tests>>:
+
+
+
+[[3_e2e_tests]]
+.Actually 3 tests at the E2E layer already
+====
+[source,python]
+----
+def test_api_returns_allocation_info(add_stock):
+def test_api_actually_decrements_quantites(add_stock, postgres_session):
+def test_api_actually_saves_allocation(add_stock, postgres_session):
+----
+====
+
+Let's add a bit of error-handling shall we?  What if we receive an order
+for a SKU that doesn't exist?
+
 
