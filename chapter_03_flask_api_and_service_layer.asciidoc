@@ -61,6 +61,8 @@ also talking to a postgres database.  If you want to see how we did
 it, check out TODO: repo tag
 
 
+=== The naive implementation
+
 Implementing things in the most obvious 
 You mig
 
@@ -100,14 +102,13 @@ def allocate_endpoint():
 ----
 ====
 
-So far so good.  No need for too much of your "architecture astronaut"
+So far so good.  No need for too much more of your "architecture astronaut"
 nonsense, Bob and Harry, you may be thinking.  But let's just see, not quite
 all of this code was justified by a single test, was it?  Where did that
 `try/finally` come from?  Where's the test for that?   And what about
 adding the allocation to the repo, the current test doesn't explicitly
 test for that?  Sure enough, I wrote a few more tests on the way to even this
 naive solution, <<3_e2e_tests>>:
-
 
 
 [[3_e2e_tests]]
@@ -121,7 +122,131 @@ def test_api_actually_saves_allocation(add_stock, postgres_session):
 ----
 ====
 
+
+=== Error conditions that require database checks
+
 Let's add a bit of error-handling shall we?  What if we receive an order
-for a SKU that doesn't exist?
+that's already been allocated?  To do that, we need to check the database
+for existing allocations for that order, something that's not really the
+remit of the domain layer.
+
+So we could dive in and start writing something like <<one_too_many_e2e_tests>>:
+
+[[one_too_many_e2e_tests]]
+.We could test at the e2e layer but...
+====
+[source,python]
+----
+@pytest.mark.usefixtures('restart_api')
+def test_error_if_allocation_already_exists(add_stock, postgres_session):
+    sku1, order_ref = random_ref(), random_ref()
+    add_stock([('warehouse', sku1, 100)])
+    data = {'order_reference': order_ref, 'lines': {sku1: 3}}
+    url = get_api_url()
+    r = requests.post(f'{url}/allocate', json=data)
+    assert r.status_code == 201
+    r = requests.post(f'{url}/allocate', json=data)
+    assert r.status_code == 400
+    assert r.json() == {'errors': [f'Order {order_ref} is already allocated']}
+----
+====
+
+But that's not really enough.  We should probably also explicitly check that
+stock quantities are not decremented.  Soon our E2E tests are going to become
+unwieldy, and we'll end up with an inverted test pyramid.
 
 
+=== Introducing a service layer, and using FakeRepository to unit test it
+
+let's move the orchestration stuff into a _services.py_ and use some
+fakerepositories to test it:
+
+
+[[first_services_test]]
+.Unit testing with fakes at the services layer (test_services.py)
+====
+[source,python]
+----
+def test_error_if_allocation_already_exists():
+    shipments_repo = FakeRepository()
+    warehouse = Warehouse({'sku1': 100})
+    warehouse_repo = FakeWarehouseRepository(warehouse)
+    allocation_repo = FakeAllocationRepository([Allocation(
+        order=Order('order-ref', {'sku1': 10})
+    )])
+
+    with pytest.raises(services.OrderAlreadyAllocatedException) as ex:
+        services.allocate(
+            'order-ref', {'sku1': 10},
+            shipments_repo, warehouse_repo, allocation_repo
+        )
+
+    assert 'order order-ref already allocated' in str(ex)
+----
+====
+
+
+TODO: ok turns out a simple generic fakerepository may not work
+
+
+[[more_fake_repositories]]
+.Listing title
+====
+[source,python]
+----
+class FakeWarehouseRepository:
+    def __init__(self, warehouse):
+        self.warehouse = warehouse
+
+    def get(self):
+        return self.warehouse
+
+
+class FakeAllocationRepository(FakeRepository):
+
+    def get_by_order_reference(self, order_reference):
+        return next(a for a in self if a.order.reference == order_reference)
+----
+====
+
+
+But now we can migrate some of the other E2E tests too, like the one
+that checks we actually save to the repo:
+
+
+[[second_test]]
+.Listing title
+====
+[source,python]
+----
+
+def test_allocation_service_saves_new_allocation():
+    shipments_repo = FakeRepository()
+    warehouse = Warehouse({'sku1': 100})
+    warehouse_repo = FakeWarehouseRepository(warehouse)
+    allocation_repo = FakeAllocationRepository()
+
+    services.allocate(
+        'order-ref', {'sku1': 10},
+        shipments_repo, warehouse_repo, allocation_repo
+    )
+
+    allocation = allocation_repo.pop()
+    assert allocation.order.reference == 'order-ref'
+    [line] = allocation.lines
+    assert line.sku == 'sku1'
+    assert line.source.reference == 'warehouse'
+----
+====
+
+
+TODO: third test, check quantities decremented
+
+TODO: discuss moving all the domain unit tests to the services layer too
+
+TODO: strip e2e down to just 1 happy path and 1 unhappy path.  do a tests count
+    to illustrate test pyramid.
+
+TODO: mention the word "use case"
+
+TODO: integrate folder structure stuff at some point.
