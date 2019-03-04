@@ -114,8 +114,9 @@ code.
 If you're anything like us, you might have ended up with some tests a little like this:
 
 [[unit_tests]]
-.A first set of unit tests
+.A first set of unit tests (test_allocation.py)
 ====
+[role="noncontinuous"]
 [source,python]
 ----
 def test_can_allocate_to_warehouse():
@@ -127,8 +128,8 @@ def test_can_allocate_multiple_lines_to_warehouse():
 def test_can_allocate_multiple_lines_to_shipment():
 def test_can_allocate_to_both():
 def test_can_allocate_to_both_preferring_warehouse():
-def test_allocated_to_first_suitable_shipment_in_list():
-def test_still_preserves_ordering_if_split_across_shipments():
+def test_allocated_to_earliest_suitable_shipment_in_list():
+def test_still_chooses_earliest_if_split_across_shipments():
 def test_warehouse_not_quite_enough_means_we_use_shipment():
 def test_cannot_allocate_if_insufficent_quantity_in_warehouse():
 def test_cannot_allocate_if_insufficent_quantity_in_shipment():
@@ -139,24 +140,28 @@ def test_cannot_allocate_if_insufficent_quantity_in_shipment():
 Let's take a look at an example test
 
 [[example_unit_test]]
-.Example unit test
+.Example unit test (test_allocation.py)
 ====
 [source,python]
 ----
-def test_allocates_to_stock_in_preference_to_shipment():
-    order = Order({'sku1': 10})
-    stock = Stock({'sku1': 1000})
-    shipment = Shipment({'sku1': 1000}, eta=tomorrow)
+def test_allocates_to_warehouse_in_preference_to_shipment():
+    order = Order('oref', {'sku1': 10})
+    warehouse = Warehouse({'sku1': 1000})
+    shipment = Shipment('sref', {'sku1': 1000}, eta=tomorrow)
 
-    order.allocate(stock, shipments=[shipment])
+    allocation = allocate(order, warehouse, shipments=[shipment])
 
-    assert order.allocation.sources['sku1'] == stock
-    assert stock.quantities['sku1'] == 990
-    assert shipment.quantities['sku1'] == 1000
+    assert allocation['sku1'] == warehouse
+    assert warehouse['sku1'] == 990
+    assert shipment['sku1'] == 1000
 ----
 ====
 
-The name of our unit test describes the behaviour that we want to see from the system, and the names of the classes and variables are taken from the business jargon or "ubiquitous language", in DDD terms. We could show this code to a non-technical co-worker, and he would agree that this correctly describes the behaviour of the system.
+The name of our unit test describes the behaviour that we want to see from the
+system, and the names of the classes and variables are taken from the business
+jargon or "ubiquitous language", in DDD terms. We could show this code to a
+non-technical co-worker, and he would agree that this correctly describes the
+behaviour of the system.
 //TODO: agree policy on he vs she in text
 
 
@@ -173,8 +178,9 @@ shipments, and returns a dict mapping `sku` to `warehouse or shipment`
 instances, to represent the allocation.
 
 [[dict_model]]
-.A minimal, procedural/functional model
+.A minimal, procedural/functional model (domain_model.py)
 ====
+[role="skip"]
 [source,python]
 ----
 def allocate(order, warehouse, shipments):
@@ -191,6 +197,7 @@ def allocation_from(order, source):
         and source[sku] > quantity
     }
 ----
+====
 
 This minimal dict-based model only really works if you rule sorting by ETA to
 be out of scope (shipments are assumed to be sorted already), and you assume
@@ -206,8 +213,9 @@ should be allocated to a single source if possible:
 
 
 [[dict_model_with_well_named_functions]]
-.Using domain language in a functional model
+.Using domain language in a functional model (domain_model.py)
 ====
+[role="skip"]
 [source,python]
 ----
 def allocate(order, warehouse, shipments):
@@ -258,13 +266,14 @@ going to be the way to go.
 
 
 If you've done a bit of modelling using primitive data types, it can be
-tempting to go down a path like this:
+tempting to go down a path like <<domain_model_still_dictey>>:
 
 
-[[id_here]]
-.Starting on an OO path, but everything is still a dict
+[[domain_model_still_dictey]]
+.Starting on an OO path, but everything is still a dict (domain_model.py)
 ====
 [source,python]
+[role="skip"]
 ----
 def allocate(order, warehouse, shipments):
     ordered_sources = [warehouse] + sorted(shipments)
@@ -274,13 +283,10 @@ def allocate(order, warehouse, shipments):
     allocation.decrement_available_quantities()
     return allocation
 
-
 class Order(dict):
     # ...
 
-
 class _Stock(dict):
-
     def allocation_for(self, order):
         return {
             sku: self
@@ -292,10 +298,7 @@ class _Stock(dict):
 class Warehouse(_Stock):
     pass
 
-
-
 class Shipment(_Stock):
-
     def __init__(self, d, eta):
         self.eta = eta
         super().__init__(d)
@@ -330,15 +333,16 @@ A dict might be the right data structure to store information about the content 
 but a Shipment should _have_ a dict rather than _be_ one:
 
 
-```
 [[oo_model]]
-.Has-a vs Is-a
+.Has-a vs Is-a (domain_model.py)
 ====
+[role="noncontinuous"]
 [source,python]
 ----
 class _Lines:
 
-    def __init__(self, lines: dict):
+    def __init__(self, reference: str, lines: dict):
+        self.reference = reference
         self._lines = lines
 
     def __getitem__(self, sku):
@@ -353,15 +357,12 @@ class Order(_Lines):
 ----
 ====
 
-TODO: update listing above for new duck-typing approach
-
 The `_Lines` base class, which is used by `Order`, `Warehouse` and `Shipment`, lets its subclasses
 use _some_ dict methods, the ones that make semantic sense in the domain.  "getting" a sku from
 an order means retrieving the quantity ordered for that sku.  Checking if a sku is `in` an order is
 also meaningful.  But other dict methods like `.update()` and `.values()` don't have a clear or
 unambiguous meaning, so those methods aren't supported.
 
-// TODO aside on Line dataclass and modifying iteration
 
 ==== Not everything has to be a class
 
@@ -369,61 +370,82 @@ But we don't have to make everything a class.  Our top-level entrypoint is
 still the `allocate` function, but by making our domain model classes more
 expressive, it can be much more readable, <<allocate_is_still_a_function>>. 
 
-
-[[id_here]]
-.allocate is still a function, but we have a richer model for an Allocation
+[[allocate_is_still_a_function]]
+.the top-level allocate function is still a standalone function (domain_model.py)
 ====
 [source,python]
 ----
 def allocate(order, warehouse, shipments):
-    ordered_sources = [warehouse] + sorted(shipments)  #<3>
-    allocation = Allocation(order)  #<2>
+    ordered_sources = [warehouse] + sorted(shipments)  #<1>
+    allocation = Allocation(order)
     for source in ordered_sources:
-        allocation.supplement_with(source.allocation_for(order))  #<3>
-    allocation.decrement_available_quantities()  #<4>
+        allocation.supplement_with(source.allocation_for(order))  #<2>
+    allocation.decrement_available_quantities()  #<3>
     return allocation
-
-
-class Allocation:
-
-    def __init__(self, order):  #<2>
-        self.order = order
-        self._sources = {}  #<1>
-
-    def __getitem__(self, sku):  #<1>
-        return self._sources[sku]
-
-    def __contains__(self, sku):  #<1>
-        return sku in self._sources
-
-    def with_sources(self, sources: dict):  #<5>
-        self._sources = sources
-        return self
-
-    def supplement_with(self, other: Allocation):  #<3>
-        for sku, source in other._sources.items():
-            if sku not in self:
-                self._sources[sku] = source
-
-    def decrement_available_quantities(self):  #<4>
-        for sku, source in self._sources.items():
-            source.decrement_available(sku, self.order[sku])
 ----
 ====
 
-<1> An allocation _has_ sources, and we use similar duck-typing methods to
-    support checking whether a sku is in an allocation, and retrieving the
-    source for a particular sku.  
+<1> The sorting of shipments is still a nice, readable, expressive part
+    of the model, the logic for which lives on the `__eq__` method of
+    the Shipment model.
 
-<2> An allocation is always _for_ an order,
-    so it's a required argument in the constructor.
-
-<3> We can also build some nice, meaningful helper methods. _supplement_with_
-    makes our algorithm for building up an allocation from several different
-    smaller allocations more readable. The top-level `allocate` function no
-    longer needs to use the hack of reversing the sources list so that
-    `dict.update()` works, giving preference to the last source in the list.
+<2> But thanks to some helper methods on `Allocation`, we no longer needs to
+    use the hack of reversing the sources list so that `dict.update()` works by
+    giving preference to the last source in the list.
     Instead, an allocation knows how to conditionally supplement itself.
+
+<3> ...and it knows how to decrement the available quantities on the stock
+    sources affected.
+
+
+
+
+[[richer_model]]
+.a richer model for an Allocation (domain_model.py)
+====
+[source,python]
+----
+class Allocation:
+
+    def __init__(self, order: Order):  #<2>
+        self.order = order
+        self.lines = []  # type: List[AllocationLine]  #<1>
+
+    def __getitem__(self, sku):  #<1>
+        return next(l.source for l in self.lines if l.sku == sku)
+
+    def __setitem__(self, sku, source):  #<1>
+        line = next(l.source for l in self.lines if l.sku == sku)
+        line.source = source
+
+    def __contains__(self, sku):  #<1>
+        return sku in {l.sku for l in self.lines}
+
+    def with_sources(self, sources: dict):  #<5>
+        self.lines = [AllocationLine(sku, source) for sku, source in sources.items()]
+        return self
+
+    def supplement_with(self, other: Allocation):  #<3>
+        for line in other.lines:
+            if line.sku not in self:
+                self.lines.append(line)
+
+    def decrement_available_quantities(self):  #<4>
+        for line in self.lines:
+            line.source.decrement_available(line.sku, self.order[line.sku])  #<4>
+----
+====
+
+<1> An allocation _has_ lines, but we use a slightly different duck-typing
+    approach here, where the underlying data model `.lines` is not a dict.
+    We support some nice semantic shortcuts for checking whether a sku is in an
+    allocation, and retrieving or setting the source for a particular sku.  
+
+<2> An allocation is always _for_ an order, so it's a required argument in the
+    constructor.
+
+<3> We can also build some nice, meaningful helper methods. `supplement_with`
+    makes will make our top-level `allocate` function more readable, as we'll see.
 
 <4> `decrement_available_quantities` and `decrement_available` on individual
     Stock objects similarly encapsulates the knowledge about how to make
@@ -433,24 +455,26 @@ class Allocation:
     for the individual `Stock` objects to be able to build up an allocation
 
 
+And our base model for `Warehouse` and `Shipment` also has some methods
+that are expressed in terms of the model.
 
-[[id_here]]
-.Listing title
+
+[[stock_model]]
+.More helpers on the Stock model (domain_model.py)
 ====
 [source,python]
 ----
-
 class _Stock(_Lines):
 
     def decrement_available(self, sku, qty):
-        self._lines[sku] -= qty
+        self[sku] -= qty
 
     def allocation_for(self, order: Order):
         return Allocation(order).with_sources({
-            line.sku: self
-            for line in order.lines
-            if line.sku in self
-            and self[line.sku] > line.qty
+            sku: self
+            for sku, qty in order.items()
+            if sku in self
+            and self[sku] > qty
         })
 ----
 ====
@@ -615,11 +639,13 @@ class Shipment:
 ----
 
 
+TODO: explain `line.sku` or change to using `.items()`
 
-[[id_here]]
-.Placeholder re: Line value object shall we keep it?
+[[value_objects]]
+.Placeholder re: Line value object shall we keep it? (domain_model.py)
 ====
 [source,python]
+[role="skip"]
 ----
 @dataclass
 class Line:
