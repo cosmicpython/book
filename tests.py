@@ -48,8 +48,12 @@ def test_chapter(chapter):
 def check_listing(listing, chapter):
     if 'skip' in listing.classes:
         return
-    actual_contents = file_contents_for_branch(listing.filename, chapter)
+    elif 'tree' in listing.classes:
+        actual_contents = tree_for_branch(chapter)
+    else:
+        actual_contents = file_contents_for_branch(listing.filename, chapter)
     actual_lines = actual_contents.split('\n')
+
     if 'noncontinuous' in listing.classes:
         missing_lines = [l for l in listing.lines if l not in actual_lines]
         if missing_lines:
@@ -100,6 +104,8 @@ def parse_listings(chapter_name):
         except AttributeError as e:
             if 'skip' in classes:
                 filename = None
+            elif 'tree' in classes:
+                filename = None
             else:
                 raise AssertionError(f'Could not find filename in title {title_node.text_content()}') from e
 
@@ -114,4 +120,27 @@ def file_contents_for_branch(filename, chapter_name):
         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         check=True
     ).stdout.decode()
+
+
+def tree_for_branch(chapter_name):
+    subprocess.run(
+        ['git', 'checkout', f'origin/{chapter_name}'],
+        cwd=Path(__file__).parent / 'code',
+        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        check=True
+    )
+    try:
+        return subprocess.run(
+            ['tree'],
+            cwd=Path(__file__).parent / 'code',
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            check=True
+        ).stdout.decode()
+    finally:
+        subprocess.run(
+            ['git', 'checkout', '-'],
+            cwd=Path(__file__).parent / 'code',
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            check=True
+        )
 

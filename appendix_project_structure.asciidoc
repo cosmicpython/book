@@ -6,16 +6,20 @@ Around <<chapter_03_flask_api_and_service_layer>> we moved from just having
 everything in one folder to a more structured tree, and we thought it might
 be of interest to outline the moving parts.
 
-[[id_here]]
+<<project_tree>> shows the folder structure:
+
+[[project_tree]]
 .Project tree
 ====
-[role="skip"]
 [source,text]
+[role="tree"]
 ----
 .
 ├── docker-compose.yml  <1>
 ├── Dockerfile  <1>
+├── license.txt
 ├── Makefile  <2>
+├── mypy.ini
 ├── requirements.txt
 ├── src  <3>
 │   ├── allocation
@@ -23,17 +27,19 @@ be of interest to outline the moving parts.
 │   │   ├── domain_model.py
 │   │   ├── flask_app.py
 │   │   ├── orm.py
-│   │   └── repository.py
+│   │   ├── repository.py
+│   │   └── services.py
 │   └── setup.py  <3>
 └── tests  <4>
-    ├── conftest.py <4>
+    ├── conftest.py  <4>
     ├── e2e
     │   └── test_api.py
     ├── integration
     │   └── test_repository.py
-    ├── pytest.ini <4>
+    ├── pytest.ini  <4>
     └── unit
-        └── test_domain_model.py
+        ├── test_domain_model.py
+        └── test_services.py
 ----
 ====
 
@@ -308,17 +314,18 @@ Our tests are kept alongside everything else, as in <<tests_folder>>:
 .Tests folder tree
 ====
 [source,text]
-[role="skip"]
+[role="tree"]
 ----
 └── tests  <5>
-    ├── conftest.py <6>
+    ├── conftest.py  <6>
     ├── e2e
     │   └── test_api.py
     ├── integration
     │   └── test_repository.py
-    ├── pytest.ini <6>
+    ├── pytest.ini  <6>
     └── unit
-        └── test_domain_model.py
+        ├── test_domain_model.py
+        └── test_services.py
 ----
 ====
 
