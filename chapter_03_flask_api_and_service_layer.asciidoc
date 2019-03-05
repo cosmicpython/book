@@ -190,7 +190,7 @@ TODO: ok turns out a simple generic fakerepository may not work
 
 
 [[more_fake_repositories]]
-.Listing title
+.More fake repositories (test_services.py)
 ====
 [source,python]
 ----
@@ -211,15 +211,16 @@ class FakeAllocationRepository(FakeRepository):
 
 
 But now we can migrate some of the other E2E tests too, like the one
-that checks we actually save to the repo:
+that checks we actually save to the repo, <<second_test>>:
+
+TODO: discuss moving _all_ the domain unit tests to the services layer too
 
 
 [[second_test]]
-.Listing title
+.A second test at the service layer (test_services.py)
 ====
 [source,python]
 ----
-
 def test_allocation_service_saves_new_allocation():
     shipments_repo = FakeRepository()
     warehouse = Warehouse({'sku1': 100})
@@ -283,18 +284,18 @@ And now our flask app looks a lot cleaner, as in <<flask_app_using_service_layer
 
 
 [[flask_app_using_service_layer]]
-.Listing title
+.Flask app delegating to service layer (flask_app.py)
 ====
 [source,python]
 ----
 @app.route("/allocate", methods=['POST'])
 def allocate_endpoint():
     try:
-        session = get_session()
+        session = get_session()  #<1>
         allocation = services.allocate(
-            request.json['order_reference'],  #<1>
-            request.json['lines'],  #<1>
-            warehouse_repo=repository.WarehouseRepository(session),  #<2>
+            request.json['order_reference'],  #<2>
+            request.json['lines'],  #<2>
+            warehouse_repo=repository.WarehouseRepository(session),  #<1>
             shipments_repo=repository.ShipmentRepository(session),
             allocation_repo=repository.AllocationRepository(session),
         )
@@ -313,27 +314,45 @@ def allocate_endpoint():
 We see that the responsibilities of the flask app are much more minimal, and
 more focused on just the web stuff:
 
-<1> We instantiate a database session and some repository objects
+<1> We instantiate a database session and some repository objects.
 <2> We extract the user's commands from the web request and pass them
     to a domain service.
 <3> And we return some JSON.
 
-.  Once we've got them ready,
-we can swap out our flask app code to use our new service layer:
+The responsibilities of the flask app are just standard web stuff: per-request
+session management, parsing information out of POST parameters, response status
+codes and JSON.  All the orchestration logic is in the use case / service layer,
+and the domain logic stays in the domain.
 
 
 
+=== How is our test pyramid looking?
 
-TODO: third test, check quantities decremented
+[[test_pyramid]]
+.Listing title
+====
+[source,sh]
+----
+👉  grep -c test_ *.py
+test_allocation.py:14
+test_api.py:2
+test_repository.py:9
+test_services.py:3
+----
+====
+
+Not bad!  17 unit tests, 9 integration tests, and just 2 end-to-end test.
 
 
-TODO: discuss moving all the domain unit tests to the services layer too
+But there's still some things we're not happy with.  Passing 3 repositories
+around feels awkward, and the service/orchestration layer should probably
+be in charge of the commit.  We'll introduce a nice pattern to deal with
+that in the next chapter.
 
-TODO: strip e2e down to just 1 happy path and 1 unhappy path.  do a tests count
-    to illustrate test pyramid.
 
 TODO: mention commit, still not tested
 
 TODO: mention the word "use case"
 
 TODO: integrate folder structure stuff at some point.
+
