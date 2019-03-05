@@ -60,8 +60,6 @@ def check_listing(listing, chapter):
         assert listing.lines == actual_lines
 
 
-callouts = re.compile(r'  #?\(\d\)$', flags=re.MULTILINE)
-callouts_alone = re.compile(r'^\(\d\)$')
 
 @dataclass
 class Listing:
@@ -69,13 +67,16 @@ class Listing:
     contents: str
     classes: list
 
+    callouts = re.compile(r'  #?\(\d\)$', flags=re.MULTILINE)
+    callouts_alone = re.compile(r'^\(\d\)$')
+
     @property
     def fixed_contents(self):
         fixed = self.contents
-        fixed = callouts.sub('', fixed)
+        fixed = self.callouts.sub('', fixed)
         fixed = '\n'.join(
             l for l in fixed.splitlines()
-            if not callouts_alone.match(l)
+            if not self.callouts_alone.match(l)
         )
         return fixed
 
