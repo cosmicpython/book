@@ -60,7 +60,7 @@ to get your goods to your home.
 At a high level, we have separate systems that are responsible for buying
 stock, selling stock to customers, and shipping goods to customers. There's a
 system in the middle that needs to coordinate the process by allocating stock
-to a customer's orders. 
+to a customer's orders.
 
 For the purposes of this book, we're imagining a situation where the business
 decide to implement an exciting new way of allocating stock.  Until now, the
@@ -487,7 +487,157 @@ TODO: sidebar on the good and bad.
 
 *******************************************************************************
 
-==== Datclasses are great for Value Objects (tbc?)
+==== Datclasses are great for Value Objects
+
+We've used the _line_ liberally in the previous code listing, but what is a line? In the business language, a _shipment_ has multiple _line_ items, where each line has a product code and a quantity. We can imagine that a simple yaml file containing shipment information might look like this:
+
+Shipment_reference: 12345
+Due: 2020-01-30
+From: Supplier
+To: UK Warehouse 1
+Lines:
+  - sku: RED-CHAIR
+    qty: 25
+  - sku: BLU-CHAIR
+    qty: 25
+  - sku: GRN-CHAIR
+    qty: 25
+
+Notice that while a shipment has a _reference_ that uniquely identifies it, a _line_ does not. Whenever we have a business concept that has some data but no identity, we often choose to represent it using a _Value Object_. A value object is any domain object that is uniquely identified by the data it holds.
+
+@dataclass(frozen=True)
+class Line:
+    sku: str
+    qty: int
+
+Dataclasses are a neat way to represent value objects in Python 3.7, but if you're running an earlier version, we recommend using a named tuple. Either technique will give you _value equality_ which is the fancy way of saying "two lines with the same sku and qty are equal".
+
+[source,python]
+----
+from dataclasses import dataclass
+from typing import NamedTuple
+from collections import namedtuple
+
+
+@dataclass(frozen=True)
+class Name:
+    first_name: str
+    surname: str
+
+
+class Money(NamedTuple):
+    currency: str
+    value: int
+
+
+Line = namedtuple('Line', ['sku', 'qty'])
+
+
+def test_equality():
+
+    assert Money('gbp', 10) == Money('gbp', 10)
+    assert Name('Harry', 'Percival') != Name('Bob', 'Gregory')
+    assert Line('RED-CHAIR', 5) == Line('RED-CHAIR', 5)
+
+----
+
+These value objects match our real-world intutions about how their values work. It doesn't matter _which_ £10 note we're talking about, because they all have the same value. Likewise two names are equal if both the first and last name match, and two lines are equivalent if they have the same product code and quantity. We can still have complex behaviour on a value object, though. In fact, it's common to support operations that fit our intuitions, for example mathematical operators.
+
+[source,python]
+----
+
+
+fiver = Money('gbp', 5)
+tenner = Money('gbp', 10)
+
+
+def can_add_money_values_for_the_same_currency():
+    assert fiver + fiver == tenner
+
+
+def can_subtract_money_values():
+    assert tenner - fiver == fiver
+
+
+def adding_different_currencies_fails():
+    with pytest.raises(ValueError):
+        Money('usd', 10) + Money('gbp', 10)
+
+
+def can_multiply_money_by_a_number():
+        assert fiver * 5 == Money('gbp', 25)
+        
+
+def multiplying_two_money_values_is_an_error():
+    with pytest.raises(TypeError):
+        tenner * fiver
+
+----
+
+
+==== Value Objects and Entities
+
+A _Line_ is uniquely identified by its product code and quantity, if we change one of those values, we now have a new line. We said that value objects don't have any "id" field. What about Shipment though? That _is_ identified by an id. 
+
+We use the term _entity_ to describe a domain object that has long-lived identity. On the previous page we introduced a _Name_ class as a value object. If we take the name "Harry Percival" and change one letter, we have the new Name object "Barry Percival".
+
+It should be clear that "Harry Percival" is not equal to "Barry Percival".
+
+[source,python]
+----
+
+def test_name_equality():
+    assert Name("Harry", "Percival") != Name("Barry", "Percival")
+
+----
+
+But what about Harry as a _person_? People do change their names, and their marital status, and even their gender, but we continue to recognise them as the same individual. That's because people, unlike names, have a persistent _identity_. 
+
+[source,python]
+----
+
+class Person:
+
+    def __init__(self, name: Name):
+        self.name = name
+
+
+def test_barry_is_harry():
+    harry = Person(Name("Harry", "Percival"))
+    barry = harry
+
+    barry.name = Name("Barry", "Percival")
+
+    assert harry is barry and barry is harry
+
+----
+
+Entities, unlike values, have _identity equality_. We can change their values and they are still recognisably the same thing. Shipments, in our example, are entities. We can add a new line to a shipment, or change the data that we expect it to arrive, and it will still be the same shipment.
+
+We usually make this explicit in code by implementating equality operators.
+
+[source,python]
+----
+
+class Shipment:
+    def __init__(self, reference: str):
+        self.reference = reference
+
+    def __eq__(self, other):
+        if not instanceof(other, Shipment):
+            return False
+        return other.reference == self.reference
+
+    def __hash__(self, other):
+        return hash(self.reference)
+
+    def add_line(self, line:Line):
+        ...
+
+    def change_arrival_date(self, eta: DateTime):
+        ...
+----
+
 
 TODO: explain `line.sku` or change to using `.items()`
 
@@ -517,10 +667,11 @@ class _Lines:
 
 could talk about...?
 
-* value objects
-* dataclass
-* one day wanting to sum lines for total available quantity of a sku across all shipments
+* value objects [x]
+* dataclass [x]
+* one day wanting to sum lines for total available quantity of a sku across all shipments []
 
+I bet 14p that we'll find a natural place to use a `sum` method in the course of writing the book, and then we get to act all smug when we can just do it with an __add__ on `Line`.
 
 The core algorithm (in `allocate()`) is essentially the same, but this
 model is much richer.  The key concepts of the business are represented,
