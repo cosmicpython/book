@@ -60,7 +60,7 @@ def check_listing(listing, chapter):
         assert listing.lines == actual_lines
 
 
-callouts = re.compile(r'  \(\d\)$', flags=re.MULTILINE)
+callouts = re.compile(r'  #?\(\d\)$', flags=re.MULTILINE)
 callouts_alone = re.compile(r'^\(\d\)$')
 
 @dataclass
