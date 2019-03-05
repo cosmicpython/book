@@ -48,18 +48,18 @@ be of interest to outline the moving parts.
     more complex project might have several Dockerfiles, although we've found that
     minimising the number of images is usually a good ideafootnote:[It often
     seems like a good idea to split out different images for app and test, say
-    or for async processing containers vs ones with web dependencies, because then
-    you can tell yourself each container will only install the dependencies it needs.
-    Why install pytest on your prod webapp containers?  But in our experience that
-    actually gains you very little, whilst costing a lot in build times and complexity.
-    Single image ftw.].
+    or for async processing containers vs ones with web dependencies, because
+    then you can tell yourself each container will only install the
+    dependencies itneeds. Why install pytest on your prod webapp containers?
+    But in our experience that actually gains you very little, whilst costing a
+    lot in build times and complexityl Single image ftw.].
 
 <2> A _Makefile_ provides the entrypoint for all the typical commands a developer
-    (or a CI server) might want to run during their normal worfklow.  `make build`,
-    `make test`, and so on.  This is optional, you could just use `docker-compose`
-    and `pytest` directly, but if nothing else it's nice to have all the
-    "common commands" in a list somewhere, and unlike documentation, a Makefile is
-    code so it has less tendency to go out of date.
+    (or a CI server) might want to run during their normal worfklow.  `make
+    build`, `make test`, and so on.  This is optional, you could just use
+    `docker-compose` and `pytest` directly, but if nothing else it's nice to
+    have all the "common commands" in a list somewhere, and unlike
+    documentation, a Makefile is code so it has less tendency to go out of date.
 
 <3> All the actual source code for our app, including the domain model, the
     flask app, and infrastructure code, lives in a Python package inside _src_,
