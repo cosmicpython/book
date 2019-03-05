@@ -12,18 +12,31 @@ CHAPTERS = [
     "appendix_project_structure",
 ]
 
-@pytest.fixture(scope='session')
-def git_log():
+
+def git_log(chapter):
     return subprocess.run(
-        ['git', 'log', 'origin/master', '--oneline', '--decorate'],
+        ['git', 'log', f'origin/{chapter}', '--oneline', '--decorate'],
         cwd=Path(__file__).parent / 'code',
         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         check=True
     ).stdout.decode()
 
+@pytest.fixture(scope='session')
+def master_log():
+    return git_log('master')
+
 @pytest.mark.parametrize('chapter', CHAPTERS)
-def test_git_history(git_log, chapter):
-    assert f'origin/{chapter}' in git_log
+def test_master_has_all_chapters_in_its_history(master_log, chapter):
+    assert f'origin/{chapter}' in master_log
+
+
+@pytest.mark.parametrize('chapter', CHAPTERS)
+def test_each_chapter_follows_the_last(chapter):
+    chapter_no = CHAPTERS.index(chapter)
+    if chapter_no == 0:
+        return
+    previous = CHAPTERS[chapter_no - 1]
+    assert f'origin/{previous}' in git_log(chapter), f'{chapter} did not follow {previous}'
 
 
 @pytest.mark.parametrize('chapter', CHAPTERS)
