@@ -1,7 +1,7 @@
 [[chapter_03]]
 == Our first use case:  Flask API and service layer.
 
-Like any good agile team, we're hussling to try and get an MVP out and
+Like any good agile team, we're hustling to try and get an MVP out and
 in front of the users to start gathering feedback.  We have the core
 of our domain model and the domain service we need to allocate orders,
 and we have the Repository interface for permanent storage.
@@ -239,13 +239,100 @@ def test_allocation_service_saves_new_allocation():
 ----
 ====
 
+And the test that we decrement quantities too.
+
+We'll get to a service function that looks something like <<service_function>>:
+
+[[service_function]]
+.Basic allocation service (services.py)
+====
+[source,python]
+----
+def allocate(
+    order_reference: str, lines: dict,
+    warehouse_repo, shipments_repo, allocation_repo
+):
+    try:  #<1>
+        allocation_repo.get_by_order_reference(order_reference)
+    except:
+        # TODO: this is ugly
+        pass
+    else:
+        raise OrderAlreadyAllocatedException(order_reference)
+
+    order = domain_model.Order(order_reference, lines)  #<2>
+    allocation = domain_model.allocate(  #<2>
+        order, warehouse_repo.get(), shipments_repo.list()
+    )
+    allocation_repo.add(allocation)  #<4>
+    return allocation
+----
+====
+
+Typical service-layer functions have similar steps:
+
+<1> We make some checks or assertions about the request against
+    the current state of the world
+
+<2> We may instantiate a domain object, and/or call a domain service
+
+<3> We add some new state to our repository
+
+
+And now our flask app looks a lot cleaner, as in <<flask_app_using_service_layer>>:
+
+
+[[flask_app_using_service_layer]]
+.Listing title
+====
+[source,python]
+----
+@app.route("/allocate", methods=['POST'])
+def allocate_endpoint():
+    try:
+        session = get_session()
+        allocation = services.allocate(
+            request.json['order_reference'],  #<1>
+            request.json['lines'],  #<1>
+            warehouse_repo=repository.WarehouseRepository(session),  #<2>
+            shipments_repo=repository.ShipmentRepository(session),
+            allocation_repo=repository.AllocationRepository(session),
+        )
+        session.commit()
+        return jsonify(
+            {l.sku: l.source.reference for l in allocation.lines}
+        ), 201  #<3>
+    except services.OrderAlreadyAllocatedException as e:
+        return jsonify({'error': str(e)}), 400  #<4>
+
+    finally:
+        session.close()
+----
+====
+
+We see that the responsibilities of the flask app are much more minimal, and
+more focused on just the web stuff:
+
+<1> We instantiate a database session and some repository objects
+<2> We extract the user's commands from the web request and pass them
+    to a domain service.
+<3> And we return some JSON.
+
+.  Once we've got them ready,
+we can swap out our flask app code to use our new service layer:
+
+
+
 
 TODO: third test, check quantities decremented
+
 
 TODO: discuss moving all the domain unit tests to the services layer too
 
 TODO: strip e2e down to just 1 happy path and 1 unhappy path.  do a tests count
     to illustrate test pyramid.
+
+TODO: mention commit, still not tested
 
 TODO: mention the word "use case"
 
