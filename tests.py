@@ -108,7 +108,7 @@ def parse_listings(chapter_name):
 
 def file_contents_for_branch(filename, chapter_name):
     return subprocess.run(
-        ['git', 'show', f'{chapter_name}:{filename}'],
+        ['git', 'show', f'origin/{chapter_name}:{filename}'],
         cwd=Path(__file__).parent / 'code',
         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         check=True
