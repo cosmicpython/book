@@ -1,6 +1,7 @@
-install: 
-  - gem install rails
-
+install:
+- gem install rails
 script:
-  - make html test
-
+- make html test
+before_install:
+- openssl aes-256-cbc -K $encrypted_182558d6ac87_key -iv $encrypted_182558d6ac87_iv
+  -in travis-deploy-key.enc -out travis-deploy-key -d
