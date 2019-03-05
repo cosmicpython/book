@@ -1,5 +1,5 @@
-services:
-  - docker
+install: 
+  - gem install rails
 
 script:
   - make html test
