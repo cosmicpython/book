@@ -5,12 +5,28 @@ from dataclasses import dataclass
 from lxml import html
 from pathlib import Path
 
-@pytest.mark.parametrize('chapter', [
+CHAPTERS = [
     'chapter_01_domain_model',
     'chapter_02_repository',
     "chapter_03_flask_api_and_service_layer",
     "appendix_project_structure",
-])
+]
+
+@pytest.fixture(scope='session')
+def git_log():
+    return subprocess.run(
+        ['git', 'log', 'origin/master', '--oneline', '--decorate'],
+        cwd=Path(__file__).parent / 'code',
+        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        check=True
+    ).stdout.decode()
+
+@pytest.mark.parametrize('chapter', CHAPTERS)
+def test_git_history(git_log, chapter):
+    assert f'origin/{chapter}' in git_log
+
+
+@pytest.mark.parametrize('chapter', CHAPTERS)
 def test_chapter(chapter):
     for listing in parse_listings(chapter):
         check_listing(listing, chapter)

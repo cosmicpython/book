@@ -4,7 +4,7 @@ html:
 test: html
 	pytest tests.py --tb=short -vv
 
-update:
+update-code:
 	# git submodule update --init --recursive
 	cd code && git fetch
 
