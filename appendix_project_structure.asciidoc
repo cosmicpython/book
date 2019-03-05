@@ -271,8 +271,8 @@ RUN apk add --no-cache --virtual .build-deps gcc postgresql-dev musl-dev python3
 RUN apk add libpq
 
 <2>
-COPY requirements*.txt /tmp/
-RUN pip install -r /tmp/requirements.prod.txt
+COPY requirements.txt /tmp/
+RUN pip install -r /tmp/requirements.txt
 
 RUN apk del --no-cache .build-deps
 
@@ -308,6 +308,7 @@ Our tests are kept alongside everything else, as in <<tests_folder>>:
 .Tests folder tree
 ====
 [source,text]
+[role="skip"]
 ----
 └── tests  <5>
     ├── conftest.py <6>
