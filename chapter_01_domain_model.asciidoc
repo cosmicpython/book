@@ -357,11 +357,12 @@ class Order(_Lines):
 ----
 ====
 
-The `_Lines` base class, which is used by `Order`, `Warehouse` and `Shipment`, lets its subclasses
-use _some_ dict methods, the ones that make semantic sense in the domain.  "getting" a sku from
-an order means retrieving the quantity ordered for that sku.  Checking if a sku is `in` an order is
-also meaningful.  But other dict methods like `.update()` and `.values()` don't have a clear or
-unambiguous meaning, so those methods aren't supported.
+The `_Lines` base class, which is used by `Order`, `Warehouse` and `Shipment`,
+lets its subclasses use __some__ dict methods, the ones that make semantic
+sense in the domain.  "getting" a sku from an order means retrieving the
+quantity ordered for that sku.  Checking if a sku is `in` an order is also
+meaningful.  But other dict methods like `.update()` and `.values()` don't have
+a clear or unambiguous meaning, so those methods aren't supported.
 
 
 ==== Not everything has to be a class
