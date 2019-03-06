@@ -1,2 +1,138 @@
 [[chapter_04]]
 == Unit of Work pattern
+
+
+Bla bla service layer is unwieldy.  too many repos.  also it should do commits.  also in python, context managers are nice for try/except stuff.
+
+
+
+Here's  a test for a new "unit of work" context manager that allows us to start a transaction, retrieve and get things from repos, and commit:
+
+
+
+[[test_unit_of_work]]
+.A basic "roundtrip" test for a unit of work (tests/integration/test_uow.py)
+====
+[source,python]
+----
+def test_uow_roundtrip_shipment(in_memory_db, session):
+    with unit_of_work.start(in_memory_db) as uow:
+        sh = Shipment('ship1', {'sku1': 22, 'sku2': 23}, eta=date.today())
+        uow.shipments.add(sh)
+        uow.commit()
+
+        rows = list(uow.session.execute('SELECT * FROM "stock_lines"'))
+        assert rows == [
+            ("ship1", 'sku1', 22),
+            ("ship1", 'sku2', 23),
+        ]
+
+        sh = uow.shipments.get(reference='ship1')
+        sh['sku2'] -= 3
+        sh['nusku'] = 34
+        uow.commit()
+
+    shipment_rows = list(session.execute('SELECT * FROM "stock_lines"'))
+    assert shipment_rows == [
+        ('ship1', 'sku1', 22),
+        ('ship1', 'sku2', 20),
+        ('ship1', 'nusku', 34),
+    ]
+----
+====
+
+
+Here's an implementation:
+
+
+[[unit_of_work]]
+.Basic unit of work context manager  (src/allocation/unit_of_work.py)
+====
+[source,python]
+----
+class _UnitOfWork:
+    def __init__(self, session):
+        self.session = session
+        self.shipments = repository.ShipmentRepository(session)
+        self.warehouse = repository.WarehouseRepository(session)
+        self.allocations = repository.AllocationRepository(session)
+
+    def commit(self):
+        self.session.commit()
+
+
+@contextmanager
+def start(engine=None):
+    if engine is None:
+        engine = create_engine(config.get_postgres_uri())
+    session = sessionmaker(bind=engine)()
+    yield _UnitOfWork(session)
+----
+====
+
+
+Here's how we use a fake unit of work in our service layer tests
+
+
+
+
+[[fake_unit_of_work]]
+.Fake unit of work (tests/unit/test_services.py)
+====
+[source,python]
+----
+class FakeUnitOfWork:
+    def __init__(self):
+        self.shipments = FakeRepository()
+        self.warehouse = FakeWarehouseRepository(Warehouse({}))
+        self.allocations = FakeAllocationRepository()
+        self.committed = False
+
+    def commit(self):
+        self.committed = True
+
+
+
+def test_saves_new_allocation():
+    uow = FakeUnitOfWork()
+    uow.warehouse.warehouse = Warehouse({'sku1': 100})
+    start_uow = lambda: nullcontext(uow)
+
+    allocation = services.allocate(
+        'order-ref', {'sku1': 10},
+        start_uow,
+    )
+    assert allocation == uow.allocations.pop()
+
+    assert allocation.order.reference == 'order-ref'
+    [line] = allocation.lines
+    assert line.sku == 'sku1'
+    assert line.source.reference == 'warehouse'
+----
+====
+
+
+And here's what our new service layer looks like:
+
+
+[[service_layer_with_uow]]
+.Service layer using UoW (src/allocation/services.py)
+====
+[source,python]
+----
+def allocate(
+    order_reference: str, lines: dict, start_uow,
+):
+    with start_uow() as uow:
+        _check_order_not_already_allocated(order_reference, uow)
+
+        order = domain_model.Order(order_reference, lines)
+        allocation = domain_model.allocate(
+            order, uow.warehouse.get(), uow.shipments.list()
+        )
+        uow.allocations.add(allocation)
+        uow.commit()
+    return allocation
+----
+====
+

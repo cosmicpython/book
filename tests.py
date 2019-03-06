@@ -62,7 +62,7 @@ def check_listing(listing, chapter):
             assert listing.lines == actual_lines
 
     elif listing.fixed_contents not in actual_contents:
-        assert listing.lines == actual_lines
+        assert listing.lines == actual_lines, 'listing not found within actual'
 
 
 
@@ -132,7 +132,7 @@ def tree_for_branch(chapter_name):
     )
     try:
         return subprocess.run(
-            ['tree'],
+            ['tree', '-I', '*.egg-info'],
             cwd=Path(__file__).parent / 'code',
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             check=True
