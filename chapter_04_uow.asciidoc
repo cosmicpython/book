@@ -24,16 +24,24 @@ def test_uow_roundtrip_shipment(session):
         uow.shipments.add(sh)
         uow.commit()
 
-        rows = list(uow.session.execute('SELECT * FROM "stock_lines"'))
-        assert rows == [
-            ("ship1", 'sku1', 22),
-            ("ship1", 'sku2', 23),
-        ]
+    rows = list(session.execute('SELECT * FROM "stock_lines"'))
+    assert rows == [
+        ("ship1", 'sku1', 22),
+        ("ship1", 'sku2', 23),
+    ]
 
+    with unit_of_work.start(lambda: session) as uow:
         sh = uow.shipments.get(reference='ship1')
         sh['sku2'] -= 3
         sh['nusku'] = 34
         uow.commit()
+
+    shipment_rows = list(session.execute('SELECT * FROM "stock_lines"'))
+    assert shipment_rows == [
+        ('ship1', 'sku1', 22),
+        ('ship1', 'sku2', 20),
+        ('ship1', 'nusku', 34),
+    ]
 ----
 ====
 
@@ -53,7 +61,10 @@ default_session_factory = sessionmaker(
 @contextmanager
 def start(session_factory=default_session_factory):
     session = session_factory()
-    yield _UnitOfWork(session)
+    try:
+        yield _UnitOfWork(session)
+    finally:
+        session.rollback()
 
 
 class _UnitOfWork:
