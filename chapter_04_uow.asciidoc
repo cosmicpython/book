@@ -145,3 +145,59 @@ def allocate(
 ----
 ====
 
+
+=== rolling back unless explicitly committed
+
+
+
+
+[[explicit_rollback]]
+.always roll back to whatever was committed (src/allocation/unit_of_work.py)
+====
+[source,python]
+----
+@contextmanager
+def start(session_factory=default_session_factory):
+    session = session_factory()
+    try:
+        yield _UnitOfWork(session)
+    finally:
+        session.rollback()
+----
+====
+
+
+
+
+[[testing_rollback]]
+.Integration tests for rollback behaviour (tests/integration/test_uow.py)
+====
+[source,python]
+----
+def test_rolls_back_uncommitted_work_by_default(session_factory):
+    with unit_of_work.start(session_factory) as uow:
+        uow.session.execute("INSERT into stock_lines VALUES ('ship1', 'sku3', 33)")
+
+    new_session = session_factory()
+    rows = list(new_session.execute('SELECT * FROM "stock_lines"'))
+    assert rows == []
+
+
+def test_rolls_back_on_error(session_factory):
+    class MyException(Exception):
+        pass
+
+    with pytest.raises(MyException):
+        with unit_of_work.start(session_factory) as uow:
+            uow.session.execute(
+                "INSERT into stock_lines VALUES ('ship1', 'sku3', 33)"
+            )
+            raise MyException()
+
+    new_session = session_factory()
+    rows = list(new_session.execute('SELECT * FROM "stock_lines"'))
+    assert rows == []
+----
+====
+
+
