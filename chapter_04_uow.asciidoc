@@ -2,8 +2,11 @@
 == Unit of Work pattern
 
 
-Bla bla service layer is unwieldy.  too many repos.  also it should do commits.  also in python, context managers are nice for try/except stuff.
+Bla bla service layer is unwieldy.  too many repos.  also it should do commits.
 
+What happens if we encounter an error during our allocation?  eg out of stock, a domain error?  We'd like to wrap our work up so that, either the entire order is allocated, or we abort and leave things in a "clean" state if anything goes wrong -- a classic case for a transaction/rollback.
+
+What's a Pythonic way of "doing transactions"?  A context manager. 
 
 
 Here's  a test for a new "unit of work" context manager that allows us to start a transaction, retrieve and get things from repos, and commit:
@@ -15,8 +18,8 @@ Here's  a test for a new "unit of work" context manager that allows us to start 
 ====
 [source,python]
 ----
-def test_uow_roundtrip_shipment(in_memory_db, session):
-    with unit_of_work.start(in_memory_db) as uow:
+def test_uow_roundtrip_shipment(session):
+    with unit_of_work.start(lambda: session) as uow:
         sh = Shipment('ship1', {'sku1': 22, 'sku2': 23}, eta=date.today())
         uow.shipments.add(sh)
         uow.commit()
@@ -31,13 +34,6 @@ def test_uow_roundtrip_shipment(in_memory_db, session):
         sh['sku2'] -= 3
         sh['nusku'] = 34
         uow.commit()
-
-    shipment_rows = list(session.execute('SELECT * FROM "stock_lines"'))
-    assert shipment_rows == [
-        ('ship1', 'sku1', 22),
-        ('ship1', 'sku2', 20),
-        ('ship1', 'nusku', 34),
-    ]
 ----
 ====
 
@@ -50,6 +46,16 @@ Here's an implementation:
 ====
 [source,python]
 ----
+default_session_factory = sessionmaker(
+    bind=create_engine(config.get_postgres_uri())
+)
+
+@contextmanager
+def start(session_factory=default_session_factory):
+    session = session_factory()
+    yield _UnitOfWork(session)
+
+
 class _UnitOfWork:
     def __init__(self, session):
         self.session = session
@@ -59,14 +65,6 @@ class _UnitOfWork:
 
     def commit(self):
         self.session.commit()
-
-
-@contextmanager
-def start(engine=None):
-    if engine is None:
-        engine = create_engine(config.get_postgres_uri())
-    session = sessionmaker(bind=engine)()
-    yield _UnitOfWork(session)
 ----
 ====
 
