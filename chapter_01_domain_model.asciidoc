@@ -273,16 +273,14 @@ Let's skip the deallocate method because we can trivially implement it as an
 increment of the Batch.available_quantity property, and jump to the next test:
 
 
-
-[[id_here]]
-.Listing title
+[[test_deallocate_unallocated]]
+.This test is going to require a smarter model (test_allocation.py)
 ====
 [source,python]
 ----
 def test_can_only_deallocate_allocated_lines(): 
-    batch, line =  make_batch_and_line("small-table", 20, 2)
+    batch, line = make_batch_and_line("small-table", 20, 2)
     batch.deallocate(line)
-
     assert batch.available_quantity == 20
 ----
 ====
@@ -293,8 +291,8 @@ needs to understand which lines have been allocated. Let's look at the
 implementation.
 
 
-[[id_here]]
-.Listing title
+[[domain_model_complete]]
+.A decent first cut of the domain model (model.py)
 ====
 [source,python]
 ----
@@ -315,9 +313,10 @@ class Batch:
 
     @property
     def allocated_quantity(self) -> Quantity: 
-        return Quantity(sum(line for line in self._allocations))
+        return Quantity(sum(line.qty for line in self._allocations))
 
-    @property def available_quantity(self) -> Quantity: 
+    @property 
+    def available_quantity(self) -> Quantity: 
         return self._purchased_quantity - self.allocated_quantity
 
     def can_allocate(self, line: OrderLine) -> bool:
@@ -333,18 +332,15 @@ purchased quantity - allocated quantity. Using a set here makes it simple for us
 to handle the last test, because items in a set are unique.
 
 
-
-[[id_here]]
-.Listing title
+[[last_test]]
+.Last test!  (test_allocation.py)
 ====
 [source,python]
 ----
 def test_allocation_is_idempotent(): 
     batch, line = make_batch_and_line("small-table", 20, 2)
-
     batch.allocate(line)
     batch.allocate(line)
-
     assert batch.available_quantity == 18
 ----
 ====
@@ -365,13 +361,17 @@ TODO: sidebar on the good and bad.
 
 ==== Datclasses are great for Value Objects
 
-We've used the _line_ liberally in the previous code listings, but what is a line? In the business language, an _order_ has multiple _line_ items, where each line has a sku, and a quantity. We can imagine that a simple yaml file containing order information might look like this:
+We've used the _line_ liberally in the previous code listings, but what is a
+line? In the business language, an _order_ has multiple _line_ items, where
+each line has a sku, and a quantity. We can imagine that a simple yaml file
+containing order information might look like this:
 
 
-[[id_here]]
-.Listing title
+[[yaml_order_example]]
+.Order info as YAML
 ====
 [source,yaml]
+[role="skip"]
 ----
 Order_reference: 12345
 Lines:
@@ -392,10 +392,11 @@ identity, we often choose to represent it using a _Value Object_. A value
 object is any domain object that is uniquely identified by the data it holds.
 
 
-[[id_here]]
-.Listing title
+[[orderline_value_object]]
+.OrderLine is a Value Object.
 ====
 [source,python]
+[role="skip"]
 ----
 @dataclass(frozen=True)
 class OrderLine:
@@ -410,32 +411,28 @@ technique will give you _value equality_ which is the fancy way of saying "two
 lines with the same sku and qty are equal".
 
 
-[[id_here]]
-.Listing title
+[[more_value_objects]]
+.More examples of Value Objects
 ====
 [source,python]
+[role="skip"]
 ----
 from dataclasses import dataclass
 from typing import NamedTuple
 from collections import namedtuple
-
 
 @dataclass(frozen=True)
 class Name:
     first_name: str
     surname: str
 
-
 class Money(NamedTuple):
     currency: str
     value: int
 
-
 Line = namedtuple('Line', ['sku', 'qty'])
 
-
 def test_equality():
-
     assert Money('gbp', 10) == Money('gbp', 10)
     assert Name('Harry', 'Percival') != Name('Bob', 'Gregory')
     assert Line('RED-CHAIR', 5) == Line('RED-CHAIR', 5)
@@ -451,14 +448,14 @@ fact, it's common to support operations on values, for example mathematical
 operators.
 
 
-[[id_here]]
-.Listing title
+[[value_object_maths]]
+.Maths with Value Objects.
 ====
 [source,python]
+[role="skip"]
 ----
 fiver = Money('gbp', 5)
 tenner = Money('gbp', 10)
-
 
 def can_add_money_values_for_the_same_currency():
     assert fiver + fiver == tenner
@@ -498,10 +495,11 @@ Name object "Barry Percival".
 It should be clear that "Harry Percival" is not equal to "Barry Percival".
 
 
-[[id_here]]
-.Listing title
+[[test_equality]]
+.A name itself cannot change
 ====
 [source,python]
+[role="skip"]
 ----
 def test_name_equality():
     assert Name("Harry", "Percival") != Name("Barry", "Percival")
@@ -515,10 +513,11 @@ same individual. That's because humans, unlike names, have a persistent
 _identity_.
 
 
-[[id_here]]
-.Listing title
+[[person_identity]]
+.But a person can...
 ====
 [source,python]
+[role="skip"]
 ----
 class Person:
 
@@ -543,30 +542,31 @@ and they are still recognisably the same thing. Batches, in our example, are
 entities. We can allocate lines to a batch, or change the date that we expect
 it to arrive, and it will still be the same entity.
 
-We usually make this explicit in code by implementating equality operators on
+We usually make this explicit in code by implementing equality operators on
 entities.
 
 
 
-[[id_here]]
-.Listing title
+[[equality_on_batches]]
+.Implementing equality operators (model.py)
 ====
 [source,python]
 ----
 class Batch:
-    def __init__(self, reference: str):
-        self.reference = reference
+    def __init__(self, ref: Reference, sku: Sku, qty: Quantity):
+        #...
 
     def __eq__(self, other):
-        if not instanceof(other, Batch):
+        if not isinstance(other, Batch):
             return False
         return other.reference == self.reference
 
-    def __hash__(self, other):
-        return hash(self.Batch)
+    def __hash__(self):
+        return hash(self.reference)
 ----
 ====
 
+TODO: talk about hash
 
 === Wrap-up
 

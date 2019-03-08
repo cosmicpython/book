@@ -57,7 +57,13 @@ def check_listing(listing, chapter):
         )
     actual_lines = actual_contents.split('\n')
 
-    if listing.fixed_contents not in actual_contents:
+    if '#...' in listing.contents:
+        for section in listing.fixed_contents.split('#...'):
+            lines = section.splitlines()
+            if section not in actual_contents:
+                assert lines == actual_lines, f'section from [{listing.tag}] not found within actual'
+
+    elif listing.fixed_contents not in actual_contents:
         assert listing.lines == actual_lines, f'listing [{listing.tag}] not found within actual'
 
 
