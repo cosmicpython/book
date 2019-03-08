@@ -4,12 +4,16 @@
 
 Bla bla service layer is unwieldy.  too many repos.  also it should do commits.
 
-What happens if we encounter an error during our allocation?  eg out of stock, a domain error?  We'd like to wrap our work up so that, either the entire order is allocated, or we abort and leave things in a "clean" state if anything goes wrong -- a classic case for a transaction/rollback.
+What happens if we encounter an error during our allocation?  eg out of stock,
+a domain error?  We'd like to wrap our work up so that, either the entire order
+is allocated, or we abort and leave things in a "clean" state if anything goes
+wrong -- a classic case for a transaction/rollback.
 
 What's a Pythonic way of "doing transactions"?  A context manager. 
 
 
-Here's  a test for a new "unit of work" context manager that allows us to start a transaction, retrieve and get things from repos, and commit:
+Here's  a test for a new "unit of work" context manager that allows us to start
+a transaction, retrieve and get things from repos, and commit:
 
 
 
