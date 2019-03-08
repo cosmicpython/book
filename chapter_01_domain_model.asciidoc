@@ -144,14 +144,13 @@ how we would construct a model from this business conversation.
 <<first_test>> shows what one of our first tests might look like:
 
 [[first_test]]
-.A first test for allocation
+.A first test for allocation (test_allocation.py)
 ====
 [source,python]
 ----
 def test_allocating_to_a_batch_reduces_the_available_quantity(): 
     sku = Sku("SMALL-TABLE")
     ref = Reference("batch-001")
-    order_id = OrderId("order-123")
 
     batch = Batch(ref, sku, Quantity(20))
     line = OrderLine(sku, Quantity(2))
@@ -171,19 +170,19 @@ they would agree that this correctly describes the behaviour of the system.
 <<domain_model_1>> shows a domain model that meets our requirements:
 
 [[domain_model_1]]
-.First cut of a domain model for batches
+.First cut of a domain model for batches (model.py)
 ====
 [source,python]
 ----
 from dataclasses import dataclass
 from typing import NewType
 
-Quantity = NewType("Quantity", int) #<1>
+Quantity = NewType("Quantity", int)  #<1>
 Sku = NewType("Sku", str)
 Reference = NewType("Reference", str)
 
 
-@dataclass(frozen=True) #<2>
+@dataclass(frozen=True)  #<2>
 class OrderLine:
     sku: Sku
     qty: Quantity
@@ -257,7 +256,7 @@ We can implement this straightforwardly, too, by writing the can_allocate
 method of the Batch.
 
 
-[[id_here]]
+[[can_allocate]]
 .Listing title
 ====
 [source,python]

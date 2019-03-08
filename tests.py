@@ -7,10 +7,10 @@ from pathlib import Path
 
 CHAPTERS = [
     'chapter_01_domain_model',
-    'chapter_02_repository',
-    "chapter_03_flask_api_and_service_layer",
-    "appendix_project_structure",
-    "chapter_04_uow",
+    # 'chapter_02_repository',
+    # "chapter_03_flask_api_and_service_layer",
+    # "appendix_project_structure",
+    # "chapter_04_uow",
 ]
 
 
@@ -52,7 +52,9 @@ def check_listing(listing, chapter):
     elif 'tree' in listing.classes:
         actual_contents = tree_for_branch(chapter)
     else:
-        actual_contents = file_contents_for_branch(listing.filename, chapter)
+        actual_contents = file_contents_for_branch(
+            listing.filename, listing.tag, chapter
+        )
     actual_lines = actual_contents.split('\n')
 
     if 'noncontinuous' in listing.classes:
@@ -69,6 +71,7 @@ def check_listing(listing, chapter):
 @dataclass
 class Listing:
     filename: str
+    tag: str
     contents: str
     classes: list
 
@@ -109,14 +112,17 @@ def parse_listings(chapter_name):
                 filename = None
             else:
                 raise AssertionError(f'Could not find filename in title {title_node.text_content()}') from e
+        tag = listing_node.get('id')
 
         [code_node] = block_node.cssselect('.content pre')
-        yield Listing(filename, contents=code_node.text_content(), classes=classes)
+        yield Listing(
+            filename, tag, contents=code_node.text_content(), classes=classes
+        )
 
 
-def file_contents_for_branch(filename, chapter_name):
+def file_contents_for_branch(filename, tag, chapter_name):
     return subprocess.run(
-        ['git', 'show', f'origin/{chapter_name}:{filename}'],
+        ['git', 'show', f'origin/{chapter_name}^{{/\\[{tag}\\]}}:{filename}'],
         cwd=Path(__file__).parent / 'code',
         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         check=True
