@@ -57,13 +57,7 @@ def check_listing(listing, chapter):
         )
     actual_lines = actual_contents.split('\n')
 
-    if 'noncontinuous' in listing.classes:
-        missing_lines = [l for l in listing.lines if l not in actual_lines]
-        if missing_lines:
-            print('\n'.join(missing_lines))
-            assert listing.lines == actual_lines
-
-    elif listing.fixed_contents not in actual_contents:
+    if listing.fixed_contents not in actual_contents:
         assert listing.lines == actual_lines, f'listing [{listing.tag}] not found within actual'
 
 
