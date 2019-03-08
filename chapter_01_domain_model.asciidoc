@@ -216,20 +216,23 @@ Let's write some new failing tests, as in <<test_can_allocate>>:
 
 
 [[test_can_allocate]]
-.Testing logic for what we can allocate
+.Testing logic for what we can allocate (test_allocation.py)
 ====
 [source,python]
 ----
 def make_batch_and_line(sku, batch_qty, line_qty):
-    return Batch(
-        Reference("batch-001"),
-        Sku(sku),
-        Quantity(batch_qty)
-    ),
-    OrderLine(
-        OrderId("order-123"),
-        Sku(sku),
-        Quantity(line_qty))
+    return (
+        Batch(
+            Reference("batch-001"),
+            Sku(sku),
+            Quantity(batch_qty)
+        ),
+        OrderLine(
+            OrderId("order-123"),
+            Sku(sku),
+            Quantity(line_qty)
+        ),
+    )
 
 
 def test_can_allocate_if_available_greater_than_required():
@@ -257,12 +260,12 @@ method of the Batch.
 
 
 [[can_allocate]]
-.Listing title
+.A new method in the model (model.py)
 ====
 [source,python]
 ----
-def can_allocate(self, line: OrderLine) -> bool:
-    return self.available_quantity >= line.qty
+    def can_allocate(self, line: OrderLine) -> bool:
+        return self.available_quantity >= line.qty
 ----
 ====
 

@@ -64,7 +64,7 @@ def check_listing(listing, chapter):
             assert listing.lines == actual_lines
 
     elif listing.fixed_contents not in actual_contents:
-        assert listing.lines == actual_lines, 'listing not found within actual'
+        assert listing.lines == actual_lines, f'listing [{listing.tag}] not found within actual'
 
 
 
@@ -121,12 +121,14 @@ def parse_listings(chapter_name):
 
 
 def file_contents_for_branch(filename, tag, chapter_name):
-    return subprocess.run(
+    output = subprocess.run(
         ['git', 'show', f'origin/{chapter_name}^{{/\\[{tag}\\]}}:{filename}'],
         cwd=Path(__file__).parent / 'code',
         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         check=True
     ).stdout.decode()
+    assert output.strip(), f'no commit found for [{tag}]'
+    return output
 
 
 def tree_for_branch(chapter_name):
