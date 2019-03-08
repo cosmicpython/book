@@ -81,35 +81,52 @@ Time for some domain modelling.
 
 === Exploring the domain language
 
-Understanding the domain model takes time,and patience, and post-it notes. We have an initial conversation with our business experts and we agree a glossary and some rules for the first minimal version of the domain model. Wherever possible, we ask for concrete examples to illustrate each rule.
+Understanding the domain model takes time,and patience, and post-it notes. We
+have an initial conversation with our business experts and we agree a glossary
+and some rules for the first minimal version of the domain model. Wherever
+possible, we ask for concrete examples to illustrate each rule.
 
-We make sure to express those rules in the business jargon (the _"ubiquitous language"_ in DDD terminology). We choose memorable identifiers for our objects so that the examples are easier to talk about.
+We make sure to express those rules in the business jargon (the _"ubiquitous
+language"_ in DDD terminology). We choose memorable identifiers for our objects
+so that the examples are easier to talk about.
 
-* A _product_ is identified by a _sku_, pronounced "skew", which is short for "Stock Keeping Unit".
-* _Customers_ place _orders_. An order is identified by an _order reference_, and comprises multiple _order lines_, where each line has a sku, and a _quantity_. 
+* A _product_ is identified by a _sku_, pronounced "skew", which is short for
+  "Stock Keeping Unit".
+
+* _Customers_ place _orders_. An order is identified by an _order reference_,
+  and comprises multiple _order lines_, where each line has a sku, and a
+  _quantity_.
    Example: 10 units of RED-CHAIR
-             1 unit of TASTELESS-LAMP
-* The purchasing department orders small _batches_ of stock. A _batch_ of stock has a unique id which they call a _reference_, a sku and a _quantity_.
+            1 unit of TASTELESS-LAMP
+
+* The purchasing department orders small _batches_ of stock. A _batch_ of stock
+  has a unique id which they call a _reference_, a sku and a _quantity_.
+
 * We need to _allocate_ _order lines_ to _batches_.
+
 * When I allocate 1 unit of stock to a batch, the _available quantity_ is
-* reduced. 
+  reduced.
   Example: I have a batch of 20 SMALL-TABLE, and I allocate an order line for 2
   SMALL-TABLE. The batch should have 18 SMALL-TABLE remaining.
+
 * I can't allocate to a batch if the available quantity is less than the
-* quantity of the order line. 
+  quantity of the order line.
   Example: I have a batch of 1 BLUE-CUSHION, and an order line for 2
   BLUE-CUSHION. I should not be able to allocate the line to the batch.
+
 * Customers can cancel orders. When an order is cancelled, we need to
-* _deallocate_ the order lines.  When I deallocate an order line from a batch,
-* the available quantity is increased by the quantity of the order line. 
+  _deallocate_ the order lines.  When I deallocate an order line from a batch,
+  the available quantity is increased by the quantity of the order line. 
   Example: I have a batch of 3 CRIMSON-TOWEL and I allocate 1 CRIMSON-TOWEL.
   When I deallocate the order line from the batch, the available quantity is 3.
+
 * I can't deallocate an order line from a batch unless I first allocate the
-* order line. 
+  order line.
   Example: I have a batch of 12 ELEGANT-CLOCK with no allocations. When I
   deallocate an order line of 1 ELEGANT-CLOCK the available quantity should
   still be 12.
-* I can't allocate the same line twice. 
+
+* I can't allocate the same line twice.
   Example: I have a batch of 10 BLUE-VASE, and I allocate an order line for 2
   BLUE-VASE. When I allocate the order line again, the batch should still have
   an available quantity of 8.
@@ -124,6 +141,10 @@ code.
 We're not going to show you how TDD works in this book, but we want to show you
 how we would construct a model from this business conversation.
 
+<<first_test>> shows what one of our first tests might look like:
+
+[[first_test]]
+.A first test for allocation
 ====
 [source,python]
 ----
@@ -147,10 +168,13 @@ system, and the names of the classes and variables that I use are taken from the
 business jargon. We could show this code to our non-technical co-workers, and
 they would agree that this correctly describes the behaviour of the system.
 
+<<domain_model_1>> shows a domain model that meets our requirements:
+
+[[domain_model_1]]
+.First cut of a domain model for batches
 ====
 [source,python]
 ----
-
 from dataclasses import dataclass
 from typing import NewType
 
@@ -184,15 +208,19 @@ class Batch:
 <2> OrderLine is an immutable dataclass with no behaviour. In python 3.6 or
     below we would use a named tuple for this kind of object.
 
-Our implemention here is trivial: a Batch just wraps an integer
+Our implementation here is trivial: a Batch just wraps an integer
 "available_quantity" and we decrement that value on allocation. We've written
 quite a lot of code just to subtract one number from another, but we think that
-modelling our domain precisely will pay off. Let's write a new failing test.
+modelling our domain precisely will pay off.
 
+Let's write some new failing tests, as in <<test_can_allocate>>:
+
+
+[[test_can_allocate]]
+.Testing logic for what we can allocate
 ====
 [source,python]
 ----
-
 def make_batch_and_line(sku, batch_qty, line_qty):
     return Batch(
         Reference("batch-001"),
@@ -207,21 +235,15 @@ def make_batch_and_line(sku, batch_qty, line_qty):
 
 def test_can_allocate_if_available_greater_than_required():
     batch, line = make_batch_and_line("small-table", 20, 2)
-
     assert batch.can_allocate(line)
-
 
 def test_can_not_allocate_if_available_smaller_than_required():
     batch, line = make_batch_and_line("small-table", 2, 20)
-
     assert batch.can_allocate(line) is False
-
 
 def test_can_allocate_if_available_equal_to_required():
     batch, line = make_batch_and_line("small-table", 2, 2)
-
     assert batch.can_allocate(line)
-
 ----
 ====
 
@@ -231,16 +253,17 @@ Quantity, a Batch, and a Line; and we've written three simple tests for a new
 method "can_allocate". Again, notice that the names we use mirror the language of
 our domain experts, and the examples we agreed.
 
-We can implement this straight-forwardly, too, by writing the can_allocate
+We can implement this straightforwardly, too, by writing the can_allocate
 method of the Batch.
 
+
+[[id_here]]
+.Listing title
 ====
 [source,python]
 ----
-
 def can_allocate(self, line: OrderLine) -> bool:
     return self.available_quantity >= line.qty
-
 ----
 ====
 
@@ -248,12 +271,17 @@ Let's skip the deallocate method because we can trivially implement it as an
 increment of the Batch.available_quantity property, and jump to the next test:
 
 
+
+[[id_here]]
+.Listing title
+====
+[source,python]
+----
 def test_can_only_deallocate_allocated_lines(): 
     batch, line =  make_batch_and_line("small-table", 20, 2)
     batch.deallocate(line)
 
     assert batch.available_quantity == 20
-
 ----
 ====
 
@@ -262,10 +290,12 @@ unless the batch previously allocated the line. For this to work, our Batch
 needs to understand which lines have been allocated. Let's look at the
 implementation.
 
+
+[[id_here]]
+.Listing title
 ====
 [source,python]
 ----
-
 class Batch: 
     def __init__(self, ref: Reference, sku: Sku, qty: Quantity):
         self.sku = sku 
@@ -290,6 +320,8 @@ class Batch:
 
     def can_allocate(self, line: OrderLine) -> bool:
         return self.available_quantity >= line.qty
+----
+====
 
 
 Now we're getting somewhere! A batch now keeps track of a set of allocated
@@ -298,10 +330,13 @@ just add to the set. Our available_quantity is now a calculated property:
 purchased quantity - allocated quantity. Using a set here makes it simple for us
 to handle the last test, because items in a set are unique.
 
+
+
+[[id_here]]
+.Listing title
 ====
 [source,python]
 ----
-
 def test_allocation_is_idempotent(): 
     batch, line = make_batch_and_line("small-table", 20, 2)
 
@@ -330,6 +365,12 @@ TODO: sidebar on the good and bad.
 
 We've used the _line_ liberally in the previous code listings, but what is a line? In the business language, an _order_ has multiple _line_ items, where each line has a sku, and a quantity. We can imagine that a simple yaml file containing order information might look like this:
 
+
+[[id_here]]
+.Listing title
+====
+[source,yaml]
+----
 Order_reference: 12345
 Lines:
   - sku: RED-CHAIR
@@ -338,16 +379,38 @@ Lines:
     qty: 25
   - sku: GRN-CHAIR
     qty: 25
+----
+====
 
-Notice that while an order has a _reference_ that uniquely identifies it, a _line_ does not. Whenever we have a business concept that has some data but no identity, we often choose to represent it using a _Value Object_. A value object is any domain object that is uniquely identified by the data it holds.
 
+
+Notice that while an order has a _reference_ that uniquely identifies it, a
+_line_ does not. Whenever we have a business concept that has some data but no
+identity, we often choose to represent it using a _Value Object_. A value
+object is any domain object that is uniquely identified by the data it holds.
+
+
+[[id_here]]
+.Listing title
+====
+[source,python]
+----
 @dataclass(frozen=True)
 class OrderLine:
     sku: Reference
     qty: Quantity
+----
+====
 
-Dataclasses are a neat way to represent value objects in Python 3.7, but if you're running an earlier version, we recommend using a named tuple. Either technique will give you _value equality_ which is the fancy way of saying "two lines with the same sku and qty are equal".
+Dataclasses are a neat way to represent value objects in Python 3.7, but if
+you're running an earlier version, we recommend using a named tuple. Either
+technique will give you _value equality_ which is the fancy way of saying "two
+lines with the same sku and qty are equal".
 
+
+[[id_here]]
+.Listing title
+====
 [source,python]
 ----
 from dataclasses import dataclass
@@ -374,15 +437,23 @@ def test_equality():
     assert Money('gbp', 10) == Money('gbp', 10)
     assert Name('Harry', 'Percival') != Name('Bob', 'Gregory')
     assert Line('RED-CHAIR', 5) == Line('RED-CHAIR', 5)
-
 ----
+====
 
-These value objects match our real-world intutions about how their values work. It doesn't matter _which_ £10 note we're talking about, because they all have the same value. Likewise two names are equal if both the first and last name match, and two lines are equivalent if they have the same product code and quantity. We can still have complex behaviour on a value object, though. In fact, it's common to support operations on values, for example mathematical operators.
+These value objects match our real-world intutions about how their values work.
+It doesn't matter _which_ £10 note we're talking about, because they all have
+the same value. Likewise two names are equal if both the first and last name
+match, and two lines are equivalent if they have the same product code and
+quantity. We can still have complex behaviour on a value object, though. In
+fact, it's common to support operations on values, for example mathematical
+operators.
 
+
+[[id_here]]
+.Listing title
+====
 [source,python]
 ----
-
-
 fiver = Money('gbp', 5)
 tenner = Money('gbp', 10)
 
@@ -390,48 +461,63 @@ tenner = Money('gbp', 10)
 def can_add_money_values_for_the_same_currency():
     assert fiver + fiver == tenner
 
-
 def can_subtract_money_values():
     assert tenner - fiver == fiver
-
 
 def adding_different_currencies_fails():
     with pytest.raises(ValueError):
         Money('usd', 10) + Money('gbp', 10)
 
-
 def can_multiply_money_by_a_number():
         assert fiver * 5 == Money('gbp', 25)
-
 
 def multiplying_two_money_values_is_an_error():
     with pytest.raises(TypeError):
         tenner * fiver
-
 ----
+====
+
+
 
 
 ==== Value Objects and Entities
 
-An order line is uniquely identified by its sku and quantity, if we change one of those values, we now have a new line. That's the definition of a value object: any object that is only idetified by its data, and doesn have a long-lived identity. What about a batch though? That _is_ identified by a reference. 
+An order line is uniquely identified by its sku and quantity, if we change one
+of those values, we now have a new line. That's the definition of a value
+object: any object that is only idetified by its data, and doesn have a
+long-lived identity. What about a batch though? That _is_ identified by a
+reference.
 
-We use the term _entity_ to describe a domain object that has long-lived identity. On the previous page we introduced a _Name_ class as a value object. If we take the name "Harry Percival" and change one letter, we have the new Name object "Barry Percival".
+We use the term _entity_ to describe a domain object that has long-lived
+identity. On the previous page we introduced a _Name_ class as a value object.
+If we take the name "Harry Percival" and change one letter, we have the new
+Name object "Barry Percival".
 
 It should be clear that "Harry Percival" is not equal to "Barry Percival".
 
+
+[[id_here]]
+.Listing title
+====
 [source,python]
 ----
-
 def test_name_equality():
     assert Name("Harry", "Percival") != Name("Barry", "Percival")
-
 ----
+====
 
-But what about Harry as a _person_? People do change their names, and their marital status, and even their gender, but we continue to recognise them as the same individual. That's because humans, unlike names, have a persistent _identity_. 
 
+But what about Harry as a _person_? People do change their names, and their
+marital status, and even their gender, but we continue to recognise them as the
+same individual. That's because humans, unlike names, have a persistent
+_identity_.
+
+
+[[id_here]]
+.Listing title
+====
 [source,python]
 ----
-
 class Person:
 
     def __init__(self, name: Name):
@@ -445,17 +531,26 @@ def test_barry_is_harry():
     barry.name = Name("Barry", "Percival")
 
     assert harry is barry and barry is harry
-
 ----
+====
 
-Entities, unlike values, have _identity equality_. We can change their values and they are still recognisably the same thing. Batches, in our example, are entities. We can allocate lines to a batch, or change the date that we expect it to arrive, and it will still be the same entity.
 
-We usually make this explicit in code by implementating equality operators on entities.
 
+Entities, unlike values, have _identity equality_. We can change their values
+and they are still recognisably the same thing. Batches, in our example, are
+entities. We can allocate lines to a batch, or change the date that we expect
+it to arrive, and it will still be the same entity.
+
+We usually make this explicit in code by implementating equality operators on
+entities.
+
+
+
+[[id_here]]
+.Listing title
 ====
 [source,python]
 ----
-
 class Batch:
     def __init__(self, reference: str):
         self.reference = reference
@@ -471,60 +566,15 @@ class Batch:
 ====
 
 
+=== Wrap-up
 
+TODO: could talk about...?
 
-[[id_here]]
-.Placeholder re: Line value object shall we keep it?
-====
-[source,python]
-----
-@dataclass
-class Line:
-    sku: str
-    qty: int
-
-
-class _Lines:
-    #...
-
-    @property
-    def lines(self):
-        return [
-            Line(sku, qty)
-            for sku, qty in self._lines.items()
-        ]
-----
-====
-
-could talk about...?
-
-* value objects [x]
-* dataclass [x]
 * one day wanting to sum lines for total available quantity of a sku across all shipments []
 
 I bet 14p that we'll find a natural place to use a `sum` method in the course of writing the book, and then we get to act all smug when we can just do it with an __add__ on `Line`.
 
-The core algorithm (in `allocate()`) is essentially the same, but this
-model is much richer.  The key concepts of the business are represented,
-the code uses the domain language and is thus likely to remain readable
-in 6 months' time, and it actually delivers the requirements of sorting by ETA
-and decrementing available quantities.
 
-Perhaps you prefer one or the other. Maybe you'd start with the minimal
-implementation and grow into a more complex one over time.  But either way,
-the critical thing about the domain is that it captures the core understanding
-of the business, and it should be the most important part of our code.  It's
-the place where we want to have maximum flexibility in evolving over time.
-It's the place where we expect to get the most value out of unit testing.
-It's not something we want tied down with infrastructure constraints.
-
-Refactoring from the Harry model to the Bob model took all of 2 hours. How
-long do you think it would have taken if all the models were Django models,
-tightly coupled to the database and any number of presentation concerns,
-and the core algorithm was buried inside a view controller, surrounded by
-authentication, validation and HTTP request/response transformation code?
-
-=== Wrap-up
 
 // IRL sources of complexity from Csaba:
 // maybe one could be used as a further examples of when classes are useful
