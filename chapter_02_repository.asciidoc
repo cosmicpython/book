@@ -288,6 +288,15 @@ def allocate_endpoint():
 
 === Introducing Repository Pattern.
 
+The repository pattern is an abstraction over persistent storage. It hides the
+boring details of data access by pretending that our database is really an
+in-memory data structure with semantics similar to a set or dict.
+
+The ideal repository has just two methods: `add` to put a new item in the
+repository, and `get` to return a previously added item. We stick rigidly to
+using these methods for data access in our domain and our _service layer_. This
+self-imposed simplicity stops us from coupling our domain model to the database.
+
 Whenever we introduce an architectural pattern in this book, we'll always be
 trying to ask: "what do we get for this?  And what does it cost us?". Rich
 Hickey once said "programmers know the benefits of everything and the tradeoffs
@@ -329,7 +338,7 @@ def test_repository_can_save_an_order_to_the_database(session):
 
     repo = repository.OrderRepository(session)
     repo.add(order)
-    session.commit()  #TODO: does this belong in repository?
+    session.commit()
 
     rows = list(session.execute('SELECT * FROM "order_lines"'))
     assert rows == [
