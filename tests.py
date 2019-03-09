@@ -7,10 +7,10 @@ from pathlib import Path
 
 CHAPTERS = [
     'chapter_01_domain_model',
-    # 'chapter_02_repository',
-    # "chapter_03_flask_api_and_service_layer",
-    # "appendix_project_structure",
-    # "chapter_04_uow",
+    'chapter_02_repository',
+    "chapter_03_flask_api_and_service_layer",
+    "appendix_project_structure",
+    "chapter_04_uow",
 ]
 
 
