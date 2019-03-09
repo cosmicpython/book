@@ -131,6 +131,13 @@ so that the examples are easier to talk about.
   BLUE-VASE. When I allocate the order line again, the batch should still have
   an available quantity of 8.
 
+* Batches have an _ETA_ if they are currently shipping, or they may be in
+  _Warehouse stock_.
+
+* We allocate to warehouse stock in preference to shipment batches
+
+* We allocate to shipment batches in order of which has the earliest ETA.
+  
 
 Why not have a go at solving this problem yourself?  Write a few unit tests and
 see if you can capture the essence of these business rules in some nice, clean
@@ -147,14 +154,10 @@ how we would construct a model from this business conversation.
 .A first test for allocation (test_allocation.py)
 ====
 [source,python]
-[role="non-head"]
 ----
-def test_allocating_to_a_batch_reduces_the_available_quantity(): 
-    sku = Sku("SMALL-TABLE")
-    ref = Reference("batch-001")
-
-    batch = Batch(ref, sku, Quantity(20))
-    line = OrderLine(sku, Quantity(2))
+def test_allocating_to_a_batch_reduces_the_available_quantity():
+    batch = Batch("batch-001", "SMALL-TABLE", qty=20, eta=date.today())
+    line = OrderLine('order-ref', "SMALL-TABLE", 2)
 
     batch.allocate(line)
 
@@ -176,24 +179,26 @@ they would agree that this correctly describes the behaviour of the system.
 [source,python]
 [role="non-head"]
 ----
+from __future__ import annotations
 from dataclasses import dataclass
-from typing import NewType
-
-Quantity = NewType("Quantity", int)  #<1>
-Sku = NewType("Sku", str)
-Reference = NewType("Reference", str)
+from datetime import date
+from typing import Optional
 
 
-@dataclass(frozen=True)  #<2>
+@dataclass(frozen=True)  #<1>
 class OrderLine:
-    sku: Sku
-    qty: Quantity
+    orderid: str
+    sku: str
+    qty: int
 
 
 class Batch:
-    def __init__(self, ref: Reference, sku: Sku, qty: Quantity):
+    def __init__(
+        self, ref: str, sku: str, qty: int, eta: Optional[date]  #<2>
+    ):
         self.sku = sku 
         self.reference = ref 
+        self.eta = eta
         self.available_quantity = qty
 
     def allocate(self, line: OrderLine): 
@@ -202,12 +207,14 @@ class Batch:
 ====
 
 
-<1> We're using "NewType" here to wrap primitive values. This allows our type
-    checker to make sure that we don't pass a Sku where a Reference is expected.
-    Whether you this is wonderful or appalling is a matter of debate.
-
-<2> OrderLine is an immutable dataclass with no behaviour. In python 3.6 or
+<1> OrderLine is an immutable dataclass with no behaviour. In python 3.6 or
     below we would use a named tuple for this kind of object.
+
+<2> Type hints are still a matter of controversy in the Python world. For
+    domain models, they can sometimes help to clarify or document what the
+    expected arguments are, and people with IDEs are often grateful for them.
+    You may decide the price paid in terms of readability is too high.
+
 
 Our implementation here is trivial: a Batch just wraps an integer
 "available_quantity" and we decrement that value on allocation. We've written
@@ -224,16 +231,8 @@ Let's write some new failing tests, as in <<test_can_allocate>>:
 ----
 def make_batch_and_line(sku, batch_qty, line_qty):
     return (
-        Batch(
-            Reference("batch-001"),
-            Sku(sku),
-            Quantity(batch_qty)
-        ),
-        OrderLine(
-            OrderId("order-123"),
-            Sku(sku),
-            Quantity(line_qty)
-        ),
+        Batch("batch-001", sku, batch_qty, eta=date.today()),
+        OrderLine("order-123", sku, line_qty)
     )
 
 
@@ -252,9 +251,9 @@ def test_can_allocate_if_available_equal_to_required():
 ====
 
 There's nothing too unexpected here. We've refactored our test suite so that we
-don't keep repeating the same lines of code to create a Sku, a Reference, a
-Quantity, a Batch, and a Line; and we've written three simple tests for a new
-method "can_allocate". Again, notice that the names we use mirror the language of
+don't keep repeating the same lines of code to create a batch and a line for
+the same sku; and we've written three simple tests for a new
+method `can_allocate`. Again, notice that the names we use mirror the language of
 our domain experts, and the examples we agreed.
 
 We can implement this straightforwardly, too, by writing the can_allocate
@@ -299,12 +298,15 @@ implementation.
 [source,python]
 [role="non-head"]
 ----
-class Batch: 
-    def __init__(self, ref: Reference, sku: Sku, qty: Quantity):
-        self.sku = sku 
-        self.reference = ref 
+class Batch:
+    def __init__(
+        self, ref: str, sku: str, qty: int, eta: Optional[date]
+    ):
+        self.sku = sku
+        self.reference = ref
+        self.eta = eta
         self._purchased_quantity = qty
-        self._allocations = set()
+        self._allocations = set()  # type: Set[OrderLine]
 
     def allocate(self, line: OrderLine) -> None:
         if self.can_allocate(line):
@@ -315,11 +317,11 @@ class Batch:
             self._allocations.remove(line)
 
     @property
-    def allocated_quantity(self) -> Quantity: 
-        return Quantity(sum(line.qty for line in self._allocations))
+    def allocated_quantity(self) -> int: 
+        return sum(line.qty for line in self._allocations)
 
     @property 
-    def available_quantity(self) -> Quantity: 
+    def available_quantity(self) -> int: 
         return self._purchased_quantity - self.allocated_quantity
 
     def can_allocate(self, line: OrderLine) -> bool:
@@ -336,7 +338,7 @@ to handle the last test, because items in a set are unique.
 
 
 [[last_test]]
-.Last test!  (test_allocation.py)
+.Last batch test!  (test_allocation.py)
 ====
 [source,python]
 ----
@@ -355,10 +357,117 @@ see how sticking rigidly to our principles of encapsulation and careful
 layering will help us to avoid a ball of mud. 
 
 
+=== Not everything has to be an object: a domain service function
+
+TODO: discuss what a domain service is.
+
+[[test_allocate_by_eta]]
+.Testing our domain service (test_allocates_by_eta.py)
+====
+[source,python]
+----
+from model import allocate, OrderLine, Batch
+#...
+
+def test_prefers_warehouse_batches_to_shipments():
+    warehouse_batch = Batch('wh-batch', 'sku1', 100, eta=None)
+    shipment_batch = Batch('sh-batch', 'sku1', 100, eta=tomorrow)
+    line = OrderLine('oref', 'sku1', 10)
+
+    allocate(line, [warehouse_batch, shipment_batch])
+
+    assert warehouse_batch.available_quantity == 90
+    assert shipment_batch.available_quantity == 100
+
+def test_prefers_earlier_batches():
+    earliest = Batch('sh-batch', 'sku1', 100, eta=today)
+    medium = Batch('sh-batch', 'sku1', 100, eta=tomorrow)
+    latest = Batch('sh-batch', 'sku1', 100, eta=later)
+    line = OrderLine('oref', 'sku1', 10)
+
+    allocate(line, [medium, earliest, latest])
+
+    assert earliest.available_quantity == 90
+    assert medium.available_quantity == 100
+    assert latest.available_quantity == 100
+----
+====
+
+
+And our service looks like this:
+
+
+
+[[domain_service]]
+.A standalone function for our domain service (model.py)
+====
+[source,python]
+----
+def allocate(line: OrderLine, batches: List[Batch]) -> None:
+    for batch in sorted(batches):
+        if batch.can_allocate(line):
+            batch.allocate(line)
+            return
+----
+====
+
+==== Python's magic methods let us use our models with idomatic Python
+
+Python's magic methods allow us to use that nice, idiomatic `sorted()` function;
+to make it work we implement `__gt__` on our domain model
+
+
+[[dunder_gt]]
+.Magic methods can express domain semantics (model.py)
+====
+[source,python]
+----
+class Batch:
+    #...
+
+    def __gt__(self, other):
+        if self.eta is None:
+            return False
+        return self.eta > other.eta
+----
+====
+
+
+
+
+
 .On Type hints
 *******************************************************************************
 
-TODO: sidebar on the good and bad.
+If you really want to go to town with type hints
+
+[[too_many_types]]
+.Just taking it way too far.
+====
+[source,python]
+[role="skip"]
+----
+from dataclasses import dataclass
+from typing import NewType
+
+Quantity = NewType("Quantity", int)  #<1>
+Sku = NewType("Sku", str)
+Reference = NewType("Reference", str)
+
+#...
+
+class Batch:
+    def __init__(self, ref: Reference, sku: Sku, qty: Quantity):
+        self.sku = sku 
+        self.reference = ref 
+        self.available_quantity = qty
+
+----
+====
+
+<1> You can even use "NewType" here to wrap primitive values. This allows our type
+    checker to make sure that we don't pass a Sku where a Reference is expected.
+    Whether you this is wonderful or appalling is a matter of debate.
 
 *******************************************************************************
 
@@ -556,8 +665,7 @@ entities.
 [source,python]
 ----
 class Batch:
-    def __init__(self, ref: Reference, sku: Sku, qty: Quantity):
-        #...
+    #...
 
     def __eq__(self, other):
         if not isinstance(other, Batch):
