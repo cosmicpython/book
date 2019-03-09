@@ -385,7 +385,7 @@ def test_repository_can_modify_an_existing_order(session):
     order = repo.get("r1")
     order['oldsku2'] = 100
     order['newsku'] = 14
-    session.commit()  #TODO: does this belong in repository?
+    session.commit()
 
     rows = list(session.execute('SELECT * FROM "order_lines"'))
     assert rows == [
