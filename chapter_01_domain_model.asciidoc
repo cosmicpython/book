@@ -147,6 +147,7 @@ how we would construct a model from this business conversation.
 .A first test for allocation (test_allocation.py)
 ====
 [source,python]
+[role="non-head"]
 ----
 def test_allocating_to_a_batch_reduces_the_available_quantity(): 
     sku = Sku("SMALL-TABLE")
@@ -173,6 +174,7 @@ they would agree that this correctly describes the behaviour of the system.
 .First cut of a domain model for batches (model.py)
 ====
 [source,python]
+[role="non-head"]
 ----
 from dataclasses import dataclass
 from typing import NewType
@@ -295,6 +297,7 @@ implementation.
 .A decent first cut of the domain model (model.py)
 ====
 [source,python]
+[role="non-head"]
 ----
 class Batch: 
     def __init__(self, ref: Reference, sku: Sku, qty: Quantity):

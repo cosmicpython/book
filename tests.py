@@ -51,6 +51,11 @@ def check_listing(listing, chapter):
         return
     elif 'tree' in listing.classes:
         actual_contents = tree_for_branch(chapter)
+    elif 'non-head' in listing.classes:
+        actual_contents = file_contents_for_tag(
+            listing.filename, listing.tag, chapter
+        )
+
     else:
         actual_contents = file_contents_for_branch(
             listing.filename, listing.tag, chapter
@@ -121,6 +126,14 @@ def parse_listings(chapter_name):
 
 
 def file_contents_for_branch(filename, tag, chapter_name):
+    return subprocess.run(
+        ['git', 'show', f'origin/{chapter_name}:{filename}'],
+        cwd=Path(__file__).parent / 'code',
+        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        check=True
+    ).stdout.decode()
+
+def file_contents_for_tag(filename, tag, chapter_name):
     output = subprocess.run(
         ['git', 'show', f'origin/{chapter_name}^{{/\\[{tag}\\]}}:{filename}'],
         cwd=Path(__file__).parent / 'code',
