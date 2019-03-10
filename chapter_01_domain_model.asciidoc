@@ -357,92 +357,15 @@ see how sticking rigidly to our principles of encapsulation and careful
 layering will help us to avoid a ball of mud. 
 
 
-=== Not everything has to be an object: a domain service function
 
-TODO: discuss what a domain service is.
-
-[[test_allocate_by_eta]]
-.Testing our domain service (test_allocates_by_eta.py)
-====
-[source,python]
-----
-from model import allocate, OrderLine, Batch
-#...
-
-def test_prefers_warehouse_batches_to_shipments():
-    warehouse_batch = Batch('wh-batch', 'sku1', 100, eta=None)
-    shipment_batch = Batch('sh-batch', 'sku1', 100, eta=tomorrow)
-    line = OrderLine('oref', 'sku1', 10)
-
-    allocate(line, [warehouse_batch, shipment_batch])
-
-    assert warehouse_batch.available_quantity == 90
-    assert shipment_batch.available_quantity == 100
-
-def test_prefers_earlier_batches():
-    earliest = Batch('sh-batch', 'sku1', 100, eta=today)
-    medium = Batch('sh-batch', 'sku1', 100, eta=tomorrow)
-    latest = Batch('sh-batch', 'sku1', 100, eta=later)
-    line = OrderLine('oref', 'sku1', 10)
-
-    allocate(line, [medium, earliest, latest])
-
-    assert earliest.available_quantity == 90
-    assert medium.available_quantity == 100
-    assert latest.available_quantity == 100
-----
-====
-
-
-And our service looks like this:
-
-
-
-[[domain_service]]
-.A standalone function for our domain service (model.py)
-====
-[source,python]
-----
-def allocate(line: OrderLine, batches: List[Batch]) -> None:
-    for batch in sorted(batches):
-        if batch.can_allocate(line):
-            batch.allocate(line)
-            return
-----
-====
-
-==== Python's magic methods let us use our models with idomatic Python
-
-Python's magic methods allow us to use that nice, idiomatic `sorted()` function;
-to make it work we implement `__gt__` on our domain model
-
-
-[[dunder_gt]]
-.Magic methods can express domain semantics (model.py)
-====
-[source,python]
-----
-class Batch:
-    #...
-
-    def __gt__(self, other):
-        if self.eta is None:
-            return False
-        return self.eta > other.eta
-----
-====
-
-
-
-
-
-.On Type hints
+.More Types for more Type hints
 *******************************************************************************
 
-If you really want to go to town with type hints
+If you really want to go to town with type hints, you could go as far as
+wrapping primitive types using `typing.NewType`:
 
 [[too_many_types]]
-.Just taking it way too far.
+.Just taking it way too far, Bob.
 ====
 [source,python]
 [role="skip"]
@@ -450,7 +373,7 @@ If you really want to go to town with type hints
 from dataclasses import dataclass
 from typing import NewType
 
-Quantity = NewType("Quantity", int)  #<1>
+Quantity = NewType("Quantity", int)
 Sku = NewType("Sku", str)
 Reference = NewType("Reference", str)
 
@@ -465,9 +388,12 @@ class Batch:
 ----
 ====
 
-<1> You can even use "NewType" here to wrap primitive values. This allows our type
-    checker to make sure that we don't pass a Sku where a Reference is expected.
-    Whether you this is wonderful or appalling is a matter of debate.
+
+That would allow our type checker to make sure that we don't pass a Sku where a
+Reference is expected, for example.
+
+Whether you think this is wonderful or appallingfootnote:[It is appalling.
+Please, please don't do this. Harry.] is a matter of debate.
 
 *******************************************************************************
 
@@ -678,6 +604,104 @@ class Batch:
 ====
 
 TODO: talk about hash
+
+
+=== Not everything has to be an object: a domain service function
+
+We've made a model to represent Batches, but what we actually need
+to do is allocate order lines against a specific set of batches that
+represent all our stock.  
+
+[quote, Eric Evans (in the DDD book)]
+____
+Sometimes, it just isn't a thing.
+____
+
+Evans discusses the idea of "domain services", operations that don't
+have a natural home in an Entity or Value object.  A thing that
+allocates an order line, given a set of batches, sounds a lot like
+a function, and we can take advantage of the fact that Python is
+a multi-paradigm language and just make it a function.
+
+<<test_allocate_by_eta>> shows how we might test-drive such a function:
+
+[[test_allocate_by_eta]]
+.Testing our domain service (test_allocates_by_eta.py)
+====
+[source,python]
+----
+from model import allocate, OrderLine, Batch
+#...
+
+def test_prefers_warehouse_batches_to_shipments():
+    warehouse_batch = Batch('wh-batch', 'sku1', 100, eta=None)
+    shipment_batch = Batch('sh-batch', 'sku1', 100, eta=tomorrow)
+    line = OrderLine('oref', 'sku1', 10)
+
+    allocate(line, [warehouse_batch, shipment_batch])
+
+    assert warehouse_batch.available_quantity == 90
+    assert shipment_batch.available_quantity == 100
+
+def test_prefers_earlier_batches():
+    earliest = Batch('sh-batch', 'sku1', 100, eta=today)
+    medium = Batch('sh-batch', 'sku1', 100, eta=tomorrow)
+    latest = Batch('sh-batch', 'sku1', 100, eta=later)
+    line = OrderLine('oref', 'sku1', 10)
+
+    allocate(line, [medium, earliest, latest])
+
+    assert earliest.available_quantity == 90
+    assert medium.available_quantity == 100
+    assert latest.available_quantity == 100
+----
+====
+
+
+And our service looks might look like this:
+
+
+[[domain_service]]
+.A standalone function for our domain service (model.py)
+====
+[source,python]
+----
+def allocate(line: OrderLine, batches: List[Batch]) -> None:
+    batch = next(
+        b for b in sorted(batches) if b.can_allocate(line)
+    )
+    batch.allocate(line)
+----
+====
+
+
+==== Python's magic methods let us use our models with idomatic Python
+
+Python's magic methods allow us to use that nice, idiomatic `sorted()`
+function; to make it work we implement `__gt__` on our domain model:
+
+
+[[dunder_gt]]
+.Magic methods can express domain semantics (model.py)
+====
+[source,python]
+----
+class Batch:
+    #...
+
+    def __gt__(self, other):
+        if self.eta is None:
+            return False
+        return self.eta > other.eta
+----
+====
+
+That's lovely.
+
+And we now have a domain service which we can use for our first use case.
+
+
+
 
 === Wrap-up
 
