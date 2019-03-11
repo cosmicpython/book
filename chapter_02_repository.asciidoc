@@ -171,8 +171,9 @@ metadata = MetaData()
 
 order_lines = Table(  #<2>
     'order_lines', metadata,
-    Column('orderid', String(255), primary_key=True),
-    Column('sku', String(255), primary_key=True),
+    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('orderid', String(255)),
+    Column('sku', String(255)),
     Column('qty', Integer, nullable=False),
 )
 #...
@@ -208,15 +209,17 @@ some tests for it, as in <<orm_tests>>:
 [source,python]
 ----
 def test_orderline_mapper_can_load_lines(session):
-    session.execute('INSERT INTO "order_lines" VALUES ("order1", "sku1", 12)')
-    session.execute('INSERT INTO "order_lines" VALUES ("order1", "sku2", 13)')
-    session.execute('INSERT INTO "order_lines" VALUES ("order2", "sku3", 14)')
+    session.execute(
+        'INSERT INTO order_lines (orderid, sku, qty) VALUES '
+        '("order1", "sku1", 12),'
+        '("order1", "sku2", 13),'
+        '("order2", "sku3", 14)'
+    )
     expected = [
         model.OrderLine('order1', 'sku1', 12),
         model.OrderLine('order1', 'sku2', 13),
         model.OrderLine('order2', 'sku3', 14),
     ]
-
     assert session.query(model.OrderLine).all() == expected
 
 
@@ -225,10 +228,8 @@ def test_orderline_mapper_can_save_lines(session):
     session.add(new_line)
     session.commit()
 
-    rows = list(session.execute('SELECT * FROM "order_lines"'))
-    assert rows == [
-        ('order1', 'sku1', 12),
-    ]
+    rows = list(session.execute('SELECT orderid, sku, qty FROM "order_lines"'))
+    assert rows == [('order1', 'sku1', 12)]
 ----
 ====
 
@@ -329,23 +330,47 @@ def test_repository_can_save_a_batch(session):
     repo.add(batch)
     session.commit()
 
-    rows = list(session.execute('SELECT * FROM "batches"'))
+    rows = list(session.execute(
+        'SELECT reference, sku, _purchased_quantity, eta FROM "batches"')
+    )
     assert rows == [('batch1', 'sku1', 100, None)]
 ----
 ====
 
 
+The next test involves retrieving batches and allocations so it's more
+complex:
+
 
 [[repo_test_retrieve]]
-.Repository test for retrieving an object (test_repository.py)
+.Repository test for retrieving a complex object (test_repository.py)
 ====
 [source,python]
 ----
 def test_repository_can_retrieve_a_batch_with_allocations(session):
-    session.execute('INSERT INTO "order_lines" VALUES ("order1", "sku1", 12)')
-    session.execute('INSERT INTO "batches" VALUES ("batch1", "sku1", 100, null)')
-    session.execute('INSERT INTO "batches" VALUES ("batch2", "sku1", 100, null)')
-    session.execute('INSERT INTO "allocations" VALUES ("batch1", "order1", "sku1")')
+    session.execute(
+        'INSERT INTO order_lines (orderid, sku, qty) VALUES ("order1", "sku1", 12)'
+    )
+    [[olid]] = session.execute(
+        'SELECT id FROM order_lines WHERE orderid=:orderid AND sku=:sku',
+        dict(orderid='order1', sku='sku1')
+    )
+    session.execute(
+        'INSERT INTO batches (reference, sku, _purchased_quantity, eta)'
+        ' VALUES ("batch1", "sku1", 100, null)'
+    )
+    [[b1id]] = session.execute(
+        'SELECT id FROM batches WHERE reference=:ref AND sku=:sku',
+        dict(ref='batch1', sku='sku1')
+    )
+    session.execute(
+        'INSERT INTO batches (reference, sku, _purchased_quantity, eta)'
+        ' VALUES ("batch2", "sku1", 100, null)'
+    )
+    session.execute(
+        'INSERT INTO allocations (orderline_id, batch_id) VALUES (:olid, :b1id)',
+        dict(olid=olid, b1id=b1id)
+    )
 
     repo = repository.BatchRepository(session)
     retrieved = repo.get('batch1')
@@ -360,7 +385,9 @@ def test_repository_can_retrieve_a_batch_with_allocations(session):
 Whether or not you painstakingly write tests for every model is a judgement
 call.  Once you have one class tested for create/modify/save, you might be
 happy to go on and do the others with a minimal roundtrip test, or even nothing
-at all, if they all follow a similar pattern.
+at all, if they all follow a similar pattern.  In our case, the ORM config
+that sets up the `._allocations` set is a little complex, so it merited a
+specific test.
 
 
 You end up with something like <<batch_repository>>:
@@ -381,10 +408,11 @@ class BatchRepository:
 
     def get(self, reference):
         return self.session.query(model.Batch).filter_by(reference=reference).one()
+
+    def list(self):
+        return self.session.query(model.Batch).all()
 ----
 ====
-
-TODO: add `.list()` option
 
 
 And now our flask endpoint might look something like <<api_endpoint_with_repo>>:
@@ -397,10 +425,9 @@ And now our flask endpoint might look something like <<api_endpoint_with_repo>>:
 ----
 @flask.route.gubbbins
 def allocate_endpoint():
-    lines = 
     batches = BatchRepository.list()
-    for l in request.params['lines'])
-        allocate(OrderLine(l['orderid'], l['sku'], l['qty']), batches)
+    lines = [OrderLine(l['orderid'], l['sku'], l['qty']) for l in lines]
+    allocate(lines, batches)
     session.commit()
     return 201
 ----
