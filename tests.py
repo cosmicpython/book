@@ -37,7 +37,6 @@ def test_each_chapter_follows_the_last(chapter):
     if chapter_no == 0:
         return
     previous = CHAPTERS[chapter_no - 1]
-    print(git_log(chapter))
     assert f'(origin/{previous}' in git_log(chapter), f'{chapter} did not follow {previous}'
 
 
