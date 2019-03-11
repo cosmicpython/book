@@ -151,7 +151,7 @@ how we would construct a model from this business conversation.
 <<first_test>> shows what one of our first tests might look like:
 
 [[first_test]]
-.A first test for allocation (test_allocation.py)
+.A first test for allocation (test_batches.py)
 ====
 [source,python]
 ----
@@ -225,7 +225,7 @@ Let's write some new failing tests, as in <<test_can_allocate>>:
 
 
 [[test_can_allocate]]
-.Testing logic for what we can allocate (test_allocation.py)
+.Testing logic for what we can allocate (test_batches.py)
 ====
 [source,python]
 ----
@@ -240,21 +240,26 @@ def test_can_allocate_if_available_greater_than_required():
     batch, line = make_batch_and_line("small-table", 20, 2)
     assert batch.can_allocate(line)
 
-def test_can_not_allocate_if_available_smaller_than_required():
+def test_cannot_allocate_if_available_smaller_than_required():
     batch, line = make_batch_and_line("small-table", 2, 20)
     assert batch.can_allocate(line) is False
 
 def test_can_allocate_if_available_equal_to_required():
     batch, line = make_batch_and_line("small-table", 2, 2)
     assert batch.can_allocate(line)
+
+def test_cannot_allocate_if_skus_do_not_match():
+    batch = Batch("batch-001", 'sku1', 100, eta=None)
+    line = OrderLine("order-123", 'sku2', 10)
+    assert batch.can_allocate(line) is False
 ----
 ====
 
 There's nothing too unexpected here. We've refactored our test suite so that we
 don't keep repeating the same lines of code to create a batch and a line for
-the same sku; and we've written three simple tests for a new
-method `can_allocate`. Again, notice that the names we use mirror the language of
-our domain experts, and the examples we agreed.
+the same sku; and we've written four simple tests for a new method
+`can_allocate`. Again, notice that the names we use mirror the language of our
+domain experts, and the examples we agreed.
 
 We can implement this straightforwardly, too, by writing the can_allocate
 method of the Batch.
@@ -266,7 +271,7 @@ method of the Batch.
 [source,python]
 ----
     def can_allocate(self, line: OrderLine) -> bool:
-        return self.available_quantity >= line.qty
+        return self.sku == line.sku and self.available_quantity >= line.qty
 ----
 ====
 
@@ -275,7 +280,7 @@ increment of the Batch.available_quantity property, and jump to the next test:
 
 
 [[test_deallocate_unallocated]]
-.This test is going to require a smarter model (test_allocation.py)
+.This test is going to require a smarter model (test_batches.py)
 ====
 [source,python]
 ----
@@ -325,7 +330,7 @@ class Batch:
         return self._purchased_quantity - self.allocated_quantity
 
     def can_allocate(self, line: OrderLine) -> bool:
-        return self.available_quantity >= line.qty
+        return self.sku == line.sku and self.available_quantity >= line.qty
 ----
 ====
 
@@ -338,7 +343,7 @@ to handle the last test, because items in a set are unique.
 
 
 [[last_test]]
-.Last batch test!  (test_allocation.py)
+.Last batch test!  (test_batches.py)
 ====
 [source,python]
 ----
@@ -623,22 +628,19 @@ allocates an order line, given a set of batches, sounds a lot like
 a function, and we can take advantage of the fact that Python is
 a multi-paradigm language and just make it a function.
 
-<<test_allocate_by_eta>> shows how we might test-drive such a function:
+<<test_allocate>> shows how we might test-drive such a function:
 
-[[test_allocate_by_eta]]
-.Testing our domain service (test_allocates_by_eta.py)
+[[test_allocate]]
+.Testing our domain service (test_allocate.py)
 ====
 [source,python]
 ----
-from model import allocate, OrderLine, Batch
-#...
-
 def test_prefers_warehouse_batches_to_shipments():
     warehouse_batch = Batch('wh-batch', 'sku1', 100, eta=None)
     shipment_batch = Batch('sh-batch', 'sku1', 100, eta=tomorrow)
     line = OrderLine('oref', 'sku1', 10)
 
-    allocate(line, [warehouse_batch, shipment_batch])
+    allocate([line], [warehouse_batch, shipment_batch])
 
     assert warehouse_batch.available_quantity == 90
     assert shipment_batch.available_quantity == 100
@@ -649,11 +651,22 @@ def test_prefers_earlier_batches():
     latest = Batch('sh-batch', 'sku1', 100, eta=later)
     line = OrderLine('oref', 'sku1', 10)
 
-    allocate(line, [medium, earliest, latest])
+    allocate([line], [medium, earliest, latest])
 
     assert earliest.available_quantity == 90
     assert medium.available_quantity == 100
     assert latest.available_quantity == 100
+
+def test_can_allocate_multiple_lines():
+    sku1_batch = Batch('batch1', 'sku1', 100, eta=today)
+    sku2_batch = Batch('batch2', 'sku2', 100, eta=today)
+    sku1_line = OrderLine('oref', 'sku1', 10)
+    sku2_line = OrderLine('oref', 'sku2', 10)
+
+    allocate([sku1_line, sku2_line], [sku1_batch, sku2_batch])
+
+    assert sku1_batch.available_quantity == 90
+    assert sku2_batch.available_quantity == 90
 ----
 ====
 
@@ -665,20 +678,25 @@ And our service looks might look like this:
 .A standalone function for our domain service (model.py)
 ====
 [source,python]
+[role="non-head"]
 ----
-def allocate(line: OrderLine, batches: List[Batch]) -> None:
-    batch = next(
-        b for b in sorted(batches) if b.can_allocate(line)
-    )
-    batch.allocate(line)
+def allocate(lines: List[OrderLine], batches: List[Batch]) -> None:
+    for line in lines:
+        batch = next(
+            b for b in sorted(batches) if b.can_allocate(line)
+        )
+        batch.allocate(line)
 ----
 ====
 
 
 ==== Python's magic methods let us use our models with idomatic Python
 
-Python's magic methods allow us to use that nice, idiomatic `sorted()`
-function; to make it work we implement `__gt__` on our domain model:
+You may or may not like the use of `next()` above, but we're pretty
+sure you'll agree that being able to use `sorted()` on our list of
+batches is nice, idiomatic Python.
+
+To make it work we implement `__gt__` on our domain model, as in <<dunder_gt>>:
 
 
 [[dunder_gt]]
@@ -700,8 +718,62 @@ class Batch:
 
 That's lovely.
 
-And we now have a domain service which we can use for our first use case.
 
+==== Exceptions can express domain concepts too
+
+One final concept to cover, which is the idea that exceptions
+can be used to express domain concepts too.  In our conversations
+with the domain experts we've learned about the possibility that
+an order cannot be allocated because we are _Out of Stock_, and
+we can capture that using a Domain Exception:
+
+
+[[test_out_of_stock]]
+.Testing out of stock exception (test_allocate.py)
+====
+[source,python]
+----
+def test_raises_out_of_stock_exception_if_cannot_allocate():
+    sku1_batch = Batch('batch1', 'sku1', 100, eta=today)
+    sku2_line = OrderLine('oref', 'sku2', 10)
+
+    with pytest.raises(OutOfStock) as ex:
+        allocate([sku2_line], [sku1_batch])
+    assert 'sku2' in str(ex)
+
+def test_out_of_stock_does_not_prevent_other_lines_being_allocated():
+    #...
+
+def test_multiple_lines_can_be_out_of_stock():
+    #...
+----
+====
+
+We won't bore you too much with the implementation, but the main thing
+to note is that we take care in naming our exceptions in the ubiquitous
+language, just like we do our entities, value objects and services.
+
+[[out_of_stock]]
+.Raising a domain exception (model.py)
+====
+[source,python]
+----
+class OutOfStock(Exception):
+    pass
+
+
+def allocate(lines: List[OrderLine], batches: List[Batch]) -> None:
+    skus_out_of_stock = set()
+    #...
+
+    if skus_out_of_stock:
+        raise OutOfStock(f'Out of stock for sku(s) {",".join(skus_out_of_stock)}')
+----
+====
+
+
+That'll probably do for now! We have a domain service which we can use for our
+first use case.   But first we'll need a database.
 
 
 
@@ -711,7 +783,9 @@ TODO: could talk about...?
 
 * one day wanting to sum lines for total available quantity of a sku across all shipments []
 
-I bet 14p that we'll find a natural place to use a `sum` method in the course of writing the book, and then we get to act all smug when we can just do it with an __add__ on `Line`.
+I bet 14p that we'll find a natural place to use a `sum` method in the course
+of writing the book, and then we get to act all smug when we can just do it
+with an __add__ on `Line`.
 
 
 

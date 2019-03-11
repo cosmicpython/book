@@ -65,7 +65,7 @@ def check_listing(listing, chapter):
     if '#...' in listing.contents:
         for section in listing.fixed_contents.split('#...'):
             lines = section.splitlines()
-            if section not in actual_contents:
+            if section.strip() not in actual_contents:
                 assert lines == actual_lines, f'section from [{listing.tag}] not found within actual'
 
     elif listing.fixed_contents not in actual_contents:
@@ -153,7 +153,7 @@ def tree_for_branch(chapter_name):
     )
     try:
         return subprocess.run(
-            ['tree', '-I', '*.egg-info'],
+            ['tree', '-I', '__pycache__|*.egg-info'],
             cwd=Path(__file__).parent / 'code',
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             check=True
