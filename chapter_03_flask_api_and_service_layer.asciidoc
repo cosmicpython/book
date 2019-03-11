@@ -38,20 +38,21 @@ def random_ref():
 @pytest.mark.usefixtures('restart_api')
 def test_api_returns_allocation_info(add_stock):
     sku1, sku2 = random_ref(), random_ref()
+    batch1, batch2, batch3 = random_ref(), random_ref(), random_ref()
     add_stock([
-        ('warehouse', sku1, 100),
-        ('shipment1', sku1, 100),
-        ('shipment2', sku2, 100),
+        (batch1, sku1, 100, None),
+        (batch2, sku1, 100, '2011-01-01'),
+        (batch3, sku2, 100, '2011-01-02'),
     ])
     data = {
         'order_reference': random_ref(),
         'lines': {sku1: 3, sku2: 12},
     }
-    url = get_api_url()
+    url = config.get_api_url()
     r = requests.post(f'{url}/allocate', json=data)
     assert r.status_code == 201
-    assert r.json()[sku1] == 'warehouse'
-    assert r.json()[sku2] == 'shipment2'
+    assert r.json()[sku1] == batch1
+    assert r.json()[sku2] == batch2
 ----
 ====
 
@@ -63,16 +64,14 @@ it, check out TODO: repo tag
 
 === The naive implementation
 
-Implementing things in the most obvious 
-You mig
-
+Implementing things in the most obvious way, you might get something like this:
 
 
 [[first_cut_flask_app]]
 .First cut flask app (flask_app.py)
 ====
 [source,python]
-[role="skip"]
+[role="non-head"]
 ----
 orm.start_mappers()
 get_session = sessionmaker(bind=create_engine(config.get_postgres_uri()))
