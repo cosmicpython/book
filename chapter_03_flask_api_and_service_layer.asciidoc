@@ -83,26 +83,20 @@ app = Flask(__name__)
 def allocate_endpoint():
     try:
         session = get_session()
-        warehouse = repository.WarehouseRepository(session).get()
-        shipments = repository.ShipmentRepository(session).list()
-        order = domain_model.Order(
-            request.json['order_reference'],
-            request.json['lines']
-        )
+        batches = repository.BatchRepository(session).list()
+        ref = request.json['order_reference']
+        allocations = {}
+        for sku, qty in request.json['lines'].items():
+            line = model.OrderLine(ref, sku, qty)
+            batch = model.allocate(line, batches)
+            allocations[sku] = batch.reference
 
-        allocation = domain_model.allocate(order, warehouse, shipments)
-
-        repository.AllocationRepository(session).add(allocation)
         session.commit()
-        return jsonify(
-            {l.sku: l.source.reference for l in allocation.lines}
-        ), 201
+        return jsonify(allocations), 201
     finally:
         session.close()
 ----
 ====
-
-//TODO: find a way of checking listings against tags
 
 
 So far so good.  No need for too much more of your "architecture astronaut"
