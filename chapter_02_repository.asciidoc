@@ -29,19 +29,19 @@ some code that looks more or less like <<api_endpoint_pseudocode>>:
 ----
 @flask.route.gubbbins
 def allocate_endpoint():
-    order = # ... fetch order from db, or maybe 
-            # just instantiate it from request params
-    warehouse = # ... retrieve warehouse from db
-    shipments = # ... load all shipments from
-    new_allocation = allocate(order, warehouse, shipments)
+    order_lines = # ... fetch from db, or maybe just 
+                  # instantiate them from request params
+    batches = # ... load all batches from db
+    for line in order.lines:
+        allocate(line, batches)
     # .. and then save the allocation back to the database somehow
     return 201
 ----
 ====
 
-We'll need a way to retrieve warehouse, shipment and order info
-from the DB and instantiate our domain model objects from them,
-and we'll also need a way of saving them back to the database.
+We'll need a way to retrieve batch info from the DB and instantiate our domain
+model objects from it, and we'll also need a way of saving them back to the
+database.
 
 
 
@@ -113,6 +113,8 @@ want to be hand-coding SQL (at least, not yet!).  But if you follow the typical
 SQLAlchemy tutorial, you'll end up with something like this:
 
 
+
+
 [[typical_sqlalchemy_example]]
 .SQLAlchemy "declarative" syntax, model depends on ORM (orm.py)
 ====
@@ -140,7 +142,7 @@ class Allocation(Base):
 ----
 ====
 
-....And our pristine model is now full of dependencies on the ORM, and is
+...And our pristine model is now full of dependencies on the ORM, and is
 starting to look ugly as hell.
 
 
@@ -158,39 +160,30 @@ https://docs.sqlalchemy.org/en/latest/orm/mapping_styles.html#classical-mappings
 [[sqlalchemy_classical_mapper]]
 .Explicit ORM Mapping with SQLALchemy Table objects (orm.py)
 ====
-[role="skip"]
 [source,python]
 ----
-from sqlalchemy import Table, MetaData, Column, Integer, String, ForeignKey, Date
 from sqlalchemy.orm import mapper, relationship
 
-import domain_model  #<1>
+import model  #<1>
 
 
 metadata = MetaData()
 
-order = Table(  #<2>
-    'order', metadata,
-    Column('reference', String(255), primary_key=True),
-)
-
 order_lines = Table(  #<2>
     'order_lines', metadata,
-    Column('order_reference', ForeignKey('order.reference'), primary_key=True),
+    Column('orderid', String(255), primary_key=True),
     Column('sku', String(255), primary_key=True),
-    Column('qty', Integer),
+    Column('qty', Integer, nullable=False),
 )
 #...
 
 
 def start_mappers():
-    mapper(Line, order_lines)  #<3>
-    mapper(Order, order, properties={  #<3>
-        'lines': relationship(Order.Line, cascade="all, delete-orphan")
-    })
-    #...
+    lines_mapper = mapper(model.OrderLine, order_lines)  #<3>
 ----
 ====
+
+
 
 <1> The ORM imports the domain model, and not the other way around
 
@@ -203,6 +196,8 @@ This gives us all the benefits of SQLAlchemy, including the ability to use
 `alembic` for migrations, and the ability to transparently query using our
 domain classes, as we'll see.
 
+TODO: mention hack: `@dataclass(frozen=True)` -> `dataclass(unsafe_hash=True)`
+
 When you're first trying to build your ORM config, it can be useful to write
 some tests for it, as in <<orm_tests>>:
 
@@ -211,31 +206,32 @@ some tests for it, as in <<orm_tests>>:
 .Testing the ORM directly (throwaway tests) (test_orm.py)
 ====
 [source,python]
-[role="skip"]
 ----
-def test_order_mapper_can_load_lines(session):
-    session.execute('INSERT INTO "order" VALUES (1)')
-    session.execute('INSERT INTO "order" VALUES (2)')
-    session.execute('INSERT INTO "order_lines" VALUES (1, "sku1", 12)')
-    session.execute('INSERT INTO "order_lines" VALUES (1, "sku2", 13)')
-    session.execute('INSERT INTO "order_lines" VALUES (2, "sku3", 14)')
-    expected_order = Order({'sku1': 12, 'sku2': 13})
-    retrieved_order = session.query(Order).first()
-    assert retrieved_order.lines == expected_order.lines
+def test_orderline_mapper_can_load_lines(session):
+    session.execute('INSERT INTO "order_lines" VALUES ("order1", "sku1", 12)')
+    session.execute('INSERT INTO "order_lines" VALUES ("order1", "sku2", 13)')
+    session.execute('INSERT INTO "order_lines" VALUES ("order2", "sku3", 14)')
+    expected = [
+        model.OrderLine('order1', 'sku1', 12),
+        model.OrderLine('order1', 'sku2', 13),
+        model.OrderLine('order2', 'sku3', 14),
+    ]
+
+    assert session.query(model.OrderLine).all() == expected
 
 
-def test_order_mapper_can_save_lines(session):
-    new_order = Order({'sku1': 12, 'sku2': 13})
-    session.add(new_order)
+def test_orderline_mapper_can_save_lines(session):
+    new_line = model.OrderLine('order1', 'sku1', 12)
+    session.add(new_line)
     session.commit()
 
     rows = list(session.execute('SELECT * FROM "order_lines"'))
     assert rows == [
-        (1, 'sku1', 12),
-        (1, 'sku2', 13),
+        ('order1', 'sku1', 12),
     ]
 ----
 ====
+
 
 But you probably wouldn't keep these tests around--as we'll see shortly, once
 you've taken the step of inverting the dependency of ORM and domain model, it's
@@ -249,19 +245,12 @@ concerns.  We could throw away SQLAlchemy and use a different ORM, or a totally
 different persistence system, and the domain model doesn't need to change at
 all.
 
-We are glossing over some complexity here.  If we want to stick to using dicts
-as our primary data structure, there is some slightly tricky config to get
-right.  For the curious, there's more example code at
-https://github.com/python-leap/code/blob/orm-experiments-backtodicts/orm.py
-
-//TODO: fix link.
 
 Depending on what you're doing in your domain model, and especially if you
 stray far from the OO paradigm, you may find it increasingly hard to get the
 ORM to produce the exact behaviour you need,  and you may need to modify your
-domain modelfootnote:[Harry came extremely close to giving up his beloved
-dicts, but thanks to the amazingly helpful SQLAlchemy maintainers, he didn't
-have to, or at least not yet.  Shout out to Mike Bayer!].  As so often with
+domain modelfootnote:[Shout out to the amazingly helpful SQLAlchemy
+maintainers, and Mike Bayer in particular].  As so often with
 architectural decisions, there is a trade-off you'll need to consider.  As the
 Zen of Python says, "Practicality beats purity!"
 
@@ -333,18 +322,15 @@ if any parts of your domain model mean the object-relational map is nontrivial.
 ====
 [source,python]
 ----
-def test_repository_can_save_an_order_to_the_database(session):
-    order = Order("orderref", {'sku1': 12, 'sku2': 13})
+def test_repository_can_save_a_batch(session):
+    batch = model.Batch('batch1', 'sku1', 100, eta=None)
 
-    repo = repository.OrderRepository(session)
-    repo.add(order)
+    repo = repository.BatchRepository(session)
+    repo.add(batch)
     session.commit()
 
-    rows = list(session.execute('SELECT * FROM "order_lines"'))
-    assert rows == [
-        (order.reference, 'sku1', 12),
-        (order.reference, 'sku2', 13),
-    ]
+    rows = list(session.execute('SELECT * FROM "batches"'))
+    assert rows == [('batch1', 'sku1', 100, None)]
 ----
 ====
 
@@ -355,107 +341,51 @@ def test_repository_can_save_an_order_to_the_database(session):
 ====
 [source,python]
 ----
-def test_repository_can_get_an_existing_order(session):
-    session.execute('INSERT INTO "order" VALUES ("ref1")')
-    session.execute('INSERT INTO "order" VALUES ("ref2")')
-    session.execute('INSERT INTO "order_lines" VALUES ("ref1", "sku1", 12)')
-    session.execute('INSERT INTO "order_lines" VALUES ("ref2", "sku2", 13)')
-    session.execute('INSERT INTO "order_lines" VALUES ("ref2", "sku3", 14)')
+def test_repository_can_retrieve_a_batch_with_allocations(session):
+    session.execute('INSERT INTO "order_lines" VALUES ("order1", "sku1", 12)')
+    session.execute('INSERT INTO "batches" VALUES ("batch1", "sku1", 100, null)')
+    session.execute('INSERT INTO "batches" VALUES ("batch2", "sku1", 100, null)')
+    session.execute('INSERT INTO "allocations" VALUES ("batch1", "order1", "sku1")')
 
-    repo = repository.OrderRepository(session)
-    retrieved_order = repo.get("ref2")
+    repo = repository.BatchRepository(session)
+    retrieved = repo.get('batch1')
 
-    expected_order = Order('ref2', {'sku2': 13, 'sku3': 14})
-    assert retrieved_order._lines == expected_order._lines
+    expected = model.Batch('batch1', 'sku1', 100, eta=None)
+    expected._allocations = {model.OrderLine('order1', 'sku1', 12)}
+    assert retrieved == expected
 ----
 ====
 
 
-[[repo_test_update]]
-.Repository test for updating an object (test_repository.py)
-====
-[source,python]
-----
-def test_repository_can_modify_an_existing_order(session):
-    session.execute('INSERT INTO "order" VALUES ("r1")')
-    session.execute('INSERT INTO "order_lines" VALUES ("r1", "oldsku1", 12)')
-    session.execute('INSERT INTO "order_lines" VALUES ("r1", "oldsku2", 12)')
-
-    repo = repository.OrderRepository(session)
-    order = repo.get("r1")
-    order['oldsku2'] = 100
-    order['newsku'] = 14
-    session.commit()
-
-    rows = list(session.execute('SELECT * FROM "order_lines"'))
-    assert rows == [
-        (order.reference, 'oldsku1', 12),
-        (order.reference, 'oldsku2', 100),
-        (order.reference, 'newsku', 14),
-    ]
-----
-====
+Whether or not you painstakingly write tests for every model is a judgement
+call.  Once you have one class tested for create/modify/save, you might be
+happy to go on and do the others with a minimal roundtrip test, or even nothing
+at all, if they all follow a similar pattern.
 
 
-Whether or not you painstakingly write tests for every model is
-a judgement call.  Once you have one class tested for create/modify/save,
-you might be happy to go on and do the others with a minimal roundtrip
-test, or even nothing at all, if they all follow a similar pattern.
+You end up with something like <<batch_repository>>:
 
 
-You end up with something like <<simple_model_repositories>>:
-
-
-[[simple_model_repositories]]
-.Many repositories look similar (repository.py)
+[[batch_repository]]
+.A typical repository (repository.py)
 ====
 [source,python]
 ----
-class _ModelRepository:
-    def __init__(self, model_class, session):
-        self._model_class = model_class
-        self.session = session
+class BatchRepository:
 
-    def get(self, reference):
-        return self.session.query(self._model_class).filter_by(
-            reference=reference
-        ).one()
-
-    def add(self, obj):
-        assert isinstance(obj, self._model_class)
-        self.session.add(obj)
-
-
-OrderRepository = lambda s: _ModelRepository(domain_model.Order, s)
-ShipmentRepository = lambda s: _ModelRepository(domain_model.Shipment, s)
-AllocationRepository = lambda s: _ModelRepository(domain_model.Allocation, s)
-----
-====
-
-TODO: add `.list()` option to shipments repository?
-
-Because our warehouse is a sort of global singleton, it gets treated
-slightly differently:
-
-[[warehouse_repository]]
-.Although there are some special-cases (repository.py)
-====
-[source,python]
-----
-class WarehouseRepository:
     def __init__(self, session):
         self.session = session
 
-    def get(self):
-        wh = self.session.query(domain_model.Warehouse).one()
-        assert wh.reference == 'warehouse'
-        return wh
+    def add(self, batch):
+        self.session.add(batch)
 
-    def add(self, warehouse):
-        warehouse.reference = 'warehouse'
-        self.session.add(warehouse)
+    def get(self, reference):
+        return self.session.query(model.Batch).filter_by(reference=reference).one()
 ----
 ====
+
+TODO: add `.list()` option
+
 
 And now our flask endpoint might look something like <<api_endpoint_with_repo>>:
 
@@ -467,15 +397,15 @@ And now our flask endpoint might look something like <<api_endpoint_with_repo>>:
 ----
 @flask.route.gubbbins
 def allocate_endpoint():
-    order = Order(request.params['order_id'], request.params['lines'])
-    warehouse = warehouse_repo.get()
-    shipments = shipment_repo.list()
-    new_allocation = allocate(order, warehouse, shipments)
-    allocation_repo.add(new_allocation)
-    session.commit()  # TODO: still need to fix this
+    lines = 
+    batches = BatchRepository.list()
+    for l in request.params['lines'])
+        allocate(OrderLine(l['orderid'], l['sku'], l['qty']), batches)
+    session.commit()
     return 201
 ----
 ====
+
 
 === Building a fake repository for tests is now trivial!
 
@@ -485,6 +415,7 @@ Here's one of the biggest benefits of Repository pattern.
 [[fake_repository]]
 .A simple fake repository subclassing set (repository.py)
 ====
+[role="skip"]
 [source,python]
 ----
 class FakeRepository(set):
@@ -506,7 +437,7 @@ abstraction that's easy to use and reason about:
 [role="skip"]
 [source,python]
 ----
-fake_repo = FakeRepository([shipment1, shipment2, shipment3])
+fake_repo = FakeRepository([batch1, batch2, batch3])
 ----
 ====
 
