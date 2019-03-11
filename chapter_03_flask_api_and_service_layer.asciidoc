@@ -118,25 +118,27 @@ remit of the domain layer.
 
 TODO: update from this point on for batches.
 
-So we could dive in and start writing something like <<one_too_many_e2e_tests>>:
+So we could dive in and start writing something like <<test_already_allocated>>:
 
-[[one_too_many_e2e_tests]]
+[[test_already_allocated]]
 .We could test at the e2e layer but...  (test_api.py)
 ====
 [source,python]
 ----
 @pytest.mark.usefixtures('restart_api')
 def test_allocation_already_exists_error_in_json_message(add_stock):
-    sku1, oref = random_ref(), random_ref()
-    oref = 'dupe-' + oref
-    add_stock([('warehouse', sku1, 100)])
+    sku1, oref, batchref = random_ref('s1'), random_ref('o'), random_ref('b')
+    add_stock([
+        (batchref, sku1, 100, None),
+    ])
     data = {'order_reference': oref, 'lines': {sku1: 3}}
-    url = get_api_url()
+    url = config.get_api_url()
     r = requests.post(f'{url}/allocate', json=data)
     assert r.status_code == 201
     r = requests.post(f'{url}/allocate', json=data)
     assert r.status_code == 400
-    assert r.json()['error'] == f'Order {oref} already allocated'
+    assert r.text == f'Order {oref} already allocated'
+
 ----
 ====
 
@@ -157,44 +159,33 @@ fakerepositories to test it:
 [source,python]
 ----
 def test_error_if_allocation_already_exists():
-    shipments_repo = FakeRepository()
-    warehouse = Warehouse({'sku1': 100})
-    warehouse_repo = FakeWarehouseRepository(warehouse)
-    allocation_repo = FakeAllocationRepository([Allocation(
-        order=Order('order-ref', {'sku1': 10})
-    )])
+    line = model.OrderLine('o1', 'sku1', 10)
+    batch = model.Batch('b1', 'sku1', 100, eta=None)
+    batch.allocate(line)
+    repo = FakeRepository([batch])
 
-    with pytest.raises(services.OrderAlreadyAllocatedException) as ex:
-        services.allocate(
-            'order-ref', {'sku1': 10},
-            warehouse_repo, shipments_repo, allocation_repo
-        )
+    with pytest.raises(services.OrderAlreadyAllocated) as ex:
+        services.allocate([line], repo)
 
-    assert 'Order order-ref already allocated' in str(ex)
+    assert 'Order o1 already allocated' in str(ex)
+
 ----
 ====
 
 
-TODO: ok turns out a simple generic fakerepository may not work
 
-
-[[more_fake_repositories]]
-.More fake repositories (test_services.py)
+[[fake_repo]]
+.Our fake repository (test_services.py)
 ====
 [source,python]
 ----
-class FakeWarehouseRepository:
-    def __init__(self, warehouse):
-        self.warehouse = warehouse
+class FakeRepository(set):
 
-    def get(self):
-        return self.warehouse
+    def get(self, reference):
+        return next(x for x in self if x.reference == reference)
 
-
-class FakeAllocationRepository(FakeRepository):
-
-    def get_by_order_reference(self, order_reference):
-        return next(a for a in self if a.order.reference == order_reference)
+    def list(self):
+        return list(self)
 ----
 ====
 
@@ -205,27 +196,19 @@ that checks we actually save to the repo, <<second_test>>:
 TODO: discuss moving _all_ the domain unit tests to the services layer too
 
 
-[[second_test]]
+[[second_servicetest]]
 .A second test at the service layer (test_services.py)
 ====
 [source,python]
 ----
-def test_saves_new_allocation():
-    shipments_repo = FakeRepository()
-    warehouse = Warehouse({'sku1': 100})
-    warehouse_repo = FakeWarehouseRepository(warehouse)
-    allocation_repo = FakeAllocationRepository()
+def test_actually_allocates():
+    line = model.OrderLine('o1', 'sku1', 10)
+    batch = model.Batch('b1', 'sku1', 100, eta=None)
+    repo = FakeRepository([batch])
 
-    allocation = services.allocate(
-        'order-ref', {'sku1': 10},
-        warehouse_repo, shipments_repo, allocation_repo
-    )
-    assert allocation == allocation_repo.pop()
+    services.allocate([line], repo)
 
-    assert allocation.order.reference == 'order-ref'
-    [line] = allocation.lines
-    assert line.sku == 'sku1'
-    assert line.source.reference == 'warehouse'
+    assert batch.available_quantity == 90
 ----
 ====
 
@@ -238,24 +221,18 @@ We'll get to a service function that looks something like <<service_function>>:
 ====
 [source,python]
 ----
-def allocate(
-    order_reference: str, lines: dict,
-    warehouse_repo, shipments_repo, allocation_repo
-):
-    try:  #<1>
-        allocation_repo.get_by_order_reference(order_reference)
-    except:
-        # TODO: this is ugly
-        pass
-    else:
-        raise OrderAlreadyAllocatedException(order_reference)
+class OrderAlreadyAllocated(Exception):
+    pass
 
-    order = domain_model.Order(order_reference, lines)  #<2>
-    allocation = domain_model.allocate(  #<2>
-        order, warehouse_repo.get(), shipments_repo.list()
-    )
-    allocation_repo.add(allocation)  #<3>
-    return allocation
+
+def allocate(lines: List[OrderLine], repo: BatchRepository) -> None:
+    batches = repo.list()
+
+    existing_allocations = set(a for batch in batches for a in batch._allocations)
+    if any(l in existing_allocations for l in lines):  #<1>
+        raise OrderAlreadyAllocated(f'Order {lines[0].orderid} already allocated')
+
+    model.allocate(lines, batches)  #<2>
 ----
 ====
 
@@ -266,10 +243,10 @@ Typical service-layer functions have similar steps:
 
 <2> We may instantiate a domain object, and/or call a domain service
 
-<3> We add some new state to our repository
+TODO: no step 3, add a new object to a repo, sadly
 
 
-And now our flask app looks a lot cleaner, as in <<flask_app_using_service_layer>>:
+And now our flask app is looking reasonably sane, <<flask_app_using_service_layer>>:
 
 
 [[flask_app_using_service_layer]]
@@ -281,19 +258,18 @@ And now our flask app looks a lot cleaner, as in <<flask_app_using_service_layer
 def allocate_endpoint():
     try:
         session = get_session()  #<1>
-        allocation = services.allocate(
-            request.json['order_reference'],  #<2>
-            request.json['lines'],  #<2>
-            warehouse_repo=repository.WarehouseRepository(session),  #<1>
-            shipments_repo=repository.ShipmentRepository(session),
-            allocation_repo=repository.AllocationRepository(session),
-        )
-        session.commit()
-        return jsonify(
-            {l.sku: l.source.reference for l in allocation.lines}
-        ), 201  #<3>
-    except services.OrderAlreadyAllocatedException as e:
-        return jsonify({'error': str(e)}), 400  #<4>
+        repo = repository.BatchRepository(session)  #<1>
+        ref = request.json['order_reference']  #<2>
+        lines = [
+            model.OrderLine(ref, sku, qty)
+            for sku, qty in request.json['lines'].items()  #<2>
+        ]
+        try:
+            services.allocate(lines, repo)
+            session.commit()
+            return 'OK', 201  #<3>
+        except services.OrderAlreadyAllocated as e:
+            return str(e), 400  #<3>
 
     finally:
         session.close()
@@ -306,7 +282,7 @@ more focused on just the web stuff:
 <1> We instantiate a database session and some repository objects.
 <2> We extract the user's commands from the web request and pass them
     to a domain service.
-<3> And we return some JSON.
+<3> And we return some responses and status codes
 
 The responsibilities of the flask app are just standard web stuff: per-request
 session management, parsing information out of POST parameters, response status
@@ -323,20 +299,22 @@ and the domain logic stays in the domain.
 [source,sh]
 [role="skip"]
 ----
-👉  grep -c test_ *.py
-test_allocation.py:14
+👉  grep -c test_ test_*.py
+test_batches.py:8
+test_allocate.py:6
+test_services.py:2
+test_orm.py:6
+test_repository.py:2
 test_api.py:2
-test_repository.py:9
-test_services.py:3
 ----
 ====
 
 //TODO: test this too?
 
-Not bad!  17 unit tests, 9 integration tests, and just 2 end-to-end test.
+Not bad!  16 unit tests, 8 integration tests, and just 2 end-to-end tests.
 
 
-But there's still some things we're not happy with.  Passing 3 repositories
+But there's still some things we're not happy with.  Passing that repository
 around feels awkward, and the service/orchestration layer should probably
 be in charge of the commit.  We'll introduce a nice pattern to deal with
 that in the next chapter.
