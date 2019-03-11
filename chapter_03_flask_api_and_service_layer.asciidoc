@@ -32,34 +32,39 @@ them end-to-end tests because it's one of the most self-explanatory names.
 ====
 [source,python]
 ----
-def random_ref():
-    return uuid.uuid4().hex[:10]
+def random_ref(prefix):
+    return prefix + '-' + uuid.uuid4().hex[:10]
 
 @pytest.mark.usefixtures('restart_api')
-def test_api_returns_allocation_info(add_stock):
-    sku1, sku2 = random_ref(), random_ref()
-    batch1, batch2, batch3 = random_ref(), random_ref(), random_ref()
+def test_api_for_allocation(add_stock, postgres_session):
+    sku1, sku2 = random_ref('s1'), random_ref('s2')
+    batch1, batch2, batch3 = random_ref('b1'), random_ref('b2'), random_ref('b3')
     add_stock([
         (batch1, sku1, 100, None),
-        (batch2, sku1, 100, '2011-01-01'),
+        (batch2, sku2, 100, '2011-01-01'),
         (batch3, sku2, 100, '2011-01-02'),
     ])
     data = {
-        'order_reference': random_ref(),
+        'order_reference': random_ref('o'),
         'lines': {sku1: 3, sku2: 12},
     }
     url = config.get_api_url()
     r = requests.post(f'{url}/allocate', json=data)
     assert r.status_code == 201
-    assert r.json()[sku1] == batch1
-    assert r.json()[sku2] == batch2
+    rows = list(postgres_session.execute(
+        'SELECT l.sku, b.reference FROM allocations'
+        ' JOIN order_lines as l ON orderline_id=l.id'
+        ' JOIN batches as b ON batch_id=b.id',
+    ))
+    assert (sku1, batch1) in rows
+    assert (sku2, batch2) in rows
 ----
 ====
 
 Everyone solves these problems in different ways, but you're going
 to need some way of spinning up Flask, possibly in a container, and
 also talking to a postgres database.  If you want to see how we did
-it, check out TODO: repo tag
+it, check out <<appendix_project_structure>>.
 
 
 === The naive implementation
@@ -85,14 +90,14 @@ def allocate_endpoint():
         session = get_session()
         batches = repository.BatchRepository(session).list()
         ref = request.json['order_reference']
-        allocations = {}
-        for sku, qty in request.json['lines'].items():
-            line = model.OrderLine(ref, sku, qty)
-            batch = model.allocate(line, batches)
-            allocations[sku] = batch.reference
+        lines = [
+            model.OrderLine(ref, sku, qty)
+            for sku, qty in request.json['lines'].items()
+        ]
+        model.allocate(lines, batches)
 
         session.commit()
-        return jsonify(allocations), 201
+        return 'OK', 201
     finally:
         session.close()
 ----
@@ -100,25 +105,8 @@ def allocate_endpoint():
 
 
 So far so good.  No need for too much more of your "architecture astronaut"
-nonsense, Bob and Harry, you may be thinking.  But let's just see, not quite
-all of this code was justified by a single test, was it?  Where did that
-`try/finally` come from?  Where's the test for that?   And what about
-adding the allocation to the repo, the current test doesn't explicitly
-test for that?  Sure enough, I wrote a few more tests on the way to even this
-naive solution, <<three_e2e_tests>>:
-
-
-[[three_e2e_tests]]
-.Actually 3 tests at the E2E layer already (test_api.py)
-====
-[source,python]
-[role="skip"]
-----
-def test_api_returns_allocation_info(add_stock):
-def test_api_actually_decrements_quantites(add_stock, postgres_session):
-def test_api_actually_saves_allocation(add_stock, postgres_session):
-----
-====
+nonsense, Bob and Harry, you may be thinking.  But you probably _are_ 
+thinking that the end-to-end test is pretty ugly so far.
 
 
 === Error conditions that require database checks
@@ -127,6 +115,8 @@ Let's add a bit of error-handling shall we?  What if we receive an order
 that's already been allocated?  To do that, we need to check the database
 for existing allocations for that order, something that's not really the
 remit of the domain layer.
+
+TODO: update from this point on for batches.
 
 So we could dive in and start writing something like <<one_too_many_e2e_tests>>:
 
