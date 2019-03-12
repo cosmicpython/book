@@ -24,7 +24,7 @@ be of interest to outline the moving parts.
 ├── src  <3>
 │   ├── allocation
 │   │   ├── config.py
-│   │   ├── domain_model.py
+│   │   ├── model.py
 │   │   ├── flask_app.py
 │   │   ├── orm.py
 │   │   ├── repository.py
@@ -38,7 +38,8 @@ be of interest to outline the moving parts.
     │   └── test_repository.py
     ├── pytest.ini  <4>
     └── unit
-        ├── test_domain_model.py
+        ├── test_allocate.py
+        ├── test_batches.py
         └── test_services.py
 ----
 ====
@@ -324,7 +325,8 @@ Our tests are kept alongside everything else, as in <<tests_folder>>:
     │   └── test_repository.py
     ├── pytest.ini  <6>
     └── unit
-        ├── test_domain_model.py
+        ├── test_allocate.py
+        ├── test_batches.py
         └── test_services.py
 ----
 ====

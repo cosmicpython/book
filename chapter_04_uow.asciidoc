@@ -1,7 +1,6 @@
 [[chapter_04]]
 == Unit of Work pattern
 
-
 Bla bla service layer is unwieldy.  too many repos.  also it should do commits.
 
 What happens if we encounter an error during our allocation?  eg out of stock,
@@ -22,30 +21,29 @@ a transaction, retrieve and get things from repos, and commit:
 ====
 [source,python]
 ----
-def test_uow_roundtrip_shipment(session):
-    with unit_of_work.start(lambda: session) as uow:
-        sh = Shipment('ship1', {'sku1': 22, 'sku2': 23}, eta=date.today())
-        uow.shipments.add(sh)
+def test_uow_can_retrieve_a_batch_and_allocate_to_it(session_factory):
+    session = session_factory()
+    session.execute(
+        'INSERT INTO batches (reference, sku, _purchased_quantity, eta)'
+        ' VALUES ("batch1", "sku1", 100, null)'
+    )
+    session.commit()
+    with unit_of_work.start(session_factory) as uow:
+        batch = uow.batches.get(reference='batch1')
+        line = model.OrderLine('ol1', 'sku1', 10)
+        batch.allocate(line)
         uow.commit()
 
-    rows = list(session.execute('SELECT * FROM "stock_lines"'))
-    assert rows == [
-        ("ship1", 'sku1', 22),
-        ("ship1", 'sku2', 23),
-    ]
-
-    with unit_of_work.start(lambda: session) as uow:
-        sh = uow.shipments.get(reference='ship1')
-        sh['sku2'] -= 3
-        sh['nusku'] = 34
-        uow.commit()
-
-    shipment_rows = list(session.execute('SELECT * FROM "stock_lines"'))
-    assert shipment_rows == [
-        ('ship1', 'sku1', 22),
-        ('ship1', 'sku2', 20),
-        ('ship1', 'nusku', 34),
-    ]
+    [[olid]] = session.execute(
+        'SELECT id FROM order_lines WHERE orderid=:orderid AND sku=:sku',
+        dict(orderid='ol1', sku='sku1')
+    )
+    [[batchid]] = session.execute(
+        'SELECT b.reference FROM allocations JOIN batches AS b ON batch_id = b.id'
+        ' WHERE orderline_id=:orderid',
+        dict(orderid=olid)
+    )
+    assert batchid == 'batch1'
 ----
 ====
 
@@ -58,35 +56,43 @@ Here's an implementation:
 ====
 [source,python]
 ----
-default_session_factory = sessionmaker(
-    bind=create_engine(config.get_postgres_uri())
-)
+default_session_factory = sessionmaker(bind=create_engine(config.get_postgres_uri()))
 
-@contextmanager
+@contextmanager  #<1>
 def start(session_factory=default_session_factory):
     session = session_factory()
     try:
-        yield _UnitOfWork(session)
+        yield _UnitOfWork(session)  #<2>
     finally:
-        session.rollback()
+        session.rollback()  #<5>
 
 
 class _UnitOfWork:
     def __init__(self, session):
         self.session = session
-        self.shipments = repository.ShipmentRepository(session)
-        self.warehouse = repository.WarehouseRepository(session)
-        self.allocations = repository.AllocationRepository(session)
+        self.batches = repository.BatchRepository(session)  #<3>
 
-    def commit(self):
+    def commit(self):  #<4>
         self.session.commit()
 ----
 ====
 
+<1> You can use class-based or generator-based context managers,
+    whichever you find more readable and Pythonic.
+
+<2> The context manager provides a `_UnitOfWork` instance, which
+    gets used in two ways in our code:
+
+<3> It provides access to the repository(-ies).
+
+<4> And it provides a way to explicitly commit our work
+
+<5> If we don't commit, or if we exit the context manager by raising an error,
+    we do a `rollback`. (the rollback has no effect if `commit()` has been
+    called)
+
 
 Here's how we use a fake unit of work in our service layer tests
-
-
 
 
 [[fake_unit_of_work]]
@@ -96,31 +102,24 @@ Here's how we use a fake unit of work in our service layer tests
 ----
 class FakeUnitOfWork:
     def __init__(self):
-        self.shipments = FakeRepository()
-        self.warehouse = FakeWarehouseRepository(Warehouse({}))
-        self.allocations = FakeAllocationRepository()
+        self.batches = FakeRepository()
         self.committed = False
 
     def commit(self):
         self.committed = True
 
 
-
-def test_saves_new_allocation():
+def test_actually_allocates():
+    line = model.OrderLine('o1', 'sku1', 10)
+    batch = model.Batch('b1', 'sku1', 100, eta=None)
     uow = FakeUnitOfWork()
-    uow.warehouse.warehouse = Warehouse({'sku1': 100})
+    uow.batches.add(batch)
     start_uow = lambda: nullcontext(uow)
 
-    allocation = services.allocate(
-        'order-ref', {'sku1': 10},
-        start_uow,
-    )
-    assert allocation == uow.allocations.pop()
+    services.allocate([line], start_uow)
 
-    assert allocation.order.reference == 'order-ref'
-    [line] = allocation.lines
-    assert line.sku == 'sku1'
-    assert line.source.reference == 'warehouse'
+    assert batch.available_quantity == 90
+    assert uow.committed is True
 ----
 ====
 
@@ -133,45 +132,22 @@ And here's what our new service layer looks like:
 ====
 [source,python]
 ----
-def allocate(
-    order_reference: str, lines: dict, start_uow,
-):
+def allocate(lines: List[OrderLine], start_uow) -> None:
     with start_uow() as uow:
-        _check_order_not_already_allocated(order_reference, uow)
+        batches = uow.batches.list()
 
-        order = domain_model.Order(order_reference, lines)
-        allocation = domain_model.allocate(
-            order, uow.warehouse.get(), uow.shipments.list()
-        )
-        uow.allocations.add(allocation)
+        existing_allocations = set(a for batch in batches for a in batch._allocations)
+        if any(l in existing_allocations for l in lines):
+            raise OrderAlreadyAllocated(f'Order {lines[0].orderid} already allocated')
+
+        model.allocate(lines, batches)
         uow.commit()
-    return allocation
 ----
 ====
 
 
-=== rolling back unless explicitly committed
-
-
-
-
-[[explicit_rollback]]
-.always roll back to whatever was committed (src/allocation/unit_of_work.py)
-====
-[source,python]
-----
-@contextmanager
-def start(session_factory=default_session_factory):
-    session = session_factory()
-    try:
-        yield _UnitOfWork(session)
-    finally:
-        session.rollback()
-----
-====
-
-
-
+To convince ourselves that the commit/rollback behaviour works, we wrote
+a couple of tests:
 
 [[testing_rollback]]
 .Integration tests for rollback behaviour (tests/integration/test_uow.py)
@@ -180,10 +156,13 @@ def start(session_factory=default_session_factory):
 ----
 def test_rolls_back_uncommitted_work_by_default(session_factory):
     with unit_of_work.start(session_factory) as uow:
-        uow.session.execute("INSERT into stock_lines VALUES ('ship1', 'sku3', 33)")
+        uow.session.execute(
+            'INSERT INTO batches (reference, sku, _purchased_quantity, eta)'
+            ' VALUES ("batch1", "sku1", 100, null)'
+        )
 
     new_session = session_factory()
-    rows = list(new_session.execute('SELECT * FROM "stock_lines"'))
+    rows = list(new_session.execute('SELECT * FROM "batches"'))
     assert rows == []
 
 
@@ -194,14 +173,16 @@ def test_rolls_back_on_error(session_factory):
     with pytest.raises(MyException):
         with unit_of_work.start(session_factory) as uow:
             uow.session.execute(
-                "INSERT into stock_lines VALUES ('ship1', 'sku3', 33)"
+                'INSERT INTO batches (reference, sku, _purchased_quantity, eta)'
+                ' VALUES ("batch1", "sku1", 100, null)'
             )
             raise MyException()
 
     new_session = session_factory()
-    rows = list(new_session.execute('SELECT * FROM "stock_lines"'))
+    rows = list(new_session.execute('SELECT * FROM "batches"'))
     assert rows == []
 ----
 ====
 
 
+TODO: bit on whether to throw away any of the other integration tests, `test_orm` or `test_repository`
