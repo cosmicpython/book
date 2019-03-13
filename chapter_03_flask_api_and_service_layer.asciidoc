@@ -116,8 +116,6 @@ that's already been allocated?  To do that, we need to check the database
 for existing allocations for that order, something that's not really the
 remit of the domain layer.
 
-TODO: update from this point on for batches.
-
 So we could dive in and start writing something like <<test_already_allocated>>:
 
 [[test_already_allocated]]
