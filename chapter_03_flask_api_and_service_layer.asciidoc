@@ -33,7 +33,7 @@ def random_ref(prefix):
     return prefix + '-' + uuid.uuid4().hex[:10]
 
 @pytest.mark.usefixtures('restart_api')
-def test_api_returns_allocation(add_stock):
+def test_happy_path_returns_201_and_allocated_batch(add_stock):
     sku, othersku = random_ref('s1'), random_ref('s2')
     batch1, batch2, batch3 = random_ref('b1'), random_ref('b2'), random_ref('b3')
     add_stock([
@@ -104,6 +104,7 @@ the batch:
 .Test allocations are persisted (test_api.py)
 ====
 [source,python]
+[role="non-head"]
 ----
 def test_allocations_are_persisted(add_stock):
     sku = random_ref('s1')
@@ -242,7 +243,7 @@ def test_error_for_invalid_sku():
     repo = FakeRepository([batch])
 
     with pytest.raises(services.InvalidSku) as ex:
-        services.allocate(line, repo)
+        services.allocate(line, repo, FakeSession())
 
     assert 'Invalid sku nonexistentsku' in str(ex)
 ----
@@ -382,7 +383,7 @@ Finally we can confidently strip down our E2E tests to just two, one for
 the happy path and one for the unhappy path:
 
 
-[[test_error_cases]]
+[[fewer_e2e_tests]]
 .E2E tests now only happy + unhappy paths (test_api.py)
 ====
 [source,python]
