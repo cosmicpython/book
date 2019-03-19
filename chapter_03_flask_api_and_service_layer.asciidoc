@@ -24,9 +24,6 @@ them end-to-end tests because it's one of the most self-explanatory names.
 
 <<first_api_test>> shows a first cut:
 
-
-
-
 [[first_api_test]]
 .A first API test (test_api.py)
 ====
@@ -36,28 +33,23 @@ def random_ref(prefix):
     return prefix + '-' + uuid.uuid4().hex[:10]
 
 @pytest.mark.usefixtures('restart_api')
-def test_api_for_allocation(add_stock, postgres_session):
-    sku1, sku2 = random_ref('s1'), random_ref('s2')
+def test_api_returns_allocation(add_stock):
+    sku, othersku = random_ref('s1'), random_ref('s2')
     batch1, batch2, batch3 = random_ref('b1'), random_ref('b2'), random_ref('b3')
     add_stock([
-        (batch1, sku1, 100, None),
-        (batch2, sku2, 100, '2011-01-01'),
-        (batch3, sku2, 100, '2011-01-02'),
+        (batch1, sku, 100, '2011-01-02'),
+        (batch2, sku, 100, '2011-01-01'),
+        (batch3, othersku, 100, None),
     ])
     data = {
-        'order_reference': random_ref('o'),
-        'lines': {sku1: 3, sku2: 12},
+        'orderid': random_ref('o'),
+        'sku': sku,
+        'qty': 3,
     }
     url = config.get_api_url()
     r = requests.post(f'{url}/allocate', json=data)
     assert r.status_code == 201
-    rows = list(postgres_session.execute(
-        'SELECT l.sku, b.reference FROM allocations'
-        ' JOIN order_lines as l ON orderline_id=l.id'
-        ' JOIN batches as b ON batch_id=b.id',
-    ))
-    assert (sku1, batch1) in rows
-    assert (sku2, batch2) in rows
+    assert r.json()['batchid'] == batch2
 ----
 ====
 
@@ -67,7 +59,7 @@ also talking to a postgres database.  If you want to see how we did
 it, check out <<appendix_project_structure>>.
 
 
-=== The naive implementation
+=== The straightforward implementation
 
 Implementing things in the most obvious way, you might get something like this:
 
@@ -80,96 +72,186 @@ Implementing things in the most obvious way, you might get something like this:
 ----
 orm.start_mappers()
 get_session = sessionmaker(bind=create_engine(config.get_postgres_uri()))
-
-
 app = Flask(__name__)
 
 @app.route("/allocate", methods=['POST'])
 def allocate_endpoint():
-    try:
-        session = get_session()
-        batches = repository.BatchRepository(session).list()
-        ref = request.json['order_reference']
-        lines = [
-            model.OrderLine(ref, sku, qty)
-            for sku, qty in request.json['lines'].items()
-        ]
-        model.allocate(lines, batches)
+    session = get_session()
+    batches = repository.BatchRepository(session).list()
+    line = model.OrderLine(
+        request.json['orderid'],
+        request.json['sku'],
+        request.json['qty'],
+    )
 
-        session.commit()
-        return 'OK', 201
-    finally:
-        session.close()
+    batchid = model.allocate(line, batches)
+
+    return jsonify({'batchid': batchid}), 201
 ----
 ====
 
 
 So far so good.  No need for too much more of your "architecture astronaut"
-nonsense, Bob and Harry, you may be thinking.  But you probably _are_ 
-thinking that the end-to-end test is pretty ugly so far.
+nonsense, Bob and Harry, you may be thinking.
+
+But hang on a minute -- there's no commit.  We're not actually saving our
+allocation to the database. Now we need a second test, either one that will
+inspect the database state after (not very black-boxey), or maybe one that
+checks we can't allocate a second line if a first should have already depleted
+the batch:
+
+[[second_api_test]]
+.Test allocations are persisted (test_api.py)
+====
+[source,python]
+----
+def test_allocations_are_persisted(add_stock):
+    sku = random_ref('s1')
+    batch1, batch2 = random_ref('b1'), random_ref('b2')
+    order1, order2 = random_ref('o1'), random_ref('o2')
+    add_stock([
+        (batch1, sku, 10, '2011-01-01'),
+        (batch2, sku, 10, '2011-01-02'),
+    ])
+    line1 = {'orderid': order1, 'sku': sku, 'qty': 10}
+    line2 = {'orderid': order2, 'sku': sku, 'qty': 10}
+    url = config.get_api_url()
+    r = requests.post(f'{url}/allocate', json=line1)
+    assert r.status_code == 201
+    assert r.json()['batchid'] == batch1
+    r = requests.post(f'{url}/allocate', json=line2)
+    assert r.status_code == 201
+    assert r.json()['batchid'] == batch2
+----
+====
+
+Not quite so lovely, but that will force us to get a commit in.
+
 
 
 === Error conditions that require database checks
 
-Let's add a bit of error-handling shall we?  What if we receive an order
-that's already been allocated?  To do that, we need to check the database
-for existing allocations for that order, something that's not really the
-remit of the domain layer.
+Let's add a bit of error-handling shall we?  What if the domain raises an
+error, for a sku that's out of stock?  Or what about a sku that doesn't even
+exist, that's not something the domain even knows about, nor should it.  It's
+more of a sanity-check that we should implement at the database layer, before
+we even invoke the domain service.
 
-So we could dive in and start writing something like <<test_already_allocated>>:
+Now we're looking at two more end-to-end tests:
 
-[[test_already_allocated]]
-.We could test at the e2e layer but...  (test_api.py)
+[[test_error_cases]]
+.Yet more tests at the e2e layer...  (test_api.py)
 ====
 [source,python]
+[role="non-head"]
 ----
 @pytest.mark.usefixtures('restart_api')
-def test_allocation_already_exists_error_in_json_message(add_stock):
-    sku1, oref, batchref = random_ref('s1'), random_ref('o'), random_ref('b')
+def test_400_message_for_out_of_stock(add_stock):
+    sku, batch, order = random_ref('s'), random_ref('b'), random_ref('o')
     add_stock([
-        (batchref, sku1, 100, None),
+        (batch, sku, 10, '2011-01-01'),
     ])
-    data = {'order_reference': oref, 'lines': {sku1: 3}}
+    data = {'orderid': order, 'sku': sku, 'qty': 20}
     url = config.get_api_url()
     r = requests.post(f'{url}/allocate', json=data)
-    assert r.status_code == 201
+    assert r.status_code == 400
+    assert r.json()['message'] == f'Out of stock for sku {sku}'
+
+
+@pytest.mark.usefixtures('restart_api')
+def test_400_message_for_invalid_sku():
+    sku, order = random_ref('s'), random_ref('o')
+    data = {'orderid': order, 'sku': sku, 'qty': 20}
+    url = config.get_api_url()
     r = requests.post(f'{url}/allocate', json=data)
     assert r.status_code == 400
-    assert r.text == f'Order {oref} already allocated'
-
+    assert r.json()['message'] == f'Invalid sku {sku}'
 ----
 ====
 
-But that's not really enough.  We should probably also explicitly check that
-stock quantities are not decremented.  Soon our E2E tests are going to become
-unwieldy, and we'll end up with an inverted test pyramid.
+And, sure we can implement that in the flask app too:
+
+[[flask_error_handling]]
+.First cut flask app (flask_app.py)
+====
+[source,python]
+[role="non-head"]
+----
+def is_valid_sku(sku, batches):
+    return sku in {b.sku for b in batches}
+
+@app.route("/allocate", methods=['POST'])
+def allocate_endpoint():
+    session = get_session()
+    batches = repository.BatchRepository(session).list()
+    line = model.OrderLine(
+        request.json['orderid'],
+        request.json['sku'],
+        request.json['qty'],
+    )
+
+    if not is_valid_sku(line.sku, batches):
+        return jsonify({'message': f'Invalid sku {line.sku}'}), 400
+
+    try:
+        batchid = model.allocate(line, batches)
+    except model.OutOfStock as e:
+        return jsonify({'message': str(e)}), 400
+
+    session.commit()
+    return jsonify({'batchid': batchid}), 201
+----
+====
+
+But our flask app is starting to look a bit unwieldy.  And our number of
+E2E tests is starting to get out of control, and soon we'll end up with an
+inverted test pyramid (or "ice cream cone model" as Bob likes to call it).
 
 
 === Introducing a service layer, and using FakeRepository to unit test it
 
-let's move the orchestration stuff into a _services.py_ and use some
-fakerepositories to test it:
+If we look at what our flask app is doing, there's quite a lot of what we
+might call "orchestration" -- fetching stuff out of our repository, validating
+our input against database state, handling errors, and committing in the
+happy path.  Most of these things aren't anything to do with having a
+web API endpoint (you'd need them if you were building a CLI for example, see
+appendix TODO), and they're not really things that need to be tested by
+end-to-end tests.
 
+It often makes sense to split out a "service layer", sometimes called
+"orchestration layer' or "use case layer".  And our `FakeRepository`
+will come in very useful for testing it with nice, fast unit tests:
 
 [[first_services_test]]
 .Unit testing with fakes at the services layer (test_services.py)
 ====
 [source,python]
 ----
-def test_error_if_allocation_already_exists():
+def test_returns_allocation():
     line = model.OrderLine('o1', 'sku1', 10)
     batch = model.Batch('b1', 'sku1', 100, eta=None)
-    batch.allocate(line)
     repo = FakeRepository([batch])
 
-    with pytest.raises(services.OrderAlreadyAllocated) as ex:
-        services.allocate([line], repo)
+    result = services.allocate(line, repo, FakeSession())
+    assert result == 'b1'
 
-    assert 'Order o1 already allocated' in str(ex)
 
+def test_error_for_invalid_sku():
+    line = model.OrderLine('o1', 'nonexistentsku', 10)
+    batch = model.Batch('b1', 'actualsku', 100, eta=None)
+    repo = FakeRepository([batch])
+
+    with pytest.raises(services.InvalidSku) as ex:
+        services.allocate(line, repo)
+
+    assert 'Invalid sku nonexistentsku' in str(ex)
 ----
 ====
 
+
+Alongside `FakeRepository`, we also build `FakeSession` (that latter is a bit
+of a temporary solution though.  We'll get rid of it and make things _even nicer_
+in the next chapter, <<chapter_04_uow>>)
 
 
 [[fake_repo]]
@@ -184,12 +266,18 @@ class FakeRepository(set):
 
     def list(self):
         return list(self)
+
+
+class FakeSession():
+    committed = False
+
+    def commit(self):
+        self.committed = True
 ----
 ====
 
-
-But now we can migrate some of the other E2E tests too, like the one
-that checks we actually save to the repo, <<second_test>>:
+And that lets us migrate a third test from the E2E layer, the one that
+checks that we do a commit:
 
 TODO: discuss moving _all_ the domain unit tests to the services layer too
 
@@ -199,52 +287,58 @@ TODO: discuss moving _all_ the domain unit tests to the services layer too
 ====
 [source,python]
 ----
-def test_actually_allocates():
+def test_commits():
     line = model.OrderLine('o1', 'sku1', 10)
     batch = model.Batch('b1', 'sku1', 100, eta=None)
     repo = FakeRepository([batch])
+    session = FakeSession()
 
-    services.allocate([line], repo)
-
-    assert batch.available_quantity == 90
+    services.allocate(line, repo, session)
+    assert session.committed is True
 ----
 ====
 
-And the test that we decrement quantities too.
-
 We'll get to a service function that looks something like <<service_function>>:
 
-[[service_function]]
+[[service_function_nocommit]]
 .Basic allocation service (services.py)
 ====
 [source,python]
 ----
-class OrderAlreadyAllocated(Exception):
+class InvalidSku(Exception):
     pass
 
 
-def allocate(lines: List[OrderLine], repo: BatchRepository) -> None:
-    batches = repo.list()
+def is_valid_sku(sku, batches):  #<2>
+    return sku in {b.sku for b in batches}
 
-    existing_allocations = set(a for batch in batches for a in batch._allocations)
-    if any(l in existing_allocations for l in lines):  #<1>
-        raise OrderAlreadyAllocated(f'Order {lines[0].orderid} already allocated')
-
-    model.allocate(lines, batches)  #<2>
+def allocate(line: OrderLine, repo: BatchRepository, session) -> str:
+    batches = repo.list()  #<1>
+    if not is_valid_sku(line.sku, batches):  #<2>
+        raise InvalidSku(f'Invalid sku {line.sku}')
+    batch = model.allocate(line, batches)  #<3>
+    session.commit()  #<4>
+    return batch
 ----
 ====
 
 Typical service-layer functions have similar steps:
 
-<1> We make some checks or assertions about the request against
+<1> We fetch some objects from the repository
+
+<2> We make some checks or assertions about the request against
     the current state of the world
 
-<2> We may instantiate a domain object, and/or call a domain service
+<3> We call a domain service
 
-TODO: no step 3, add a new object to a repo, sadly
+<4> And if all is well, we save/update any state we've changed.
 
+That last step is a little unsatisfactory at the moment, our services
+layer is tightly coupled to our database layer, but we'll improve on
+that in the next chapter.
 
-And now our flask app is looking reasonably sane, <<flask_app_using_service_layer>>:
+But the essentials of the services layer are there, and our flask
+app now looks a lot cleaner, <<flask_app_using_service_layer>>:
 
 
 [[flask_app_using_service_layer]]
@@ -254,23 +348,19 @@ And now our flask app is looking reasonably sane, <<flask_app_using_service_laye
 ----
 @app.route("/allocate", methods=['POST'])
 def allocate_endpoint():
+    session = get_session()  #<1>
+    repo = repository.BatchRepository(session)  #<1>
+    line = model.OrderLine(
+        request.json['orderid'],  #<2>
+        request.json['sku'],  #<2>
+        request.json['qty'],  #<2>
+    )
     try:
-        session = get_session()  #<1>
-        repo = repository.BatchRepository(session)  #<1>
-        ref = request.json['order_reference']  #<2>
-        lines = [
-            model.OrderLine(ref, sku, qty)
-            for sku, qty in request.json['lines'].items()  #<2>
-        ]
-        try:
-            services.allocate(lines, repo)
-            session.commit()
-            return 'OK', 201  #<3>
-        except services.OrderAlreadyAllocated as e:
-            return str(e), 400  #<3>
+        batchid = services.allocate(line, repo, session)  #<2>
+    except (model.OutOfStock, services.InvalidSku) as e:
+        return jsonify({'message': str(e)}), 400  <3>
 
-    finally:
-        session.close()
+    return jsonify({'batchid': batchid}), 201  <3>
 ----
 ====
 
@@ -280,13 +370,63 @@ more focused on just the web stuff:
 <1> We instantiate a database session and some repository objects.
 <2> We extract the user's commands from the web request and pass them
     to a domain service.
-<3> And we return some responses and status codes
+<3> And we return some JSON responses with the appropriate status codes
 
 The responsibilities of the flask app are just standard web stuff: per-request
 session management, parsing information out of POST parameters, response status
 codes and JSON.  All the orchestration logic is in the use case / service layer,
 and the domain logic stays in the domain.
 
+
+Finally we can confidently strip down our E2E tests to just two, one for
+the happy path and one for the unhappy path:
+
+
+[[test_error_cases]]
+.E2E tests now only happy + unhappy paths (test_api.py)
+====
+[source,python]
+----
+import uuid
+import pytest
+import requests
+
+import config
+
+def random_ref(prefix):
+    return prefix + '-' + uuid.uuid4().hex[:10]
+
+@pytest.mark.usefixtures('restart_api')
+def test_happy_path_returns_201_and_allocated_batch(add_stock):
+    sku, othersku = random_ref('s1'), random_ref('s2')
+    batch1, batch2, batch3 = random_ref('b1'), random_ref('b2'), random_ref('b3')
+    add_stock([
+        (batch1, sku, 100, '2011-01-02'),
+        (batch2, sku, 100, '2011-01-01'),
+        (batch3, othersku, 100, None),
+    ])
+    data = {
+        'orderid': random_ref('o'),
+        'sku': sku,
+        'qty': 3,
+    }
+    url = config.get_api_url()
+    r = requests.post(f'{url}/allocate', json=data)
+    assert r.status_code == 201
+    assert r.json()['batchid'] == batch2
+
+
+@pytest.mark.usefixtures('restart_api')
+def test_unhappy_path_returns_400_and_error_message():
+    sku, order = random_ref('s'), random_ref('o')
+    data = {'orderid': order, 'sku': sku, 'qty': 20}
+    url = config.get_api_url()
+    r = requests.post(f'{url}/allocate', json=data)
+    assert r.status_code == 400
+    assert r.json()['message'] == f'Invalid sku {sku}'
+
+----
+====
 
 
 === How is our test pyramid looking?
@@ -298,29 +438,25 @@ and the domain logic stays in the domain.
 [role="skip"]
 ----
 👉  grep -c test_ test_*.py
+test_allocate.py:4
 test_batches.py:8
-test_allocate.py:6
-test_services.py:2
+test_services.py:3
+
 test_orm.py:6
 test_repository.py:2
-test_api.py:2
+
+test_api.py:4
 ----
 ====
 
 //TODO: test this too?
 
-Not bad!  16 unit tests, 8 integration tests, and just 2 end-to-end tests.
+Not bad!  15 unit tests, 8 integration tests, and just 2 end-to-end tests.
 
 
-But there's still some things we're not happy with.  Passing that repository
-around feels awkward, and the service/orchestration layer should probably
-be in charge of the commit.  We'll introduce a nice pattern to deal with
-that in the next chapter.
-
-
-TODO: mention commit, still not tested
-
-TODO: mention the word "use case"
-
-TODO: integrate folder structure stuff at some point.
+But there's still a bit of awkwardness we'd like to get rid of. The service
+layer is tightly coupled to a `session` object.  In the next chapter, we'll
+introduce one more pattern that works closely with _Repository_ and _Service
+Layer_, the _Unit of Work_ pattern, and everything will be absolutely lovely.
+You'll see!
 
