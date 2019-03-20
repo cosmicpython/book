@@ -37,6 +37,7 @@ be of interest to outline the moving parts.
     ├── integration
     │   ├── test_orm.py
     │   └── test_repository.py
+    ├── mypy.ini
     ├── pytest.ini  <4>
     └── unit
         ├── test_allocate.py
@@ -325,6 +326,7 @@ Our tests are kept alongside everything else, as in <<tests_folder>>:
     ├── integration
     │   ├── test_orm.py
     │   └── test_repository.py
+    ├── mypy.ini
     ├── pytest.ini  <6>
     └── unit
         ├── test_allocate.py
