@@ -196,8 +196,8 @@ class Batch:
     def __init__(
         self, ref: str, sku: str, qty: int, eta: Optional[date]  #<2>
     ):
-        self.sku = sku 
         self.reference = ref 
+        self.sku = sku 
         self.eta = eta
         self.available_quantity = qty
 
@@ -307,8 +307,8 @@ class Batch:
     def __init__(
         self, ref: str, sku: str, qty: int, eta: Optional[date]
     ):
-        self.sku = sku
         self.reference = ref
+        self.sku = sku
         self.eta = eta
         self._purchased_quantity = qty
         self._allocations = set()  # type: Set[OrderLine]
@@ -643,10 +643,11 @@ def test_prefers_warehouse_batches_to_shipments():
     shipment_batch = Batch('sh-batch', 'sku1', 100, eta=tomorrow)
     line = OrderLine('oref', 'sku1', 10)
 
-    allocate([line], [warehouse_batch, shipment_batch])
+    allocate(line, [warehouse_batch, shipment_batch])
 
     assert warehouse_batch.available_quantity == 90
     assert shipment_batch.available_quantity == 100
+
 
 def test_prefers_earlier_batches():
     earliest = Batch('sh-batch', 'sku1', 100, eta=today)
@@ -654,22 +655,19 @@ def test_prefers_earlier_batches():
     latest = Batch('sh-batch', 'sku1', 100, eta=later)
     line = OrderLine('oref', 'sku1', 10)
 
-    allocate([line], [medium, earliest, latest])
+    allocate(line, [medium, earliest, latest])
 
     assert earliest.available_quantity == 90
     assert medium.available_quantity == 100
     assert latest.available_quantity == 100
 
-def test_can_allocate_multiple_lines():
-    sku1_batch = Batch('batch1', 'sku1', 100, eta=today)
-    sku2_batch = Batch('batch2', 'sku2', 100, eta=today)
-    sku1_line = OrderLine('oref', 'sku1', 10)
-    sku2_line = OrderLine('oref', 'sku2', 10)
 
-    allocate([sku1_line, sku2_line], [sku1_batch, sku2_batch])
-
-    assert sku1_batch.available_quantity == 90
-    assert sku2_batch.available_quantity == 90
+def test_returns_allocated_batch_id():
+    warehouse_batch = Batch('wh-batch', 'sku1', 100, eta=None)
+    shipment_batch = Batch('sh-batch', 'sku1', 100, eta=tomorrow)
+    line = OrderLine('oref', 'sku1', 10)
+    allocation = allocate(line, [warehouse_batch, shipment_batch])
+    assert allocation == 'wh-batch'
 ----
 ====
 
@@ -683,12 +681,12 @@ And our service looks might look like this:
 [source,python]
 [role="non-head"]
 ----
-def allocate(lines: List[OrderLine], batches: List[Batch]) -> None:
-    for line in lines:
-        batch = next(
-            b for b in sorted(batches) if b.can_allocate(line)
-        )
-        batch.allocate(line)
+def allocate(line: OrderLine, batches: List[Batch]) -> str:
+    batch = next(
+        b for b in sorted(batches) if b.can_allocate(line)
+    )
+    batch.allocate(line)
+    return batch.reference
 ----
 ====
 
@@ -741,14 +739,8 @@ def test_raises_out_of_stock_exception_if_cannot_allocate():
     sku2_line = OrderLine('oref', 'sku2', 10)
 
     with pytest.raises(OutOfStock) as ex:
-        allocate([sku2_line], [sku1_batch])
+        allocate(sku2_line, [sku1_batch])
     assert 'sku2' in str(ex)
-
-def test_out_of_stock_does_not_prevent_other_lines_being_allocated():
-    #...
-
-def test_multiple_lines_can_be_out_of_stock():
-    #...
 ----
 ====
 
@@ -765,12 +757,12 @@ class OutOfStock(Exception):
     pass
 
 
-def allocate(lines: List[OrderLine], batches: List[Batch]) -> None:
-    skus_out_of_stock = set()
-    #...
-
-    if skus_out_of_stock:
-        raise OutOfStock(f'Out of stock for sku(s) {",".join(skus_out_of_stock)}')
+def allocate(line: OrderLine, batches: List[Batch]) -> str:
+    try:
+        batch = next(
+        #...
+    except StopIteration:
+        raise OutOfStock(f'Out of stock for sku {line.sku}')
 ----
 ====
 
