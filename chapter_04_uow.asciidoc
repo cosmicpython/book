@@ -102,26 +102,32 @@ Here's how we use a fake unit of work in our service layer tests
 ----
 class FakeUnitOfWork:
     def __init__(self):
-        self.batches = FakeRepository()
+        self.batches = FakeRepository()  #<1>
         self.committed = False
 
-    def commit(self):
+    def commit(self):  #<2>
         self.committed = True
 
 
-def test_actually_allocates():
+def test_returns_allocation():
     line = model.OrderLine('o1', 'sku1', 10)
     batch = model.Batch('b1', 'sku1', 100, eta=None)
     uow = FakeUnitOfWork()
     uow.batches.add(batch)
     start_uow = lambda: nullcontext(uow)
-
-    services.allocate([line], start_uow)
-
-    assert batch.available_quantity == 90
-    assert uow.committed is True
+    result = services.allocate(line, start_uow)
+    assert result == 'b1'
 ----
 ====
+
+<1> `FakeUnitOfWork` and `FakeRepository` are tightly coupled,
+    just like the real unit of work and repository classes
+
+<2> Notice the similarity with the fake `commit()` function
+    from `FakeSession` (which we can now get rid of).  But it's 
+    a substantial improvement because we're now faking out
+    code that we wrote, rather than 3rd party code.  Some
+    people say https://github.com/testdouble/contributing-tests/wiki/Don%27t-mock-what-you-don%27t-own["don't mock what you don't own"].
 
 
 And here's what our new service layer looks like:
@@ -132,16 +138,14 @@ And here's what our new service layer looks like:
 ====
 [source,python]
 ----
-def allocate(lines: List[OrderLine], start_uow) -> None:
+def allocate(line: OrderLine, start_uow) -> str:
     with start_uow() as uow:
         batches = uow.batches.list()
-
-        existing_allocations = set(a for batch in batches for a in batch._allocations)
-        if any(l in existing_allocations for l in lines):
-            raise OrderAlreadyAllocated(f'Order {lines[0].orderid} already allocated')
-
-        model.allocate(lines, batches)
+        if not is_valid_sku(line.sku, batches):
+            raise InvalidSku(f'Invalid sku {line.sku}')
+        batch = model.allocate(line, batches)
         uow.commit()
+    return batch
 ----
 ====
 

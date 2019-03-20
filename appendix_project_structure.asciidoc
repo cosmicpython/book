@@ -24,8 +24,8 @@ be of interest to outline the moving parts.
 ├── src  <3>
 │   ├── allocation
 │   │   ├── config.py
-│   │   ├── model.py
 │   │   ├── flask_app.py
+│   │   ├── model.py
 │   │   ├── orm.py
 │   │   ├── repository.py
 │   │   └── services.py
@@ -35,6 +35,7 @@ be of interest to outline the moving parts.
     ├── e2e
     │   └── test_api.py
     ├── integration
+    │   ├── test_orm.py
     │   └── test_repository.py
     ├── pytest.ini  <4>
     └── unit
@@ -322,6 +323,7 @@ Our tests are kept alongside everything else, as in <<tests_folder>>:
     ├── e2e
     │   └── test_api.py
     ├── integration
+    │   ├── test_orm.py
     │   └── test_repository.py
     ├── pytest.ini  <6>
     └── unit
