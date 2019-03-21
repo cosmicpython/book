@@ -153,9 +153,12 @@ code examples / patterns: events as a microservices integration platform
 
  
 
-## Appendix 1: swapping out flask for asyncio
+## Appendix 1: swapping out flask and our database for a CLI with CSVs
 
-demonstrate how our layered architecture makes it easy to do infrastructure changes whilst keeping our business logic intact
+(to follow on from unit of work chapter).
+the business come to us apologetically saying they're not ready to use our API and could we build a thing that reads batches and orders from 2 csvs and outputs a third with allocations".
+
+show how by just changing our repository and unitofwork, we can use the exact same service layer and domain layer to build a CLI app.
 
 this could be an exercise for the reader tbh.  or a video
 
