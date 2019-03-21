@@ -1,15 +1,26 @@
 [[chapter_04]]
 == Unit of Work pattern
 
-Bla bla service layer is unwieldy.  too many repos.  also it should do commits.
+In this chapter we'll introduce a final piece of the puzzle that really pulls
+the _Repository_ and _Service layer_ patterns together, the _Unit of Work_
+pattern.
 
-What happens if we encounter an error during our allocation?  eg out of stock,
-a domain error?  We'd like to wrap our work up so that, either the entire order
-is allocated, or we abort and leave things in a "clean" state if anything goes
-wrong -- a classic case for a transaction/rollback.
+In the last chapter, the service layer was tightly coupled to the SQLAlchemy
+session object, so we'll fix that.
 
-What's a Pythonic way of "doing transactions"?  A context manager. 
+But we'll also use be giving ourself a tool for explicitly saying that some
+work needs to work as an atomic unit.  We either do all of it, or none of it.
+An error part of the way along should lead to any interim work being reverted.
+In normal life (and for now) that translates straight into a database transaction,
+but by giving ourself our own abstraction, we can make it mean more things,
+as we'll see when we get to TODO-link-to-events-chapter.
 
+What's a nice, Pythonic way of expressing that a block of code should run
+as a coherent whole, with some setup at the beginning, and some tidy-up at
+the end, some different handling for error and success cases?  Something like
+`try/except/finally`?  
+
+A context manager.
 
 Here's  a test for a new "unit of work" context manager that allows us to start
 a transaction, retrieve and get things from repos, and commit:
@@ -46,6 +57,8 @@ def test_uow_can_retrieve_a_batch_and_allocate_to_it(session_factory):
     assert batchid == 'batch1'
 ----
 ====
+
+TODO: this test is... a litte unwieldy.
 
 
 Here's an implementation:
@@ -90,6 +103,9 @@ class _UnitOfWork:
 <5> If we don't commit, or if we exit the context manager by raising an error,
     we do a `rollback`. (the rollback has no effect if `commit()` has been
     called)
+
+
+TODO: sidebar on ABCs for eg `UnitOfWork` and `FakeUnitOfWork` (could also be repo and fakerepo)
 
 
 Here's how we use a fake unit of work in our service layer tests
@@ -190,3 +206,7 @@ def test_rolls_back_on_error(session_factory):
 
 
 TODO: bit on whether to throw away any of the other integration tests, `test_orm` or `test_repository`
+
+
+TODO: bit on other advantages of UoW:  if we do multiple operations, we commit all or none. add example cod.
+
