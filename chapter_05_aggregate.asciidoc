@@ -1,0 +1,34 @@
+[[chapter_05_aggregate]]
+== Aggregates and consistency boundaries
+
+As we start to think about scaling up our app, we realise that our model
+of allocating lines against all avaiable batches may not scale.  If we've
+got tens of thousands of orders per hour, and hundreds of thousands of
+order lines, we can't hold a lock over the whole `batches` table for
+every single one.
+
+
+=== Choosing the right Aggregate
+
+
+bla
+
+
+=== 1 Aggregate = 1 Repository
+
+bla
+
+=== Version numbers
+
+more bla
+
+
+.Recap: Aggregates and consistency boundaries
+*****************************************************************
+Choose the right aggregate::
+    bla
+
+Something something transactions::
+    bla bla.
+
+*****************************************************************
