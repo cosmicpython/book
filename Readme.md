@@ -7,7 +7,15 @@
 
 ## Table of Contents
 
-* [preface](preface.asciidoc)
+* [Preface](preface.asciidoc)
+* [Prologue](prologue.asciidoc)
+* [chapter 1: Domain Model](chapter_01_domain_model.asciidoc)
+* [chapter 2: Repository](chapter_02_repository.asciidoc)
+* [chapter 3: Flask API and Service Layer](chapter_03_flask_api_and_service_layer.asciidoc)
+* [chapter 4: Unit of Work](chapter_04_uow.asciidoc)
+* [appendix A: Project Structure](appendix_project_structure.asciidoc)
+* [appendix B: A major infrastructure change, made easy](appendix_csvs.asciidoc)
+
 
 ## Dependencies:
 
