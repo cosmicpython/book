@@ -769,16 +769,9 @@ That'll probably do for now! We have a domain service which we can use for our
 first use case.   But first we'll need a database.
 
 
-
-=== Wrap-up
-
-TODO: could talk about...?
-
-* one day wanting to sum lines for total available quantity of a sku across all shipments []
-
-I bet 14p that we'll find a natural place to use a `sum` method in the course
-of writing the book, and then we get to act all smug when we can just do it
-with an __add__ on `Line`.
+// I bet 14p that we'll find a natural place to use a `sum` method in the course
+// of writing the book, and then we get to act all smug when we can just do it
+// with an __add__ on `Line`.
 
 
 
@@ -790,12 +783,20 @@ with an __add__ on `Line`.
 // * grouped
 // * countries
 
-.Key things (example formatting for end-of-chapter glossary/recap)
+.Domain modelling wrap-up
 *****************************************************************
 Domain modelling::
     This is the part of your code that is closest to the business,
     the most likely to change, and the place where you deliver the
     most value to the business.  Make it easy to understand and modify
+
+Distinguish Entities from Value Objects::
+    A "value object" is defined by its attributes.  It's usually best
+    implemented as an immutable type.  If you change an attribute on
+    a value object, it represents a different object.  In contrast,
+    an Entity has attributes that may vary over time, and still be the
+    same entity. It's important to define what _does_ uniquely identify
+    an entity (usually some sort of name or reference field).
 
 Not everything has to be an object::
     Python is a multi-paradigm language, so let the "verbs" in your
@@ -805,7 +806,7 @@ Not everything has to be an object::
 This is the time to apply your best OO design principles::
     revise SOLID.  has-a vs is-a.  composition over inheritance. etc etc.
 
-Datclasses for value objects::
-    yes indeed.
+You'll also want to think about consistency boundaries and Aggregates::
+    But that's a topic for <<chapter_05_aggregate>>.
 
 *****************************************************************
