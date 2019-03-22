@@ -1,6 +1,7 @@
 import pytest
 import re
 import subprocess
+import sys
 from dataclasses import dataclass
 from lxml import html
 from pathlib import Path
@@ -42,12 +43,12 @@ def test_each_chapter_follows_the_last(chapter):
 
 
 @pytest.mark.parametrize('chapter', CHAPTERS)
-def test_chapter(chapter):
+def test_listings_match_repo(chapter):
     for listing in parse_listings(chapter):
-        check_listing(listing, chapter)
+        check_listing_matches_repo(listing, chapter)
 
 
-def check_listing(listing, chapter):
+def check_listing_matches_repo(listing, chapter):
     if 'skip' in listing.classes:
         return
     elif 'tree' in listing.classes:
@@ -72,6 +73,47 @@ def check_listing(listing, chapter):
     elif listing.fixed_contents not in actual_contents:
         assert listing.lines == actual_lines, f'listing [{listing.tag}] not found within actual'
 
+@pytest.fixture(scope='session')
+def stop_submodule_docker_app():
+    subprocess.run(
+        ['docker-compose', 'down'],
+        cwd=Path(__file__).parent / 'code',
+        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        check=True
+    )
+    yield
+
+@pytest.fixture()
+def tmpdir_that_cleans_up_docker(tmpdir):
+    yield tmpdir
+    subprocess.run(
+        ['docker-compose', 'down'],
+        cwd=tmpdir,
+        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        check=True
+    )
+
+
+@pytest.mark.usefixtures('stop_submodule_docker_app')
+@pytest.mark.parametrize('chapter', CHAPTERS)
+def test_tests_pass_as_we_go_along(chapter, tmpdir_that_cleans_up_docker):
+    tmpdir = tmpdir_that_cleans_up_docker
+    for listing in parse_listings(chapter):
+        if 'non-head' in listing.classes:
+            load_files_for_tag(listing.tag, chapter, tmpdir)
+        else:
+            load_files_for_branch(chapter, tmpdir)
+        # pytest_path = Path(sys.executable).parent / 'pytest'
+        p = subprocess.run(
+            ['make', 'test'],
+            cwd=tmpdir,
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        )
+        stdout, stderr = p.stdout.decode(), p.stderr.decode()
+        if p.returncode != 0:
+            print(stdout)
+            print(stderr)
+            pytest.fail(f'Tests failed, return code was {p.returncode}')
 
 
 @dataclass
@@ -143,6 +185,24 @@ def file_contents_for_tag(filename, tag, chapter_name):
     ).stdout.decode()
     assert output.strip(), f'no commit found for [{tag}]'
     return output
+
+def load_files_for_branch(chapter_name, target_folder):
+    subprocess.run(
+        f'git archive origin/{chapter_name} | tar -x -C {target_folder}/',
+        cwd=Path(__file__).parent / 'code',
+        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        check=True,
+        shell=True,
+    )
+
+def load_files_for_tag(tag, chapter_name, target_folder):
+    subprocess.run(
+        f'git archive origin/{chapter_name}^{{/\\[{tag}\\]}} | tar -x -C {target_folder}/',
+        cwd=Path(__file__).parent / 'code',
+        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        check=True,
+        shell=True,
+    )
 
 
 def tree_for_branch(chapter_name):
