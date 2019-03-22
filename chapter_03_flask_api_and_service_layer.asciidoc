@@ -461,3 +461,19 @@ introduce one more pattern that works closely with _Repository_ and _Service
 Layer_, the _Unit of Work_ pattern, and everything will be absolutely lovely.
 You'll see!
 
+
+.API and Service Layer recap
+*****************************************************************
+Apply the DIP to Flask as well--your API is a port::
+    Your web framework should depend on your domain model and
+    service layers, not the other way around.
+
+The service layer allows your external integrations to be very thin::
+    The service layer does all the work of fetching things from
+    your repository, doing data validation, creating domain objects,
+    invoking domain methods and services, and raising the appropriate
+    errors.  This way, whether your external interface is only a very
+    thin wrapper, whether it's a Flask API or a CLI that uses CSVs
+    (see <<appendix_csvs>>)
+
+*****************************************************************
