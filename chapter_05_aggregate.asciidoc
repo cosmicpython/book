@@ -13,14 +13,153 @@ every single one.
 
 bla
 
+[[product_aggregate]]
+.Our chosen Aggregate, Product (src/allocation/model.py)
+====
+[source,python]
+----
+class Product:
+
+    def __init__(self, sku: str, batches: List[Batch], version_number: int = 0):
+        self.sku = sku
+        self.batches = batches
+        self.version_number = version_number
+
+    def allocate(self, line: OrderLine) -> str:
+        try:
+            batch = next(
+                b for b in sorted(self.batches) if b.can_allocate(line)
+            )
+            batch.allocate(line)
+            self.version_number += 1
+            return batch.reference
+        except StopIteration:
+            raise OutOfStock(f'Out of stock for sku {line.sku}')
+----
+====
+
+
+
 
 === 1 Aggregate = 1 Repository
+
+
+[[id_here]]
+.Listing title
+====
+[source,python]
+----
+class _UnitOfWork:
+    def __init__(self, session):
+        self.session = session
+        self.products = repository.ProductRepository(session)
+
+
+#...
+
+class ProductRepository:
+    #...
+
+    def get(self, sku):
+        return self.session.query(model.Product) \
+                           .filter_by(sku=sku) \
+                           .with_for_update() \
+                           .first()
+----
+====
+
 
 bla
 
 === Version numbers
 
 more bla
+
+
+=== Testing for our data integrity rules
+
+[[id_here]]
+.Listing title
+====
+[source,python]
+----
+def test_integrity_of_concurrent_updates_to_product_version(postgres_session_factory):
+    sku, batch = random_ref('s'), random_ref('b')
+    session = postgres_session_factory()
+    session.execute(
+        "INSERT INTO products (sku, version_number) VALUES (:sku, 3)",
+        dict(sku=sku),
+    )
+    session.execute(
+        'INSERT INTO batches (reference, sku, _purchased_quantity, eta)'
+        " VALUES (:batch, :sku, 100, null)",
+        dict(batch=batch, sku=sku),
+    )
+    session.commit()
+    exceptions = []
+    o1, o2 = random_ref('o1'), random_ref('o2')
+    target1 = lambda: try_to_allocate(o1, sku, postgres_session_factory, exceptions)
+    target2 = lambda: try_to_allocate(o2, sku, postgres_session_factory, exceptions)
+    t1 = threading.Thread(target=target1)
+    t2 = threading.Thread(target=target2)
+    t1.start()
+    t2.start()
+    t1.join()
+    t2.join()
+    [[version]] = session.execute(
+        "SELECT version_number FROM products WHERE sku=:sku",
+        dict(sku=sku),
+    )
+    assert version == 5
+    assert exceptions == []
+    orders = list(session.execute(
+        "SELECT orderid FROM allocations"
+        " JOIN batches ON allocations.batch_id = batches.id"
+        " JOIN order_lines ON allocations.orderline_id = order_lines.id"
+        " WHERE order_lines.sku=:sku",
+        dict(sku=sku),
+    ))
+    orders = set([orders[0][0], orders[1][0]])
+    assert orders == {o1, o2}
+----
+====
+
+
+
+
+
+[[id_here]]
+.Isolation level may not be enough (or even work!)
+====
+[source,python]
+[role="non-head"]
+----
+default_session_factory = sessionmaker(bind=create_engine(
+    config.get_postgres_uri(),
+    isolation_level="SERIALIZABLE"
+))
+----
+====
+
+
+
+
+[[id_here]]
+.SELECT FOR UPDATE, otoh, is your friend.
+====
+[source,python]
+----
+    def get(self, sku):
+        return self.session.query(model.Product) \
+                           .filter_by(sku=sku) \
+                           .with_for_update() \
+                           .first()
+----
+====
+
+
+TODO: get story straight on these two
+
 
 
 .Recap: Aggregates and consistency boundaries
