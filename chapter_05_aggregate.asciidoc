@@ -2,13 +2,28 @@
 == Aggregates and consistency boundaries
 
 As we start to think about scaling up our app, we realise that our model
-of allocating lines against all avaiable batches may not scale.  If we've
+of allocating lines against all available batches may not scale.  If we've
 got tens of thousands of orders per hour, and hundreds of thousands of
 order lines, we can't hold a lock over the whole `batches` table for
 every single one.
 
 
 === Choosing the right Aggregate
+
+[quote, Eric Evans, DDD blue book]
+____
+// We need an abstraction for encapsulating references within the model.
+An AGGREGATE is a cluster of associated objects that we treat as a unit for the
+purpose of data changes.
+// Each AGGREGATE has a root and a boundary. The boundary
+// defines what is inside the AGGREGATE. The root is a single, specific ENTITY
+// contained in the AGGREGATE. The root is the only member of the AGGREGATE that
+// outside objects are allowed to hold references to, although objects within the
+// boundary may hold references to each other. ENTITIES other than the root have
+// local identity, but that identity needs to be distinguishable only within the
+// AGGREGATE, because no outside object can ever see it out of the context of the
+// root ENTITY.
+____
 
 
 bla
