@@ -12,6 +12,7 @@ CHAPTERS = [
     "appendix_project_structure",
     "chapter_04_uow",
     "appendix_csvs",
+    "chapter_05_aggregate",
 ]
 
 

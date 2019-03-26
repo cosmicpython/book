@@ -52,6 +52,7 @@ Let's go with that for now, and see how it looks
 .Our chosen Aggregate, Product (src/allocation/model.py)
 ====
 [source,python]
+[role="non-head"]
 ----
 class Product:
 
@@ -112,7 +113,7 @@ class ProductRepository:
 And our service layer evolves to use `Product` as its main entrypoint:
 
 [[service_layer_uses_products]]
-.Service layer 
+.Service layer  (src/allocation/services.py)
 ====
 [source,python]
 ----
@@ -226,8 +227,8 @@ def test_concurrent_updates_to_version_are_not_allowed(postgres_session_factory)
     session.commit()
     exceptions = []
     o1, o2 = random_ref('o1'), random_ref('o2')
-    target1 = lambda: try_to_allocate(o1, sku, postgres_session_factory, exceptions)
-    target2 = lambda: try_to_allocate(o2, sku, postgres_session_factory, exceptions)
+    target1 = lambda: try_to_allocate(o1, sku, exceptions)
+    target2 = lambda: try_to_allocate(o2, sku, exceptions)
     t1 = threading.Thread(target=target1)  #<1>
     t2 = threading.Thread(target=target2)  #<1>
     t1.start()
@@ -290,10 +291,9 @@ To get the test to pass as it is, we can set the transaction isolation level
 on our session:
 
 [[transaction_serializable]]
-.Isolation level may not be enough (or even work!)
+.Set isolation level for session (src/allocation/unit_of_work.py)
 ====
 [source,python]
-[role="non-head"]
 ----
 default_session_factory = sessionmaker(bind=create_engine(
     config.get_postgres_uri(),
@@ -315,9 +315,10 @@ which will produce different behaviour: two concurrent transactions will not
 be allowed to do a read on the same rows at the same time.
 
 [[with_for_update]]
-.SELECT FOR UPDATE, otoh, is your friend.
+.SqlAlchemy with_for_update (src/allocation/repository.py)
 ====
 [source,python]
+[role="non-head"]
 ----
     def get(self, sku):
         return self.session.query(model.Product) \
