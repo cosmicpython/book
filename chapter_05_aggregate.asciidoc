@@ -55,18 +55,16 @@ Let's go with that for now, and see how it looks
 ----
 class Product:
 
-    def __init__(self, sku: str, batches: List[Batch], version_number: int = 0):
+    def __init__(self, sku: str, batches: List[Batch]):
         self.sku = sku  #<1>
         self.batches = batches  #<2>
-        self.version_number = version_number  #<3>
 
-    def allocate(self, line: OrderLine) -> str:  #<4>
+    def allocate(self, line: OrderLine) -> str:  #<3>
         try:
             batch = next(
                 b for b in sorted(self.batches) if b.can_allocate(line)
             )
             batch.allocate(line)
-            self.version_number += 1
             return batch.reference
         except StopIteration:
             raise OutOfStock(f'Out of stock for sku {line.sku}')
@@ -75,12 +73,18 @@ class Product:
 
 <1> Product's main identifier is the `sku`
 <2> It hold a reference to a collection of `batches` for that sku
-<3> We'll talk about `version_number` a little later
-<4> And finally, we can move the `allocate()` domain service to
-    being a method on `Product`.
+<3> And finally, we can move the `allocate()` domain service to
+    being a method on `Product`.  
 
 
 === 1 Aggregate = 1 Repository
+
+Once you define certain entities to be Aggregates, we need to apply the
+rule that they are the only entities that are publicly accessible to the
+outside world.  In other words, the only repositories we are allowed should
+be repositories that return aggregates.
+
+In our case, we'll switch from `BatchRepository` to `ProductRepository`:
 
 
 [[new_uow_and_repository]]
@@ -101,38 +105,113 @@ class ProductRepository:
     #...
 
     def get(self, sku):
-        return self.session.query(model.Product) \
-                           .filter_by(sku=sku) \
-                           .with_for_update() \
-                           .first()
+        return self.session.query(model.Product).filter_by(sku=sku).first()
 ----
 ====
 
+And our service layer evolves to use `Product` as its main entrypoint:
 
-bla
+[[service_layer_uses_products]]
+.Service layer 
+====
+[source,python]
+----
+def allocate(line: OrderLine, start_uow) -> str:
+    with start_uow() as uow:
+        product = uow.products.get(sku=line.sku)
+        if product is None:
+            raise InvalidSku(f'Invalid sku {line.sku}')
+        batch = product.allocate(line)
+        uow.commit()
+    return batch
+----
+====
+
+TODO: discuss, should repository raise `InvalidSku`?
+
 
 === Version numbers
 
-Why:  basically to have a way of marking the aggregate and its associated batches as having changed.  data integrity.
+We've got our new aggregate and we're using it in all the right places, the remaining
+question is:  how will we actually enforce our data integrity rules?  We don't want
+to hold a lock over the entire batches table, but how will we implement holding a
+lock over just the rows for a particular sku?  The answer is to have a single
+attribute on the Product model which acts as a marker for the whole state change
+being complete, and we use it as the single resource that concurrent workers
+can fight over:  if two transactions both read the state of the world for `batches`
+at the same time, and they both want to update the `allocations` tables, we force
+both of them to also try and update the `version_number` in the `products` table,
+in such a way that only one of them can win and the world stays consistent.
 
-3 options:
+There are essentially 3 options for implementing version numbers:
 
-1. version number lives in domain, add to product constructor
-2. services layer could do it
-3. the uow + repository could do it by magic
+1. `version_number` lives in domain, we add it to the `Product` constructor,
+   and `Product.allocate()` is responsible for incrementing it.
 
-Options 2 and 3 are a bit crap so we'll do 1. 
+2. The services layer could do it!  The version number isn't _strictly_ a domain
+   concern, so instead our service layer could assume that the current version number 
+   is attached to `Product` by the repository, and the service layer will increment it
+   before it does the `commit()`
 
+3. Or, since it's arguably an infrastructure concern, the UoW and repository
+   could do it by magic.  The repository has access to version numbers for any
+   products it retrieves, and when the UoW does a commit, it can increment the
+   version number for any products it knows about, assuming them to have changed.
+
+
+Option 3 isn't ideal, because there's no real way of doing it without having to
+assume that _all_ products have changed, so we'll be incrementing version numbers
+when we don't have tofootnote:[perhaps we could get some ORM/sqlalchemy magic to tell
+us when an object is dirty, but how would that work in the generic case, eg for a
+CsvRepository?].
+
+Option 2 involves mixing the responsibility for mutating state between the service
+layer and the domain layer, so it's a little messy as well.
+
+So in the end, even though version numbers don't _have_ to be a domain concern,
+you might decide the cleanest tradeoff is to put them in the domain.
+
+[[product_aggregate]]
+.Our chosen Aggregate, Product (src/allocation/model.py)
+====
+[source,python]
+----
+class Product:
+
+    def __init__(self, sku: str, batches: List[Batch], version_number: int = 0):  #<1>
+        self.sku = sku
+        self.batches = batches
+        self.version_number = version_number  #<1>
+
+    def allocate(self, line: OrderLine) -> str:
+        try:
+            batch = next(
+                b for b in sorted(self.batches) if b.can_allocate(line)
+            )
+            batch.allocate(line)
+            self.version_number += 1  #<1>
+            return batch.reference
+        except StopIteration:
+            raise OutOfStock(f'Out of stock for sku {line.sku}')
+----
+====
+
+<1> There it is!
 
 
 === Testing for our data integrity rules
 
-[[id_here]]
-.Listing title
+Now to actually make sure we can get the behaviour we want: if we have two
+concurrent attempts to do allocation against the same `Product`, one of them
+should fail, because they can't both update the version number:
+
+
+[[data_integrity_test]]
+.An integration test for concurrency behaviour (tests/integration/test_uow.py)
 ====
 [source,python]
 ----
-def test_integrity_of_concurrent_updates_to_product_version(postgres_session_factory):
+def test_concurrent_updates_to_version_are_not_allowed(postgres_session_factory):
     sku, batch = random_ref('s'), random_ref('b')
     session = postgres_session_factory()
     session.execute(
@@ -149,8 +228,8 @@ def test_integrity_of_concurrent_updates_to_product_version(postgres_session_fac
     o1, o2 = random_ref('o1'), random_ref('o2')
     target1 = lambda: try_to_allocate(o1, sku, postgres_session_factory, exceptions)
     target2 = lambda: try_to_allocate(o2, sku, postgres_session_factory, exceptions)
-    t1 = threading.Thread(target=target1)
-    t2 = threading.Thread(target=target2)
+    t1 = threading.Thread(target=target1)  #<1>
+    t2 = threading.Thread(target=target2)  #<1>
     t1.start()
     t2.start()
     t1.join()
@@ -159,8 +238,10 @@ def test_integrity_of_concurrent_updates_to_product_version(postgres_session_fac
         "SELECT version_number FROM products WHERE sku=:sku",
         dict(sku=sku),
     )
-    assert version == 5
-    assert exceptions == []
+    assert version == 4  #<2>
+    exception = [exceptions]
+    assert 'could not serialize access due to concurrent update' in str(exception)  #<3>
+
     orders = list(session.execute(
         "SELECT orderid FROM allocations"
         " JOIN batches ON allocations.batch_id = batches.id"
@@ -168,16 +249,47 @@ def test_integrity_of_concurrent_updates_to_product_version(postgres_session_fac
         " WHERE order_lines.sku=:sku",
         dict(sku=sku),
     ))
-    orders = set([orders[0][0], orders[1][0]])
-    assert orders == {o1, o2}
+    assert len(orders) == 1  #<4>
+----
+====
+
+<1> We set up two threads that will reliably produce the concurrency behaviour we
+    want:  `read1, read2, write1, write2`. (see below for the code being run in
+    each thread).
+
+<2> We assert that the version number has only been incremented once.
+
+<3> We can also check on the specific exception if we like
+
+<4> And we can make sure that only one allocation has gotten through.
+
+
+[[time_sleep_thread]]
+.time.sleep can reliably produce concurrency behaviour (tests/integration/test_uow.py)
+====
+[source,python]
+----
+def try_to_allocate(orderid, sku, exceptions):
+    line = model.OrderLine(orderid, sku, 10)
+    try:
+        with unit_of_work.start() as uow:
+            product = uow.products.get(sku=sku)
+            product.allocate(line)
+            time.sleep(0.2)
+            uow.commit()
+    except Exception as e:
+        print(traceback.format_exc())
+        exceptions.append(e)
 ----
 ====
 
 
+==== Enforcing concurrency rules by using database transaction isolation levels
 
+To get the test to pass as it is, we can set the transaction isolation level
+on our session:
 
-
-[[id_here]]
+[[transaction_serializable]]
 .Isolation level may not be enough (or even work!)
 ====
 [source,python]
@@ -190,10 +302,19 @@ default_session_factory = sessionmaker(bind=create_engine(
 ----
 ====
 
+Transaction isolation levels are tricky stuff, it's worth spending time
+understanding https://www.postgresql.org/docs/9.6/transaction-iso.html[the
+documentation].
 
 
+==== SELECT FOR UPDATE can also help
 
-[[id_here]]
+An alternative to using the `SERIALIZABLE` isolation level is to use
+https://www.postgresql.org/docs/9.6/explicit-locking.html[SELECT FOR UPDATE],
+which will produce different behaviour: two concurrent transactions will not
+be allowed to do a read on the same rows at the same time.
+
+[[with_for_update]]
 .SELECT FOR UPDATE, otoh, is your friend.
 ====
 [source,python]
@@ -207,8 +328,28 @@ default_session_factory = sessionmaker(bind=create_engine(
 ====
 
 
-TODO: get story straight on these two
+TODO: get specific commits into the repo for the above and get them
+      under test.
 
+This will have the effect of changing the concurrency pattern from 
+
+[role="skip"]
+----
+read1, read2, write1, write2(fail)
+----
+
+to
+
+[role="skip"]
+----
+read1, read1, read2, write2(succeed)
+----
+
+In our simple case, it's not obvious which to prefer.  In a more complex
+scenario, `SELECT FOR UPDATE` might lead to more deadlocks, while `SERIALIZABLE`
+having more of an "optimistic locking" approach and might lead to more failures,
+but the failures might be more recoverable.  So, as usual, the right solution
+will depend on circumstances.
 
 
 .Recap: Aggregates and consistency boundaries
