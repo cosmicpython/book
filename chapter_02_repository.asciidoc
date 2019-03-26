@@ -1,13 +1,20 @@
 [[chapter_02]]
 == Repository Pattern
 
-We expect to be working in an agile manner, so our priority is to get to an MVP
-as quickly as possible.  Once we've identified the first use case we want to
-support and we've built a service in the domain for it (the `allocate()` function),
-we want to start thinking about exposing it to users as quickly as possible.
+In the previous chapter we built a simple domain model that can allocate orders
+to batches of stock. It's easy for us to write tests against this code because
+there aren't any dependencies or infrastructure to set up. If we needed to run
+a database or an API and create test data, our tests would be harder to write
+and maintain.
 
-In our case that's going to be a web API, and there's a good case for saying that,
-in a real project, you might dive straight in with some end-to-end tests and
+Sadly, at some point we'll need to put our perfect little model in the hands of
+users and we'll need to contend with the real world of spreadsheets and web
+browsers.
+
+We expect to be working in an agile manner, so our priority is to get to an MVP
+as quickly as possible.  In our case that's going to be a web API.
+
+In a real project, you might dive straight in with some end-to-end tests and
 start plugging in a web framework, test-driving things outside-in.
 
 But we know that, no matter what, we're going to need some form of persistent
@@ -42,7 +49,6 @@ def allocate_endpoint():
 We'll need a way to retrieve batch info from the DB and instantiate our domain
 model objects from it, and we'll also need a way of saving them back to the
 database.
-
 
 
 === Applying the Dependency Inversion Principle to the Database
@@ -92,11 +98,6 @@ Instead, as discussed in the prologue, we'll think of our model as being on the
 > as the Onion architecture?  What about the Clean architecture?  What's a Port
 > and what's an Adapter?  Why do you people have so many words for the same thing?
 
-...we hear you ask.  The answer to all these questions is yes, pretty much. Well,
-apart from the what-is-a-port-and-what-is-an-adapter question, which we'll
-come back to later, but the short answer to that one is that it doesn't really
-matter.
-
 Although some people like to nitpick over the differences, all these are
 pretty much names for the same thing, and they all boil down to the
 Dependency Inversion Principle--high-level modules (the domain) should
@@ -108,11 +109,20 @@ and whether there is a Pythonic equivalent of interfaces, later in the book.
 
 ==== The "normal" ORM way: model depends on ORM.
 
-How to implement it when we want to use a tool like an ORM though? We don't
-want to be hand-coding SQL (at least, not yet!).  But if you follow the typical
-SQLAlchemy tutorial, you'll end up with something like this:
+In 2019 it's unlikely that your team are hand-rolling their own SQL queries.
+Instead, you're almost certainly using some kind of framework to generate
+SQL for you based on your model objects.
 
+These frameworks are called Object-Relational Mappers because they exist to
+bridge the conceptual gap between the world of objects and domain modelling, and
+the world of databases and relational algebra.
 
+The most important thing an ORM gives us is "persistence ignorance": the idea
+that our fancy domain model doesn't need to know anything about how data are
+loaded or persisted. This helps to keep our domain clean of dependencies.
+
+But if you follow the typical SQLAlchemy tutorial, you'll end up with something
+like this:
 
 
 [[typical_sqlalchemy_example]]
@@ -143,7 +153,8 @@ class Allocation(Base):
 ====
 
 ...And our pristine model is now full of dependencies on the ORM, and is
-starting to look ugly as hell.
+starting to look ugly as hell. Can we really say this model is persistence
+ignorant?
 
 
 
@@ -279,8 +290,34 @@ def allocate_endpoint():
 === Introducing Repository Pattern.
 
 The repository pattern is an abstraction over persistent storage. It hides the
-boring details of data access by pretending that our database is really an
-in-memory data structure with semantics similar to a set or dict.
+boring details of data access by pretending that all of our data is in memory.
+
+If we had infinite memory in our laptops, we'd have no need for clumsy databases.
+Instead, we could just use our objects whenever we liked. What would tht look
+like?
+
+====
+[role="skip"]
+[source,python]
+----
+import all_my_data from data
+
+def create_a_batch(self):
+    batch = Batch(...)
+    all_my_data.batches.add(batch) #<1>
+
+def modify_a_batch(self, batch_id, new_quantity):
+    batch = all_my_data.batches.get(batch_id)
+    batch.change_initial_quantity(new_quantity) #<2>
+
+----
+====
+
+
+Even though our objects are in memory, we need to put them _somewhere_ so we can
+find them again. Our in memory data would let us add new objects, just like a
+list or a set, and since the objects are in memory we never need to call a
+"Save" method, we just fetch the object we care about, and modify it in memory.
 
 The ideal repository has just two methods: `add` to put a new item in the
 repository, and `get` to return a previously added item. We stick rigidly to
