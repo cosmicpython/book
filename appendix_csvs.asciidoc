@@ -45,7 +45,7 @@ def test_cli_app_reads_csvs_with_batches_and_orders_and_outputs_allocations(
         [order_ref, sku2, 12],
     ])
 
-    subprocess.run(['./allocate-from-csv', orders_csv.parent])
+    subprocess.run(['allocate-from-csv', orders_csv.parent])
 
     expected_output_csv = orders_csv.parent / 'allocations.csv'
     with open(expected_output_csv) as f:
@@ -66,7 +66,7 @@ that jazz, you might start with something like this:
 
 
 [[first_cut_csvs]]
-.A first cut of our CSV reader/writer (allocate-from-csv)
+.A first cut of our CSV reader/writer (src/bin/allocate-from-csv)
 ====
 [source,python]
 [role="non-head"]
@@ -157,7 +157,7 @@ def test_cli_app_also_reads_existing_allocations_and_can_append_to_them(
         [new_order, sku, 7],
     ])
 
-    subprocess.run(['./allocate-from-csv', orders_csv.parent])
+    subprocess.run(['allocate-from-csv', orders_csv.parent])
 
     expected_output_csv = orders_csv.parent / 'allocations.csv'
     with open(expected_output_csv) as f:
@@ -268,7 +268,7 @@ _existing_ service layer:
 
 
 [[final_cli]]
-.Allocation with CSVs in 9 lines (allocate-from-csv)
+.Allocation with CSVs in 9 lines (src/bin/allocate-from-csv)
 ====
 [source,python]
 ----
