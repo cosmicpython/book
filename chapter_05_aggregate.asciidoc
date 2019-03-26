@@ -171,7 +171,7 @@ layer and the domain layer, so it's a little messy as well.
 So in the end, even though version numbers don't _have_ to be a domain concern,
 you might decide the cleanest tradeoff is to put them in the domain.
 
-[[product_aggregate]]
+[[product_aggregate_with_version_number]]
 .Our chosen Aggregate, Product (src/allocation/model.py)
 ====
 [source,python]

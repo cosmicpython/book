@@ -237,7 +237,7 @@ def reallocate(line: OrderLine, start_uow) -> str:
         if product is None:
             raise InvalidSku(f'Invalid sku {line.sku}')
         product.deallocate(line)  #<1>
-        product.allocate(line)  #<1>
+        product.allocate(line)  #<2>
         uow.commit()
 ----
 ====
@@ -258,6 +258,7 @@ opened and half our sofas have fallen into the Indian Ocean.  oops!
 .Change quantity
 ====
 [source,python]
+[role="skip"]
 ----
 def change_batch_quantity(batch: Batch, new_qty: int, start_uow):
     with start_uow() as uow:
