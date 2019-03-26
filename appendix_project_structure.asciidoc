@@ -37,7 +37,6 @@ be of interest to outline the moving parts.
     ├── integration
     │   ├── test_orm.py
     │   └── test_repository.py
-    ├── mypy.ini
     ├── pytest.ini  <4>
     └── unit
         ├── test_allocate.py
@@ -79,9 +78,6 @@ be of interest to outline the moving parts.
 Let's look at a few of these in more detail.
 
 TODO: add more subfolders/structure inside our main source tree?
-
-//TODO: get rid of that mypy.ini in the tests folder somehow. is only there to make 
-// my vim/mypy plugin happy.
 
 
 === env vars, 12-factor, and config, inside and outside containers.
@@ -329,7 +325,6 @@ Our tests are kept alongside everything else, as in <<tests_folder>>:
     ├── integration
     │   ├── test_orm.py
     │   └── test_repository.py
-    ├── mypy.ini
     ├── pytest.ini  <6>
     └── unit
         ├── test_allocate.py
