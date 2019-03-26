@@ -28,11 +28,25 @@ ____
 Even if it weren't for the data integrity concerns, as a model gets more complex
 and grows more different _Entity_ and _Value Objects_, all of which start pointing
 to each other, it can be hard to keep track of who can modify what.  Especially
-when we have a model 
-once
+when we have _Collections_ in the model like we do (our batches are a collection),
+it's a good idea to nominate some entities to be the single entrypoint for
+modifying their related objects.  It makes the system conceptually simpler
+and easy to reason about if you nominate some objects to be in charge of consistency
+for the others.
 
+Our model currently only has the concept of `Batch` and `OrderLine`, both of which
+are collections.  We need some kind of parent object to hold references to them.
+Some sort of `Order` object might suggest itself, but that's more about order lines,
+and we're more concerned about something that provides some sort of conceptual unity
+for collections of batches.
 
-bla
+When we allocate an order line, we're actually only interested in all the batches
+that have the same SKU as the order line.  Some sort of concept of `GlobalSkuStock`
+or perhaps just simply `Product` -- after all, that was the first concept we
+came across in our exploration of the domain language back in <<chapter_01_domain_model>>.
+
+Let's go with that for now, and see how it looks
+
 
 [[product_aggregate]]
 .Our chosen Aggregate, Product (src/allocation/model.py)
@@ -42,11 +56,11 @@ bla
 class Product:
 
     def __init__(self, sku: str, batches: List[Batch], version_number: int = 0):
-        self.sku = sku
-        self.batches = batches
-        self.version_number = version_number
+        self.sku = sku  #<1>
+        self.batches = batches  #<2>
+        self.version_number = version_number  #<3>
 
-    def allocate(self, line: OrderLine) -> str:
+    def allocate(self, line: OrderLine) -> str:  #<4>
         try:
             batch = next(
                 b for b in sorted(self.batches) if b.can_allocate(line)
@@ -59,7 +73,11 @@ class Product:
 ----
 ====
 
-
+<1> Product's main identifier is the `sku`
+<2> It hold a reference to a collection of `batches` for that sku
+<3> We'll talk about `version_number` a little later
+<4> And finally, we can move the `allocate()` domain service to
+    being a method on `Product`.
 
 
 === 1 Aggregate = 1 Repository
