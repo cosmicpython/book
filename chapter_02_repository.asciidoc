@@ -9,13 +9,13 @@ and maintain.
 
 Sadly, at some point we'll need to put our perfect little model in the hands of
 users and we'll need to contend with the real world of spreadsheets and web
-browsers.
+browsers and race conditions. For the next few chapters we're going to look at
+how we can connect our idealised domain model to external state.
 
 We expect to be working in an agile manner, so our priority is to get to an MVP
-as quickly as possible.  In our case that's going to be a web API.
-
-In a real project, you might dive straight in with some end-to-end tests and
-start plugging in a web framework, test-driving things outside-in.
+as quickly as possible.  In our case that's going to be a web API. In a real
+project, you might dive straight in with some end-to-end tests and start
+plugging in a web framework, test-driving things outside-in.
 
 But we know that, no matter what, we're going to need some form of persistent
 storage, and this is a textbook, so we can allow ourselves a tiny bit more
@@ -153,16 +153,16 @@ class Allocation(Base):
 ====
 
 ...And our pristine model is now full of dependencies on the ORM, and is
-starting to look ugly as hell. Can we really say this model is persistence
-ignorant?
-
+starting to look ugly as hell. Can we really say this model is ignorant
+of the database? How can it be separate from storage concerns when our model
+properties are directly coupled to database columns?
 
 
 ==== Inverting the dependency: ORM depends on model.
 
-But that's not the only way to use SQLAlchemy.  The alternative is to define
-your schema separately, and an explicit _mapper_ for how to convert between the
-schema and our domain model:
+Well, thankfully, that's not the only way to use SQLAlchemy.  The alternative is
+to define your schema separately, and an explicit _mapper_ for how to convert
+between the schema and our domain model:
 
 https://docs.sqlalchemy.org/en/latest/orm/mapping_styles.html#classical-mappings
 
@@ -293,7 +293,7 @@ The repository pattern is an abstraction over persistent storage. It hides the
 boring details of data access by pretending that all of our data is in memory.
 
 If we had infinite memory in our laptops, we'd have no need for clumsy databases.
-Instead, we could just use our objects whenever we liked. What would tht look
+Instead, we could just use our objects whenever we liked. What would that look
 like?
 
 ====
@@ -304,11 +304,11 @@ import all_my_data from data
 
 def create_a_batch(self):
     batch = Batch(...)
-    all_my_data.batches.add(batch) #<1>
+    all_my_data.batches.add(batch)
 
 def modify_a_batch(self, batch_id, new_quantity):
     batch = all_my_data.batches.get(batch_id)
-    batch.change_initial_quantity(new_quantity) #<2>
+    batch.change_initial_quantity(new_quantity)
 
 ----
 ====
