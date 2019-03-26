@@ -222,8 +222,63 @@ TODO: bit on whether to throw away any of the other integration tests, `test_orm
 
 === Example: Using UoW to group multiple operations into an atomic unit
 
-TODO: bit on other advantages of UoW:  if we do multiple operations, we commit all or none. add example cod.
 
+==== Example 1: reallocate
+
+[[reallocate]]
+.Reallocate service function
+====
+[source,python]
+[role="skip"]
+----
+def reallocate(line: OrderLine, start_uow) -> str:
+    with start_uow() as uow:
+        product = uow.products.get(sku=line.sku)
+        if product is None:
+            raise InvalidSku(f'Invalid sku {line.sku}')
+        product.deallocate(line)  #<1>
+        product.allocate(line)  #<1>
+        uow.commit()
+----
+====
+
+<1> If `deallocate()` fails, we don't want to do `allocate()`, obviously.
+<2> But if `allocate()` fails, we probably don't want to actually commit
+    the `deallocate()`, either.
+
+
+==== Example 2: change batch quantity
+
+Our shipping company gives us a call to say that one of the container doors
+opened and half our sofas have fallen into the Indian Ocean.  oops!
+
+
+
+[[change_batch_quantity]]
+.Change quantity
+====
+[source,python]
+----
+def change_batch_quantity(batch: Batch, new_qty: int, start_uow):
+    with start_uow() as uow:
+        product = uow.products.get(sku=batch.sku)
+        batch.change_purchased_quantity(new_qty)
+        while batch.available_quantity < 0:
+            line = batch.deallocate_one()  #<1>
+            product.allocate(line)  #<1>
+        uow.commit()
+----
+====
+
+<1> Here we may need to deallocate any number of lines.  If we get a failure
+    at any stage, we probably want to commit none of the changes.
+
+
+
+Hopefully we've convinced you that the unit of work is a useful pattern, and
+hopefully you'll agree that the context manager is a really nice Pythonic way
+of visually grouping  code into blocks that we want to happen atomically.
+//TODO this wrap-up needs work.
 
 
 .Unit of Work pattern: wrap-up
@@ -233,5 +288,8 @@ Unit of Work is an abstraction around data integrity::
 
 It works closely with repository and service layer::
     bla bla see <<appendix_csvs>>.
+
+This is a lovely case for a context manager::
+    bla bla bla.
 
 *****************************************************************
