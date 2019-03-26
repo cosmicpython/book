@@ -17,6 +17,7 @@ typofixes, and more substantial feedback + suggestions are enthusiastically soli
 * [Chapter 2: Repository](chapter_02_repository.asciidoc)
 * [Chapter 3: Flask API and Service Layer](chapter_03_flask_api_and_service_layer.asciidoc)
 * [Chapter 4: Unit of Work](chapter_04_uow.asciidoc)
+* [Chapter 5: Aggregates](chapter_05_aggregate.asciidoc)
 * [Appendix A: Project Structure](appendix_project_structure.asciidoc)
 * [Appendix B: A major infrastructure change, made easy](appendix_csvs.asciidoc)
 
