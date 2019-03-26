@@ -1,4 +1,4 @@
-[[chapter_02]]
+[[chapter_02_repository]]
 == Repository Pattern
 
 In the previous chapter we built a simple domain model that can allocate orders
@@ -511,3 +511,18 @@ What will our flask app actually look like?  Find out in the next
 exciting instalment...
 
 
+.Repository pattern: recap
+*****************************************************************
+Apply Dependency Inversion to your ORM::
+    Our domain model should be free of infrastructure concerns,
+    so your ORM should import your model, and not the other way
+    around.
+
+Repository pattern is a simple abstraction around permanent storage::
+    The repository gives you the illusion of a collection of in-memory
+    objects. It makes it very easy to create a `FakeRepository` for
+    testing, and it makes it easy to swap fundamental details of you
+    infrastructure without disrupting your core application. See
+    <<appendix_csvs>> for an example.
+
+*****************************************************************

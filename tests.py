@@ -11,6 +11,7 @@ CHAPTERS = [
     "chapter_03_flask_api_and_service_layer",
     "appendix_project_structure",
     "chapter_04_uow",
+    "appendix_csvs",
 ]
 
 
