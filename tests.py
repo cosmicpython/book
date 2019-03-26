@@ -15,6 +15,10 @@ CHAPTERS = [
     "chapter_05_aggregate",
 ]
 
+BRANCHES = {
+    'appendix_csvs',
+}
+
 
 def git_log(chapter):
     return subprocess.run(
@@ -30,6 +34,8 @@ def master_log():
 
 @pytest.mark.parametrize('chapter', CHAPTERS)
 def test_master_has_all_chapters_in_its_history(master_log, chapter):
+    if chapter in BRANCHES:
+        return
     assert f'origin/{chapter}' in master_log
 
 
@@ -39,6 +45,8 @@ def test_each_chapter_follows_the_last(chapter):
     if chapter_no == 0:
         return
     previous = CHAPTERS[chapter_no - 1]
+    if previous in BRANCHES:
+        previous = CHAPTERS[chapter_no - 2]
     assert f'(origin/{previous}' in git_log(chapter), f'{chapter} did not follow {previous}'
 
 
