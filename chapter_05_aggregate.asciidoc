@@ -25,6 +25,12 @@ purpose of data changes.
 // root ENTITY.
 ____
 
+Even if it weren't for the data integrity concerns, as a model gets more complex
+and grows more different _Entity_ and _Value Objects_, all of which start pointing
+to each other, it can be hard to keep track of who can modify what.  Especially
+when we have a model 
+once
+
 
 bla
 
@@ -59,10 +65,11 @@ class Product:
 === 1 Aggregate = 1 Repository
 
 
-[[id_here]]
-.Listing title
+[[new_uow_and_repository]]
+.Our new UoW and Repository (unit_of_work.py and repository.py)
 ====
 [source,python]
+[role="skip"]
 ----
 class _UnitOfWork:
     def __init__(self, session):
@@ -88,7 +95,16 @@ bla
 
 === Version numbers
 
-more bla
+Why:  basically to have a way of marking the aggregate and its associated batches as having changed.  data integrity.
+
+3 options:
+
+1. version number lives in domain, add to product constructor
+2. services layer could do it
+3. the uow + repository could do it by magic
+
+Options 2 and 3 are a bit crap so we'll do 1. 
+
 
 
 === Testing for our data integrity rules
