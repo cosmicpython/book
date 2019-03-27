@@ -98,17 +98,7 @@ code examples / patterns:  Aggregate
 
 
 
-## Chapter 6: CQRS
-
-The business comes along and supplies a new requirement:  a dashboard showing the current allocation state of all shipments.  Discuss how using the ORM naively leads to the _SELECT N+1_ antipattern, and use it as an opportunity to demonstrate _Command-Query-Responsiblity-Segregation (CQRS)_ -- read-only parts of our architecture can be implemented quite differently from the write side
-
-code examples / patterns:  CQRS / raw sql queries
-
-related post from existing blog: https://io.made.com/commands-and-queries-handlers-and-views/
-
-
-
-## Chapter 7: event-driven architecture part 1: events and the message bus
+## Chapter 6: event-driven architecture part 1: events and the message bus
 
 Another new requirement:  when allocation succeeds, someone should be emailed.  But we don't want to have email-sending code be a potential cause of bugs/failures in our core model/state changes.  introduce domain events and a message bus as a pattern for kicking off related work after a use case is complete.
 
@@ -120,13 +110,22 @@ related post from existing blog: https://io.made.com/why-use-domain-events/
 
 
 
-## Chapter 8: event-driven architecture part 2: domain events
+## Chapter 7: event-driven architecture part 2: domain events
 
 currently events are raised at the service layer.  but what about something like "out of stock"?  maybe that's an event that really belongs inside our domain, something that has business logic, not just orchestration.
 
 code examples / patterns:  domain events raised by aggregate, unit of work with event tracking/ message bus integration
 
 related post from existing blog: https://io.made.com/why-use-domain-events/
+
+
+## Chapter 8: CQRS
+
+The business comes along and supplies a new requirement:  a dashboard showing the current allocation state of all shipments.  Discuss how using the ORM naively leads to the _SELECT N+1_ antipattern, and use it as an opportunity to demonstrate _Command-Query-Responsiblity-Segregation (CQRS)_ -- read-only parts of our architecture can be implemented quite differently from the write side
+
+code examples / patterns:  CQRS / raw sql queries
+
+related post from existing blog: https://io.made.com/commands-and-queries-handlers-and-views/
 
 
 

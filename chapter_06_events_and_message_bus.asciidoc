@@ -1,0 +1,9 @@
+[[chapter_06_events_and_message_bus]]
+== Events and the Message Bus
+
+Another new requirement:  when allocation succeeds, someone should be emailed.
+But we don't want to have email-sending code be a potential cause of
+bugs/failures in our core model/state changes.  We introduce events and
+a message bus as a pattern for kicking off related work after a use case is
+complete.
+
