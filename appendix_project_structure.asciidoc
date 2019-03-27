@@ -247,21 +247,20 @@ _src_ folder, as in <<src_folder_tree>>:
 ====
 [source,python]
 ----
-from setuptools import setup, find_packages
+from setuptools import setup
 
 setup(
     name='allocation',
     version='0.1',
-    packages=find_packages(),
+    packages=['allocation'],
 )
 ----
 ====
 
-//TODO: backport the fixup in appendix_csvs, we actually dont need find_packages
-
-That's all you need.  `find_packages()` will find the subfolders and install
-them as top-level modules.  The `name` entry is just cosmetic, but it's required.
-For a package that's never actually going to hit PyPI, this is all you need.
+That's all you need.  `packages=` specifies the names of subfolders that you
+want to install as top-level modules. The `name` entry is just cosmetic, but
+it's required. For a package that's never actually going to hit PyPI, this is
+all you need.
 
 
 === Dockerfile
@@ -290,7 +289,7 @@ RUN apk del --no-cache .build-deps
 RUN mkdir -p /src
 COPY src/ /src/
 COPY tests/ /tests/
-RUN pip install -e /src
+RUN pip install /src
 
 <4>
 WORKDIR /src
