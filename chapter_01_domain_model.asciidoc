@@ -430,9 +430,12 @@ Lines:
 
 
 Notice that while an order has a _reference_ that uniquely identifies it, a
-_line_ does not. Whenever we have a business concept that has some data but no
-identity, we often choose to represent it using a _Value Object_. A value
-object is any domain object that is uniquely identified by the data it holds.
+_line_ does not. (Even if we add the order ID to the OrderLine class,
+it's not something that uniquely identifies the line itself).
+
+Whenever we have a business concept that has some data but no identity, we
+often choose to represent it using a _Value Object_. A value object is any
+domain object that is uniquely identified by the data it holds.
 
 
 [[orderline_value_object]]
@@ -443,7 +446,8 @@ object is any domain object that is uniquely identified by the data it holds.
 ----
 @dataclass(frozen=True)
 class OrderLine:
-    sku: Reference
+    orderid: OrderReference
+    sku: ProductReference
     qty: Quantity
 ----
 ====
@@ -451,7 +455,7 @@ class OrderLine:
 Dataclasses are a neat way to represent value objects in Python 3.7, but if
 you're running an earlier version, we recommend using a named tuple. Either
 technique will give you _value equality_ which is the fancy way of saying "two
-lines with the same sku and qty are equal".
+lines with the same orderid, sku and qty are equal".
 
 
 [[more_value_objects]]
@@ -482,7 +486,7 @@ def test_equality():
 ----
 ====
 
-These value objects match our real-world intutions about how their values work.
+These value objects match our real-world intuitions about how their values work.
 It doesn't matter _which_ £10 note we're talking about, because they all have
 the same value. Likewise two names are equal if both the first and last name
 match, and two lines are equivalent if they have the same product code and
@@ -524,9 +528,9 @@ def multiplying_two_money_values_is_an_error():
 
 ==== Value Objects and Entities
 
-An order line is uniquely identified by its sku and quantity, if we change one
-of those values, we now have a new line. That's the definition of a value
-object: any object that is only idetified by its data, and doesn have a
+An order line is uniquely identified by its orderid, sku and quantity; if we
+change one of those values, we now have a new line. That's the definition of a
+value object: any object that is only identified by its data, and doesn't have a
 long-lived identity. What about a batch though? That _is_ identified by a
 reference.
 
@@ -586,7 +590,7 @@ entities. We can allocate lines to a batch, or change the date that we expect
 it to arrive, and it will still be the same entity.
 
 We usually make this explicit in code by implementing equality operators on
-entities.
+entities:
 
 
 
