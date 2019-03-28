@@ -612,7 +612,17 @@ class Batch:
 ----
 ====
 
-TODO: talk about hash
+Python's `__eq__` magic method defines the behaviour of the class for the
+`==` operator.
+
+For both entity and value objects it's also worth thinking through how
+`__hash__` will work.  It's the magic method Python uses to control the
+behaviour of objects when you add them to sets or use them as dict keys.
+
+For value objects, the hash should be based on all the value attributes.
+For entities, the hash should either be `None`, or it should be based
+on the attribute(s), like `.reference`, that define identity over time.
+More info https://docs.python.org/3/glossary.html#term-hashable[in the Python docs].
 
 
 === Not everything has to be an object: a domain service function
