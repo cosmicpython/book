@@ -216,7 +216,7 @@ might call "orchestration" -- fetching stuff out of our repository, validating
 our input against database state, handling errors, and committing in the
 happy path.  Most of these things aren't anything to do with having a
 web API endpoint (you'd need them if you were building a CLI for example, see
-appendix TODO), and they're not really things that need to be tested by
+<<appendix_csvs>>), and they're not really things that need to be tested by
 end-to-end tests.
 
 It often makes sense to split out a "service layer", sometimes called
