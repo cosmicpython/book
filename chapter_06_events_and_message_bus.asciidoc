@@ -1,9 +1,79 @@
 [[chapter_06_events_and_message_bus]]
 == Events and the Message Bus
 
-Another new requirement:  when allocation succeeds, someone should be emailed.
+Another new requirement:  when allocation fails, someone should be emailed.
 But we don't want to have email-sending code be a potential cause of
 bugs/failures in our core model/state changes.  We introduce events and
 a message bus as a pattern for kicking off related work after a use case is
 complete.
+
+
+all to easy to start sticking this sort of stuff in
+our web controllers:
+
+
+[[email_in_flask]]
+.Listing title
+====
+[source,python]
+[role="skip"]
+----
+@app.route("/allocate", methods=['POST'])
+def allocate_endpoint():
+    line = model.OrderLine(
+        request.json['orderid'],
+        request.json['sku'],
+        request.json['qty'],
+    )
+    try:
+        batchid = services.allocate(line, unit_of_work.start)
+    except (model.OutOfStock, services.InvalidSku) as e:
+        send_mail(
+            'out of stock', 
+            'stock_admin@made.com', 
+            f'{line.orderid} - {line.sku}'
+        )
+        return jsonify({'message': str(e)}), 400
+
+    return jsonify({'batchid': batchid}), 201
+----
+====
+
+... but that's crap
+
+
+
+and in the model it's even worse!  our model definitely doesn't need to
+know about emails...
+
+[[email_in_model]]
+.Listing title
+====
+[source,python]
+[role="skip"]
+----
+class Product:
+    #...
+
+
+    def allocate(self, line: OrderLine) -> str:
+        try:
+            batch = next(
+                b for b in sorted(self.batches) if b.can_allocate(line)
+            )
+            #...
+        except StopIteration:
+            send_mail(
+                subject='Out of stock', 
+                to='stock_admin@made.com', 
+                body=f'{line.orderid} - {line.sku}'
+            )
+            raise OutOfStock(f'Out of stock for sku {line.sku}')
+----
+====
+
+really this is a violation of SRP.  Our use case is allocation, our endpoint,
+service function and domain methods are all called "allocate", not "allocate
+and send email if we're out of stock".
+
 
