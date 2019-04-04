@@ -34,8 +34,6 @@ modifying their related objects.  It makes the system conceptually simpler
 and easy to reason about if you nominate some objects to be in charge of consistency
 for the others.
 
-Our model currently only has the concept of `Batch` and `OrderLine`, both of which
-are collections.  We need some kind of parent object to hold references to them.
 Some sort of `Order` object might suggest itself, but that's more about order lines,
 and we're more concerned about something that provides some sort of conceptual unity
 for collections of batches.
@@ -199,6 +197,9 @@ class Product:
 
 <1> There it is!
 
+TODO: more discussion of version number -- actual numebr doesn't matter,
+    we're just setting _something_ so the db complains, could use uids,
+    also discuss similarity with eventsourcing version numbers.
 
 === Testing for our data integrity rules
 
@@ -329,9 +330,6 @@ be allowed to do a read on the same rows at the same time.
 ====
 
 
-TODO: get specific commits into the repo for the above and get them
-      under test.
-
 This will have the effect of changing the concurrency pattern from 
 
 [role="skip"]
@@ -343,8 +341,10 @@ to
 
 [role="skip"]
 ----
-read1, read1, read2, write2(succeed)
+read1, write1, read2, write2(succeed)
 ----
+
+//TODO maybe better diagrams here?
 
 In our simple case, it's not obvious which to prefer.  In a more complex
 scenario, `SELECT FOR UPDATE` might lead to more deadlocks, while `SERIALIZABLE`
