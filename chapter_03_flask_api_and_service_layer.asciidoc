@@ -280,7 +280,6 @@ class FakeSession():
 And that lets us migrate a third test from the E2E layer, the one that
 checks that we do a commit:
 
-TODO: discuss moving _all_ the domain unit tests to the services layer too
 
 
 [[second_servicetest]]
@@ -429,6 +428,58 @@ def test_unhappy_path_returns_400_and_error_message():
 ----
 ====
 
+We've successfully split our tests into two broad categories: tests about web
+stuff, which we implement end-to-end; and tests about orchestration stuff, which
+we can test against the service layer in memory.
+
+We could take this a step further. Since we can test the our software against
+the service layer, we don't really need tests for the domain model any more.
+Instead, we could write the domain-level tests from chapter one in terms of the
+service layer.
+
+====
+[source,python]
+[role="skip"]
+----
+def test_prefers_warehouse_batches_to_shipments():
+    warehouse_batch = Batch('wh-batch', 'sku1', 100, eta=None)
+    shipment_batch = Batch('sh-batch', 'sku1', 100, eta=tomorrow)
+    repo = FakeRepository([warehouse_batch, shipment_batch])
+    session = FakeSession()
+
+    line = OrderLine('oref', 'sku1', 10)
+
+    services.allocate(line, repo, session)
+
+    assert warehouse_batch.available_quantity == 90
+----
+====
+
+Why would we want to do that?
+
+Tests are supposed to help us change our system fearlessly, but very often
+we see teams writing too many tests against their domain model. This causes
+problems when they come to change their codebase, and find that they need to
+update tens or even hundreds of unit tests.
+
+This makes sense if you stop to think about the purpose of automated tests. We
+use tests to enforce that some property of the system doesn't change while we're
+working. We use tests to check that the API continues to return 200, that the
+database session continues to commit, and that orders are still being allocated.
+
+If we accidentally change one of those behaviours, our tests will break. The
+flip side, though, is that if we want to change the design of our code, any
+tests relying directly on that code will also fail.
+
+Every line of code that we put in a test is like a blob of glue, holding the
+system in a particular shape.
+
+As we get further into the book, we'll see how the service layer forms an API
+for our system that we can drive in multiple ways. Testing against this API
+reduces the amount of code that we need to change when we refactor our domain
+model.
+
+// TODO: Sidebar on high vs low gear?
 
 === How is our test pyramid looking?
 

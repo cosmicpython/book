@@ -1,0 +1,297 @@
+== Coupling and Abstractions ==
+
+A key theme in this book, hidden among the fancy patterns, is that we can use
+simple abstractions to hide messy details. When we're writing code for fun, or
+in a kata, we get to play with ideas freely, hammering things out and
+refactoring aggressively. In a large-scale system, though, we become constrained
+by the decisions made elsewhere in the system.
+
+When I'm unable to change component A for fear of breaking component B, we say
+that the components have become coupled. Locally, coupling is a good thing: it's
+a sign that our code is working together, each component supporting the others,
+fitting in place like the gears of a watch.
+
+Globally, coupling is a nuisance: it increases the risk and the cost of changing
+our code, sometimes to the point where we feel unable to make some changes at
+all. This is the problem with the ball of mud pattern: as the application grows,
+the coupling increases superlinearly until we are no longer able to effectively
+change our systems.
+
+We can reduce the degree of coupling within a system by abstracting away the
+details.
+
+[[foo the poo]]
+
+[[Do the macGroo]]
+
+In both diagrams above, we have a pair of subsystems, with the one dependent on
+the other. In the first diagram, there is a high degree of coupling betweeen the
+two becausages of sausages. If we need to change feature B, there's a good
+chance that the change will ripple through to feature A.
+
+In the second, though, we have reduced the degree of coupling by inserting a
+new, simpler, abstraction. This abstraction serves to protect us from change by
+hiding away the complex details of whatever feature B does.
+
+
+== Abstracting State Aids Testability ==
+
+Let's see an example. Imagine we want to write some code for synchronising two
+file directories which we'll call the source and the destination.
+
+* If a file exists in the source, but not the destination, copy the file over.
+* If a file exists in the source, but has a different name than in the destination,
+  rename the destination file to match.
+* If a file exists in the destination but not the source, remove it.
+
+Our first and third requirements are simple enough, we can just compare two
+lists of paths. Our second is trickier, though. In order to detect renames,
+we'll have to inspect the content of files. For this we can use a hashing
+function like md5 or SHA.
+
+A gallon of coffee later, we've got a working prototype, and it looks
+something like this:
+
+====
+[source,python]
+----
+
+import os
+import shutil
+
+def synchronise_dirs(source, dest):
+
+    source_contents = read_paths_and_hashes(source) #<1>
+    dest_contents = read_paths_and_hashes(dest)
+
+    for sha, filepath in dest_contents.items():
+        if sha not in source_contents: #<2>
+            sourcepath = os.path.join(source,filepath)
+            destpath = os.path.join(dest, filepath)
+
+            shutil.copyfile(sourcepath, destpath)
+
+        elif source_contents[sha] != dest_contents[sha]: #<3>
+            sourcepath = os.path.join(source, filepath)
+            destpath = os.path.join(dest, dest_contents[sha])
+
+            shutil.move(sourcepath, destpath)
+
+    for sha, filepath in dest_contents.items(): #<4>
+        if sha not in source_contents:
+            os.remove(filepath)
+----
+====
+
+<1> read_paths_and_hashes returns a dictionary of hashes to relative file
+    paths. This makes it easy for us to detect that a file exists in two
+    places.
+
+<2> First we copy any files that are missing from the destination.
+
+<3> Secondly we move any files that have a different relative path in the
+    source.
+
+<4> Lastly we delete any files that existed in the destination but not the
+    source.
+
+Let's take quick look at the source for read_paths_and_hashes
+
+====
+[source,python]
+----
+import hashlib
+import os
+
+BLOCKSIZE = 65536
+
+def read_paths_and_hashes(root):
+    contents = os.walk(root) #<1>
+    result = dict()
+
+    for path, dirs, files in contents:
+        for f in files:
+            hasher = hashlib.sha1() #<2>
+            fullpath = os.path.join(path, f)
+
+            with open(fullpath, "rb") as file:
+                buf = file.read(BLOCKSIZE)
+                while len(buf) > 0:
+                    hasher.update(buf)
+                    buf = file.read(BLOCKSIZE)
+            result[hasher.hexdigest()] = f #<3>
+    return result
+----
+====
+
+<1> os.walk does a recursive walk of the directory and returns all the
+    files and directors it contains.
+
+<2> We use a SHA1 hash to fingerprint each file.
+
+<3> And we compose a dictionary where the key is the hash, and the value is
+    the path of the file relative to the root directory.
+
+Fantastic! We have some code and it _looks_ okay, but before we run it on our
+hard drive, maybe we should test it?  How do we go about testing this code?
+
+====
+[source,python]
+----
+
+import tempfile
+import os
+
+def test_when_a_file_exists_in_the_source_but_not_the_destination():
+    source = tempfile.mkdtemp() #<1>
+    dest = tempfile.mkdtemp()
+
+    content = "I am a very useful file"
+    filepath = os.path.join(source, "my-file")
+
+    with open(filepath, "w") as f: #<2>
+        f.write(content)
+
+    synchronise_dirs(source, dest)
+
+    expected_path = os.path.join(dest, "my-file")
+
+    assert os.path.isfile(expected_path) #<3>
+    with open(expected_path, "r") as f:
+        assert f.read() == content #<4>
+
+    os.remove(source) #<5>
+    os.remove(dest)
+
+
+def test_when_a_file_has_been_renamed_in_the_source():
+    source = tempfile.mkdtemp()
+    dest = tempfile.mkdtemp()
+
+    content = "I am a file that was renamed"
+
+    source_file_path = os.path.join(source, "source-file")
+    original_dest_path = os.path.join(dest, "dest-file")
+    expected_dest_path = os.path.join(dest, "source-file")
+
+    with open(source_file_path, "w") as f:
+        f.write(content)
+
+    with open(original_dest_path, "w") as f:
+        f.write(content)
+
+    synchronise_dirs(source, dest)
+
+    assert not os.path.isfile(original_dest_path) #<6>
+    with open(expected_dest_path, "r") as f:
+        assert f.read() == content
+
+    os.remove(source)
+    os.remove(dest)
+
+----
+====
+
+Wowsers, that's a lot of setup for two very simple cases! The problem is that
+our domain logic "figure out the difference between two directories" is tightly
+coupled to the IO code. We can't run our difference algorithm without calling
+the os, shutil, and hashlib modules.
+
+Our high-level code is coupled to low-level details, and its making life hard.
+As the scenarios we consider get more complex, our tests will get more unwieldy.
+We can definitely refactor these tests (see the appendix for some ideas) but
+what would our code look like if we removed those dependencies?
+
+Firstly we need to think about what our code needs from the filesystem.
+Reading through the code, there are really three distinct things happening.
+
+1. We interrogate the filesystem and produce a dict of hashes and filepaths.
+2. We decide a file is new, renamed, or redundant.
+3. We move, delete, or copy files to match the source.
+
+The first responsibility is already taken care of by the read_paths_and_hashes
+function. The second and third are coupled together. We could split these out
+in a number of different ways, but we're going to choose something unintuitive.
+
+We'll rewrite the synchronise_dirs function to return a list of _actions_ that
+we want to take. Separately we'll write a function that takes a list of actions
+and executes them on a file system.
+
+
+
+
+
+====
+[source,python]
+----
+
+class SyncFile:
+
+    def __init__(self, path, shasum):
+        self.path = path
+        self.shasum = shasum
+
+    def __hash__(self):
+        return self.shasum
+
+    def under(self, root):
+        return os.path.join(root, self.path)
+
+    def matches(self, other):
+        return self.path == other.path
+
+
+def synchronise_dirs(reader, apply_func, source_root, dest_root):
+
+    source = reader(source_root)
+    dest = reader(dest_root)
+
+    for file in dest:
+        if file not in source:
+           apply_func(("DELETE", file.path))
+
+    for file in source:
+        if file not in dest:
+            apply_func(("COPY", file.under(source_root), file.under(dest_root)))
+        elif not file.matches(dest[file]):
+            apply_func(("MOVE", dest[file].under(dest_root), file_under(dest_root))
+
+
+def test_when_a_file_exists_in_the_source_but_not_the_destination():
+
+    source = {"sha1": "my-file" }
+    dest = {}
+    actions = []
+
+    reader = [source, dest]
+    synchronise_dirs(reader.pop, actions.append, "/source", "/dest")
+
+    assert actions = [("COPY", "/source/my-file", "/dest/my-file")]
+
+
+def test_when_a_file_has_been_renamed_in_the_source():
+
+    source = {"sha1": "renamed-file" }
+    dest = {"sha1": "original-file" }
+    actions = []
+
+    reader = [source, dest]
+    synchronise_dirs(reader.pop, actions.append, "/source", "/dest")
+
+    assert actions = [("MOVE", "/dest/original-file", "/dest/renamed-file")]
+
+----
+====
+
+Because we've disentangled the logic of our program - the code for identifying
+changes - from the low-level details of IO, we can easily test the code. All we
+need to do is plug in two functions - one for generating hashes and file names,
+and the other for executing the resulting actions list.
+
+This easier testing isn't the only benefit here, though. Consider a new feature
+requirement: we would like to add a "dry-run" mode to our program. If a flag is
+passed on the command line, then our program should output the changes it will
+make, but not actually execute any of them.
+
+TODO: is this too contrived a feature change
+Which of the two versions is easier to extend in this way?
