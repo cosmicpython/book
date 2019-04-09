@@ -13,6 +13,7 @@ CHAPTERS = [
     "chapter_04_uow",
     "appendix_csvs",
     "chapter_05_aggregate",
+    "chapter_06_events_and_message_bus",
 ]
 
 BRANCHES = {

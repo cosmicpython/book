@@ -52,6 +52,7 @@ So let's try and avoid that.  We can start by writing a test at the service laye
 .A Mocky test at the service layer (tests/unit/test_services.py)
 ====
 [source,python]
+[role="non-head"]
 ----
 def test_sends_email_on_out_of_stock_error():
     line = model.OrderLine('o1', 'sku1', 10)
@@ -62,7 +63,7 @@ def test_sends_email_on_out_of_stock_error():
     start_uow = lambda: nullcontext(uow)
 
     with mock.patch('allocation.email.send_mail') as mock_send_mail:  #<1>
-        with pytest.raises(model.OutOfStock):
+        with pytest.raises(exceptions.OutOfStock):
             services.allocate(line, start_uow)
         assert mock_send_mail.call_args == mock.call(  #<2>
             'stock@made.com',
@@ -114,7 +115,7 @@ infrastructure concerns like `email.send_mail`.
 In the service layer it's a little better, but it's still not lovely:
 
 [[email_in_services]]
-.And in the services layer it's no better (services.py)
+.And in the services layer it's no better (src/allocation/services.py)
 ====
 [source,python]
 [role="non-head"]
@@ -231,8 +232,8 @@ class OutOfStock(Event):  #<2>
 A message bus essentially says: when I see this event, I should
 invoke the following handlers.  Here's a minimal implementation:
 
-[[id_here]]
-.Listing title
+[[messagebus]]
+.Simple message bus (src/allocation/messagebus.py)
 ====
 [source,python]
 ----
@@ -269,9 +270,10 @@ them to the message bus.  The service layer might be one place to do
 it...
 
 [[service_talks_to_messagebus]]
-.The service layer with an explicit message bus (services.py)
+.The service layer with an explicit message bus (src/allocation/services.py)
 ====
 [source,python]
+[role="non-head"]
 ----
 from allocation import messagebus, exceptions
 
@@ -333,8 +335,8 @@ def start(session_factory=default_session_factory):
 
 That relies on the repository keeping track of aggregates that it's seen:
 
-[[id_here]]
-.Listing title
+[[repository_tracks_seen]]
+.Repository tracks aggregates seen (src/allocation/repository.py)
 ====
 [source,python]
 ----
@@ -418,6 +420,7 @@ def test_sends_email_on_out_of_stock_error():
         model.Batch('b1', 'sku1', 9, eta=None)
     ]))
     start_uow = fake_start_uow_with_message_handling(uow)
+
     with mock.patch('allocation.email.send_mail') as mock_send_mail:
         with pytest.raises(exceptions.OutOfStock):
             services.allocate(line, start_uow)
