@@ -8,12 +8,18 @@ a message bus as a pattern for kicking off related work after a use case is
 complete.
 
 
-all to easy to start sticking this sort of stuff in
-our web controllers:
+
+=== Avoiding making a mess.
+
+==== First, avoid making a mess of of our web controllers
+
+When we have a new requirement like this, that's not _really_ to do with the
+core domain, it's all to easy to start dumping these things into our web
+controllers:
 
 
 [[email_in_flask]]
-.Listing title
+.Just whack it in the endpoint, what could go wrong? (src/allocation/flask_app.py)
 ====
 [source,python]
 [role="skip"]
@@ -39,23 +45,54 @@ def allocate_endpoint():
 ----
 ====
 
-... but that's crap
+So let's try and avoid that.  We can start by writing a test at the service layer:
 
 
-
-and in the model it's even worse!  our model definitely doesn't need to
-know about emails...
-
-[[email_in_model]]
-.Listing title
+[[mocky_test_for_send_email]]
+.A Mocky test at the service layer (tests/unit/test_services.py)
 ====
 [source,python]
-[role="skip"]
 ----
-class Product:
-    #...
+def test_sends_email_on_out_of_stock_error():
+    line = model.OrderLine('o1', 'sku1', 10)
+    uow = FakeUnitOfWork()
+    uow.products.add(model.Product(sku='sku1', batches=[
+        model.Batch('b1', 'sku1', 9, eta=None)
+    ]))
+    start_uow = lambda: nullcontext(uow)
+
+    with mock.patch('allocation.email.send_mail') as mock_send_mail:  #<1>
+        with pytest.raises(model.OutOfStock):
+            services.allocate(line, start_uow)
+        assert mock_send_mail.call_args == mock.call(  #<2>
+            'stock@made.com',
+            f'Out of stock for sku1',
+        )
+----
+====
+
+<1> We use `unittest.mock.patch` to monkeypatch out our "real" email-sending
+    function, which lives at _src/allocation/email.py_.  This may not be the best
+    pattern for testing dependencies like email. In the next chapter we'll discuss
+    alternative ways of approaching this.
 
 
+NOTE: If you find yourself using `unittest.mock` to test external dependencies
+    at the service layer, it may be a code smell.  See <<chapter_07_bootstrap>>.
+
+
+==== ... And let's not make a mess of our model either
+
+Assuming we don't want to put this code into our web controllers, because
+we want them to be as thin as possible, we may look at putting it right at
+the source, in the model:
+
+[[email_in_model]]
+.Email-sending code in our model isn't lovely either (src/allocation/model.py)
+====
+[source,python]
+[role="non-head"]
+----
     def allocate(self, line: OrderLine) -> str:
         try:
             batch = next(
@@ -63,30 +100,353 @@ class Product:
             )
             #...
         except StopIteration:
-            send_mail(
-                subject='Out of stock', 
-                to='stock_admin@made.com', 
-                body=f'{line.orderid} - {line.sku}'
-            )
-            raise OutOfStock(f'Out of stock for sku {line.sku}')
+            email.send_mail('stock@made.com', f'Out of stock for {line.sku}')
+            raise exceptions.OutOfStock(f'Out of stock for sku {line.sku}')
 ----
 ====
 
-really this is a violation of SRP.  Our use case is allocation, our endpoint,
-service function and domain methods are all called "allocate", not "allocate
-and send email if we're out of stock".
+But that's even worse!  We don't want our model to have any dependencies on
+infrastructure concerns like `email.send_mail`.
 
 
-But, let's back up.  We'll start with a test.
+==== Or the service layer!
 
-=== TODO: Start with a test, using mock/patch
+In the service layer it's a little better, but it's still not lovely:
 
-=== TODO: Hacky implementation at the service layer
+[[email_in_services]]
+.And in the services layer it's no better (services.py)
+====
+[source,python]
+[role="non-head"]
+----
+def allocate(line: OrderLine, start_uow) -> str:
+    with start_uow() as uow:
+        product = uow.products.get(sku=line.sku)
+        if product is None:
+            raise exceptions.InvalidSku(f'Invalid sku {line.sku}')
+        try:
+            batch = product.allocate(line)
+            uow.commit()
+            return batch
+        except exceptions.OutOfStock:
+            email.send_mail('stock@made.com', f'Out of stock for {line.sku}')
+            raise
+----
+====
 
-=== TODO: Refactor out to message bus on uow
+Catching an exception and re-raising it?  I mean, it could be worse, but it's
+definitely making us unhappy.
+
+===  Single Responsibility Principle
+
+Really this is a violation of the Single Responsibility Principle.  Our use
+case is allocation, our endpoint, service function and domain methods are all
+called `allocate`, not `allocate_and_send_mail_if_out_of_stock`.
+
+What we'd like is to keep our domain working in the language of the domain.
+We might want to signal that allocation has happened, but the responsibility
+of actually invoking some email-sending code in response to that fact belongs
+elsewhere.  It's something we want to be able to switch on and off, or change
+the implementation of (changing email services, switching to SMS notifications)
+without needing to change our model.
+
+We'd also like to keep the service layer free of implementation concerns,
+in the same way as the service layer doesn't depend on a specific database,
+it just uses the `UnitOfWork` abstraction.
+
+
+=== All aboard the Message Bus!
+
+The pattern we're going to introduce here is _Domain Events_ and the _Message Bus_.
+
+First, rather than being concerned about emails, our domain is in charge of
+recording "events"--facts about things that have happened:
+
+
+==== The model records events
+
+[[domain_event]]
+.The model records a domain event (src/allocation/model.py)
+====
+[source,python]
+----
+class Product:
+
+    def __init__(self, sku: str, batches: List[Batch], version_number: int = 0):
+        self.sku = sku
+        self.batches = batches
+        self.version_number = version_number
+        self.events = []  # type: List[events.Event]  #<1>
+
+    def allocate(self, line: OrderLine) -> str:
+        try:
+            #...
+        except StopIteration:
+            self.events.append(events.OutOfStock(line.sku))  #<2>
+            raise exceptions.OutOfStock(f'Out of stock for sku {line.sku}')
+----
+====
+
+<1> Our Aggregate grows a `.events` attribute, where it will store facts
+    about what has happened.
+
+<2> Rather than invoking some email-sending code directly, we record those
+    events at the place they occur, using only the language of the domain.
+
+
+==== Events are simple dataclasses
+
+Events are part of our domain.  We could store them in _model.py_, but we
+may as well keep them in their own file.  (this might be a good time to
+consider refactoring out a directory called "domain", so we have _domain/model.py_
+and _domain/events.py_).
+
+[[events_dot_py]]
+.Event classes (src/allocation/events.py)
+====
+[source,python]
+----
+from dataclasses import dataclass
+
+class Event:  #<1>
+    pass
+
+@dataclass
+class OutOfStock(Event):  #<2>
+    sku: str
+----
+====
+
+
+<1> Once we have a number of events we'll find it useful to have a parent
+    class that can store common behaviour.  It's also useful for type
+    hints in our message bus, as we'll see shortly.
+
+<2> `dataclasses` are great for Domain events too.
+
+
+
+==== The message bus maps events to handlers
+
+A message bus essentially says: when I see this event, I should
+invoke the following handlers.  Here's a minimal implementation:
+
+[[id_here]]
+.Listing title
+====
+[source,python]
+----
+from allocation import events
+from allocation import email
+
+
+def handle(event):
+    for handler in handlers[type(event)]:
+        handler(event)
+
+
+def handle_out_of_stock(event):
+    email.send_mail(
+        'stock@made.com',
+        f'Out of stock for {event.sku}',
+    )
+
+
+handlers = {
+    events.OutOfStock: [handle_out_of_stock],
+}
+----
+====
+
+//TODO: handlers -> HANDLERS?
+
+
+
+==== In a first cut, the service layer puts events on the message bus
+
+And now we need something to catch events from the model and pass
+them to the message bus.  The service layer might be one place to do
+it...
+
+[[service_talks_to_messagebus]]
+.The service layer with an explicit message bus (services.py)
+====
+[source,python]
+----
+from allocation import messagebus, exceptions
+
+
+def allocate(line: OrderLine, start_uow) -> str:
+    with start_uow() as uow:
+        product = uow.products.get(sku=line.sku)
+        if product is None:
+            raise exceptions.InvalidSku(f'Invalid sku {line.sku}')
+        try:  #<1>
+            batch = product.allocate(line)
+            uow.commit()
+            return batch
+        finally:  #<1>
+            if product.events:
+                messagebus.handle(product.events[-1])
+----
+====
+
+<1> We keep the `try/finally` from our ugly earlier implementation,
+<2> But now instead of depending directly on some email infrastructure,
+    the service layer is just in charge of passing events from the model
+    up to the message bus.
+
+TODO: get rid of that `events[-1]` hack.  `messagebus.handle` should take
+    multiple events.
+
+That avoids some of the ugliness that we had in our naive implementation,
+but we can do better.
+
+
+TODO: test with `FakeMessageBus`?
+
+
+=== The Unit of Work can pass events to the Message Bus
+
+The UoW already has a `try/finally`, and it knows about all the aggregates
+currently in play because it provides access to the _Repository_.  So it's
+potentially a good place to spot events and pass them to the message bus:
+
+[[uow_with_messagebus]]
+.The UoW meets the Message Bus (src/allocation/unit_of_work.py)
+====
+[source,python]
+----
+@contextmanager
+def start(session_factory=default_session_factory):
+    session = session_factory()
+    try:
+        uow = _UnitOfWork(session)
+        yield uow
+    finally:
+        session.rollback()
+        for obj in uow.products.seen:
+            if obj.events:
+                messagebus.handle(obj.events[-1])
+----
+====
+
+That relies on the repository keeping track of aggregates that it's seen:
+
+[[id_here]]
+.Listing title
+====
+[source,python]
+----
+class ProductRepository:
+
+    def __init__(self, session):
+        self.session = session
+        self.seen = set()
+
+    def add(self, product):
+        self.seen.add(product)
+        self.session.add(product)
+
+    def get(self, sku):
+        p = self.session.query(model.Product).filter_by(sku=sku).first()
+        if p:
+            self.seen.add(p)
+        return p
+----
+====
+
+And now the service layer is actually totally free of any concerns of
+handling events:
+
+
+[[services_clean]]
+.Service layer is clean again (src/allocation/services.py)
+====
+[source,python]
+----
+def allocate(line: OrderLine, start_uow) -> str:
+    with start_uow() as uow:
+        product = uow.products.get(sku=line.sku)
+        if product is None:
+            raise exceptions.InvalidSku(f'Invalid sku {line.sku}')
+        batch = product.allocate(line)
+        uow.commit()
+        return batch
+----
+====
+
+
+But we do end up having to modify our fakes in the service layer
+quite a lot:
+
+[[services_tests_ugly_fake_messagebus]]
+.Service-layer fakes are starting to be hard work. (tests/unit/test_services.py)
+====
+[source,python]
+[role="non-head"]
+----
+class FakeRepository(set):
+    def __init__(self, *args):
+        self.seen = set()
+        super().__init__(*args)
+
+    def get(self, sku):
+        try:
+            obj = next(x for x in self if x.sku == sku)
+            self.seen.add(obj)
+            return obj
+        except StopIteration:
+            return None
+#...
+
+def fake_start_uow_with_message_handling(uow):
+    @contextmanager
+    def _start_uow():
+        try:
+            yield uow
+        finally:
+            for obj in uow.products.seen:
+                messagebus.handle(obj.events[-1])
+    return _start_uow
+
+
+def test_sends_email_on_out_of_stock_error():
+    line = model.OrderLine('o1', 'sku1', 10)
+    uow = FakeUnitOfWork()
+    uow.products.add(model.Product(sku='sku1', batches=[
+        model.Batch('b1', 'sku1', 9, eta=None)
+    ]))
+    start_uow = fake_start_uow_with_message_handling(uow)
+    with mock.patch('allocation.email.send_mail') as mock_send_mail:
+        with pytest.raises(exceptions.OutOfStock):
+            services.allocate(line, start_uow)
+    #...
+----
+====
+
 
 === TODO: Discussion: abstract base classes
 
-=== TODO: Discussion unittest.mock.patch vs dependency injection and bootstrap.py
+* show how abcs can reduce that duplication between tests and actual.
+* discussion of abcs as documentation
+* but they soon rot if not maintained!  make sure they're tested eg by pylint.
 
 
+=== Wrap-up
+
+If there's any ugliness left, arguably, it's the `unittest.mock.patch`, and
+the fact that `unit_of_work.py` depends on `messagebus.py` which depends
+on `email.send_mail`.  Discuss in the next chapter!
+
+
+
+.Recap: Domain events and the Message Bus
+*****************************************************************
+Events can help with SRP::
+    bla
+
+Unit of Work pattern can help::
+    bla bla.
+
+*****************************************************************
