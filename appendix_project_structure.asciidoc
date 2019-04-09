@@ -288,8 +288,8 @@ RUN apk del --no-cache .build-deps
 <3>
 RUN mkdir -p /src
 COPY src/ /src/
+RUN pip install -e /src
 COPY tests/ /tests/
-RUN pip install /src
 
 <4>
 WORKDIR /src
@@ -297,8 +297,6 @@ ENV FLASK_APP=allocation/flask_app.py FLASK_DEBUG=1 PYTHONUNBUFFERED=1
 CMD flask run --host=0.0.0.0 --port=80
 ----
 ====
-
-//TODO: that should be pip install -e /src above
 
 <1> Installing system-level dependencies
 <2> Installing our Python dependencies
