@@ -422,11 +422,205 @@ def test_sends_email_on_out_of_stock_error():
 ====
 
 
-=== TODO: Discussion: abstract base classes
+=== Discussion: abstract base classes
+
+TODO: this section is under construction, tidy up and finish
 
 * show how abcs can reduce that duplication between tests and actual.
 * discussion of abcs as documentation
 * but they soon rot if not maintained!  make sure they're tested eg by pylint.
+
+
+some abcs for fake repository, these allow us to share the `.seen` logic:
+
+[[abstract_repository]]
+.Abstract and actual Repository (src/allocation/repository.py)
+====
+[source,python]
+----
+class AbstractRepository(abc.ABC):
+
+    def __init__(self):
+        self.seen = set()
+
+    def add(self, obj):
+        self.seen.add(obj)
+
+    @abc.abstractmethod
+    def _get(self, sku):
+        raise NotImplementedError
+
+    def get(self, sku):
+        obj = self._get(sku)
+        if obj is not None:
+            self.seen.add(obj)
+        return obj
+
+
+
+class SqlAlchemyRepository(AbstractRepository):
+
+    def __init__(self, session):
+        super().__init__()
+        self.session = session
+
+    def add(self, product):
+        super().add(product)
+        self.session.add(product)
+
+    def _get(self, sku):
+        return self.session.query(model.Product).filter_by(sku=sku).first()
+----
+====
+
+
+[[fake_repository]]
+.Fake repository inheriting from the abstract one (tests/unit/test_services.py)
+====
+[source,python]
+----
+class FakeRepository(set, repository.AbstractRepository):
+    def __init__(self):
+        set.__init__(self)
+        repository.AbstractRepository.__init__(self)
+
+    def _get(self, sku):
+        try:
+            return next(x for x in self if x.sku == sku)
+        except StopIteration:
+            return None
+----
+====
+
+
+For the Uow, it's much harder work, and you may decide it's more effort than
+it's worth:
+
+
+[[abstract_uow_starter]]
+.Our yield-based context manager becomes a class-based one (src/allocation/unit_of_work.py)
+====
+[source,python]
+----
+class AbstractUnitOfWorkStarter(abc.ABC):
+
+    def __enter__(self):
+        self.uow = self._get_uow()
+        return self.uow
+
+    def __exit__(self, *args):
+        self._cleanup()
+        for obj in self.uow.products.seen:
+            messagebus.handle(obj.events)
+
+    @abc.abstractmethod
+    def _get_uow(self):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def _cleanup(self):
+        raise NotImplementedError
+
+
+default_session_factory = sessionmaker(bind=create_engine(
+    config.get_postgres_uri(),
+    isolation_level="SERIALIZABLE"
+))
+
+class SqlAlchemyUnitOfWorkStarter(AbstractUnitOfWorkStarter):
+
+    def __init__(self, session_factory=default_session_factory):
+        self.session_factory = session_factory
+
+    def _get_uow(self):
+        self.session = self.session_factory()
+        return _UnitOfWork(self.session)
+
+    def _cleanup(self):
+        self.session.rollback()
+
+
+start = SqlAlchemyUnitOfWorkStarter
+----
+====
+
+[[abstract_uow]]
+.And the abstract UoW is really just documentation of intent (src/allocation/unit_of_work.py)
+====
+[source,python]
+----
+class AbstractUnitOfWork(abc.ABC):
+
+    @property
+    @abc.abstractmethod
+    def products(self) -> repository.AbstractRepository:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def commit(self):
+        raise NotImplementedError
+
+
+class _UnitOfWork(AbstractUnitOfWork):
+
+    @property
+    def products(self):
+        return self._products
+
+    def __init__(self, session):
+        self.session = session
+        self._products = repository.SqlAlchemyRepository(session)
+
+    def commit(self):
+        self.session.commit()
+----
+====
+
+
+here's the fake uow-starter and uow:
+
+
+[[fake_uow_starter_from_abc]]
+.Fake UoW starter
+====
+[source,python]
+----
+class FakeUnitOfWork(unit_of_work.AbstractUnitOfWork):
+
+    @property
+    def products(self):
+        return self._products
+
+    def commit(self):
+        self.committed = True
+
+    def __init__(self):
+        self._products = FakeRepository()
+        self.committed = False
+
+
+
+
+class FakeUowStarter(unit_of_work.AbstractUnitOfWorkStarter):
+
+    def __call__(self):
+        return self
+
+    def __init__(self, uow):
+        self.uow = uow
+
+    def _get_uow(self):
+        return self.uow
+
+    def _cleanup(self):
+        pass
+----
+====
+
+We have managed to deduplicate the 
+`for obj in self.uow.products.seen: messagebus.handle(obj.events)` 
+code, but at what cost?
+
 
 
 === Wrap-up
