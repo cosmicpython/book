@@ -237,25 +237,23 @@ invoke the following handlers.  Here's a minimal implementation:
 ====
 [source,python]
 ----
-from allocation import events
-from allocation import email
+def handle(events: List[events.Event]):
+    for event in events:
+        for handler in HANDLERS[type(event)]:
+            handler(event)
 
 
-def handle(event):
-    for handler in handlers[type(event)]:
-        handler(event)
-
-
-def handle_out_of_stock(event):
+def handle_out_of_stock(event: events.OutOfStock):
     email.send_mail(
         'stock@made.com',
         f'Out of stock for {event.sku}',
     )
 
 
-handlers = {
+HANDLERS = {
     events.OutOfStock: [handle_out_of_stock],
-}
+
+}  # type: Dict[Type[events.Event], List[Callable]]
 ----
 ====
 
@@ -288,8 +286,7 @@ def allocate(line: OrderLine, start_uow) -> str:
             uow.commit()
             return batch
         finally:  #<1>
-            if product.events:
-                messagebus.handle(product.events[-1])
+            messagebus.handle(product.events)  #<2>
 ----
 ====
 
@@ -297,9 +294,6 @@ def allocate(line: OrderLine, start_uow) -> str:
 <2> But now instead of depending directly on some email infrastructure,
     the service layer is just in charge of passing events from the model
     up to the message bus.
-
-TODO: get rid of that `events[-1]` hack.  `messagebus.handle` should take
-    multiple events.
 
 That avoids some of the ugliness that we had in our naive implementation,
 but we can do better.
@@ -328,8 +322,7 @@ def start(session_factory=default_session_factory):
     finally:
         session.rollback()
         for obj in uow.products.seen:
-            if obj.events:
-                messagebus.handle(obj.events[-1])
+            messagebus.handle(obj.events)
 ----
 ====
 
@@ -409,7 +402,7 @@ def fake_start_uow_with_message_handling(uow):
             yield uow
         finally:
             for obj in uow.products.seen:
-                messagebus.handle(obj.events[-1])
+                messagebus.handle(obj.events)
     return _start_uow
 
 
