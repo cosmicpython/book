@@ -75,6 +75,11 @@ class Product:
 <3> And finally, we can move the `allocate()` domain service to
     being a method on `Product`.  
 
+//TODO: talk about magic methods on aggregates maybe?  ie, a non-aggregate entity
+//      might have a __hash__ so that we can put it into a set, but because you
+//      are never supposed to have a collection of aggregates, they could return
+//      an error for __has__. or sumfink.
+
 
 === 1 Aggregate = 1 Repository
 
