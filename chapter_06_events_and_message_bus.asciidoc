@@ -257,8 +257,6 @@ HANDLERS = {
 ----
 ====
 
-//TODO: handlers -> HANDLERS?
-
 
 
 ==== In a first cut, the service layer puts events on the message bus
@@ -299,7 +297,7 @@ That avoids some of the ugliness that we had in our naive implementation,
 but we can do better.
 
 
-TODO: test with `FakeMessageBus`?
+TODO: discussion, service layer can/could raise events too.
 
 
 === The Unit of Work can pass events to the Message Bus
@@ -445,17 +443,22 @@ class AbstractRepository(abc.ABC):
         self.seen = set()
 
     def add(self, obj):
+        self._add(obj)
         self.seen.add(obj)
-
-    @abc.abstractmethod  #<1>
-    def _get(self, sku):
-        raise NotImplementedError  #<2>
 
     def get(self, sku):
         obj = self._get(sku)
         if obj is not None:
             self.seen.add(obj)
         return obj
+
+    @abc.abstractmethod  #<1>
+    def _add(self, obj):
+        raise NotImplementedError  #<2>
+
+    @abc.abstractmethod  #<1>
+    def _get(self, sku):
+        raise NotImplementedError  #<2>
 
 
 
@@ -465,8 +468,7 @@ class SqlAlchemyRepository(AbstractRepository):
         super().__init__()
         self.session = session
 
-    def add(self, product):
-        super().add(product)
+    def _add(self, product):
         self.session.add(product)
 
     def _get(self, sku):
@@ -485,22 +487,31 @@ class SqlAlchemyRepository(AbstractRepository):
     can call out to, if you want.
 
 
+NOTE: To really reap the benefits of ABCs (such as they may be) you'll want to
+    be running some helpers like `pylint` and `mypy`.
+
+
+
 [[fake_repository_inherits]]
 .Fake repository inheriting from the abstract one (tests/unit/test_services.py)
 ====
 [source,python]
 [role="non-head"]
 ----
-class FakeRepository(set, repository.AbstractRepository):
+class FakeRepository(repository.AbstractRepository):
+
     def __init__(self):
-        set.__init__(self)
-        repository.AbstractRepository.__init__(self)
+        super().__init__()
+        self.objects = set()
 
     def _get(self, sku):
         try:
-            return next(x for x in self if x.sku == sku)
+            return next(x for x in self.objects if x.sku == sku)
         except StopIteration:
             return None
+
+    def _add(self, obj):
+        self.objects.add(obj)
 ----
 ====
 
@@ -516,74 +527,38 @@ it's worth.
 ----
 class AbstractUnitOfWork(abc.ABC):
 
-    @property
     @abc.abstractmethod
-    def products(self) -> repository.AbstractRepository:
-        raise NotImplementedError
+    def __init__(self, products: repository.AbstractRepository):
+        self.products = products
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.rollback()
+        for obj in self.products.seen:
+            messagebus.handle(obj.events)
 
     @abc.abstractmethod
     def commit(self):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def rollback(self):
         raise NotImplementedError
 
 
 
 class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 
-    @property
-    def products(self):
-        return self._products
-
     def __init__(self, session):
         self.session = session
-        self._products = repository.SqlAlchemyRepository(session)
+        super().__init__(repository.SqlAlchemyRepository(self.session))
 
     def commit(self):
         self.session.commit()
-----
-====
 
-
-[[abstract_uow_starter]]
-.Build a class around our context manager (src/allocation/unit_of_work.py)
-====
-[source,python]
-[role="non-head"]
-----
-class AbstractUnitOfWorkStarter(abc.ABC):
-
-    @contextmanager
-    def __call__(self):
-        try:
-            yield self.uow
-        finally:
-            self._cleanup()
-            for obj in self.uow.products.seen:
-                messagebus.handle(obj.events)
-
-    @property
-    @abc.abstractmethod
-    def uow(self) -> AbstractUnitOfWork:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def _cleanup(self):
-        raise NotImplementedError
-
-#...
-
-
-class SqlAlchemyUnitOfWorkStarter(AbstractUnitOfWorkStarter):
-
-    def __init__(self, session_factory=DEFAULT_SESSION_FACTORY):
-        self.session_factory = session_factory
-        self.session = None
-
-    @property
-    def uow(self):
-        self.session = self.session_factory()
-        return SqlAlchemyUnitOfWork(self.session)
-
-    def _cleanup(self):
+    def rollback(self):
         self.session.rollback()
 ----
 ====
@@ -599,45 +574,18 @@ And here's us reusing them in our tests:
 ----
 class FakeUnitOfWork(unit_of_work.AbstractUnitOfWork):
 
-    @property
-    def products(self):
-        return self._products
+    def __init__(self):
+        self.committed = False
+        super().__init__(FakeRepository())
 
     def commit(self):
         self.committed = True
 
-    def __init__(self):
-        self._products = FakeRepository()
-        self.committed = False
-
-
-
-class FakeUowStarter(unit_of_work.AbstractUnitOfWorkStarter):
-
-    def __init__(self, uow):
-        self._uow = uow
-
-    @property
-    def uow(self):
-        return self._uow
-
-    def _cleanup(self):
+    def rollback(self):
         pass
 ----
 ====
 
-One other nice thing:  we can use `AbstractUnitOfWorkStarter` as a type hint
-in our service function:
-
-[[service_type_hint_uow]]
-.Allocate now has a better type hint I guess (src/allocation/services.py)
-====
-[source,python]
-[role="non-head"]
-----
-def allocate(line: OrderLine, start_uow: AbstractUnitOfWorkStarter) -> str:
-----
-====
 
 
 What have we achieved?
@@ -651,20 +599,21 @@ What have we achieved?
 
 But this comes at a significant cost in terms of added complexity.
 
-NOTE: To really reap the benefits of ABCs (such as they may be) you'll want to
-    be running some helpers like `pylint` and `mypy`.
-
 
 TODO: "depend on abstractions" chat?
 
 
-=== Wrap-up
+=== Unit Testing with a fake message bus
 
 If there's any ugliness left, arguably, it's the `unittest.mock.patch`, and
 the fact that `unit_of_work.py` depends on `messagebus.py` which depends
 on `email.send_mail`.  Discuss in the next chapter!
 
 
+TODO: discuss replacing @mock test with `FakeMessageBus`?
+
+
+=== Wrap-up
 
 .Recap: Domain events and the Message Bus
 *****************************************************************
