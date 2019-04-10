@@ -110,8 +110,11 @@ class _UnitOfWork:
     we do a `rollback`. (the rollback has no effect if `commit()` has been
     called)
 
+//TODO: should be DEFAULT_SESSION_FACTORY
 
-TODO: sidebar on ABCs for eg `UnitOfWork` and `FakeUnitOfWork` (could also be repo and fakerepo)
+TIP: See the end of <<chapter_06_events_and_message_bus>> for a few examples
+    of how you might use abstract base classes to share code between
+    `UnitOfWork` and `FakeUnitOfWork`
 
 
 === Fake Unit of Work for testing:
