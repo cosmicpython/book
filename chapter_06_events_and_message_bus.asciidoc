@@ -437,6 +437,7 @@ some abcs for fake repository, these allow us to share the `.seen` logic:
 .Abstract and actual Repository (src/allocation/repository.py)
 ====
 [source,python]
+[role="non-head"]
 ----
 class AbstractRepository(abc.ABC):
 
@@ -446,9 +447,9 @@ class AbstractRepository(abc.ABC):
     def add(self, obj):
         self.seen.add(obj)
 
-    @abc.abstractmethod
+    @abc.abstractmethod  #<1>
     def _get(self, sku):
-        raise NotImplementedError
+        raise NotImplementedError  #<2>
 
     def get(self, sku):
         obj = self._get(sku)
@@ -474,10 +475,21 @@ class SqlAlchemyRepository(AbstractRepository):
 ====
 
 
-[[fake_repository]]
+<1> Python tip: `@abc.abstractmethod` is one of the only things that makes
+    ABCs actually "work" in Python.   Python will refuse to let you instantiate
+    a class that does not implement all the `abstractmethods` defined in its
+    parent class
+
+<2> `raise NotImplementedError` is nice but neither necessary nor sufficient.
+    In fact, your abstract methods can have real behaviour which subclasses
+    can call out to, if you want.
+
+
+[[fake_repository_inherits]]
 .Fake repository inheriting from the abstract one (tests/unit/test_services.py)
 ====
 [source,python]
+[role="non-head"]
 ----
 class FakeRepository(set, repository.AbstractRepository):
     def __init__(self):
@@ -493,61 +505,14 @@ class FakeRepository(set, repository.AbstractRepository):
 ====
 
 
-For the Uow, it's much harder work, and you may decide it's more effort than
-it's worth:
-
-
-[[abstract_uow_starter]]
-.Our yield-based context manager becomes a class-based one (src/allocation/unit_of_work.py)
-====
-[source,python]
-----
-class AbstractUnitOfWorkStarter(abc.ABC):
-
-    def __enter__(self):
-        self.uow = self._get_uow()
-        return self.uow
-
-    def __exit__(self, *args):
-        self._cleanup()
-        for obj in self.uow.products.seen:
-            messagebus.handle(obj.events)
-
-    @abc.abstractmethod
-    def _get_uow(self):
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def _cleanup(self):
-        raise NotImplementedError
-
-
-default_session_factory = sessionmaker(bind=create_engine(
-    config.get_postgres_uri(),
-    isolation_level="SERIALIZABLE"
-))
-
-class SqlAlchemyUnitOfWorkStarter(AbstractUnitOfWorkStarter):
-
-    def __init__(self, session_factory=default_session_factory):
-        self.session_factory = session_factory
-
-    def _get_uow(self):
-        self.session = self.session_factory()
-        return _UnitOfWork(self.session)
-
-    def _cleanup(self):
-        self.session.rollback()
-
-
-start = SqlAlchemyUnitOfWorkStarter
-----
-====
+For the UoW, it's much harder work, and you may decide it's more effort than
+it's worth.
 
 [[abstract_uow]]
-.And the abstract UoW is really just documentation of intent (src/allocation/unit_of_work.py)
+.The abstract UoW is really just documentation of intent (src/allocation/unit_of_work.py)
 ====
 [source,python]
+[role="non-head"]
 ----
 class AbstractUnitOfWork(abc.ABC):
 
@@ -561,7 +526,8 @@ class AbstractUnitOfWork(abc.ABC):
         raise NotImplementedError
 
 
-class _UnitOfWork(AbstractUnitOfWork):
+
+class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 
     @property
     def products(self):
@@ -577,13 +543,59 @@ class _UnitOfWork(AbstractUnitOfWork):
 ====
 
 
-here's the fake uow-starter and uow:
-
-
-[[fake_uow_starter_from_abc]]
-.Fake UoW starter
+[[abstract_uow_starter]]
+.Build a class around our context manager (src/allocation/unit_of_work.py)
 ====
 [source,python]
+[role="non-head"]
+----
+class AbstractUnitOfWorkStarter(abc.ABC):
+
+    @contextmanager
+    def __call__(self):
+        try:
+            yield self.uow
+        finally:
+            self._cleanup()
+            for obj in self.uow.products.seen:
+                messagebus.handle(obj.events)
+
+    @property
+    @abc.abstractmethod
+    def uow(self) -> AbstractUnitOfWork:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def _cleanup(self):
+        raise NotImplementedError
+
+#...
+
+
+class SqlAlchemyUnitOfWorkStarter(AbstractUnitOfWorkStarter):
+
+    def __init__(self, session_factory=DEFAULT_SESSION_FACTORY):
+        self.session_factory = session_factory
+        self.session = None
+
+    @property
+    def uow(self):
+        self.session = self.session_factory()
+        return SqlAlchemyUnitOfWork(self.session)
+
+    def _cleanup(self):
+        self.session.rollback()
+----
+====
+
+
+And here's us reusing them in our tests:
+
+[[fake_uow_from_abc]]
+.Fake UoW and starter (tests/unit/test_services.py)
+====
+[source,python]
+[role="non-head"]
 ----
 class FakeUnitOfWork(unit_of_work.AbstractUnitOfWork):
 
@@ -600,27 +612,50 @@ class FakeUnitOfWork(unit_of_work.AbstractUnitOfWork):
 
 
 
-
 class FakeUowStarter(unit_of_work.AbstractUnitOfWorkStarter):
 
-    def __call__(self):
-        return self
-
     def __init__(self, uow):
-        self.uow = uow
+        self._uow = uow
 
-    def _get_uow(self):
-        return self.uow
+    @property
+    def uow(self):
+        return self._uow
 
     def _cleanup(self):
         pass
 ----
 ====
 
-We have managed to deduplicate the 
-`for obj in self.uow.products.seen: messagebus.handle(obj.events)` 
-code, but at what cost?
+One other nice thing:  we can use `AbstractUnitOfWorkStarter` as a type hint
+in our service function:
 
+[[service_type_hint_uow]]
+.Allocate now has a better type hint I guess (src/allocation/services.py)
+====
+[source,python]
+[role="non-head"]
+----
+def allocate(line: OrderLine, start_uow: AbstractUnitOfWorkStarter) -> str:
+----
+====
+
+
+What have we achieved?
+
+* we've deduped the `.seen` attribute on repositories between tests and actual
+* we've deduped the event-catching code in the "after" phase of the UoW context
+  manager.
+* and we've documented our intention:  this is what a UoW/Repository/UoW starter
+  should look like.
+
+
+But this comes at a significant cost in terms of added complexity.
+
+NOTE: To really reap the benefits of ABCs (such as they may be) you'll want to
+    be running some helpers like `pylint` and `mypy`.
+
+
+TODO: "depend on abstractions" chat?
 
 
 === Wrap-up
