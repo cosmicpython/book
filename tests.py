@@ -1,24 +1,11 @@
-import pytest
 import re
 import subprocess
 from dataclasses import dataclass
-from lxml import html
 from pathlib import Path
+from lxml import html
+import pytest
+from chapters import CHAPTERS, BRANCHES
 
-CHAPTERS = [
-    'chapter_01_domain_model',
-    'chapter_02_repository',
-    "chapter_03_flask_api_and_service_layer",
-    "appendix_project_structure",
-    "chapter_04_uow",
-    "appendix_csvs",
-    "chapter_05_aggregate",
-    "chapter_06_events_and_message_bus",
-]
-
-BRANCHES = {
-    'appendix_csvs',
-}
 
 
 def git_log(chapter):
