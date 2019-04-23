@@ -10,7 +10,7 @@ from chapters import CHAPTERS, BRANCHES
 
 def git_log(chapter):
     return subprocess.run(
-        ['git', 'log', f'origin/{chapter}', '--oneline', '--decorate'],
+        ['git', 'log', chapter, '--oneline', '--decorate'],
         cwd=Path(__file__).parent / 'code',
         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         check=True
@@ -24,7 +24,7 @@ def master_log():
 def test_master_has_all_chapters_in_its_history(master_log, chapter):
     if chapter in BRANCHES:
         return
-    assert f'origin/{chapter}' in master_log
+    assert f'{chapter})' in master_log
 
 
 @pytest.mark.parametrize('chapter', CHAPTERS)
@@ -35,7 +35,7 @@ def test_each_chapter_follows_the_last(chapter):
     previous = CHAPTERS[chapter_no - 1]
     if previous in BRANCHES:
         previous = CHAPTERS[chapter_no - 2]
-    assert f'(origin/{previous}' in git_log(chapter), f'{chapter} did not follow {previous}'
+    assert f'{previous})' in git_log(chapter), f'{chapter} did not follow {previous}'
 
 
 @pytest.mark.parametrize('chapter', CHAPTERS)
@@ -125,7 +125,7 @@ def parse_listings(chapter_name):
 
 def file_contents_for_branch(filename, tag, chapter_name):
     return subprocess.run(
-        ['git', 'show', f'origin/{chapter_name}:{filename}'],
+        ['git', 'show', f'{chapter_name}:{filename}'],
         cwd=Path(__file__).parent / 'code',
         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         check=True
@@ -133,7 +133,7 @@ def file_contents_for_branch(filename, tag, chapter_name):
 
 def file_contents_for_tag(filename, tag, chapter_name):
     output = subprocess.run(
-        ['git', 'show', f'origin/{chapter_name}^{{/\\[{tag}\\]}}:{filename}'],
+        ['git', 'show', f'{chapter_name}^{{/\\[{tag}\\]}}:{filename}'],
         cwd=Path(__file__).parent / 'code',
         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         check=True
@@ -144,7 +144,7 @@ def file_contents_for_tag(filename, tag, chapter_name):
 
 def tree_for_branch(chapter_name):
     subprocess.run(
-        ['git', 'checkout', f'origin/{chapter_name}'],
+        ['git', 'checkout', f'{chapter_name}'],
         cwd=Path(__file__).parent / 'code',
         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         check=True
