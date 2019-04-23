@@ -4,13 +4,17 @@ import subprocess
 from pathlib import Path
 from chapters import CHAPTERS
 
-for chap in CHAPTERS:
+for chapter in CHAPTERS:
     subprocess.run(
-        ['git', '-c', 'pager.show=false', 'show', '-s', '--oneline', f':/{chap}_ends'],
+        ['git', '-c', 'pager.show=false', 'show', '-s', '--oneline', f':/{chapter}_ends'],
         cwd=Path(__file__).parent / 'code'
     )
     subprocess.run(
-        ['git', 'branch', '-f', chap, f':/{chap}_ends'],
+        ['git', 'branch', '-f', chapter, f':/{chapter}_ends'],
+        cwd=Path(__file__).parent / 'code'
+    )
+    subprocess.run(
+        ['git', 'diff', chapter, f'origin/{chapter}'],
         cwd=Path(__file__).parent / 'code'
     )
 
