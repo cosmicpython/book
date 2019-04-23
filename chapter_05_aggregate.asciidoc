@@ -120,7 +120,18 @@ And our service layer evolves to use `Product` as its main entrypoint:
 ====
 [source,python]
 ----
-def allocate(line: OrderLine, start_uow) -> str:
+def add_batch(ref: str, sku: str, qty: int, eta: Optional[date], start_uow):
+    with start_uow() as uow:
+        product = uow.products.get(sku=sku)
+        if product is None:
+            product = model.Product(sku, batches=[])
+            uow.products.add(product)
+        product.batches.append(model.Batch(ref, sku, qty, eta))
+        uow.commit()
+
+
+def allocate(orderid: str, sku: str, qty: int, start_uow) -> str:
+    line = OrderLine(orderid, sku, qty)
     with start_uow() as uow:
         product = uow.products.get(sku=line.sku)
         if product is None:
