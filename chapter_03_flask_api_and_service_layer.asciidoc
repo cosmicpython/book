@@ -432,12 +432,45 @@ We've successfully split our tests into two broad categories: tests about web
 stuff, which we implement end-to-end; and tests about orchestration stuff, which
 we can test against the service layer in memory.
 
+=== How is our test pyramid looking?
+
+Let's see what this move to using a service layer, with its own service-layer tests,
+does to our test pyramid:
+
+[[test_pyramid]]
+.Counting different types of test
+====
+[source,sh]
+[role="skip"]
+----
+👉  grep -c test_ test_*.py
+test_allocate.py:4
+test_batches.py:8
+test_services.py:3
+
+test_orm.py:6
+test_repository.py:2
+
+test_api.py:4
+----
+====
+
+//TODO: test listing this too?
+
+Not bad!  15 unit tests, 8 integration tests, and just 2 end-to-end tests.  That's
+a healthy-looking test pyramid.
+
+// still some more stuff we can tweak:
+
+
+=== Moving domain layer tests to the service layer
+
 We could take this a step further. Since we can test the our software against
 the service layer, we don't really need tests for the domain model any more.
-Instead, we could write the domain-level tests from chapter one in terms of the
-service layer.
+Instead, we could rewrite all of the domain-level tests from chapter one in
+terms of the service layer.
 
-.Move domain tests to service layer (test_services.py)
+.Moving domain tests to service layer (test_services.py)
 ====
 [source,python]
 [role="skip"]
@@ -478,36 +511,39 @@ system in a particular shape.
 As we get further into the book, we'll see how the service layer forms an API
 for our system that we can drive in multiple ways. Testing against this API
 reduces the amount of code that we need to change when we refactor our domain
-model.
+model. If we restricting ourselves to only testing against the service layer,
+we won't have any tests that directly interact with "private" methods or
+attributes on our model objects, which leaves us more free to refactor them.
+
+So we could choose to do that at this point, or (more likely), we can leave
+the domain-level tests there for now, as documentation, but if we ever find
+them to be constraining, if we find ourselves implementing new functionality
+that involves changes to our model that breaks all these tests, then we'd
+want to rewrite all of the ones that are still valid in terms of the service
+layer instead.
+
+But we still have some direct dependencies on the domain in our service-layer
+tests, because we use domain objects to set up our test data and to invoke
+our service-layer functions.
+
+To have a service layer that's fully decoupled from the domain, we need to
+rewrite its API to work in terms of primitives.
+
+
+=== Fully Decoupling the service layer from the domain
+
+bla bla primitives
+
 
 // TODO: Sidebar on high vs low gear?
 
-=== How is our test pyramid looking?
 
-[[test_pyramid]]
-.Counting different types of test
-====
-[source,sh]
-[role="skip"]
-----
-👉  grep -c test_ test_*.py
-test_allocate.py:4
-test_batches.py:8
-test_services.py:3
-
-test_orm.py:6
-test_repository.py:2
-
-test_api.py:4
-----
-====
-
-//TODO: test this too?
-
-Not bad!  15 unit tests, 8 integration tests, and just 2 end-to-end tests.
+// TODO: bit on when you would actually rewrite low-level tests.
 
 
-But there's still a bit of awkwardness we'd like to get rid of. The service
+=== Wrap-up
+
+There's still a bit of awkwardness we'd like to get rid of. The service
 layer is tightly coupled to a `session` object.  In the next chapter, we'll
 introduce one more pattern that works closely with _Repository_ and _Service
 Layer_, the _Unit of Work_ pattern, and everything will be absolutely lovely.
