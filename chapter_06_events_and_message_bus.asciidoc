@@ -55,16 +55,13 @@ So let's try and avoid that.  We can start by writing a test at the service laye
 [role="non-head"]
 ----
 def test_sends_email_on_out_of_stock_error():
-    line = model.OrderLine('o1', 'sku1', 10)
     uow = FakeUnitOfWork()
-    uow.products.add(model.Product(sku='sku1', batches=[
-        model.Batch('b1', 'sku1', 9, eta=None)
-    ]))
     start_uow = lambda: nullcontext(uow)
+    services.add_batch('b1', 'sku1', 9, None, start_uow)
 
     with mock.patch('allocation.email.send_mail') as mock_send_mail:  #<1>
         with pytest.raises(exceptions.OutOfStock):
-            services.allocate(line, start_uow)
+            services.allocate('o1', 'sku1', 10, start_uow)
         assert mock_send_mail.call_args == mock.call(  #<2>
             'stock@made.com',
             f'Out of stock for sku1',
@@ -120,7 +117,8 @@ In the service layer it's a little better, but it's still not lovely:
 [source,python]
 [role="non-head"]
 ----
-def allocate(line: OrderLine, start_uow) -> str:
+def allocate(orderid: str, sku: str, qty: int, start_uow) -> str:
+    line = OrderLine(orderid, sku, qty)
     with start_uow() as uow:
         product = uow.products.get(sku=line.sku)
         if product is None:
@@ -271,10 +269,8 @@ it...
 [source,python]
 [role="non-head"]
 ----
-from allocation import messagebus, exceptions
-
-
-def allocate(line: OrderLine, start_uow) -> str:
+def allocate(orderid: str, sku: str, qty: int, start_uow) -> str:
+    line = OrderLine(orderid, sku, qty)
     with start_uow() as uow:
         product = uow.products.get(sku=line.sku)
         if product is None:
@@ -358,7 +354,8 @@ handling events:
 ====
 [source,python]
 ----
-def allocate(line: OrderLine, start_uow) -> str:
+def allocate(orderid: str, sku: str, qty: int, start_uow) -> str:
+    line = OrderLine(orderid, sku, qty)
     with start_uow() as uow:
         product = uow.products.get(sku=line.sku)
         if product is None:
@@ -405,16 +402,13 @@ def fake_start_uow_with_message_handling(uow):
 
 
 def test_sends_email_on_out_of_stock_error():
-    line = model.OrderLine('o1', 'sku1', 10)
     uow = FakeUnitOfWork()
-    uow.products.add(model.Product(sku='sku1', batches=[
-        model.Batch('b1', 'sku1', 9, eta=None)
-    ]))
     start_uow = fake_start_uow_with_message_handling(uow)
+    services.add_batch('b1', 'sku1', 9, None, start_uow)
 
     with mock.patch('allocation.email.send_mail') as mock_send_mail:
         with pytest.raises(exceptions.OutOfStock):
-            services.allocate(line, start_uow)
+            services.allocate('o1', 'sku1', 10, start_uow)
     #...
 ----
 ====

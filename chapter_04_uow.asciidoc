@@ -136,13 +136,19 @@ class FakeUnitOfWork:
         self.committed = True
 
 
-def test_returns_allocation():
-    line = model.OrderLine('o1', 'sku1', 10)
-    batch = model.Batch('b1', 'sku1', 100, eta=None)
+def test_add_batch():
     uow = FakeUnitOfWork()
-    uow.batches.add(batch)
     start_uow = lambda: nullcontext(uow)
-    result = services.allocate(line, start_uow)
+    services.add_batch('b1', 'sku1', 100, None, start_uow)
+    assert uow.batches.get('b1') is not None
+    assert uow.committed
+
+
+def test_allocate_returns_allocation():
+    uow = FakeUnitOfWork()
+    start_uow = lambda: nullcontext(uow)
+    services.add_batch('b1', 'sku1', 100, None, start_uow)
+    result = services.allocate('o1', 'sku1', 10, start_uow)
     assert result == 'b1'
 ----
 ====
@@ -167,7 +173,14 @@ And here's what our new service layer looks like:
 ====
 [source,python]
 ----
-def allocate(line: OrderLine, start_uow) -> str:
+def add_batch(ref: str, sku: str, qty: int, eta: Optional[date], start_uow):
+    with start_uow() as uow:
+        uow.batches.add(model.Batch(ref, sku, qty, eta))
+        uow.commit()
+
+
+def allocate(orderid: str, sku: str, qty: int, start_uow) -> str:
+    line = OrderLine(orderid, sku, qty)
     with start_uow() as uow:
         batches = uow.batches.list()
         if not is_valid_sku(line.sku, batches):
