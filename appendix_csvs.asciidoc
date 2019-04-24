@@ -280,8 +280,7 @@ def main(folder):
         for row in reader:
             orderid, sku = row['orderid'], row['sku']
             qty = int(row['qty'])
-            line = model.OrderLine(orderid, sku, qty)
-            services.allocate(line, start_uow)
+            services.allocate(orderid, sku, qty, start_uow)
 ----
 ====
 
