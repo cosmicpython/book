@@ -519,26 +519,40 @@ model. If we restricting ourselves to only testing against the service layer,
 we won't have any tests that directly interact with "private" methods or
 attributes on our model objects, which leaves us more free to refactor them.
 
-So we could choose to do that at this point, or (more likely), we can leave
-the domain-level tests there for now, as documentation, but if we ever find
-them to be constraining, if we find ourselves implementing new functionality
-that involves changes to our model that breaks all these tests, then we'd
-want to rewrite all of the ones that are still valid in terms of the service
-layer instead.
+TIP: Wherever possible, write your unit tests at the highest possible level
+    of abstraction.  The lower level a unit test is, the more constraining
+    it is against future refactoring
 
-But we still have some direct dependencies on the domain in our service-layer
+.High Gear vs Low Gear,
+*******************************************************************************
+
+write tests at highest possible level, drop down to lower level when things
+get harder.  high gear vs low gear analogy.
+
+in this case we started in low gear and moved up to high gear.  that's good too.
+
+TODO: flesh out this bit.
+
+*******************************************************************************
+
+So we could choose to do that at this point, or (more likely), we can leave
+the domain-level tests there for now; they serve as documentation, if nothing
+else. But if we ever find them to be constraining, if we find ourselves
+implementing new functionality that involves changes to our model that breaks
+all these tests, then we'd want to rewrite them all in terms of the service
+layer instead--the ones that are still valid, in any case.
+
+
+=== Fully Decoupling the service layer from the domain
+
+We still have some direct dependencies on the domain in our service-layer
 tests, because we use domain objects to set up our test data and to invoke
 our service-layer functions.
 
 To have a service layer that's fully decoupled from the domain, we need to
 rewrite its API to work in terms of primitives.
 
-
-=== Fully Decoupling the service layer from the domain
-
-
 Our service layer currently takes an `OrderLine` domain object.
-How would it look if it only took primitives?
 
 [[service_domain]]
 .service takes a domain object: (services.py)
@@ -550,6 +564,7 @@ def allocate(line: OrderLine, repo: BatchRepository, session) -> str:
 ----
 ====
 
+How would it look if its parameters were all primitive types?
 
 [[service_takes_primitives]]
 .service takes strings and ints (services.py)
@@ -563,7 +578,7 @@ def allocate(
 ====
 
 
-And we can rewrite the tests in those terms as well:
+We rewrite the tests in those terms as well:
 
 
 [[tests_call_with_primitives]]
@@ -701,8 +716,6 @@ This is a really nice place to be in.  Our service-layer tests only
 depend on the services layer itself, leaving us completely free to
 refactor the model as we see fit.
 
-
-// TODO: Sidebar on high vs low gear?
 
 //TODO: add add_stock api endpoint?
 
