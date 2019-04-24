@@ -28,12 +28,13 @@ them end-to-end tests because it's one of the most self-explanatory names.
 .A first API test (test_api.py)
 ====
 [source,python]
+[role="non-head"]
 ----
 def random_ref(prefix):
     return prefix + '-' + uuid.uuid4().hex[:10]
 
 @pytest.mark.usefixtures('restart_api')
-def test_happy_path_returns_201_and_allocated_batch(add_stock):
+def test_api_returns_allocation(add_stock):
     sku, othersku = random_ref('s1'), random_ref('s2')
     batch1, batch2, batch3 = random_ref('b1'), random_ref('b2'), random_ref('b3')
     add_stock([
@@ -390,6 +391,7 @@ the happy path and one for the unhappy path:
 .E2E tests now only happy + unhappy paths (test_api.py)
 ====
 [source,python]
+[role="non-head"]
 ----
 import uuid
 import pytest
@@ -464,7 +466,6 @@ test_api.py:4
 Not bad!  15 unit tests, 8 integration tests, and just 2 end-to-end tests.  That's
 a healthy-looking test pyramid.
 
-// still some more stuff we can tweak:
 
 
 === Should domain layer tests move to the service layer?
@@ -711,16 +712,104 @@ def test_allocate_errors_for_invalid_sku():
 ====
 
 
+This is a really nice place to be in.  Our service-layer tests only depend on
+the services layer itself, leaving us completely free to refactor the model as
+we see fit.
 
-This is a really nice place to be in.  Our service-layer tests only
-depend on the services layer itself, leaving us completely free to
-refactor the model as we see fit.
+=== Carrying the improvement through to the E2E tests
+
+In the same way that adding `add_batch` helped decouple our services-layer
+tests from the model, adding an API endpoint to add a batch would remove
+the need for the ugly `add_stock` fixture, and our E2E tests can be free
+of those hardcoded SQL queries and the direct dependency on the database.
+
+The service function means adding the endpoint is very easy, just a little
+json-wranging and a single function call:
 
 
-//TODO: add add_stock api endpoint?
+[[api_for_add_batch]]
+.API for adding a batch (flask_app.py)
+====
+[source,python]
+----
+@app.route("/add_batch", methods=['POST'])
+def add_batch():
+    session = get_session()
+    repo = repository.BatchRepository(session)
+    eta = request.json['eta']
+    if eta is not None:
+        eta = datetime.fromisoformat(eta).date()
+    services.add_batch(
+        request.json['ref'], request.json['sku'], request.json['qty'], eta,
+        repo, session
+    )
+    return 'OK', 201
+----
+====
+
+
+And our hardcoded SQL queries from _conftest.py_ get replaced with some
+API calls, meaning the API tests have no dependencies other than the API,
+which is also very nice:
+
+[[api_tests_with_no_sql]]
+.API tests can now add their own batches (test_api.py)
+====
+[source,python]
+----
+def post_to_add_batch(ref, sku, qty, eta):
+    url = config.get_api_url()
+    r = requests.post(
+        f'{url}/add_batch',
+        json={'ref': ref, 'sku': sku, 'qty': qty, 'eta': eta}
+    )
+    assert r.status_code == 201
+
+
+@pytest.mark.usefixtures('postgres_db')
+@pytest.mark.usefixtures('restart_api')
+def test_happy_path_returns_201_and_allocated_batch():
+    sku, othersku = random_ref('s1'), random_ref('s2')
+    batch1, batch2, batch3 = random_ref('b1'), random_ref('b2'), random_ref('b3')
+    post_to_add_batch(batch1, sku, 100, '2011-01-02')
+    post_to_add_batch(batch2, sku, 100, '2011-01-01')
+    post_to_add_batch(batch3, othersku, 100, None)
+    data = {
+        'orderid': random_ref('o'),
+        'sku': sku,
+        'qty': 3,
+    }
+    url = config.get_api_url()
+    r = requests.post(f'{url}/allocate', json=data)
+    assert r.status_code == 201
+    assert r.json()['batchid'] == batch2
+----
+====
+
 
 === Wrap-up
 
+
+Adding the service layer has really bought us quite a lot:
+
+* Our flask API endpoints become very thin and easy to write:  their
+  only responsibility is doing "web stuff", things like parsing JSON
+  and producing the right HTTP codes for happy or unhappy cases.
+
+* We've defined a clear API for our domain, a set of use cases or
+  entrypoints that can be used by any adapter without needing to know anything
+  about our domain model classes--whether that's an API, a CLI (see
+  <<appendix_csvs>>), or the tests! They're an adapter for our domain too.
+    
+* We can write tests in "high gear" using the service layer, leaving us
+  free to refactor the domain model in any way we see fit.  As long as
+  we can still deliver the same use cases, we can experiment with new 
+  designs without needing to rewrite a load of tests.
+
+* And our "test pyramid" is looking good -- the bulk of our tests
+  are fast/unit tests, with just the bare minimum of E2E and integration
+  tests.
+  
 There's still a bit of awkwardness we'd like to get rid of. The service
 layer is tightly coupled to a `session` object.  In the next chapter, we'll
 introduce one more pattern that works closely with _Repository_ and _Service
