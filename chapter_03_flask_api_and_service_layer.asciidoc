@@ -598,9 +598,11 @@ hazard, we again drop down to a low gear until we can pick up speed again.
 * Write one black-box test per-feature to demonstrate that the feature exists
   and is working. This might be written against an HTTP api. These tests cover
   an entire feature at a time.
+
 * Write the bulk of the tests for your system against the service layer. This
   offers a good trade-off between coverage, run-time, and efficiency. These
   tests tend to cover one code path of a feature and use fakes for IO.
+
 * Maintain a small core of tests written against your domain model. These tests
   have highly-focused coverage, and are more brittle, but have the highest
   feedback. Don't be afraid to delete these tests if the functionality is
