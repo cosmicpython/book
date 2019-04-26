@@ -520,7 +520,8 @@ model. If we restricting ourselves to only testing against the service layer,
 we won't have any tests that directly interact with "private" methods or
 attributes on our model objects, which leaves us more free to refactor them.
 
-=== What kind of tests should I write?
+
+=== On deciding what kind of tests to write
 
 You might be asking yourself "should I rewrite all my unit tests, then? Is it
 wrong to write tests against the domain model?". To answer the question, it's
@@ -534,7 +535,7 @@ important to understand the trade-off between coupling and design feedback.
 | Low feedback                                                  High feedback |
 | Low barrier to change                                 High barrier to change|
 | High system coverage                                       Focused coverage |
-| <---------                                                         ------>  |
+| <---------                                                     ---------->  |
 | API tests                  service-layer tests                 domain tests |
 ----
 ====
@@ -571,6 +572,7 @@ When we want to improve the design of the code, though, we will need to replace
 or delete these tests, because they are tightly coupled to a particular
 implementation.
 
+
 ==== Low and High Gear
 
 Most of the time, when we are adding a new feature, or fixing a bug, we don't
@@ -586,16 +588,19 @@ we will drop back down to writing tests against the domain model, so that we
 get better feedback and executable documentation of our intent.
 
 The metaphor we use is that of shifting gears. When starting off a journey, the
-car needs to be in a low gear so that it can overcome inertia. Once we're off
+bicycle needs to be in a low gear so that it can overcome inertia. Once we're off
 and running, we can go faster and more efficiently by changing into a high gear
 but if we suddenly encounter a steep hill, or we're forced to slow down by a
 hazard, we again drop down to a low gear until we can pick up speed again.
 
 
-.Rules of thumb:
+.Different types of test: Rules of thumb
 ******************************************************************************
 
-* Write one black-box test per-feature to demonstrate that the feature exists
+* Write one black-box test per featurefootnote:[what about happy path and
+  unhappy path? We say, error-handling is a feature, so yes you need one E2E
+  test for error handling, but maybe not one per feature]
+  to demonstrate that the feature exists
   and is working. This might be written against an HTTP api. These tests cover
   an entire feature at a time.
 
@@ -609,6 +614,7 @@ hazard, we again drop down to a low gear until we can pick up speed again.
   later covered by tests at the service layer.
 
 ******************************************************************************
+
 
 === Fully Decoupling the service layer from the domain
 
