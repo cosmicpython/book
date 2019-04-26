@@ -13,7 +13,7 @@ work needs to work as an atomic unit.  We either do all of it, or none of it.
 An error part of the way along should lead to any interim work being reverted.
 In normal life (and for now) that translates straight into a database transaction,
 but by giving ourself our own abstraction, we can make it mean more things,
-as we'll see when we get to TODO-link-to-events-chapter.
+as we'll see when we get to <<chapter_06_events_and_message_bus>>.
 
 What's a nice, Pythonic way of expressing that a block of code should run
 as a coherent whole, with some setup at the beginning, and some tidy-up at
