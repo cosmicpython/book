@@ -1,5 +1,8 @@
 == Coupling and Abstractions ==
 
+NOTE: chapter under construction.  need to find a place for it in the flow of
+    the book.  maybe after chapter 2?
+
 A key theme in this book, hidden among the fancy patterns, is that we can use
 simple abstractions to hide messy details. When we're writing code for fun, or
 in a kata, we get to play with ideas freely, hammering things out and
@@ -20,9 +23,9 @@ change our systems.
 We can reduce the degree of coupling within a system by abstracting away the
 details.
 
-[[foo the poo]]
+[[TODO: foo the poo]]
 
-[[Do the macGroo]]
+[[TODO: Do the macGroo]]
 
 In both diagrams above, we have a pair of subsystems, with the one dependent on
 the other. In the first diagram, there is a high degree of coupling betweeen the
@@ -293,5 +296,6 @@ requirement: we would like to add a "dry-run" mode to our program. If a flag is
 passed on the command line, then our program should output the changes it will
 make, but not actually execute any of them.
 
-TODO: is this too contrived a feature change
 Which of the two versions is easier to extend in this way?
+
+TODO: is this too contrived a feature change
