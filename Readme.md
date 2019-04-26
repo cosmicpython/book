@@ -32,11 +32,12 @@ Below is just instructions for me and bob really.
 ## Dependencies:
 
 * asciidoctor
-* coderay (for syntax higlighting)
+* Pygments (for syntax higlighting)
 
 ```sh
 gem install asciidoctor
-gem install coderay
+python2 -m pip install --user pygments
+gem install pygments.rb
 ```
 
 

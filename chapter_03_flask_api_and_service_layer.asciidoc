@@ -724,7 +724,7 @@ the need for the ugly `add_stock` fixture, and our E2E tests can be free
 of those hardcoded SQL queries and the direct dependency on the database.
 
 The service function means adding the endpoint is very easy, just a little
-json-wranging and a single function call:
+json-wrangling and a single function call:
 
 
 [[api_for_add_batch]]
