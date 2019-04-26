@@ -506,6 +506,11 @@ fake_repo = FakeRepository([batch1, batch2, batch3])
 ----
 ====
 
+NOTE: You can read a bit more about our thinking on abstractions in
+    <<appendix_abstractions>>.  There's good stuff in there!
+
+//TODO: move abstractions appendix into main body of book as
+// a proper chapter
 
 How do we actually instantiate these repositories, fake or real?
 What will our flask app actually look like?  Find out in the next
