@@ -33,7 +33,7 @@ def random_ref(prefix):
     return prefix + '-' + uuid.uuid4().hex[:10]
 
 @pytest.mark.usefixtures('restart_api')
-def test_happy_path_returns_201_and_allocated_batch(add_stock):
+def test_api_returns_allocation(add_stock):
     sku, othersku = random_ref('s1'), random_ref('s2')
     batch1, batch2, batch3 = random_ref('b1'), random_ref('b2'), random_ref('b3')
     add_stock([
