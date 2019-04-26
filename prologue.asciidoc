@@ -52,7 +52,7 @@ snippets of Python code, <<urllib_example>> and <<requests_example>>:
 import urllib
 import urllib2
 
-# do horrible things to make a post to duck duck go and read the json
+# TODO: do horrible things to make a post to duck duck go and read the json
 ----
 ====
 
@@ -65,7 +65,7 @@ import urllib2
 ----
 import requests
 
-# do pleasant things to achieve the same
+# TODO: do pleasant things to achieve the same
 ----
 ====
 
@@ -110,7 +110,29 @@ other.
 
 For example most people are familiar with the three layered architecture:
 
-TODO: three-layered architecture diagram
+[[layered_architecture1]]
+.Layered Architecture
+====
+[role="skip"]
+[source,text]
+----
++------------------------------------------------------------+
+|                  Presentation Layer                        |
++------------------------------------------------------------+
+                          |
+                          V
++------------------------------------------------------------+
+|                   Business Logic                           |
++------------------------------------------------------------+
+                          |
+                          V
++------------------------------------------------------------+
+|                    Database Layer                          |
++------------------------------------------------------------+
+----
+====
+
+TODO: replace with non-ascii diagram?
 
 This is perhaps the most common pattern for building business software. In this
 model we have user-interface components, which could be a web page, or an API,
@@ -162,4 +184,5 @@ hard to imagine. How can we have an abstraction that doesn't depend on the
 details it's abstracting? We'll come to that shortly, but before we can turn
 our three-layered architecture inside out, we need to talk more about that
 middle layer.
+
 
