@@ -58,16 +58,15 @@ first step for those who want to do further research  in this field.
 
 === Outline
 
-. Domain modelling, and why do we always make it so hard for ourselves?
-. Persistence and the repository pattern
-. Web API.  Our first use cases.  Flask as a port (as in ports-and-adapters). Orchestration/Service layer
-. Data integrity 1: Unit of Work pattern
-. Data integrity 2: Choosing the right consistency boundary (Aggregate pattern)
-. Command-Query Responsibility Segregation (CQRS) - separating read from write.
-. Event-driven architecture part 1: Events and the Message Bus
-. Event-driven architecture part 2: Domain Events
-. Event-driven architecture part 3: Command Handler pattern
-. Event-driven architecture part 3: Event-driven Microservices.
+* Domain modelling, and why do we always make it so hard for ourselves?
+* Persistence and the repository pattern
+* Web API.  Our first use cases.  Flask as a port (as in ports-and-adapters). Orchestration/Service layer
+* Data integrity 1: Unit of Work pattern
+* Data integrity 2: Choosing the right consistency boundary (Aggregate pattern)
+* Event-driven architecture part 1: Events and the Message Bus
+* Event-driven architecture part 2: Event-driven Microservices.
+* Command-Query Responsibility Segregation (CQRS) - separating read from write.
+* Bootstapping and Dependency Injection
 
 
 === Conventions Used in This Book
