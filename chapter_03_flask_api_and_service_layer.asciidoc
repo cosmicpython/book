@@ -520,29 +520,95 @@ model. If we restricting ourselves to only testing against the service layer,
 we won't have any tests that directly interact with "private" methods or
 attributes on our model objects, which leaves us more free to refactor them.
 
-TIP: Wherever possible, write your unit tests at the highest possible level
-    of abstraction.  The lower level a unit test is, the more constraining
-    it is against future refactoring
+=== What kind of tests should I write?
 
-.High Gear vs Low Gear,
-*******************************************************************************
+You might be asking yourself "should I rewrite all my unit tests, then? Is it
+wrong to write tests against the domain model?". To answer the question, it's
+important to understand the trade-off between coupling and design feedback.
 
-write tests at highest possible level, drop down to lower level when things
-get harder.  high gear vs low gear analogy.
+.The test spectrum
+====
+[source,text]
+[role="skip"]
+----
+| Low feedback                                                  High feedback |
+| Low barrier to change                                 High barrier to change|
+| High system coverage                                       Focused coverage |
+| <---------                                                         ------>  |
+| API tests                  service-layer tests                 domain tests |
+----
+====
 
-in this case we started in low gear and moved up to high gear.  that's good too.
+//TODO: stick a non-ascii diagram here.
 
-TODO: flesh out this bit.
+Extreme Programming (XP) exhorts us to "listen to the code". When we're writing
+tests, we might find that the code is hard to use, or notice a code smell. This
+is a trigger for us to refactor, and reconsider our design.
 
-*******************************************************************************
+We only get that feedback, though, when we're working closely with the target
+code. A test for the HTTP API tells us nothing about the fine-grained design of
+our objects, because it sits at a much higher level of abstraction.
 
-So we could choose to do that at this point, or (more likely), we can leave
-the domain-level tests there for now; they serve as documentation, if nothing
-else. But if we ever find them to be constraining, if we find ourselves
-implementing new functionality that involves changes to our model that breaks
-all these tests, then we'd want to rewrite them all in terms of the service
-layer instead--the ones that are still valid, in any case.
+On the other hand, we can rewrite our entire application and, so long as we
+don't change the URLs or request formats, our http tests will continue to pass.
+This gives us confidence that large-scale changes, like changing the DB schema,
+haven't broken our code.
 
+At the other end of the spectrum, the tests we wrote in chapter 1 helped us to
+flesh out our understanding of the objects we need. The tests guided us to a
+design that makes sense and reads in the domain language. When our tests read
+in the domain language, we feel comfortable that our code matches our intuition
+about the problem we're trying to solve.
+
+Because the tests are written in the domain language, they act as living
+documentation for our model. A new team member can read these tests to quickly
+understand how the system works, and how the core concepts interrelate.
+
+We often "sketch" new behaviours by writing tests at this level to see how the
+code might look.
+
+When we want to improve the design of the code, though, we will need to replace
+or delete these tests, because they are tightly coupled to a particular
+implementation.
+
+==== Low and High Gear
+
+Most of the time, when we are adding a new feature, or fixing a bug, we don't
+need to make extensive changes to the domain model. In these cases, we prefer
+to write tests against services for the lower-coupling and high-coverage.
+
+For example, when writing an `add_stock` function, or a `cancel_order` feature,
+we can work more quickly and with less coupling by writing tests against the
+service layer.
+
+When starting out a new project, or when we hit a particularly gnarly problem,
+we will drop back down to writing tests against the domain model, so that we
+get better feedback and executable documentation of our intent.
+
+The metaphor we use is that of shifting gears. When starting off a journey, the
+car needs to be in a low gear so that it can overcome inertia. Once we're off
+and running, we can go faster and more efficiently by changing into a high gear
+but if we suddenly encounter a steep hill, or we're forced to slow down by a
+hazard, we again drop down to a low gear until we can pick up speed again.
+
+
+.Rules of thumb:
+******************************************************************************
+
+* Write one black-box test per-feature to demonstrate that the feature exists
+  and is working. This might be written against an HTTP api. These tests cover
+  an entire feature at a time.
+
+* Write the bulk of the tests for your system against the service layer. This
+  offers a good trade-off between coverage, run-time, and efficiency. These
+  tests tend to cover one code path of a feature and use fakes for IO.
+
+* Maintain a small core of tests written against your domain model. These tests
+  have highly-focused coverage, and are more brittle, but have the highest
+  feedback. Don't be afraid to delete these tests if the functionality is
+  later covered by tests at the service layer.
+
+******************************************************************************
 
 === Fully Decoupling the service layer from the domain
 
