@@ -1,0 +1,211 @@
+[[chapter_08_dependency_injection]]
+== Dependency Injection and Boostrap scripts
+
+
+NOTE: WIP
+
+Depending on your particular brain type, you may have a slight feeling of unease
+at the back of your mind at this point.  Let's bring it out into the open.
+We've currently shown two different ways of managing dependencies, and testing
+them.
+
+For our database dependency, we've built a careful framework of explicit
+dependencies and easy options for overriding them in tests:
+
+
+=== Implicit vs explicit dependencies
+
+[[id_here]]
+.Listing title
+====
+[source,python]
+----
+@contextmanager
+def start(session_factory=default_session_factory):
+----
+====
+
+Our unit of work, which is the main abstraction around our database dependency,
+provides an explicit argument in its constructor allowing us to choose a
+different database/session type
+
+
+[[id_here]]
+.Integration tests against a different DB (tests/integration/test_uow.py)
+====
+[source,python]
+----
+def test_rolls_back_uncommitted_work_by_default(session_factory):  #<1>
+    with unit_of_work.start(session_factory) as uow:  #<1>
+----
+====
+
+<1> Integration tests swap out the default postgres session_factory for a sqlite one.
+
+
+
+[[id_here]]
+.Listing title
+====
+[source,python]
+----
+def allocate(line: OrderLine, start_uow) -> str:
+----
+====
+
+Our service layer explicitly declares a dependency on `start_uow`, once again
+making it easy to replace or test.
+
+[[id_here]]
+.Service layer tests against a fake uow: (tests/unit/test_services.py)
+====
+[source,python]
+----
+    uow = FakeUnitOfWork()
+    uow.products.add(model.Product(sku='sku1', batches=[
+        model.Batch(ref='b1', sku='sku1', qty=100, eta=None),
+    ]))
+    start_uow = lambda: nullcontext(uow)
+
+    services.allocate(line, start_uow)
+----
+====
+
+
+
+But our messagebus currently has a hardcoded dependency on a particular
+email-sending integration:
+
+
+
+[[id_here]]
+.Listing title
+====
+[source,python]
+----
+from allocation import email, events  #<1>
+# ...
+
+def handle_out_of_stock(event: events.OutOfStock):
+    email.send_mail(  #<1>
+        'stock@made.com',
+        f'Out of stock for {event.sku}',
+    )
+----
+====
+
+Anything that depends on `messagebus.py` is currently importing, and using, some real
+email-sending code.
+
+As a result, in our tests we need to manually monkeypatch out that dependency:
+
+
+[[id_here]]
+.Listing title
+====
+[source,python]
+----
+    with mock.patch('allocation.email.send_mail') as mock_send_mail:
+        with pytest.raises(exceptions.OutOfStock):
+----
+====
+
+We're lucky because our toy example doesn't send real emails, but in real life you'd
+end up with these calls to `mock.patch` all over the place!
+
+
+=== Defaults and config
+
+_unit_of_work.py_ currently declares a "default" database session manager.  maybe that's not
+too bad...
+
+[[id_here]]
+.Listing title
+====
+[source,python]
+----
+default_session_factory = sessionmaker(bind=create_engine(
+    config.get_postgres_uri(),
+    isolation_level="SERIALIZABLE"
+))
+----
+====
+
+
+... but we also have different defaults in tests.
+
+
+
+[[id_here]]
+.Listing title
+====
+[source,python]
+----
+@pytest.fixture
+def in_memory_db():
+    engine = create_engine('sqlite:///:memory:')
+    metadata.create_all(engine)
+    return engine
+
+@pytest.fixture
+def session_factory(in_memory_db):
+    start_mappers()
+    yield sessionmaker(bind=in_memory_db)
+    clear_mappers()
+
+@pytest.fixture
+def session(session_factory):
+    return session_factory()
+
+
+def wait_for_postgres_to_come_up(engine):
+    deadline = time.time() + 10
+    while time.time() < deadline:
+        try:
+            return engine.connect()
+        except OperationalError:
+            time.sleep(0.5)
+    pytest.fail('Postgres never came up')
+
+
+@pytest.fixture(scope='session')
+def postgres_db():
+    engine = create_engine(config.get_postgres_uri())
+    wait_for_postgres_to_come_up(engine)
+    metadata.create_all(engine)
+    return engine
+
+@pytest.fixture
+def postgres_session_factory(postgres_db):
+    start_mappers()
+    yield sessionmaker(bind=postgres_db)
+    clear_mappers()
+----
+====
+
+
+
+
+=== Other setup code
+
+And what about `start_mappers`?  We call it in various places in our tests, and in 
+at least one in our "real" application...
+
+
+[[id_here]]
+.Listing title
+====
+[source,python]
+----
+app = Flask(__name__)
+orm.start_mappers()
+
+@app.route("/allocate", methods=['POST'])
+def allocate_endpoint():
+----
+====
+
+
+=== Bootstrap script
+
+===
