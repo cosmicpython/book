@@ -98,9 +98,9 @@ code examples / patterns:  Aggregate
 
 
 
-## Chapter 6: event-driven architecture part 1: events and the message bus
+## Chapter 6: event-driven architecture part 1: doamin events and the message bus
 
-Another new requirement:  when allocation succeeds, someone should be emailed.  But we don't want to have email-sending code be a potential cause of bugs/failures in our core model/state changes.  introduce domain events and a message bus as a pattern for kicking off related work after a use case is complete.
+Another new requirement:  when allocation fails because we are out of stock, someone should be emailed.  But we don't want to have email-sending code be a potential cause of bugs/failures in our core model/state changes.  introduce domain events and a message bus as a pattern for kicking off related work after a use case is complete.
 
 * discuss SRP, use case shouldn't have an _and_. leads naturally to events.
 
@@ -110,31 +110,62 @@ related post from existing blog: https://io.made.com/why-use-domain-events/
 
 
 
-## Chapter 7: event-driven architecture part 2: domain events
+## Chapter 7: event-driven architecture part 2: reactive microservices
 
-currently events are raised at the service layer.  but what about something like "out of stock"?  maybe that's an event that really belongs inside our domain, something that has business logic, not just orchestration.
+We've got a microservice with an web api, but what about other ways of talking to other systems?  how does it know if, say, a
+shipment is delayed or the quantity is amended?  how does it communicate to our warehouse system to say that an order has
+been allocated and needs to be sent to a customer?
 
-code examples / patterns:  domain events raised by aggregate, unit of work with event tracking/ message bus integration
+* redis pubsub in: batch_quantity_changed.  leads to deallocate / reallocate
+* redis pubsub out: order_allocated event, for communicating with warehouse
 
-related post from existing blog: https://io.made.com/why-use-domain-events/
+code examples / patterns: events as a microservices integration platform
+
+ 
+## Chapter 8: Bootstrap.py and dependency injection
+
+the database / sqlalchemy are under control, but email and redis are a bit haphazard.  also orm initialisation. show how a bootsrap script
+and DI can manage all this
+
+diagrams.
+
+with + without framework, `@inject`, and bob's crazy, heretical, unclean type-hints based one.
+
+maybe point out that command-handler pattern would make this all easier?
+
+related post from existing blog: https://io.made.com/dependency-injection-with-type-signatures-in-python/
 
 
-## Chapter 8: CQRS
+## Chapter 9: CQRS
 
 The business comes along and supplies a new requirement:  a dashboard showing the current allocation state of all shipments.  Discuss how using the ORM naively leads to the _SELECT N+1_ antipattern, and use it as an opportunity to demonstrate _Command-Query-Responsiblity-Segregation (CQRS)_ -- read-only parts of our architecture can be implemented quite differently from the write side
 
-code examples / patterns:  CQRS / raw sql queries
+start with raw sql
+discuss option of using events to update a view model
+
+code examples / patterns:  CQRS / event-driven view model.
 
 related post from existing blog: https://io.made.com/commands-and-queries-handlers-and-views/
 
 
 
-## Chapter 9: event-driven architecture part 3: a second use case, cancel_shipment -- command handler pattern
+## Appendix 1: project structure
 
-now we want to be able to cancel a shipment.  maybe a boat sank and all the orders allocated to it need re-allocating.  but we don't want to do the reallocation and the cancellation in the same transaction.  So a command "cancel shipment" that raises a number of independent "reallocate" commands makes sense
+show folder structure, dockerfiles, setup.py, where tests live, etc.
 
 
-We also decide we don't need a web api for this, a command-line interface makes sense.  but what's a sensible abstraction that gives use access to our use cases from both the command-line and a flask api?  commands.  we've been talking about them for a while, time to make them into a real thing.
+
+## Appendix 2: swapping out flask and our database for a CLI with CSVs
+
+(follows on from unit of work chapter).
+the business come to us apologetically saying they're not ready to use our API and could we build a thing that reads batches and orders from 2 csvs and outputs a third with allocations".
+
+show how by just changing our repository and unitofwork, we can use the exact same service layer and domain layer to build a CLI app.
+
+this could be an exercise for the reader tbh.  or a video
+
+
+## appendix 3: command handler pattern?
 
 ==> show how commands can be put on the message bus just like events.
 
@@ -143,28 +174,4 @@ code examples / patterns: reuse message bus for commands
 related post from existing blog: https://io.made.com/introducing-command-handler/
 
 
-## Chapter 10: event-driven architecture part 4: reactive microservices
-
-We've got a microservice, but we've so far glossed over how it actually gets data about the outside world -- how does it know about new shipments?
-Show how the event-driven system we've built so far is a great way of integrating between separate applications:  our logistics app can emit events about new shipments, and our app can consume them in exactly the same way that it consumes its internal events and commands.
-
-code examples / patterns: events as a microservices integration platform
-
- 
-
-## Appendix 1: swapping out flask and our database for a CLI with CSVs
-
-(to follow on from unit of work chapter).
-the business come to us apologetically saying they're not ready to use our API and could we build a thing that reads batches and orders from 2 csvs and outputs a third with allocations".
-
-show how by just changing our repository and unitofwork, we can use the exact same service layer and domain layer to build a CLI app.
-
-this could be an exercise for the reader tbh.  or a video
-
-
-## Appendix 2: patterns for dependency injection
-
-with + without framework, `@inject`, and bob's crazy, heretical, unclean type-hints based one.
-
-related post from existing blog: https://io.made.com/dependency-injection-with-type-signatures-in-python/
 
