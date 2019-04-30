@@ -316,7 +316,7 @@ def publish(channel, event):
 ==== Testing handlers
 
 Because our handlers have an explicit dependency on `start_uow`,
-we can test them:
+we can test them individually:
 
 [[test_handler_directly]]
 .Testing the reallocate handler directly

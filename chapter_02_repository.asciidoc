@@ -301,7 +301,7 @@ like?
 [role="skip"]
 [source,python]
 ----
-import all_my_data from data
+from data import all_my_data
 
 def create_a_batch(self):
     batch = Batch(...)
@@ -343,9 +343,9 @@ designed.
 
 We will have to write a few lines of code in our repository class each time we
 add a new domain object that we want to retrieve, but in return we get a very
-simple abstraction over our storage layer, which we control, which would make
-it very easy to make fundamental changes to the way we store things later, and
-which as we'll see is very easy to fake out for unit tests.
+simple abstraction over our storage layer, which we control. It would make
+it very easy to make fundamental changes to the way we store things (see
+<appendix_csvs>>), and as we'll see, it is very easy to fake out for unit tests.
 
 In addition, "Repository pattern" is so common in the DDD world that, if you
 do collaborate with programmers that have come to Python from the Java and C#

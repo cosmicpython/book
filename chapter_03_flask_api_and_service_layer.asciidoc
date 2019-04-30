@@ -66,7 +66,7 @@ Implementing things in the most obvious way, you might get something like this:
 
 
 [[first_cut_flask_app]]
-.First cut flask app (flask_app.py)
+.First cut Flask app (flask_app.py)
 ====
 [source,python]
 [role="non-head"]
@@ -133,9 +133,11 @@ Not quite so lovely, but that will force us to get a commit in.
 
 === Error conditions that require database checks
 
-Let's add a bit of error-handling shall we?  What if the domain raises an
+If we keep going like this though, things are going to get uglier and uglier.
+
+Supposing we want to add a bit of error-handling.  What if the domain raises an
 error, for a sku that's out of stock?  Or what about a sku that doesn't even
-exist, that's not something the domain even knows about, nor should it.  It's
+exist? That's not something the domain even knows about, nor should it.  It's
 more of a sanity-check that we should implement at the database layer, before
 we even invoke the domain service.
 
@@ -171,10 +173,10 @@ def test_400_message_for_invalid_sku():
 ----
 ====
 
-And, sure we can implement that in the flask app too:
+And, sure we could implement it in the Flask app too:
 
 [[flask_error_handling]]
-.First cut flask app (flask_app.py)
+.First cut Flask app (flask_app.py)
 ====
 [source,python]
 [role="non-head"]
@@ -205,14 +207,14 @@ def allocate_endpoint():
 ----
 ====
 
-But our flask app is starting to look a bit unwieldy.  And our number of
+But our Flask app is starting to look a bit unwieldy.  And our number of
 E2E tests is starting to get out of control, and soon we'll end up with an
 inverted test pyramid (or "ice cream cone model" as Bob likes to call it).
 
 
 === Introducing a service layer, and using FakeRepository to unit test it
 
-If we look at what our flask app is doing, there's quite a lot of what we
+If we look at what our Flask app is doing, there's quite a lot of what we
 might call "orchestration" -- fetching stuff out of our repository, validating
 our input against database state, handling errors, and committing in the
 happy path.  Most of these things aren't anything to do with having a
@@ -341,7 +343,7 @@ That last step is a little unsatisfactory at the moment, our services
 layer is tightly coupled to our database layer, but we'll improve on
 that in the next chapter.
 
-But the essentials of the services layer are there, and our flask
+Still, the essentials of the services layer are there, and our Flask
 app now looks a lot cleaner, <<flask_app_using_service_layer>>:
 
 
@@ -369,7 +371,7 @@ def allocate_endpoint():
 ----
 ====
 
-We see that the responsibilities of the flask app are much more minimal, and
+We see that the responsibilities of the Flask app are much more minimal, and
 more focused on just the web stuff:
 
 <1> We instantiate a database session and some repository objects.
@@ -377,7 +379,7 @@ more focused on just the web stuff:
     to a domain service.
 <3> And we return some JSON responses with the appropriate status codes
 
-The responsibilities of the flask app are just standard web stuff: per-request
+The responsibilities of the Flask app are just standard web stuff: per-request
 session management, parsing information out of POST parameters, response status
 codes and JSON.  All the orchestration logic is in the use case / service layer,
 and the domain logic stays in the domain.
@@ -469,6 +471,8 @@ a healthy-looking test pyramid.
 
 
 === Should domain layer tests move to the service layer?
+
+//TODO consider splitting this out to its own chapter
 
 We could take this a step further. Since we can test the our software against
 the service layer, we don't really need tests for the domain model any more.
@@ -749,8 +753,9 @@ def add_batch(
 
 NOTE: Should you write a new service just because it would help remove
     dependencies from your tests?  Probably not.  But in this case, we
-    probably would need an add_batch service one day anyway.  In general
-    though, if you find yourself needing to do domain-layer stuff directly
+    almost definitely would need an add_batch service one day anyway.
+
+TIP: In general, if you find yourself needing to do domain-layer stuff directly
     in your service-layer tests, it may be an indication that your service
     layer is incomplete.
     

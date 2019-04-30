@@ -319,14 +319,14 @@ Our tests are kept alongside everything else, as in <<tests_folder>>:
 [source,text]
 [role="tree"]
 ----
-└── tests  <5>
-    ├── conftest.py  <6>
+└── tests
+    ├── conftest.py
     ├── e2e
     │   └── test_api.py
     ├── integration
     │   ├── test_orm.py
     │   └── test_repository.py
-    ├── pytest.ini  <6>
+    ├── pytest.ini
     └── unit
         ├── test_allocate.py
         ├── test_batches.py
