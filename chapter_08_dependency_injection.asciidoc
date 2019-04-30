@@ -15,7 +15,7 @@ dependencies and easy options for overriding them in tests:
 
 === Implicit vs explicit dependencies
 
-[[id_here]]
+[[id_here1]]
 .Listing title
 ====
 [source,python]
@@ -30,7 +30,7 @@ provides an explicit argument in its constructor allowing us to choose a
 different database/session type
 
 
-[[id_here]]
+[[id_here2]]
 .Integration tests against a different DB (tests/integration/test_uow.py)
 ====
 [source,python]
@@ -44,7 +44,7 @@ def test_rolls_back_uncommitted_work_by_default(session_factory):  #<1>
 
 
 
-[[id_here]]
+[[id_here3]]
 .Listing title
 ====
 [source,python]
@@ -56,7 +56,7 @@ def allocate(line: OrderLine, start_uow) -> str:
 Our service layer explicitly declares a dependency on `start_uow`, once again
 making it easy to replace or test.
 
-[[id_here]]
+[[id_here4]]
 .Service layer tests against a fake uow: (tests/unit/test_services.py)
 ====
 [source,python]
@@ -78,7 +78,7 @@ email-sending integration:
 
 
 
-[[id_here]]
+[[id_here5]]
 .Listing title
 ====
 [source,python]
@@ -100,7 +100,7 @@ email-sending code.
 As a result, in our tests we need to manually monkeypatch out that dependency:
 
 
-[[id_here]]
+[[id_here6]]
 .Listing title
 ====
 [source,python]
@@ -119,7 +119,7 @@ end up with these calls to `mock.patch` all over the place!
 _unit_of_work.py_ currently declares a "default" database session manager.  maybe that's not
 too bad...
 
-[[id_here]]
+[[id_here7]]
 .Listing title
 ====
 [source,python]
@@ -136,7 +136,7 @@ default_session_factory = sessionmaker(bind=create_engine(
 
 
 
-[[id_here]]
+[[id_here8]]
 .Listing title
 ====
 [source,python]
@@ -192,7 +192,7 @@ And what about `start_mappers`?  We call it in various places in our tests, and 
 at least one in our "real" application...
 
 
-[[id_here]]
+[[id_here9]]
 .Listing title
 ====
 [source,python]
@@ -208,4 +208,10 @@ def allocate_endpoint():
 
 === Bootstrap script
 
-===
+* to do orm init and maybe redis?
+
+=== Dependency injection / configuration root
+
+* to set up all the dependencies for handlers
+* depends on command-handler pattern having been introduced
+
