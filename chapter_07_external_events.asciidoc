@@ -11,28 +11,6 @@ In this chapter we'd like to show how the events metaphor can be stretched
 to encompass the way that we handle incoming and outgoing messages from the
 system.
 
-Outline:
-
-* E2E test
-* first cut of _redis_pubsub.py_
-* test-drive `services.change_batch_quantity` at service layer
-* brief aside on `ProductRepository.get_by_batchid()`
-* add events for allocated, deallocated
-* and handlers for both
-* discuss internal vs external events
-
-* stop and reflect:
-    * handlers call services
-    * services raise events which call handlers which call services
-    * primitive obsession code smell
-    * dependencies are a bit all over the place
-
-* => introduce commands
-* all services become handlers
-
-* segue to next chapter on dependency mgmt
-
-
 === Using a Redis pubsub channel for integration
 
 At MADE.com we use https://eventstore.org/[Eventstore] to convey messages
@@ -44,7 +22,7 @@ API to create batches, and then we'll test both inbound and outbound messages:
 
 
 [[redis_e2e_test]]
-.Listing title
+.An end-to-end test for our pubsub model (tests/e2e/test_redis.py)
 ====
 [source,python]
 ----
@@ -95,4 +73,221 @@ essentially:
 
 <2> And we'll listen to another channel called `line_allocated` to
     look out for the expected reallocation.
+
+
+==== Redis is another thin adapter around our service layer
+
+
+[[redis_pubsub_first_cut]]
+.A first cut of a redis message listener (src/allocation/redis_pubsub.py)
+====
+[source,python]
+----
+from allocation import config, orm, services, unit_of_work
+
+r = redis.Redis(**config.get_redis_host_and_port())
+
+def main():  #<1>
+    orm.start_mappers()
+    pubsub = r.pubsub()
+    pubsub.subscribe('change_batch_quantity')
+
+    for m in pubsub.listen():
+        if m['type'] == 'subscribe':
+            continue
+        handle_change_batch_quantity(m)
+
+
+def handle_change_batch_quantity(m):  #<2>
+    data = json.loads(m['data'])
+    services.change_batch_quantity(
+        ref=data['batchid'], qty=data['qty'],
+        start_uow=unit_of_work.start
+    )
+----
+====
+
+//TODO: add some calls to logging.debug, where there used to be prints?
+
+<1> Main subscribes us to the channel on load
+<2> And our main job is to deserialize JSON, and pass it to the service
+    layer, much like the Flask adapter does.
+
+
+So we'll need a new service called `change_batch_quantity`.
+    
+
+=== Test-driving a new service at the service layer
+
+Following the lessons learned in <<chapter_03_flask_api_and_service_layer>>,
+we can operate in "high gear", and write our unit tests at the highest
+possible level of abstraction, the service layer.  Here's what they might
+look like:
+
+
+[[service_layer_tests_for_change_batch_quantity]]
+.Service layer tests for change_batch_quantity (tests/unit/test_services.py)
+====
+[source,python]
+----
+class TestChangeBatchQuantity:
+
+    @staticmethod
+    def test_changes_available_quantity():
+        uow = FakeUnitOfWork()
+        start_uow = lambda: nullcontext(uow)
+        services.add_batch('b1', 'sku1', 100, None, start_uow)
+        [batch] = uow.products.get(sku='sku1').batches
+        assert batch.available_quantity == 100
+        services.change_batch_quantity('b1', 50, start_uow)
+        assert batch.available_quantity == 50
+
+
+    @staticmethod
+    def test_deallocates_if_necessary():
+        uow = FakeUnitOfWork()
+        start_uow = lambda: nullcontext(uow)
+        services.add_batch('b1', 'sku1', 50, None, start_uow)
+        services.allocate('o1', 'sku1', 20, start_uow)
+        services.allocate('o2', 'sku1', 20, start_uow)
+
+        product = uow.products.get(sku='sku1')
+        [batch] = product.batches
+        assert batch.available_quantity == 10
+
+        services.change_batch_quantity('b1', 25, start_uow)
+        assert batch.available_quantity == 5
+----
+====
+
+
+==== An internal event to express de-allocation
+
+A batch might have dozens of orders allocated to it. Similarly to the "out of
+stock" email, rather than doing deallocation and re-allocation in-line in the
+service function, we can choose to clearly separate responsibility:
+
+* For the system to be in a consistent state, batch quantity changes should
+  cause deallocations, if necessary
+
+* But reallocation can happen in a separate unit of work.
+
+So we use internal/domain events to capture this distinction:
+
+
+[[expect_event_for_deallocated]]
+.A domain event for Deallocation (tests/unit/test_services.py)
+====
+[source,python]
+----
+    @staticmethod
+    def test_emits_deallocation_event():
+        uow = FakeUnitOfWork()
+        start_uow = lambda: nullcontext(uow)
+        services.add_batch('b1', 'sku1', 50, None, start_uow)
+        services.allocate('o1', 'sku1', 40, start_uow)
+
+        product = uow.products.get(sku='sku1')
+        services.change_batch_quantity('b1', 30, start_uow)
+
+        assert product.events[-1] == events.Deallocated('o1', 'sku1', 40)
+----
+====
+
+==== Implementation
+
+
+[[change_quantity_service]]
+.Service delegates to model layer (src/allocation/services.py)
+====
+[source,python]
+----
+def change_batch_quantity(ref: str, qty: int, start_uow):
+    with start_uow() as uow:
+        product = uow.products.get_by_batchid(batchid=ref)
+        product.change_batch_quantity(ref=ref, qty=qty)
+        uow.commit()
+----
+====
+
+(along the way we need a new query type on our repository)
+
+[[get_by_batchid]]
+.A new query type on our repository
+====
+[source,python]
+----
+class ProductRepository:
+    #...
+
+    @capture_seen
+    def get(self, sku):
+        #...
+
+    @capture_seen
+    def get_by_batchid(self, batchid):
+        return self.session.query(model.Product).join(model.Batch).filter(
+            orm.batches.c.reference == batchid,
+        ).first()
+----
+====
+
+TODO: discuss alternative methods on repository.
+
+
+[[model_layer_change]]
+.Our model evolves to capture the new requirement (src/allocation/model.py)
+====
+[source,python]
+----
+class Product:
+    #...
+
+    def change_batch_quantity(self, ref: str, qty: int):
+        batch = next(b for b in self.batches if b.reference == ref)
+        batch._purchased_quantity = qty
+        while batch.available_quantity < 0:
+            line = batch.deallocate_one()
+            self.events.append(
+                events.Deallocated(line.orderid, line.sku, line.qty)
+            )
+#...
+
+class Batch:
+    #....
+
+    def deallocate_one(self) -> OrderLine:
+        return self._allocations.pop()
+----
+====
+
+
+TODO: should we have `Batch.change_purchased_quantity`?  But how to
+    pass events back up to Product object?
+
+
+=== New handlers for allocated and deallocated events
+
+
+
+=== Outline/TODO
+
+* [line-through]#E2E test#
+* [line-through]#first cut of _redis_pubsub.py_#
+* [line-through]#test-drive `services.change_batch_quantity` at service layer#
+* [line-through]#brief aside on `ProductRepository.get_by_batchid()`#
+* add events for allocated, deallocated
+* and handlers for both
+* discuss internal vs external events
+
+* stop and reflect:
+    * handlers call services
+    * services raise events which call handlers which call services
+    * primitive obsession code smell
+    * dependencies are a bit all over the place
+
+* => introduce commands
+* all services become handlers
+
+* segue to next chapter on dependency mgmt
 
