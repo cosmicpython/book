@@ -33,3 +33,66 @@ Outline:
 * segue to next chapter on dependency mgmt
 
 
+=== Using a Redis pubsub channel for integration
+
+At MADE.com we use https://eventstore.org/[Eventstore] to convey messages
+between systems, but a lightweight solution based on Redis pubsub channels
+can work just fine, and are probably more familiar.
+
+Here's how we might start with an end-to-end test.  We can use our existing
+API to create batches, and then we'll test both inbound and outbound messages:
+
+
+[[redis_e2e_test]]
+.Listing title
+====
+[source,python]
+----
+@pytest.mark.usefixtures('postgres_db')
+@pytest.mark.usefixtures('restart_api')
+@pytest.mark.usefixtures('restart_redis_pubsub')
+def test_change_batch_quantity_leading_to_reallocation():
+    orderid, sku = random_ref('o'), random_ref('s')
+    batch1, batch2 = random_ref('b1'), random_ref('b2')
+    post_to_add_batch(batch1, sku, 10, '2011-01-02')
+    post_to_add_batch(batch2, sku, 10, '2011-01-03')
+    post_to_allocate(orderid, sku, 10, expected_batch=batch1)
+
+    print('subscribing to allocated events')
+    r = redis.Redis(**config.get_redis_host_and_port())
+    pubsub = r.pubsub()
+    pubsub.subscribe('line_allocated')  #<2>
+    confirmation = wait_for(pubsub.get_message)
+    assert confirmation['type'] == 'subscribe'
+
+    print('sending change batch quantity for', batch1)
+    r.publish('change_batch_quantity', json.dumps({  #<1>
+        'batchid': batch1, 'sku': sku, 'qty': 5
+    }))
+
+    print('waiting for reallocation event')
+    messages = []
+    def check_messages():  #<2>
+        messages.append(wait_for(pubsub.get_message))
+        print(messages)
+        data = json.loads(messages[-1]['data'])
+        assert data['orderid'] == orderid
+        assert data['batchid'] == batch2
+
+    wait_for_assertion(check_messages)
+
+----
+====
+
+Because this is an end-to-end test and our publish/subscribe model is
+asynchronous, there's a bit of boilerplate to manage waiting, but
+essentially:
+
+<1> We'll use a channel called `change_batch_quantity` to send
+    in our request to change the quantity for a batch.  In this
+    case we deliberately change the quantity such that we expect
+    an order to be reallocated to a different batch.
+
+<2> And we'll listen to another channel called `line_allocated` to
+    look out for the expected reallocation.
+
