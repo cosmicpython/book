@@ -112,11 +112,6 @@ class _UnitOfWork:
 
 //TODO: should be DEFAULT_SESSION_FACTORY
 
-TIP: See the end of <<chapter_06_events_and_message_bus>> for a few examples
-    of how you might use abstract base classes to share code between
-    `UnitOfWork` and `FakeUnitOfWork`
-
-
 === Fake Unit of Work for testing:
 
 Here's how we use a fake unit of work in our service layer tests
@@ -161,6 +156,11 @@ def test_allocate_returns_allocation():
     a substantial improvement because we're now faking out
     code that we wrote, rather than 3rd party code.  Some
     people say https://github.com/testdouble/contributing-tests/wiki/Don%27t-mock-what-you-don%27t-own["don't mock what you don't own"].
+
+
+TIP: See the end of <<chapter_06_events_and_message_bus>> for a few examples
+    of how you might use abstract base classes to share code between
+    `UnitOfWork` and `FakeUnitOfWork`
 
 
 === Using the UoW in the service layer
@@ -291,10 +291,10 @@ def change_batch_quantity(batch: Batch, new_qty: int, start_uow):
     at any stage, we probably want to commit none of the changes.
 
 
-
 Hopefully we've convinced you that the unit of work is a useful pattern, and
 hopefully you'll agree that the context manager is a really nice Pythonic way
 of visually grouping  code into blocks that we want to happen atomically.
+
 //TODO this wrap-up needs work.
 
 
