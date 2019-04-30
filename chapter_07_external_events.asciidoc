@@ -268,6 +268,82 @@ TODO: should we have `Batch.change_purchased_quantity`?  But how to
 
 === New handlers for allocated and deallocated events
 
+What we need to do is pretty straightforward:
+
+
+[[new_handlers]]
+.New handlers for allocate and reallocate (src/allocation/messagebus.py)
+====
+[source,python]
+----
+def reallocate(
+        event: events.Deallocated, start_uow
+):
+    services.allocate(event.orderid, event.sku, event.qty, start_uow)  #<1>
+
+
+def publish_allocated_event(
+        event: events.Allocated, start_uow, publish=redis_pubsub.publish
+):
+    publish('line_allocated', event)  #<2>
+
+
+HANDLERS = {
+    events.OutOfStock: [handle_out_of_stock],
+    events.Allocated: [publish_allocated_event],
+    events.Deallocated: [reallocate],
+
+}  # type: Dict[Type[events.Event], List[Callable]]
+----
+====
+
+<1> reallocate just calls our existing service-layer `allocate` function
+<2> and publishing an external event is very easy too:
+
+
+[[redis_publish]]
+.Publishing an event as JSON (src/allocation/redis_pubsub.py)
+====
+[source,python]
+----
+def publish(channel, event):
+    r.publish(channel, json.dumps(asdict(event)))
+----
+====
+
+
+
+==== Testing handlers
+
+Because our handlers have an explicit dependency on `start_uow`,
+we can test them:
+
+[[test_handler_directly]]
+.Testing the reallocate handler directly
+====
+[source,python]
+----
+    @staticmethod
+    def test_reallocation_handler():
+        uow = FakeUnitOfWork()
+        start_uow = lambda: nullcontext(uow)
+        services.add_batch('b1', 'sku1', 50, None, start_uow)
+
+        [reallocate] = messagebus.HANDLERS[events.Deallocated]
+        e = events.Deallocated(orderid='o1', sku='sku1', qty=10)
+        reallocate(e, start_uow=start_uow)
+
+        [batch] = uow.products.get(sku='sku1').batches
+        assert batch.available_quantity == 40
+----
+====
+
+But it's a little fiddly.
+
+
+=== Internal vs External events
+
+bla bla TODO
 
 
 === Outline/TODO
@@ -276,8 +352,8 @@ TODO: should we have `Batch.change_purchased_quantity`?  But how to
 * [line-through]#first cut of _redis_pubsub.py_#
 * [line-through]#test-drive `services.change_batch_quantity` at service layer#
 * [line-through]#brief aside on `ProductRepository.get_by_batchid()`#
-* add events for allocated, deallocated
-* and handlers for both
+* [line-through]#add events for allocated, deallocated#
+* [line-through]#and handlers for both#
 * discuss internal vs external events
 
 * stop and reflect:
