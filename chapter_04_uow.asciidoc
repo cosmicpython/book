@@ -373,22 +373,22 @@ away?
 
 ====
 [source,text]
-[role="skip"]
+[role="tree"]
 ----
-$ tree tests
-tests
-├── conftest.py
-├── e2e
-│   └── test_api.py
-├── integration
-│   ├── test_orm.py
-│   ├── test_repository.py
-│   └── test_uow.py
-├── pytest.ini
-└── unit
-    ├── test_allocate.py
-    ├── test_batches.py
-    └── test_services.py
+└── tests
+    ├── conftest.py
+    ├── e2e
+    │   └── test_api.py
+    ├── integration
+    │   ├── test_orm.py
+    │   ├── test_repository.py
+    │   └── test_uow.py
+    ├── pytest.ini
+    └── unit
+        ├── test_allocate.py
+        ├── test_batches.py
+        └── test_services.py
+
 ----
 ====
 

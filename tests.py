@@ -45,9 +45,7 @@ def test_chapter(chapter):
 
 
 def check_listing(listing, chapter):
-    if 'skip' in listing.classes:
-        return
-    elif 'tree' in listing.classes:
+    if 'tree' in listing.classes:
         actual_contents = tree_for_branch(chapter)
     elif 'non-head' in listing.classes:
         actual_contents = file_contents_for_tag(
@@ -103,18 +101,20 @@ def parse_listings(chapter_name):
     for listing_node in parsed_html.cssselect('.exampleblock'):
         [block_node] = listing_node.cssselect('.listingblock')
         classes = block_node.get('class').split()
+        if 'skip' in classes:
+            continue
 
-        [title_node] = listing_node.cssselect('.title')
-        print('found listing', title_node.text_content())
-        try:
-            filename = re.search(r'.+ \((.+)\)', title_node.text_content()).group(1)
-        except AttributeError as e:
-            if 'skip' in classes:
-                filename = None
-            elif 'tree' in classes:
-                filename = None
-            else:
-                raise AssertionError(f'Could not find filename in title {title_node.text_content()}') from e
+        if 'tree' in classes:
+            filename = None
+        else:
+            [title_node] = listing_node.cssselect('.title')
+            title = title_node.text_content()
+            print('found listing', title)
+            try:
+                filename = re.search(r'.+ \((.+)\)', title).group(1)
+            except AttributeError as e:
+                raise AssertionError(f'Could not find filename in title {title}') from e
+
         tag = listing_node.get('id')
 
         [code_node] = block_node.cssselect('.content pre')
