@@ -32,40 +32,54 @@ Here's  a test for a new "unit of work" context manager that allows us to start
 a transaction, retrieve and get things from repos, and commit:
 
 
-
 [[test_unit_of_work]]
 .A basic "roundtrip" test for a unit of work (tests/integration/test_uow.py)
 ====
 [source,python]
 ----
-def test_uow_can_retrieve_a_batch_and_allocate_to_it(session_factory):
-    session = session_factory()
+def insert_batch(session, ref, sku, qty, eta):
     session.execute(
         'INSERT INTO batches (reference, sku, _purchased_quantity, eta)'
-        ' VALUES ("batch1", "sku1", 100, null)'
+        ' VALUES (:ref, :sku, :qty, :eta)',
+        dict(ref=ref, sku=sku, qty=qty, eta=eta)
     )
-    session.commit()
 
-    with unit_of_work.start(session_factory) as uow:
-        batch = uow.batches.get(reference='batch1')
-        line = model.OrderLine('ol1', 'sku1', 10)
-        batch.allocate(line)
-        uow.commit()
-
-    [[olid]] = session.execute(
+def get_allocated_batch_id(session, orderid, sku):
+    [[orderlineid]] = session.execute(
         'SELECT id FROM order_lines WHERE orderid=:orderid AND sku=:sku',
-        dict(orderid='ol1', sku='sku1')
+        dict(orderid=orderid, sku=sku)
     )
     [[batchid]] = session.execute(
         'SELECT b.reference FROM allocations JOIN batches AS b ON batch_id = b.id'
-        ' WHERE orderline_id=:orderid',
-        dict(orderid=olid)
+        ' WHERE orderline_id=:orderlineid',
+        dict(orderlineid=orderlineid)
     )
+    return batchid
+
+
+def test_uow_can_retrieve_a_batch_and_allocate_to_it(session_factory):
+    session = session_factory()
+    insert_batch(session, 'batch1', 'sku1', 100, None)
+    session.commit()
+
+    with unit_of_work.start(session_factory) as uow:  #<1>
+        batch = uow.batches.get(reference='batch1')  #<2>
+        line = model.OrderLine('o1', 'sku1', 10)
+        batch.allocate(line)
+        uow.commit()  #<3>
+
+    batchid = get_allocated_batch_id(session, 'o1', 'sku1')
     assert batchid == 'batch1'
 ----
 ====
 
-TODO: this test is... a little unwieldy.
+<1> We initialise the unit of work using a starter function,
+    and get back a `uow` object to use in our `with` block.
+
+<2> The UoW gives us access to the batches repository via
+    `uow.batches`
+
+<3> And we call `commit()` on it when we're done.
 
 
 === Unit of Work and its context manager
@@ -209,10 +223,7 @@ a couple of tests:
 ----
 def test_rolls_back_uncommitted_work_by_default(session_factory):
     with unit_of_work.start(session_factory) as uow:
-        uow.session.execute(
-            'INSERT INTO batches (reference, sku, _purchased_quantity, eta)'
-            ' VALUES ("batch1", "sku1", 100, null)'
-        )
+        insert_batch(uow.session, 'batch1', 'sku1', 100, None)
 
     new_session = session_factory()
     rows = list(new_session.execute('SELECT * FROM "batches"'))
@@ -225,10 +236,7 @@ def test_rolls_back_on_error(session_factory):
 
     with pytest.raises(MyException):
         with unit_of_work.start(session_factory) as uow:
-            uow.session.execute(
-                'INSERT INTO batches (reference, sku, _purchased_quantity, eta)'
-                ' VALUES ("batch1", "sku1", 100, null)'
-            )
+            insert_batch(uow.session, 'batch1', 'sku1', 100, None)
             raise MyException()
 
     new_session = session_factory()
@@ -246,7 +254,7 @@ We could imagine a slightly different version of the UoW, which commits by defau
 and only rolls back if it spots an exception:
 
 [[uow_implicit_commit]]
-.A UoW with implicit commit...
+.A UoW with implicit commit... (src/allocation/unit_of_work.py)
 ====
 [source,python]
 [role="skip"]
@@ -272,7 +280,7 @@ It would allow us to save a line of code, and remove the explicit commit from ou
 client code:
 
 [[add_batch_nocommit]]
-. ...would save us a line of code
+.\... would save us a line of code (src/allocation/services.py)
 ====
 [source,python]
 [role="skip"]
@@ -295,9 +303,6 @@ user did one, or we blow their changes away.  harsh but simple.  But
 `session.close()`, well, we'd have to look up the SQLAlchemy docs to find out
 exactly what that does.   And besides, why not leave the session open for the
 next time?
-
-
-TODO: bit on whether to throw away any of the other integration tests, `test_orm` or `test_repository`
 
 
 === Examples: Using UoW to group multiple operations into an atomic unit
@@ -358,6 +363,43 @@ def change_batch_quantity(batch: Batch, new_qty: int, start_uow):
 
 <1> Here we may need to deallocate any number of lines.  If we get a failure
     at any stage, we probably want to commit none of the changes.
+
+
+=== Tidying up the integration tests
+
+We now have three sets of tests all essentially pointing at the database,
+_test_orm.py_, _test_repository.py_ and _test_uow.py_.  Should we throw any
+away?
+
+====
+[source,text]
+[role="skip"]
+----
+$ tree tests
+tests
+├── conftest.py
+├── e2e
+│   └── test_api.py
+├── integration
+│   ├── test_orm.py
+│   ├── test_repository.py
+│   └── test_uow.py
+├── pytest.ini
+└── unit
+    ├── test_allocate.py
+    ├── test_batches.py
+    └── test_services.py
+----
+====
+
+You should always feel free to throw away tests if you feel they're not going to
+add value longer term.  We'd say that _test_orm.py_ was primarily a tool to help
+us learn SQLAlchemy, so we won't need that long term, especially if the main things
+it's doing are covered in _test_repository.py_.  That last you might keep around,
+but we could certainly see an argument for just keeping everything at the highest
+possible level of abstraction (just as we did for the unit tests).
+
+TODO: expand on this a bit?
 
 
 === Wrap-up
