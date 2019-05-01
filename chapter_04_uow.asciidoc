@@ -5,6 +5,8 @@ In this chapter we'll introduce a final piece of the puzzle that really pulls
 the _Repository_ and _Service layer_ patterns together, the _Unit of Work_
 pattern.
 
+//TODO: Big Lebowski illustration
+
 In the last chapter, the service layer was tightly coupled to the SQLAlchemy
 session object, so we'll fix that.
 
@@ -43,6 +45,7 @@ def test_uow_can_retrieve_a_batch_and_allocate_to_it(session_factory):
         ' VALUES ("batch1", "sku1", 100, null)'
     )
     session.commit()
+
     with unit_of_work.start(session_factory) as uow:
         batch = uow.batches.get(reference='batch1')
         line = model.OrderLine('ol1', 'sku1', 10)
@@ -62,7 +65,7 @@ def test_uow_can_retrieve_a_batch_and_allocate_to_it(session_factory):
 ----
 ====
 
-TODO: this test is... a litte unwieldy.
+TODO: this test is... a little unwieldy.
 
 
 === Unit of Work and its context manager
@@ -108,9 +111,11 @@ class _UnitOfWork:
 
 <5> If we don't commit, or if we exit the context manager by raising an error,
     we do a `rollback`. (the rollback has no effect if `commit()` has been
-    called)
+    called.  Read on for more discussion of this).
 
 //TODO: should be DEFAULT_SESSION_FACTORY
+
+
 
 === Fake Unit of Work for testing:
 
@@ -233,13 +238,77 @@ def test_rolls_back_on_error(session_factory):
 ====
 
 
+=== Explicit vs implicit commits
+
+A brief digression on different ways of implementing the UoW pattern.
+
+We could imagine a slightly different version of the UoW, which commits by default,
+and only rolls back if it spots an exception:
+
+[[uow_implicit_commit]]
+.A UoW with implicit commit...
+====
+[source,python]
+[role="skip"]
+----
+@contextmanager
+def start(session_factory=default_session_factory):
+    session = session_factory()
+    try:
+        yield _UnitOfWork(session)
+        session.commit()  #<1>
+    except:
+        session.rollback()  #<2>
+    finally:
+        session.close()  #<3>
+----
+====
+
+<1> should we have an implicit commit in the happy path?
+<2> and roll back only on exception?
+<3> and maybe close sessions too?
+
+It would allow us to save a line of code, and remove the explicit commit from our
+client code:
+
+[[add_batch_nocommit]]
+. ...would save us a line of code
+====
+[source,python]
+[role="skip"]
+----
+def add_batch(ref: str, sku: str, qty: int, eta: Optional[date], start_uow):
+    with start_uow() as uow:
+        uow.batches.add(model.Batch(ref, sku, qty, eta))
+        # uow.commit()
+----
+====
+
+This is a judgement call, but we tend to prefer requiring the explicit commit.
+"explicit is better than implicit", and all that.
+
+As to the option of using `session.close()`, and our preference of putting the
+`rollback` in the `finally` clause, rather than only in the `except` clause,
+that's another personal preference, but the "always-rollback` version does feel
+easier to understand.  rollback rolls back to the last commit, so either the
+user did one, or we blow their changes away.  harsh but simple.  But
+`session.close()`, well, we'd have to look up the SQLAlchemy docs to find out
+exactly what that does.   And besides, why not leave the session open for the
+next time?
+
+
 TODO: bit on whether to throw away any of the other integration tests, `test_orm` or `test_repository`
 
 
-=== Example: Using UoW to group multiple operations into an atomic unit
+=== Examples: Using UoW to group multiple operations into an atomic unit
 
+Here's a few examples showing the unit of work pattern in use.  You can
+see how it leads to simple reasoning about what blocks of code happen
+together:
 
 ==== Example 1: reallocate
+
+Supposing we want to be able to deallocate and then reallocate orders?
 
 [[reallocate]]
 .Reallocate service function
@@ -290,6 +359,8 @@ def change_batch_quantity(batch: Batch, new_qty: int, start_uow):
 <1> Here we may need to deallocate any number of lines.  If we get a failure
     at any stage, we probably want to commit none of the changes.
 
+
+=== Wrap-up
 
 Hopefully we've convinced you that the unit of work is a useful pattern, and
 hopefully you'll agree that the context manager is a really nice Pythonic way
