@@ -232,16 +232,9 @@ should fail, because they can't both update the version number:
 def test_concurrent_updates_to_version_are_not_allowed(postgres_session_factory):
     sku, batch = random_ref('s'), random_ref('b')
     session = postgres_session_factory()
-    session.execute(
-        "INSERT INTO products (sku, version_number) VALUES (:sku, 3)",
-        dict(sku=sku),
-    )
-    session.execute(
-        'INSERT INTO batches (reference, sku, _purchased_quantity, eta)'
-        " VALUES (:batch, :sku, 100, null)",
-        dict(batch=batch, sku=sku),
-    )
+    insert_batch(session, batch, sku, 100, eta=None, product_version=3)
     session.commit()
+
     exceptions = []
     o1, o2 = random_ref('o1'), random_ref('o2')
     target1 = lambda: try_to_allocate(o1, sku, exceptions)
@@ -252,6 +245,7 @@ def test_concurrent_updates_to_version_are_not_allowed(postgres_session_factory)
     t2.start()
     t1.join()
     t2.join()
+
     [[version]] = session.execute(
         "SELECT version_number FROM products WHERE sku=:sku",
         dict(sku=sku),
