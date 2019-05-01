@@ -122,18 +122,10 @@ been allocated and needs to be sent to a customer?
 code examples / patterns: events as a microservices integration platform
 
  
-## Chapter 8: Bootstrap.py and dependency injection
+## Chapter 8: Commands vs Events
 
-the database / sqlalchemy are under control, but email and redis are a bit haphazard.  also orm initialisation. show how a bootsrap script
-and DI can manage all this
+distinguish commands from events. different semantics, can say no to a command.
 
-diagrams.
-
-with + without framework, `@inject`, and bob's crazy, heretical, unclean type-hints based one.
-
-maybe point out that command-handler pattern would make this all easier?
-
-related post from existing blog: https://io.made.com/dependency-injection-with-type-signatures-in-python/
 
 
 ## Chapter 9: CQRS
@@ -147,6 +139,19 @@ code examples / patterns:  CQRS / event-driven view model.
 
 related post from existing blog: https://io.made.com/commands-and-queries-handlers-and-views/
 
+
+## Chapter 10: Bootstrap.py and dependency injection
+
+the database / sqlalchemy are under control, but email and redis are a bit haphazard.  also orm initialisation. show how a bootsrap script
+and DI can manage all this
+
+diagrams.
+
+with + without framework, `@inject`, and bob's crazy, heretical, unclean type-hints based one.
+
+maybe point out that command-handler pattern would make this all easier?
+
+related post from existing blog: https://io.made.com/dependency-injection-with-type-signatures-in-python/
 
 
 ## Appendix 1: project structure

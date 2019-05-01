@@ -81,13 +81,15 @@ Chapter 5: Aggregate pattern::
     integrity
 
 
-Chapters 6&7: Event-Driven Architecture::
-    We start by introducing the concept of _Domain Events_, as a vehicle for
-    capturing the idea that some interactions with a system are triggers
-    for others.  We use  a _Message Bus_ to allow actions to trigger events,
-    and call appropriate _Handlers_.  We move on to discuss how events can
-    be used as a pattern for integration between services, in a microservices
-    architecture.
+Chapters 6-8: Event-Driven Architecture::
+    We introduce three more mutually-reinforcing patterns, starting with 
+    the concept of _Domain Events_, a vehicle for capturing the idea that some
+    interactions with a system are triggers for others.  We use  a _Message
+    Bus_ to allow actions to trigger events, and call appropriate _Handlers_.
+    We move on to discuss how events can be used as a pattern for integration
+    between services, in a microservices architecture. Finally we add the
+    distinction between _Commands_ and events.  Our application is now
+    fundamentally a message-processing system.
 
     
 Chapter 9: CQRS::
