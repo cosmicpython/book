@@ -1,3 +1,4 @@
+# pylint: disable=redefined-outer-name
 import re
 import subprocess
 from dataclasses import dataclass
@@ -49,13 +50,11 @@ def check_listing(listing, chapter):
         actual_contents = tree_for_branch(chapter)
     elif 'non-head' in listing.classes:
         actual_contents = file_contents_for_tag(
-            listing.filename, listing.tag, chapter
+            listing.filename, chapter, listing.tag,
         )
 
     else:
-        actual_contents = file_contents_for_branch(
-            listing.filename, listing.tag, chapter
-        )
+        actual_contents = file_contents_for_branch(listing.filename, chapter)
     actual_lines = actual_contents.split('\n')
 
     if '#...' in listing.contents:
@@ -123,7 +122,7 @@ def parse_listings(chapter_name):
         )
 
 
-def file_contents_for_branch(filename, tag, chapter_name):
+def file_contents_for_branch(filename, chapter_name):
     return subprocess.run(
         ['git', 'show', f'{chapter_name}:{filename}'],
         cwd=Path(__file__).parent / 'code',
@@ -131,7 +130,7 @@ def file_contents_for_branch(filename, tag, chapter_name):
         check=True
     ).stdout.decode()
 
-def file_contents_for_tag(filename, tag, chapter_name):
+def file_contents_for_tag(filename, chapter_name, tag):
     output = subprocess.run(
         ['git', 'show', f'{chapter_name}^{{/\\[{tag}\\]}}:{filename}'],
         cwd=Path(__file__).parent / 'code',

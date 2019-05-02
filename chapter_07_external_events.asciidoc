@@ -25,6 +25,7 @@ API to create batches, and then we'll test both inbound and outbound messages:
 .An end-to-end test for our pubsub model (tests/e2e/test_redis.py)
 ====
 [source,python]
+[role="non-head"]
 ----
 @pytest.mark.usefixtures('postgres_db')
 @pytest.mark.usefixtures('restart_api')
@@ -341,29 +342,205 @@ we can test them individually:
 But it's a little fiddly.
 
 
-=== Internal vs External events
+=== Services can become event handlers
 
-bla bla TODO
+There are a few code smells hanging around:
+
+* primitive obsession:  we switched to using primitives in our service
+  layer because they freed us from depending on the domain model, but
+  our adapters, flask and redis, are spending a lot of time wrangling
+  strings and integer arguments.  Perhaps we could capture the structure
+  of the data required to call a service using some sort of reusable class?
+
+* services and event handlers are quite similar.   They have dependencies
+  on the UoW and other external adapters, and they even sometimes call each
+  other.  More fundamentally, they're both ways of reacting to some sort of
+  command or event, whether it's internal or external.
 
 
-=== Outline/TODO
+.A handler and a service
+====
+[source,python]
+[role="skip"]
+----
+def reallocate(
+        event: events.Deallocated, start_uow
+):
+    services.allocate(event.orderid, event.sku, event.qty, start_uow)
 
-* [line-through]#E2E test#
-* [line-through]#first cut of _redis_pubsub.py_#
-* [line-through]#test-drive `services.change_batch_quantity` at service layer#
-* [line-through]#brief aside on `ProductRepository.get_by_batchid()`#
-* [line-through]#add events for allocated, deallocated#
-* [line-through]#and handlers for both#
-* discuss internal vs external events
+#...
 
-* stop and reflect:
-    * handlers call services
-    * services raise events which call handlers which call services
-    * primitive obsession code smell
-    * dependencies are a bit all over the place
+def allocate(orderid: str, sku: str, qty: int, start_uow) -> str:
+----
+====
 
-* => introduce commands
-* all services become handlers
+Let's see what would happen if we pushed the event-driven metaphor a little
+further, and made all the services into event handlers too.  Event classes
+will solve the "primitive obsession" problems, and the message bus will become
+the core of our application:
 
-* segue to next chapter on dependency mgmt
+
+
+[[full_messagebus]]
+.The messagebus grows (src/allocation/messagebus.py)
+====
+[source,python]
+----
+def handle(start_uow, events_: List[events.Event]):
+    #...
+
+
+HANDLERS = {
+    events.BatchCreated: [handlers.add_batch],
+    events.BatchQuantityChanged: [handlers.change_batch_quantity],
+    events.AllocationRequest: [handlers.allocate],
+    events.Deallocated: [handlers.allocate],
+    events.OutOfStock: [handlers.send_out_of_stock_email],
+    events.Allocated: [handlers.publish_allocated_event],
+
+}  # type: Dict[Type[events.Event], List[Callable]]
+----
+====
+
+
+We define a series of new events, which capture the inputs, outputs, and
+internal message structures of our system in a single place:
+
+
+[[more_events]]
+.More events
+====
+[source,python]
+----
+@dataclass
+class AllocationRequest(Event):
+    orderid: str
+    sku: str
+    qty: int
+
+#...
+
+@dataclass
+class BatchCreated(Event):
+    ref: str
+    sku: str
+    qty: int
+    eta: Optional[date] = None
+
+@dataclass
+class BatchQuantityChanged(Event):
+    ref: str
+    qty: int
+----
+====
+
+
+And we combine our services and handlers into a single file,
+_handlers.py_:
+
+
+[[handlers_dot_py]]
+.Handlers and services are the same thing, really (src/allocation/handlers.py)
+====
+[source,python]
+----
+def add_batch(start_uow, event: events.BatchCreated):
+    with start_uow() as uow:
+        product = uow.products.get(sku=event.sku)
+        #...
+
+def change_batch_quantity(start_uow, event: events.BatchQuantityChanged):
+    #...
+
+def allocate(start_uow, event: events.AllocationRequest) -> str:
+    #...
+
+def send_out_of_stock_email(
+        start_uow, event: events.OutOfStock, send_email=email.send
+):
+    #...
+
+def publish_allocated_event(
+        start_uow, event: events.Allocated, publish=redis_pubsub.publish
+):
+    #...
+----
+====
+
+
+Now the places in our code where we need to parse external input
+have a clearly defined data structure for making requests into
+the system, the events, and a single entrypoint into the system,
+the message bus:
+
+
+[[flask_with_events]]
+.Flask creates events and puts them on the messagebus. (src/allocation/flask_app.py)
+====
+[source,python]
+----
+@app.route("/add_batch", methods=['POST'])
+def add_batch():
+    eta = request.json['eta']
+    if eta is not None:
+        eta = datetime.fromisoformat(eta).date()
+    event = events.BatchCreated(
+        request.json['ref'], request.json['sku'], request.json['qty'], eta,
+    )
+    messagebus.handle(unit_of_work.start, [event])
+    return 'OK', 201
+----
+====
+
+
+Redis now looks very similar
+
+[[redis_with_events]]
+.And so does redis (src/allocation/redis_pubsub.py)
+====
+[source,python]
+----
+def handle_change_batch_quantity(m):
+    data = json.loads(m['data'])
+    event = events.BatchQuantityChanged(ref=data['batchid'], qty=data['qty'])
+    messagebus.handle(unit_of_work.start, [event])
+----
+====
+
+
+And our system is now entirely event-driven.
+
+.Internal vs External events
+*******************************************************************************
+It's a good idea to keep the distinction between internal and external events
+clear.  Some events may come from the outside, and some events may get upgraded
+and published externally, but not all of them.  This is particularly important
+if you get into event sourcing (TODO: link)
+
+*******************************************************************************
+
+
+
+=== What have we achieved?
+
+* events are simple dataclasses that define the data structures for inputs,
+  outputs, and internal messages within our system.  this is quite powerful
+  from a DDD standpoint, since events often translate really well into
+  business language; cf. "event storming" (TODO: link)
+
+* handlers are the way we react to events.   They can call down to our
+  model, or they can call out to external services.  We can define multiple
+  handlers for a single event if we want to.  handlers can also raise other
+  events.  This allows us to be very granular about what a handler does,
+  and really stick to the SRP.
+
+* events can come _from_ the outside, but they can also be published
+  externally -- our `publish` handler converts an event to a message
+  on a redis channel. We use events to talk to the outside world.
+
+We've added bit of complexity to our architecture, but hopefully you can
+see how we've now made it very easy to plug in almost any new requirement
+from the business, whether it's a new use case, a new integration with
+one of our internal systems, or an integration with external systems.
+
 
