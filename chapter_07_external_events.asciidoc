@@ -1,8 +1,7 @@
 [[chapter_07_external_events]]
 == Event-Driven Architecture (using events to integrate microservices)
 
-
-We've got a microservice with an web api, but what about other ways of talking
+We've got a microservice with a web api, but what about other ways of talking
 to other systems?  how does it know if, say, a shipment is delayed or the
 quantity is amended?  how does it communicate to our warehouse system to say
 that an order has been allocated and needs to be sent to a customer?
@@ -10,6 +9,7 @@ that an order has been allocated and needs to be sent to a customer?
 In this chapter we'd like to show how the events metaphor can be stretched
 to encompass the way that we handle incoming and outgoing messages from the
 system.
+
 
 === Using a Redis pubsub channel for integration
 
@@ -468,10 +468,9 @@ def publish_allocated_event(
 ====
 
 
-Now the places in our code where we need to parse external input
-have a clearly defined data structure for making requests into
-the system, the events, and a single entrypoint into the system,
-the message bus:
+Now the places in our code where we need to parse external input have a clearly
+defined data structure for making requests into the system, the events, and a
+single entrypoint into the system, the message bus:
 
 
 [[flask_with_events]]
