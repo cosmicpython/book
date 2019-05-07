@@ -30,7 +30,6 @@ package next to our main allocation code:
 │   │   │   │   └── __init__.py
 │   │   │   ├── models.py
 │   │   │   └── views.py
-│   │   ├── db.sqlite3
 │   │   ├── django_project
 │   │   │   ├── __init__.py
 │   │   │   ├── settings.py
@@ -59,7 +58,7 @@ some raw SQL with a call to the Django ORM / Queryset language:
 
 
 [[django_repo_test1]]
-.First repository test adapted (src/tests/integration/test_repository.py)
+.First repository test adapted (tests/integration/test_repository.py)
 ====
 [source,python]
 ----
@@ -85,7 +84,7 @@ The second test is a bit more involved since it has allocations,
 but it is still made up of familiar-looking django code:
 
 [[django_repo_test2]]
-.Second repository test is more involved (src/tests/integration/test_repository.py)
+.Second repository test is more involved (tests/integration/test_repository.py)
 ====
 [source,python]
 ----
@@ -111,7 +110,7 @@ Here's how the actual repository ends up looking:
 
 
 [[django_repository]]
-.A Django repository.
+.A Django repository. (src/allocation/repository.py)
 ====
 [source,python]
 ----
@@ -151,7 +150,7 @@ NOTE: As in <<chapter_02_repository>>, we use dependency inversion.
 Those custom methods look something like this:
 
 [[django_models]]
-.Django ORM with custom methods for domain model conversion (src/djangoprject/alloc/models.py)
+.Django ORM with custom methods for domain model conversion (src/djangoproject/alloc/models.py)
 ====
 [source,python]
 ----
@@ -184,7 +183,7 @@ class Batch(models.Model):
             ref=self.reference, sku=self.sku, qty=self.qty, eta=self.eta
         )
         b._allocations = set(
-            a.line.to_domain() 
+            a.line.to_domain()
             for a in self.allocation_set.all()
         )
         return b
@@ -212,7 +211,7 @@ class OrderLine(models.Model):
 The tests don't change too much
 
 [[test_uow_django]]
-.Adapted UoW tests (src/tests/integration/test_uow.py)
+.Adapted UoW tests (tests/integration/test_uow.py)
 ====
 [source,python]
 ----
@@ -270,11 +269,11 @@ would work:
 ----
 @contextmanager
 def start():
-    transaction.set_autocommit(False)   #<1>
+    transaction.set_autocommit(False)  #<1>
     try:
         yield _UnitOfWork()
     finally:
-        transaction.rollback()   #<2>
+        transaction.rollback()  #<2>
 
 
 class _UnitOfWork:
@@ -285,7 +284,7 @@ class _UnitOfWork:
     def commit(self):
         for batch in self.batches.seen:
             self.batches.update(batch)  #<3>
-        transaction.commit()   #<2>
+        transaction.commit()  #<2>
 ----
 ====
 
