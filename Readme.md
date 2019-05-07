@@ -21,8 +21,10 @@ typofixes, and more substantial feedback + suggestions are enthusiastically soli
 | [Chapter 4: Unit of Work](chapter_04_uow.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_04_uow)](https://travis-ci.org/python-leap/code) |
 | [Chapter 5: Aggregates](chapter_05_aggregate.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_05_aggregate)](https://travis-ci.org/python-leap/code) |
 | [Chapter 6: Events and the Message Bus](chapter_06_events_and_message_bus.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_06_events_and_message_bus)](https://travis-ci.org/python-leap/code) |
+| [Chapter 7: Event-Driven Architecture](chapter_07_external_events.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_07_external_events)](https://travis-ci.org/python-leap/code) |
 | [Appendix A: Project Structure](appendix_project_structure.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=appendix_project_structure)](https://travis-ci.org/python-leap/code) |
 | [Appendix B: A major infrastructure change, made easy](appendix_csvs.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=appendix_csvs)](https://travis-ci.org/python-leap/code) |
+| [Appendix C: Django](appendix_django.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=appendix_django)](https://travis-ci.org/python-leap/code) |
 
 
 

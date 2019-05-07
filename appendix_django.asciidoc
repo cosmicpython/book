@@ -347,3 +347,21 @@ def allocate(request):
 ====
 
 
+=== Conclusions: would you bother?
+
+OK it works but it does feel like more effort than Flask/SQLAlchemy.  Why is that, and
+when might you still choose Django?
+
+- it's hard because the ORM doesn't work so well.  We can't do ActiveRecord, so we have
+  to build a manual translation layer behind the repository instead.  That's more work
+  (although once it's done the ongoing maintenance burden shouldn't be too high).
+
+- it's also hard because you need to integrate `pytest-django` and think carefully about
+  test databases etc
+
+So why might you still do it?
+
+* when migrating an existing project that has Django?
+* or because you want the Django Admin?
+
+TODO: expand on this
