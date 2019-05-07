@@ -83,6 +83,7 @@ essentially:
 .A first cut of a redis message listener (src/allocation/redis_pubsub.py)
 ====
 [source,python]
+[role="non-head"]
 ----
 from allocation import config, orm, services, unit_of_work
 
@@ -95,11 +96,13 @@ def main():  #<1>
 
     for m in pubsub.listen():
         if m['type'] == 'subscribe':
+            print('subscribed successfully')
             continue
         handle_change_batch_quantity(m)
 
 
 def handle_change_batch_quantity(m):  #<2>
+    print('handling', m)
     data = json.loads(m['data'])
     services.change_batch_quantity(
         ref=data['batchid'], qty=data['qty'],
