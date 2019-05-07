@@ -133,6 +133,7 @@ look like:
 .Service layer tests for change_batch_quantity (tests/unit/test_services.py)
 ====
 [source,python]
+[role="non-head"]
 ----
 class TestChangeBatchQuantity:
 
@@ -183,6 +184,7 @@ So we use internal/domain events to capture this distinction:
 .A domain event for Deallocation (tests/unit/test_services.py)
 ====
 [source,python]
+[role="non-head"]
 ----
     @staticmethod
     def test_emits_deallocation_event():
@@ -205,6 +207,7 @@ So we use internal/domain events to capture this distinction:
 .Service delegates to model layer (src/allocation/services.py)
 ====
 [source,python]
+[role="non-head"]
 ----
 def change_batch_quantity(ref: str, qty: int, start_uow):
     with start_uow() as uow:
