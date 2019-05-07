@@ -3,6 +3,7 @@ CHAPTERS = [
     'chapter_02_repository',
     "chapter_03_flask_api_and_service_layer",
     "appendix_project_structure",
+    'appendix_django',
     "chapter_04_uow",
     "appendix_csvs",
     "chapter_05_aggregate",
@@ -12,4 +13,5 @@ CHAPTERS = [
 
 BRANCHES = {
     'appendix_csvs',
+    'appendix_django',
 }

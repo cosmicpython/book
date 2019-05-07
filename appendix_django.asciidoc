@@ -1,5 +1,349 @@
 [[appendix_django_repository]]
 [appendix]
-== Repository pattern with Django
+== Repository and Unit of Work patterns with Django
+
+Supposing you wanted to use Django instead of SQLAlchemy and Flask, how
+might things look?
+
+First thing is to choose where to install it. I put it in a separate
+package next to our main allocation code:
+
+
+[[django_tree]]
+====
+[source,python]
+[role="tree"]
+----
+├── src
+│   ├── allocation
+│   │   ├── config.py
+│   │   ├── model.py
+│   │   ├── repository.py
+│   │   ├── services.py
+│   │   └── unit_of_work.py
+│   ├── djangoproject
+│   │   ├── alloc
+│   │   │   ├── apps.py
+│   │   │   ├── __init__.py
+│   │   │   ├── migrations
+│   │   │   │   ├── 0001_initial.py
+│   │   │   │   └── __init__.py
+│   │   │   ├── models.py
+│   │   │   └── views.py
+│   │   ├── db.sqlite3
+│   │   ├── django_project
+│   │   │   ├── __init__.py
+│   │   │   ├── settings.py
+│   │   │   ├── urls.py
+│   │   │   └── wsgi.py
+│   │   └── manage.py
+│   └── setup.py
+└── tests
+    ├── conftest.py
+    ├── e2e
+    │   └── test_api.py
+    ├── integration
+    │   ├── test_repository.py
+#...
+----
+====
+
+
+=== Repository pattern with Django
+
+I used a plugin called pytest-django (todo: link) to help with test database
+management.
+
+rewriting the first repository test was a minimal change, just rewriting
+some raw SQL with a call to the Django ORM / Queryset language:
+
+
+[[django_repo_test1]]
+.First repository test adapted (src/tests/integration/test_repository.py)
+====
+[source,python]
+----
+from djangoproject.alloc import models as django_models
+
+@pytest.mark.django_db
+def test_repository_can_save_a_batch():
+    batch = model.Batch('batch1', 'sku1', 100, eta=date(2011, 12, 25))
+
+    repo = repository.BatchRepository()
+    repo.add(batch)
+
+    [saved_batch] = django_models.Batch.objects.all()
+    assert saved_batch.reference == batch.reference
+    assert saved_batch.sku == batch.sku
+    assert saved_batch.qty == batch._purchased_quantity
+    assert saved_batch.eta == batch.eta
+----
+====
+
+
+The second test is a bit more involved since it has allocations,
+but it is still made up of familiar-looking django code:
+
+[[django_repo_test2]]
+.Second repository test is more involved (src/tests/integration/test_repository.py)
+====
+[source,python]
+----
+@pytest.mark.django_db
+def test_repository_can_retrieve_a_batch_with_allocations():
+    d_line = django_models.OrderLine.objects.create(orderid='order1', sku='sku1', qty=12)
+    d_batch1 = django_models.Batch.objects.create(reference='batch1', sku='sku1', qty=100, eta=None)
+    d_batch2 = django_models.Batch.objects.create(reference='batch2', sku='sku1', qty=100, eta=None)
+    django_models.Allocation.objects.create(line=d_line, batch=d_batch1)
+
+    repo = repository.BatchRepository()
+    retrieved = repo.get('batch1')
+
+    assert retrieved.reference == 'batch1'
+    assert retrieved.sku == 'sku1'
+    assert retrieved._purchased_quantity == 100
+    assert retrieved.eta == None
+    assert retrieved._allocations == {model.OrderLine('order1', 'sku1', 12)}
+----
+====
+
+Here's how the actual repository ends up looking:
+
+
+[[django_repository]]
+.A Django repository.
+====
+[source,python]
+----
+class BatchRepository:
+    def __init__(self):
+        self.seen = set()
+
+    @capture_seen
+    def add(self, batch):
+        self.update(batch)
+
+    def update(self, batch):
+        django_models.Batch.update_from_domain(batch)
+
+    @capture_seen
+    def get(self, reference):
+        return django_models.Batch.objects.filter(
+            reference=reference
+        ).first().to_domain()
+
+    def list(self):
+        return [b.to_domain() for b in django_models.Batch.objects.all()]
+----
+====
+
+
+You can see that the implementation relies on the django models having
+some custom methods for translating to and from our domain model.
+
+
+==== Custom methods on Django ORM classes to translate to/from our domain model
+
+NOTE: As in <<chapter_02_repository>>, we use dependency inversion.
+    The ORM (Django) depends on the model, and not the other way around
+
+
+Those custom methods look something like this:
+
+[[django_models]]
+.Django ORM with custom methods for domain model conversion (src/djangoprject/alloc/models.py)
+====
+[source,python]
+----
+from django.db import models
+from allocation import model as domain_model
+
+class Batch(models.Model):
+    reference = models.CharField(max_length=255)
+    sku = models.CharField(max_length=255)
+    qty = models.IntegerField()
+    eta = models.DateField(blank=True, null=True)
+
+    @staticmethod
+    def update_from_domain(batch: domain_model.Batch):
+        try:
+            b = Batch.objects.get(reference=batch.reference)  #<1>
+        except Batch.DoesNotExist:
+            b = Batch(reference=batch.reference)  #<1>
+        b.sku = batch.sku
+        b.qty = batch._purchased_quantity
+        b.eta = batch.eta  #<2>
+        b.save()
+        b.allocation_set.set(
+            Allocation.from_domain(l, b)  #<3>
+            for l in batch._allocations
+        )
+
+    def to_domain(self) -> domain_model.Batch:
+        b = domain_model.Batch(
+            ref=self.reference, sku=self.sku, qty=self.qty, eta=self.eta
+        )
+        b._allocations = set(
+            a.line.to_domain() 
+            for a in self.allocation_set.all()
+        )
+        return b
+
+
+class OrderLine(models.Model):
+    #...
+----
+====
+
+<1> For value objects, `objects.get_or_create` can work, but for Entities,
+    you need an explict try-get/except to handle the upsert.
+
+<2> I've shown the most complex example here.  If you do decide to do this,
+    be aware that there will be boilerplate!  Thankfully it's not very
+    complex boilerplate...
+
+<3> Relationships also need some careful, custom handling.
+
+
+
+=== Unit of Work pattern with Django
+
+
+The tests don't change too much
+
+[[test_uow_django]]
+.Adapted UoW tests (src/tests/integration/test_uow.py)
+====
+[source,python]
+----
+def insert_batch(ref, sku, qty, eta):  #<1>
+    django_models.Batch.objects.create(reference=ref, sku=sku, qty=qty, eta=eta)
+
+def get_allocated_batch_id(orderid, sku):  #<1>
+    return django_models.Allocation.objects.get(
+        line__orderid=orderid, line__sku=sku
+    ).batch.reference
+
+
+@pytest.mark.django_db(transaction=True)
+def test_uow_can_retrieve_a_batch_and_allocate_to_it():
+    insert_batch('batch1', 'sku1', 100, None)
+
+    with unit_of_work.start() as uow:
+        batch = uow.batches.get(reference='batch1')
+        line = model.OrderLine('o1', 'sku1', 10)
+        batch.allocate(line)
+        uow.commit()
+
+    batchid = get_allocated_batch_id('o1', 'sku1')
+    assert batchid == 'batch1'
+
+
+@pytest.mark.django_db(transaction=True)  #<2>
+def test_rolls_back_uncommitted_work_by_default():
+    #...
+
+@pytest.mark.django_db(transaction=True)  #<2>
+def test_rolls_back_on_error():
+    #...
+----
+====
+
+<1> Because we had little helper functions in these tests, the actual
+    main body of the tests are pretty much the same as they were with
+    SQLA
+
+<2> the pytest-django `mark.django_db(transaction=True)` is required to
+    test our custom transaction/rollback behaviours.
+
+
+
+And the implementation is quite simple, although it took me a few
+goes to find what actual invocation of Django's transaction magic 
+would work:
+
+
+[[start_uow_django]]
+.Unit of Work adapted for Django (src/allocation/unit_of_work.py)
+====
+[source,python]
+----
+@contextmanager
+def start():
+    transaction.set_autocommit(False)   #<1>
+    try:
+        yield _UnitOfWork()
+    finally:
+        transaction.rollback()   #<2>
+
+
+class _UnitOfWork:
+    def __init__(self):
+        self.batches = repository.BatchRepository()
+
+
+    def commit(self):
+        for batch in self.batches.seen:
+            self.batches.update(batch)  #<3>
+        transaction.commit()   #<2>
+----
+====
+
+<1> `set_autocommit(False)` was the best way to tell Django to stop
+    automatically committing each ORM operation immediately, and
+    begin a transaction.
+
+<2> Then we use the explicit rollback and commits.
+
+<3> One difficulty: because, unlike with SQLAlchemy, we're not
+    instrumenting the domain model instances themselves, the
+    `commit()` command needs to explicitly got through all the
+    objects that have been touched by every repository and manually
+    updated them back to the ORM.
+
+
+=== API: Django views are adapters
+
+The Django _views.py_ file ends up being almost identical to the 
+old _flask_app.py_, because our architecture means it's a very
+thin wrapper around our service layer (which didn't change at all btw).
+
+
+[[django_views]]
+.flask app -> django views (src/djangoproject/alloc/views.py)
+====
+[source,python]
+----
+os.environ['DJANGO_SETTINGS_MODULE'] = 'djangoproject.django_project.settings'
+django.setup()
+
+@csrf_exempt
+def add_batch(request):
+    data = json.loads(request.body)
+    eta = data['eta']
+    if eta is not None:
+        eta = datetime.fromisoformat(eta).date()
+    services.add_batch(
+        data['ref'], data['sku'], data['qty'], eta,
+        unit_of_work.start
+    )
+    return HttpResponse('OK', status=201)
+
+@csrf_exempt
+def allocate(request):
+    data = json.loads(request.body)
+    try:
+        batchid = services.allocate(
+            data['orderid'],
+            data['sku'],
+            data['qty'],
+            unit_of_work.start
+        )
+    except (model.OutOfStock, services.InvalidSku) as e:
+        return JsonResponse({'message': str(e)}, status=400)
+
+    return JsonResponse({'batchid': batchid}, status=201)
+----
+====
 
 
