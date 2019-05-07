@@ -220,7 +220,7 @@ def change_batch_quantity(ref: str, qty: int, start_uow):
 (along the way we need a new query type on our repository)
 
 [[get_by_batchid]]
-.A new query type on our repository
+.A new query type on our repository (src/allocation/repository.py)
 ====
 [source,python]
 ----
@@ -261,7 +261,7 @@ class Product:
 #...
 
 class Batch:
-    #....
+    #...
 
     def deallocate_one(self) -> OrderLine:
         return self._allocations.pop()
@@ -282,6 +282,7 @@ What we need to do is pretty straightforward:
 .New handlers for allocate and reallocate (src/allocation/messagebus.py)
 ====
 [source,python]
+[role="non-head"]
 ----
 def reallocate(
         event: events.Deallocated, start_uow
@@ -296,7 +297,7 @@ def publish_allocated_event(
 
 
 HANDLERS = {
-    events.OutOfStock: [handle_out_of_stock],
+    events.OutOfStock: [send_out_of_stock_email],
     events.Allocated: [publish_allocated_event],
     events.Deallocated: [reallocate],
 
@@ -326,9 +327,10 @@ Because our handlers have an explicit dependency on `start_uow`,
 we can test them individually:
 
 [[test_handler_directly]]
-.Testing the reallocate handler directly
+.Testing the reallocate handler directly (tests/unit/test_services.py)
 ====
 [source,python]
+[role="skip"]
 ----
     @staticmethod
     def test_reallocation_handler():
@@ -344,6 +346,8 @@ we can test them individually:
         assert batch.available_quantity == 40
 ----
 ====
+
+//TODO: test this listing by splitting out a commit?
 
 But it's a little fiddly.
 
@@ -413,8 +417,8 @@ We define a series of new events, which capture the inputs, outputs, and
 internal message structures of our system in a single place:
 
 
-[[more_events]]
-.More events
+[[new_events]]
+.More events (src/allocation/events.py)
 ====
 [source,python]
 ----
