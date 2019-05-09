@@ -1,6 +1,47 @@
 [[chapter_05_aggregate]]
 == Aggregates and consistency boundaries
 
+What's the point of a domain model anyway? Why don't we just run everything in
+a spreadsheet? Many of our users would be delighted by that. Business users
+_like_ spreadsheets for their flexibility and uniform interface.
+
+An enormous number of businesses operate by manually sending spreadsheets back
+and forward over e-mail. This "csv over http" architecture has low complexity
+but tends not to scale very well because it's difficult to apply constraints.
+
+// TODO: better examples.
+Who is allowed to view this particular field? Who's allowed to update it? What
+happens when we try to order -350 chairs, or 10,000,000 tables? Can an employee
+have a negative salary?
+
+These are the constraints of a system. Much of the domain logic we write exists
+to enforce these constraints in order to maintain the _invariants_ of the
+system. The invariants are the things that have to be true whenever we finish
+an operation.
+
+Let's look at a concrete example:
+
+[quote, Us, This book]
+----
+
+* I can't allocate to a batch if the available quantity is less than the
+  quantity of the order line.
+  Example: I have a batch of 1 BLUE-CUSHION, and an order line for 2
+  BLUE-CUSHION. I should not be able to allocate the line to the batch.
+
+----
+
+This is a business rule that implements a constraint. The constraint is that we
+can't allocate more stock than is available to a batch. The invariant is that
+no batch can have negative available stock. Every time we make a change to the
+state of the system, our code needs to ensure that we don't break the
+invariants.
+
+=== Invariants and Concurrency
+
+In a single threaded single user application it's easy for us to maintain the
+invariants of our system.
+
 As we start to think about scaling up our app, we realise that our model
 of allocating lines against all available batches may not scale.  If we've
 got tens of thousands of orders per hour, and hundreds of thousands of
