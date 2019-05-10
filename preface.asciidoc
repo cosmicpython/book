@@ -58,6 +58,8 @@ first step for those who want to do further research  in this field.
 
 === Outline
 
+==== Part 1: Dependency Inversion and Domain modelling
+
 Chapter 1: Domain modelling and DDD::
     At some level, everyone has learned the lesson that complex business
     problems need to be reflected in code, in the form of a model of the domain.
@@ -80,6 +82,7 @@ Chapter 5: Aggregate pattern::
     right _Aggregate_, and how this choice relates to questions of data
     integrity
 
+==== Part 2: Event-Driven Architecture
 
 Chapters 6-8: Event-Driven Architecture::
     We introduce three more mutually-reinforcing patterns, starting with 
@@ -91,11 +94,9 @@ Chapters 6-8: Event-Driven Architecture::
     distinction between _Commands_ and events.  Our application is now
     fundamentally a message-processing system.
 
-    
 Chapter 9: CQRS::
     An example of Command-Query Responsibility Segregation, with and without
     events.
-
 
 Chapter 10 Bootstrap, configuration root, and dependency injection::
     tidy up the dependencies and startup mess.  talk about DI vs mocks.
