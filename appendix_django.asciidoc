@@ -300,6 +300,7 @@ class _UnitOfWork:
     objects that have been touched by every repository and manually
     updated them back to the ORM.
 
+TODO: maybe `.seen()` should live on the uow not the repo
 
 === API: Django views are adapters
 
@@ -364,3 +365,4 @@ So why might you still do it?
 * or because you want the Django Admin?
 
 TODO: expand on this
+

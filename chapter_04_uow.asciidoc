@@ -24,8 +24,6 @@ the end, some different handling for error and success cases?  Something like
 
 A context manager.
 
-
-
 === Test-driving a UoW with integration tests
 
 Here's  a test for a new "unit of work" context manager that allows us to start
@@ -410,11 +408,16 @@ of visually grouping  code into blocks that we want to happen atomically.
 
 //TODO this wrap-up needs work.
 
+//TODO: discuss the fact that sqla already gives us a unit of work.  check if
+//its a context manager. discuss using our own abstraction
+
+//TODO: django
+
 
 .Unit of Work pattern: wrap-up
 *****************************************************************
 Unit of Work is an abstraction around data integrity::
-    bla
+    bla  TODO
 
 It works closely with repository and service layer::
     bla bla see <<appendix_csvs>>.
