@@ -548,6 +548,7 @@ def test_repository_can_retrieve_a_batch_with_allocations(session):
 ----
 ====
 
+//TODO (HP) that assert retrieved == expected doesnt actually work. fix.
 
 //TODO (DS): This is hard to follow (particularly as we're not *that* familiar
 //with the data model). I've actually forgotten what a batch is, so I had to
@@ -623,6 +624,10 @@ def allocate_endpoint():
 === Building a fake repository for tests is now trivial!
 
 Here's one of the biggest benefits of Repository pattern.
+
+
+//TODO (DS)As mentioned before, might be better to start with the fake before
+//mentioning sqlalchemy at all. 
 
 
 [[fake_repository]]
