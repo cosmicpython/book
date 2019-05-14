@@ -207,6 +207,15 @@ details" seems clear enough, but "Details should depend on abstractions" is
 hard to imagine. How can we have an abstraction that doesn't depend on the
 details it's abstracting? We'll come to that shortly, but before we can turn
 our three-layered architecture inside out, we need to talk more about that
-middle layer.
+middle layer, the business logic.
 
+One of the most common reasons that our designs go wrong is that business
+logic becomes spread out throughout the layers of our application, hard to
+identify, understand and change.
+
+Over the next few chapters, we'll discuss some application architecture patterns
+that allow us to keep our business layer, the domain model, free of dependencies
+and easy to maintain.
+
+//TODO: bob to review these last two paras.
 
