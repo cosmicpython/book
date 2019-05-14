@@ -201,7 +201,7 @@ def test_400_message_for_out_of_stock(add_stock):
 
 
 @pytest.mark.usefixtures('restart_api')
-def test_400_message_for_unknown_sku():
+def test_400_message_for_invalid_sku():
     sku, order = random_ref('s'), random_ref('o')
     data = {'orderid': order, 'sku': sku, 'qty': 20}
     url = config.get_api_url()
@@ -211,6 +211,7 @@ def test_400_message_for_unknown_sku():
 ----
 ====
 
+//TODO (DS) - not entirely clear what invalid means or how that test works
 
 And, sure we could implement it in the Flask app too:
 
@@ -305,7 +306,7 @@ it and make things even nicer in the next chapter, <<chapter_04_uow>>)
 ----
 class FakeRepository(set):
 
-    def get(self, reference):i
+    def get(self, reference):
         return next(x for x in self if x.reference == reference)
 
     def list(self):
