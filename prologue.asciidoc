@@ -55,10 +55,19 @@ snippets of Python code, <<urllib_example>> and <<requests_example>>:
 ====
 [source,python]
 ----
-import urllib
-import urllib2
+import json
+from urllib.request import urlopen
+from urllib.parse import urlencode
 
-# TODO: do horrible things to make a post to duck duck go and read the json
+params = dict(q='Sausages', format='json')
+handle = urlopen('http://api.duckduckgo.com' + '?' + urlencode(params))
+raw_text = handle.read().decode('utf8')
+parsed = json.loads(raw_text)
+
+results = parsed['RelatedTopics']
+for r in results:
+    if 'Text' in r:
+        print(r['FirstURL'] + ' - ' + r['Text'])
 ----
 ====
 
@@ -71,15 +80,23 @@ import urllib2
 ----
 import requests
 
-# TODO: do pleasant things to achieve the same
+params = dict(q='Sausages', format='json')
+parsed = requests.get('http://api.duckduckgo.com/', params=params).json()
+
+results = parsed['RelatedTopics']
+for r in results:
+    if 'Text' in r:
+        print(r['FirstURL'] + ' - ' + r['Text'])
 ----
 ====
 
 Both of these code listings do the same thing: they submit form encoded values
-to a URL in order to perform a Google search, but the second is simpler to read
+to a URL in order to use a search engine API, but the second is simpler to read
 and understand because it operates at a higher level of abstraction. We can
 take this one step further still by identifying the role the code is playing
 and making it explicit.
+
+image::images/galaxybrainmeme.jpg["Galaxybrain meme",width="200px",float="right"]
 
 [[ddg_example]]
 .Do a search with the duckduckgo module
@@ -87,10 +104,11 @@ and making it explicit.
 [source,python]
 ----
 import duckduckgo
-
-result = duckduckgo.search('sausages')
+for r in duckduckgo.query('Sausages').results:
+    print(r.url + ' - ' + r.text)
 ----
 ====
+
 
 Encapsulating the behaviour by identifying roles is a powerful tool for making
 our code more expressive, more testable, and easier to maintain.
