@@ -417,6 +417,7 @@ The ideal repository has just two methods: `add` to put a new item in the
 repository, and `get` to return a previously added item. We stick rigidly to
 using these methods for data access in our domain and our _service layer_. This
 self-imposed simplicity stops us from coupling our domain model to the database.
+//TODO what about delete and update?
 
 [[repository_pattern_diagram]]
 .Repository pattern
@@ -460,7 +461,7 @@ ongoing maintenance.
 Repository pattern is probably one of the easiest choices in the book though,
 if you've already heading down the DDD and dependency inversion route.  As far
 as our code is concerned, we're really just swapping the SQLAlchemy abstraction
-(`session.query(Shipment)`) for a different one (`shipments_repo.get`) which we
+(`session.query(Batch)`) for a different one (`batches_repo.get`) which we
 designed.
 
 We will have to write a few lines of code in our repository class each time we
@@ -497,6 +498,12 @@ def test_repository_can_save_a_batch(session):
 ----
 ====
 
+//TODO (DS) - Intuitively this test feels a little strange, mixing the add
+//method of the repo with raw SQL to check it's there. I would lean towards
+//either checking everything using its interface (i.e. adding to the repo, then
+//using the repo to get it back) or else testing that the add method executed
+//the SQL I was expecting. I'm not saying this way is worse - maybe it's better
+//- but I'd like to know why! 
 
 The next test involves retrieving batches and allocations so it's more
 complex:
@@ -542,6 +549,20 @@ def test_repository_can_retrieve_a_batch_with_allocations(session):
 ====
 
 
+//TODO (DS): This is hard to follow (particularly as we're not *that* familiar
+//with the data model). I've actually forgotten what a batch is, so I had to
+//flip back to remind myself. I think we need more help to understand what's
+//going on from a domain perspective.Maybe a table diagram, or at least
+//some comments, would allow a reader to skim it for understanding. 
+
+//Picking a descriptive SKU (e.g. 'comfy-sofa') would make this a bit more fun to read. 
+
+// Personally I'd find ol_id or even order_line_id easier to read. Same with b1id - batch1_id would be easier.
+
+// Worth explaining why we have to do a follow up query to get the id inserted?j
+
+// Why the underscore in _allocations here?
+
 Whether or not you painstakingly write tests for every model is a judgement
 call.  Once you have one class tested for create/modify/save, you might be
 happy to go on and do the others with a minimal roundtrip test, or even nothing
@@ -574,6 +595,11 @@ class BatchRepository:
 ----
 ====
 
+//TODO (DS) This is the first time we've seen the concrete implementation of an
+//abstraction. It's really important that readers understand that you've
+//already defined an interface (implicitly) which you're now implementing -
+//people might miss this. This might be a good point to discuss using an
+//abstract base class so that we know we're implementing the interface fully. 
 
 And now our flask endpoint might look something like <<api_endpoint_with_repo>>:
 
