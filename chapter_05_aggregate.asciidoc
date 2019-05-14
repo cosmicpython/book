@@ -1,6 +1,74 @@
 [[chapter_05_aggregate]]
 == Aggregates and consistency boundaries
 
+What's the point of a domain model anyway? What's the fundamental problem
+we're trying to addresss?
+
+Couldn't we just run everything in a spreadsheet? Many of our users would be
+delighted by that. Business users _like_ spreadsheets because they're simple and
+familiar but offer .
+
+In fact, an enormous number of business processes do operate by manually sending
+spreadsheets back and forward over e-mail. This "csv over smtp" architecture has
+low initial complexity but tends not to scale very well because it's difficult
+to apply logic.
+
+// TODO: better examples.
+Who is allowed to view this particular field? Who's allowed to update it? What
+happens when we try to order -350 chairs, or 10,000,000 tables? Can an employee
+have a negative salary?
+
+These are the constraints of a system. Much of the domain logic we write exists
+to enforce these constraints in order to maintain the _invariants_ of the
+system. The invariants are the things that have to be true whenever we finish
+an operation.
+
+If we were writing a hotel booking system, we might have the constraint that no
+two bookings can exist for the same hotel room on the same night. This supports
+the invariant that no room is double booked.
+
+Of course, sometimes we might need to temporarily *bend* the rules. Perhaps we
+need to shuffle the rooms around due to a VIP booking. While we're moving people
+around, we might be double booked, but our domain model should ensure that we
+end up in a final consistent state, where the invariants are met.
+
+Let's look at a concrete example:
+
+[quote, Us, This book]
+----
+
+* I can't allocate to a batch if the available quantity is less than the
+  quantity of the order line.
+  Example: I have a batch of 1 BLUE-CUSHION, and an order line for 2
+  BLUE-CUSHION. I should not be able to allocate the line to the batch.
+
+----
+
+This is a business rule that implements a constraint. The constraint is that we
+can't allocate more stock than is available to a batch. The invariant is that
+we never oversell stock by allocating two customers to the same physical cushion.
+Every time we update the state of the system, our code needs to ensure that we
+don't break the invariants.
+
+// TODO: Maybe this ought to be a sidebar? It's an important point but sits awkwardly
+If we're unable to meet our invariants, we might choose to raise an error rather
+than complete the operation.
+
+=== Invariants and Concurrency
+
+In a single threaded single user application it's easy for us to maintain the
+invariants of our system. We can just allocate stock, one line at a time, and
+raise an error if there's no stock available.
+
+This gets much harder when we introduce the idea of concurrency. Suddenly we
+might be allocating stock for multiple order lines simultaneously. We might even
+be allocating order lines, while we're processing changes to the batches
+themselves.
+
+We usually solve this problem by applying locks to our database tables. This
+prevents two operations happening simultaneously on the same row or same
+table.
+
 As we start to think about scaling up our app, we realise that our model
 of allocating lines against all available batches may not scale.  If we've
 got tens of thousands of orders per hour, and hundreds of thousands of

@@ -1,6 +1,8 @@
 [[chapter_06_events_and_message_bus]]
 == Events and the Message Bus
 
+//TODO: Eventual cosistency between aggregates?
+
 Another new requirement:  when allocation fails, someone should be emailed.
 But we don't want to have email-sending code be a potential cause of
 bugs/failures in our core model/state changes.  We introduce events and
