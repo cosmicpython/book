@@ -37,9 +37,9 @@ some code that looks more or less like <<api_endpoint_pseudocode>>:
 @flask.route('/allocate')
 def allocate_endpoint():
     # extract order line from request
-    line = OrderLine(request.params #...)
+    line = OrderLine(request.params, ...)
     # load all batches from the DB
-    batches = #...
+    batches = ...
     # call our domain service
     allocate(line, batches)
     # then save the allocation back to the database somehow
@@ -177,7 +177,7 @@ class OrderLine(Base):
     order = relationship(Order)
 
 class Allocation(Base):
-    #... and so on
+    ...
 ----
 ====
 
@@ -208,7 +208,7 @@ class OrderLine(models.Model):
     order = models.ForeignKey(Order)
 
 class Allocation(models.Model):
-    #... and so on
+    ...
 ----
 ====
 
@@ -252,8 +252,8 @@ order_lines = Table(  #<2>
     Column('qty', Integer, nullable=False),
     Column('orderid', String(255)),
 )
-#...
 
+...
 
 def start_mappers():
     lines_mapper = mapper(model.OrderLine, order_lines)  #<3>
@@ -526,7 +526,7 @@ def insert_order_line(session):
     return orderline_id
 
 def insert_batch(session, batch_id):  #<1>
-    #...
+    ...
 
 def test_repository_can_retrieve_a_batch_with_allocations(session):
     orderline_id = insert_order_line(session)

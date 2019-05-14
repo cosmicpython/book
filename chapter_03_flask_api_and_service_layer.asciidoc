@@ -100,9 +100,14 @@ Implementing things in the most obvious way, you might get something like this:
 [role="non-head"]
 ----
 from flask import Flask, jsonify, request
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+import config
 import model
 import orm
 import repository
+
 
 orm.start_mappers()
 get_session = sessionmaker(bind=create_engine(config.get_postgres_uri()))
@@ -737,7 +742,7 @@ class FakeRepository(set):
             model.Batch(ref, sku, qty, eta),
         ])
 
-    #...
+    ...
 
 
 def test_returns_allocation():
@@ -791,7 +796,7 @@ def add_batch(
 def allocate(
         orderid: str, sku: str, qty: int, repo: BatchRepository, session
 ) -> str:
-    #...
+    ...
 ----
 ====
 

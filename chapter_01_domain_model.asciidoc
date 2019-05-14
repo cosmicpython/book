@@ -373,8 +373,7 @@ from typing import NewType
 Quantity = NewType("Quantity", int)
 Sku = NewType("Sku", str)
 Reference = NewType("Reference", str)
-
-#...
+...
 
 class Batch:
     def __init__(self, ref: Reference, sku: Sku, qty: Quantity):
@@ -592,7 +591,7 @@ entities:
 [source,python]
 ----
 class Batch:
-    #...
+    ...
 
     def __eq__(self, other):
         if not isinstance(other, Batch):
@@ -718,7 +717,7 @@ To make it work we implement `__gt__` on our domain model, as in <<dunder_gt>>:
 [source,python]
 ----
 class Batch:
-    #...
+    ...
 
     def __gt__(self, other):
         if self.eta is None:
@@ -772,8 +771,7 @@ class OutOfStock(Exception):
 def allocate(line: OrderLine, batches: List[Batch]) -> str:
     try:
         batch = next(
-            ...
-        )
+        ...
     except StopIteration:
         raise OutOfStock(f'Out of stock for sku {line.sku}')
 ----
