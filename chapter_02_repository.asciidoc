@@ -34,14 +34,15 @@ some code that looks more or less like <<api_endpoint_pseudocode>>:
 [role="skip"]
 [source,python]
 ----
-@flask.route.gubbbins
+@flask.route('/allocate')
 def allocate_endpoint():
-    order_lines = # ... fetch from db, or maybe just 
-                  # instantiate them from request params
-    batches = # ... load all batches from db
-    for line in order.lines:
-        allocate(line, batches)
-    # .. and then save the allocation back to the database somehow
+    # extract order line from request
+    line = OrderLine(request.params #...)
+    # load all batches from the DB
+    batches = #...
+    # call our domain service
+    allocate(line, batches)
+    # then save the allocation back to the database somehow
     return 201
 ----
 ====
@@ -53,8 +54,8 @@ database.
 
 === Applying the Dependency Inversion Principle to the Database
 
-We're all reasonably familiar with the best practice for a system
-with a UI, some logic, and a database:  the "layered architecture".
+As mentioned in <<part1_prologue>>, the "layered architecture" is a common
+approach to structuring an system that has a UI, some logic, and a database:  
 
 
 [[layered_architecture2]]
@@ -63,49 +64,76 @@ with a UI, some logic, and a database:  the "layered architecture".
 [role="skip"]
 [source,text]
 ----
-+------------------------------------------------------------+
-|                  Presentation Layer                        |
-+------------------------------------------------------------+
-                          |
-                          V
-+------------------------------------------------------------+
-|                   Business Logic                           |
-+------------------------------------------------------------+
-                          |
-                          V
-+------------------------------------------------------------+
-|                    Database Layer                          |
-+------------------------------------------------------------+
++-------------------------------------------------+
+|              Presentation Layer                 |
++-------------------------------------------------+
+                      |
+                      V
++-------------------------------------------------+
+|               Business Logic                    |
++-------------------------------------------------+
+                      |
+                      V
++-------------------------------------------------+
+|                Database Layer                   |
++-------------------------------------------------+
 ----
 ====
 
-You might think of it as Model-View-Controller, and have more layers, but the
-essential principle is to keep the layers separate (which is a good thing), and
-to have each layer depend only on the one below...
+Django's Model-View-Template structure is closely related, as is
+Model-View-Controller (MVC). In any case, the aim is to keep the layers
+separate (which is a good thing), and to have each layer depend only on the one
+below...
 
 But we want our domain model to have _no dependencies whatsoever_. We don't
 want infrastructure concerns bleeding over into our domain model and slowing
 down our unit tests or our ability to make changes.
+//TODO (DS) Is 'no dependencies whatsoever' an overstatement? E.g. there'd be
+//no problem depending on certain stdlib packages such as abc. 
 
 Instead, as discussed in the prologue, we'll think of our model as being on the
 "inside", and dependencies flowing inwards to it;  what people sometimes call
-"ports and adapters".
+"onion architecture".
 
+[[onion_architecture]]
+.Onion Architecture
+====
+[role="skip"]
+[source,text]
+----
++------------------------+   
+|   Presentation Layer   |   
++------------------------+   
+           |                 
+           V                 
+   +---------------------------------------------------+
+   |                   Domain model                    |
+   +---------------------------------------------------+
+                                        ^                 
+                                        |                 
+                               +-------------------+
+                               |   Database Layer  |
+                               +-------------------+
+----
+====
 
 .Is this Ports and Adapters?
 *******************************************************************************
-> "Is this Ports and Adapters?  Or is it hexagonal architecture?  Is it the same
+> "Is this Ports and Adapters?  Or is it Hexagonal Architecture?  Is it the same
 > as the Onion architecture?  What about the Clean architecture?  What's a Port
 > and what's an Adapter?  Why do you people have so many words for the same thing?
 
 Although some people like to nitpick over the differences, all these are
 pretty much names for the same thing, and they all boil down to the
 Dependency Inversion Principle--high-level modules (the domain) should
-not depend on low-level ones (the infrastructure).
+not depend on low-level ones (the infrastructure).footnote:[Mark Seeman has
+https://blog.ploeh.dk/2013/12/03/layers-onions-ports-adapters-its-all-the-same/[an excellent blog post]
+on the topic, which we recommend.]
 
 We'll get into some of the nitty-gritty around "depending on abstractions",
 and whether there is a Pythonic equivalent of interfaces, later in the book.
 *******************************************************************************
+
 
 ==== The "normal" ORM way: model depends on ORM.
 
@@ -120,6 +148,7 @@ the world of databases and relational algebra.
 The most important thing an ORM gives us is "persistence ignorance": the idea
 that our fancy domain model doesn't need to know anything about how data are
 loaded or persisted. This helps to keep our domain clean of dependencies.
+//TODO (DS): Might be interesting to point out that orms are following the DIP themselves...
 
 But if you follow the typical SQLAlchemy tutorial, you'll end up with something
 like this:
@@ -152,10 +181,46 @@ class Allocation(Base):
 ----
 ====
 
-...And our pristine model is now full of dependencies on the ORM, and is
-starting to look ugly as hell. Can we really say this model is ignorant
-of the database? How can it be separate from storage concerns when our model
-properties are directly coupled to database columns?
+You don't need to understand SQLAlchemy to see that our pristine model is now
+full of dependencies on the ORM, and is starting to look ugly as hell besides.
+Can we really say this model is ignorant of the database? How can it be
+separate from storage concerns when our model properties are directly coupled
+to database columns?
+
+.Django's ORM is essentially the same, but more restrictive
+*******************************************************************************
+
+If you're more used to Django, the SQLAlchemy snippet above translates to
+something like this:
+
+[[django_orm_example]]
+.Listing title
+====
+[source,python]
+----
+class Order(models.Model):
+    pass
+
+class OrderLine(models.Model):
+    sku = models.CharField(max_length=255)
+    qty = models.IntegerField()
+    order = models.ForeignKey(Order)
+
+class Allocation(models.Model):
+    #... and so on
+----
+====
+
+The point is the same -- our model classes inherit directly from ORM
+classes, so our model depends on the ORM.  We want it to be the other
+way around.
+
+Django doesn't provide an equivalent for SQLAlchemy's "classical mapper",
+but see <<appendix_django>> for some examples of how you apply dependency
+inversion and the Repository Pattern to Django.
+
+*******************************************************************************
+
 
 
 ==== Inverting the dependency: ORM depends on model.
@@ -182,9 +247,9 @@ metadata = MetaData()
 order_lines = Table(  #<2>
     'order_lines', metadata,
     Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('orderid', String(255)),
     Column('sku', String(255)),
     Column('qty', Integer, nullable=False),
+    Column('orderid', String(255)),
 )
 #...
 
@@ -194,14 +259,17 @@ def start_mappers():
 ----
 ====
 
-
-
 <1> The ORM imports the domain model, and not the other way around
 
-<2> We define our database tables and columns using SQLAlchemy's Pythonic DDL.
+<2> We define our database tables and columns using SQLAlchemy's abstractions.
 
-<3> And when we call the `mapper` function, SqlAlchemy binds our domain model
-    classes to the various tables we've defined.
+<3> And when we call the `mapper` function, SqlAlchemy does its magic to bind
+    our domain model classes to the various tables we've defined.
+
+The end result will be that, if we call `start_mappers()`, we will be able to
+easily load and save domain model instances from and to the database. But if
+we never call that function, then our domain model classes stay blissfully
+unaware of the database.
 
 This gives us all the benefits of SQLAlchemy, including the ability to use
 `alembic` for migrations, and the ability to transparently query using our
@@ -218,8 +286,8 @@ some tests for it, as in <<orm_tests>>:
 ====
 [source,python]
 ----
-def test_orderline_mapper_can_load_lines(session):
-    session.execute(
+def test_orderline_mapper_can_load_lines(session):  #<1>
+    session.execute(  #<1>
         'INSERT INTO order_lines (orderid, sku, qty) VALUES '
         '("order1", "sku1", 12),'
         '("order1", "sku2", 13),'
@@ -243,12 +311,23 @@ def test_orderline_mapper_can_save_lines(session):
 ----
 ====
 
+<1> If you've not used pytest, the `session` argument to this test needs
+    explaining.  You don't need to worry about the details of pytest or its
+    fixtures for the purposes of this book, but the short explanation is that
+    you can define common dependencies for your tests as "fixtures", and
+    pytest will inject them to the tests that need them by looking at their
+    function arguments.  In this case, it's a SQLAlchemy database session.
 
-But you probably wouldn't keep these tests around--as we'll see shortly, once
+
+You probably wouldn't keep these tests around--as we'll see shortly, once
 you've taken the step of inverting the dependency of ORM and domain model, it's
 only a small additional step to implement an additional abstraction called the
 Repository pattern, which will be easier to write tests against, and will
 provide a simple, common interface for faking out later in tests.
+
+// TODO (DS): Not sure how valuable this bit about getting the orm directly is.
+// Perhaps it would make more sense to start with the abstraction (repository)
+// and then show how to use sqlalchemy to plug in the implementation.
 
 But we've already achieved our objective of inverting the traditional
 dependency: the domain model stays "pure" and free from infrastructure
@@ -274,17 +353,31 @@ At this point though, our flask API endpoint might look something like
 [role="skip"]
 [source,python]
 ----
-@flask.route.gubbbins
+@flask.route('/allocate')
 def allocate_endpoint():
-    order = Order(request.params['order_id'], request.params['lines'])
-    warehouse = session.query(Warehouse).one()
-    shipments = session.query(Shipment).all()
-    new_allocation = allocate(order, warehouse, shipments)
-    session.add(new_allocation)
+    session = start_session()
+
+    # extract order line from request
+    line = OrderLine(
+        request.params['order_id'], 
+        request.params['sku'], 
+        request.params['qty'], 
+    )
+
+    # load all batches from the DB
+    batches = session.query(Batch).all()
+
+    # call our domain service
+    allocate(line, batches)
+
+    # save the allocation back to the database
     session.commit()
+
     return 201
 ----
 ====
+
+
 
 === Introducing Repository Pattern.
 
@@ -301,7 +394,7 @@ like?
 [role="skip"]
 [source,python]
 ----
-from data import all_my_data
+import all_my_data
 
 def create_a_batch(self):
     batch = Batch(...)
@@ -324,6 +417,35 @@ The ideal repository has just two methods: `add` to put a new item in the
 repository, and `get` to return a previously added item. We stick rigidly to
 using these methods for data access in our domain and our _service layer_. This
 self-imposed simplicity stops us from coupling our domain model to the database.
+
+[[repository_pattern_diagram]]
+.Repository pattern
+====
+[role="skip"]
+[source,text]
+----
+TODO ok fix this diagram
+
+               +----------------------------+   
+               | Presentation Layer (Flask) |   
+               +----------------------------+   
+                             |                 
+                             V                 
+   +---------------------------------------------------+
+   |                   Service layer                   |
+   +---------------------------------------------------+
+             |                 
+             V
+   +-------------------+            +-------------------+
+   |   Repository      |   -->      |   Database        |
+   +-------------------+            +-------------------+
+             |                           |                 
+             V                           V                 
+   +---------------------------------------------------+
+   |                   Domain model                    |
+   +---------------------------------------------------+
+----
+====
 
 Whenever we introduce an architectural pattern in this book, we'll always be
 trying to ask: "what do we get for this?  And what does it cost us?". Rich
