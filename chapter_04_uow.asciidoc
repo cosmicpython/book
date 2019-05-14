@@ -26,7 +26,7 @@ A context manager.
 
 === Test-driving a UoW with integration tests
 
-Here's  a test for a new "unit of work" context manager that allows us to start
+Here's a test for a new "unit of work" context manager that allows us to start
 a transaction, retrieve and get things from repos, and commit:
 
 
@@ -391,7 +391,7 @@ away?
 ====
 
 You should always feel free to throw away tests if you feel they're not going to
-add value longer term.  We'd say that _test_orm.py_ was primarily a tool to help
+add value, longer term.  We'd say that _test_orm.py_ was primarily a tool to help
 us learn SQLAlchemy, so we won't need that long term, especially if the main things
 it's doing are covered in _test_repository.py_.  That last you might keep around,
 but we could certainly see an argument for just keeping everything at the highest

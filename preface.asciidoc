@@ -115,7 +115,12 @@ Chapter 10 Bootstrap, configuration root, and dependency injection::
     tidy up the dependencies and startup mess.  talk about DI vs mocks.
 
 
-
+// TODO (DS): (General thoughts) There's nothing in the book about how to
+// migrate to the pattern described here. I would have thought target readers
+// are likely to be working on an existing project that isn't scaling well -
+// how do they begin to apply these principles to existing architecture.
+// Perhaps some advice on how to begin if you have (a) traditional three layer
+// architecture or (b) big ball of mud.
 
 === Conventions Used in This Book
 
