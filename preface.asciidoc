@@ -56,18 +56,32 @@ for implementing them in a Pythonic way, and that it will serve as a
 first step for those who want to do further research  in this field.
 
 
-// TODO: DS It feels like the book is missing a place where it tells you what
-// assumptions you're making about the readers. This would be a great place to
-// have a section on what the authors are assuming about us as readers.
-// Something along the lines of:
-// - what prior knowledge we need to have
-// - what knowledge is not essential, but would enhance our understanding of the book.
+=== Who might be reading this book
 
-// * DDD 
-// * TDD
-// * flask, sqlalchemy, postgres, redis
-// * python version
-// * pytest
+Here are a few things we're assuming about you, dear reader.
+
+We're assuming you've been close to some reasonably complex Python applications.
+
+We're assuming you've seen some of the pain that comes with trying to manage
+that complexity
+
+We're not assuming you already know anything about DDD, or any of the
+classic application architecture patterns.
+
+We're going to be structuring our explorations of architectural patterns
+by using an example app, building it up chapter by chapter.  We use TDD at
+work, so we tend to show listings of tests first, followed by implementation.
+If you're not used to working test-first, that may be a little strange at
+first, but we hope you'll soon get used to seeing code "being used", or from
+the outside, before you see how it's built on the inside.
+
+We will be using some specific Python (3) frameworks and technologies, like
+Flask, SQLAlchemy, Pytest, Docker and Redis.  If you're already familiar with
+them, that won't hurt, but we don't think it's required.  One of our main aims
+with this book is to build an architecture where specific technology choices
+become minor implementation details.
+
+
 
 === Outline
 
