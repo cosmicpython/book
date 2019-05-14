@@ -525,7 +525,6 @@ def insert_order_line(session):
     )
     return orderline_id
 
-
 def insert_batch(session, batch_id):  #<1>
     #...
 
