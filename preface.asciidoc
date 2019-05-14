@@ -42,10 +42,10 @@ new, but they are mostly new to the Python world.  And this book won't be
 a replacement for the classics in the field like 
 https://domainlanguage.com/ddd/[Evans' Domain-Driven Design]
 or
-https://www.martinfowler.com/books/eaa.html[Fowler's Patterns of Enterprise Application Architecture] (both of which we'll constantly refer to and encourage you to go and read).
+https://www.martinfowler.com/books/eaa.html[Fowler's Patterns of Enterprise Application Architecture] (both of which we'll often refer to and encourage you to go and read).
 
 But all the classic code examples in the literature do tend to be written in
-Java or C\+\+/#, and if you're a Python person and haven't used either of those
+Java or pass:[C++]/#, and if you're a Python person and haven't used either of those
 languages in a long time (or indeed ever), it can make them quite trying.
 There's a reason the latest edition of that other classic text, https://martinfowler.com/books/refactoring.html[Refactoring] is in JavaScript.
 
@@ -55,6 +55,13 @@ of the key architectural patterns that support Domain-Driven Design
 for implementing them in a Pythonic way, and that it will serve as a
 first step for those who want to do further research  in this field.
 
+
+// TODO: DS It feels like the book is missing a place where it tells you what
+// assumptions you're making about the readers. This would be a great place to
+// have a section on what the authors are assuming about us as readers.
+// Something along the lines of:
+// - what prior knowledge we need to have
+// - what knowledge is not essential, but would enhance our understanding of the book.
 
 === Outline
 
