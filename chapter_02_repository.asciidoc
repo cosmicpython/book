@@ -25,7 +25,11 @@ bottom-up development, and start to think about storage and databases.
 === Some pseudocode: what are we going to need?
 
 When we build our first API endpoint, we know we're going to have
-some code that looks more or less like <<api_endpoint_pseudocode>>:
+some code that looks more or less like <<api_endpoint_pseudocode>>
+footnote:[we've used Flask because it's lightweight, but you don't need
+to understand Flask to understand this book.  One of the main points
+we're trying to make is that your choice of web framework should be a minor
+implementation detail].
 
 
 [[api_endpoint_pseudocode]]
@@ -34,7 +38,7 @@ some code that looks more or less like <<api_endpoint_pseudocode>>:
 [role="skip"]
 [source,python]
 ----
-@flask.route('/allocate')
+@flask.route.gubbins
 def allocate_endpoint():
     # extract order line from request
     line = OrderLine(request.params, ...)
@@ -345,7 +349,7 @@ maintainers, and Mike Bayer in particular].  As so often with
 architectural decisions, there is a trade-off you'll need to consider.  As the
 Zen of Python says, "Practicality beats purity!"
 
-At this point though, our flask API endpoint might look something like
+At this point though, our API endpoint might look something like
 <<api_endpoint_with_session>>, and we could get it to work just fine.
 
 [[api_endpoint_with_session]]
@@ -354,7 +358,7 @@ At this point though, our flask API endpoint might look something like
 [role="skip"]
 [source,python]
 ----
-@flask.route('/allocate')
+@flask.route.gubbins
 def allocate_endpoint():
     session = start_session()
 
