@@ -47,9 +47,30 @@ read a proper DDD book.
 *****************************************************************
 
 The domain model is the mental map that business owners have of their
-processes. All business people have these mental maps, they're how humans think
+businesses. All business people have these mental maps, they're how humans think
 about complex processes. 
-//TODO: Listening for business jargon.
+
+You can tell when they're navigating these maps because they use business speak.
+Jargon arises naturally between people who are working in a complex system.
+
+Imagine that you, our unfortunate reader, were suddenly transported aboard an
+alien spaceship with your friends and family and had to figure out, from first
+principles, how to operate things.
+
+In your first few days, you might just push buttons randomly, but soon you'd
+learn which buttons did what, so that you could give one another instructions.
+"Press the red button near the flashing doo-hickey and then throw that big
+lever over by the radar gizmo", you might say. 
+
+Within a couple of weeks, you'd become more precise as you adopted words to
+describe the ship's functions: "increase oxygen levels in cargo bay three"
+or "turn on the little thrusters". After a few months you'd have adopted
+language for entire complex processes: "Start landing sequence", or "prepare
+for warp".
+
+So it is in the mundane world of business. The terminology used by business
+stakeholders represents a distilled understanding of the domain model, where
+complex ideas and processes are boiled down to a single word or phrase.
 
 We're going to use a real-world domain model throughout this book, specifically
 a model from our current employment. Made.com are a successful furniture
@@ -103,7 +124,9 @@ so that the examples are easier to talk about.
 * The purchasing department orders small _batches_ of stock. A _batch_ of stock
   has a unique id which they call a _reference_, a sku and a _quantity_.
 
-* We need to _allocate_ _order lines_ to _batches_.
+* We need to _allocate_ _order lines_ to _batches_. When we've allocated an
+  order line to a batch, we will send stock from that specific batch to the
+  customer's delivery address.
 
 * When I allocate 1 unit of stock to a batch, the _available quantity_ is
   reduced.
