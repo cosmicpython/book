@@ -14,12 +14,14 @@ typofixes, and more substantial feedback + suggestions are enthusiastically soli
 | Chapter |       |
 | ------- | ----- |
 | [Preface](preface.asciidoc) | |
+| [**Part 1 Intro**](part1.asciidoc) | |
 | [Prologue](prologue.asciidoc)| |
 | [Chapter 1: Domain Model](chapter_01_domain_model.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_01_domain_model)](https://travis-ci.org/python-leap/code) |
 | [Chapter 2: Repository](chapter_02_repository.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_02_repository)](https://travis-ci.org/python-leap/code) |
 | [Chapter 3: Flask API and Service Layer](chapter_03_flask_api_and_service_layer.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_03_flask_api_and_service_layer)](https://travis-ci.org/python-leap/code) |
 | [Chapter 4: Unit of Work](chapter_04_uow.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_04_uow)](https://travis-ci.org/python-leap/code) |
 | [Chapter 5: Aggregates](chapter_05_aggregate.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_05_aggregate)](https://travis-ci.org/python-leap/code) |
+| [**Part 2 Intro**](part2.asciidoc) | |
 | [Chapter 6: Events and the Message Bus](chapter_06_events_and_message_bus.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_06_events_and_message_bus)](https://travis-ci.org/python-leap/code) |
 | [Chapter 7: Event-Driven Architecture](chapter_07_external_events.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_07_external_events)](https://travis-ci.org/python-leap/code) |
 | [Appendix A: Abstractions](appendix_abstractions.asciidoc) | |
