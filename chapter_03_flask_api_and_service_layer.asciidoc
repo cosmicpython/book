@@ -616,6 +616,12 @@ When we want to improve the design of the code, though, we will need to replace
 or delete these tests, because they are tightly coupled to a particular
 implementation.
 
+// TODO (SG) - maybe we could do with a/some concrete examples here?  Eg an 
+// example where a unit test would break but a service-layer test wouldn't?
+// and maybe make the analogy of "you should only write tests against public
+// methods of your classes, and the service layer is just another more-public
+// layer
+
 
 ==== Low and High Gear
 
@@ -636,6 +642,7 @@ bicycle needs to be in a low gear so that it can overcome inertia. Once we're of
 and running, we can go faster and more efficiently by changing into a high gear
 but if we suddenly encounter a steep hill, or we're forced to slow down by a
 hazard, we again drop down to a low gear until we can pick up speed again.
+
 
 
 .Different types of test: Rules of thumb
