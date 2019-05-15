@@ -25,7 +25,11 @@ bottom-up development, and start to think about storage and databases.
 === Some pseudocode: what are we going to need?
 
 When we build our first API endpoint, we know we're going to have
-some code that looks more or less like <<api_endpoint_pseudocode>>:
+some code that looks more or less like <<api_endpoint_pseudocode>>
+footnote:[we've used Flask because it's lightweight, but you don't need
+to understand Flask to understand this book.  One of the main points
+we're trying to make is that your choice of web framework should be a minor
+implementation detail].
 
 
 [[api_endpoint_pseudocode]]
@@ -34,14 +38,15 @@ some code that looks more or less like <<api_endpoint_pseudocode>>:
 [role="skip"]
 [source,python]
 ----
-@flask.route.gubbbins
+@flask.route.gubbins
 def allocate_endpoint():
-    order_lines = # ... fetch from db, or maybe just 
-                  # instantiate them from request params
-    batches = # ... load all batches from db
-    for line in order.lines:
-        allocate(line, batches)
-    # .. and then save the allocation back to the database somehow
+    # extract order line from request
+    line = OrderLine(request.params, ...)
+    # load all batches from the DB
+    batches = ...
+    # call our domain service
+    allocate(line, batches)
+    # then save the allocation back to the database somehow
     return 201
 ----
 ====
@@ -53,8 +58,8 @@ database.
 
 === Applying the Dependency Inversion Principle to the Database
 
-We're all reasonably familiar with the best practice for a system
-with a UI, some logic, and a database:  the "layered architecture".
+As mentioned in <<part1_prologue>>, the "layered architecture" is a common
+approach to structuring an system that has a UI, some logic, and a database:  
 
 
 [[layered_architecture2]]
@@ -63,49 +68,76 @@ with a UI, some logic, and a database:  the "layered architecture".
 [role="skip"]
 [source,text]
 ----
-+------------------------------------------------------------+
-|                  Presentation Layer                        |
-+------------------------------------------------------------+
-                          |
-                          V
-+------------------------------------------------------------+
-|                   Business Logic                           |
-+------------------------------------------------------------+
-                          |
-                          V
-+------------------------------------------------------------+
-|                    Database Layer                          |
-+------------------------------------------------------------+
++-------------------------------------------------+
+|              Presentation Layer                 |
++-------------------------------------------------+
+                      |
+                      V
++-------------------------------------------------+
+|               Business Logic                    |
++-------------------------------------------------+
+                      |
+                      V
++-------------------------------------------------+
+|                Database Layer                   |
++-------------------------------------------------+
 ----
 ====
 
-You might think of it as Model-View-Controller, and have more layers, but the
-essential principle is to keep the layers separate (which is a good thing), and
-to have each layer depend only on the one below...
+Django's Model-View-Template structure is closely related, as is
+Model-View-Controller (MVC). In any case, the aim is to keep the layers
+separate (which is a good thing), and to have each layer depend only on the one
+below...
 
 But we want our domain model to have _no dependencies whatsoever_. We don't
 want infrastructure concerns bleeding over into our domain model and slowing
 down our unit tests or our ability to make changes.
+//TODO (DS) Is 'no dependencies whatsoever' an overstatement? E.g. there'd be
+//no problem depending on certain stdlib packages such as abc. 
 
 Instead, as discussed in the prologue, we'll think of our model as being on the
 "inside", and dependencies flowing inwards to it;  what people sometimes call
-"ports and adapters".
+"onion architecture".
 
+[[onion_architecture]]
+.Onion Architecture
+====
+[role="skip"]
+[source,text]
+----
++------------------------+   
+|   Presentation Layer   |   
++------------------------+   
+           |                 
+           V                 
+   +---------------------------------------------------+
+   |                   Domain model                    |
+   +---------------------------------------------------+
+                                        ^                 
+                                        |                 
+                               +-------------------+
+                               |   Database Layer  |
+                               +-------------------+
+----
+====
 
 .Is this Ports and Adapters?
 *******************************************************************************
-> "Is this Ports and Adapters?  Or is it hexagonal architecture?  Is it the same
+> "Is this Ports and Adapters?  Or is it Hexagonal Architecture?  Is it the same
 > as the Onion architecture?  What about the Clean architecture?  What's a Port
 > and what's an Adapter?  Why do you people have so many words for the same thing?
 
 Although some people like to nitpick over the differences, all these are
 pretty much names for the same thing, and they all boil down to the
 Dependency Inversion Principle--high-level modules (the domain) should
-not depend on low-level ones (the infrastructure).
+not depend on low-level ones (the infrastructure).footnote:[Mark Seeman has
+https://blog.ploeh.dk/2013/12/03/layers-onions-ports-adapters-its-all-the-same/[an excellent blog post]
+on the topic, which we recommend.]
 
 We'll get into some of the nitty-gritty around "depending on abstractions",
 and whether there is a Pythonic equivalent of interfaces, later in the book.
 *******************************************************************************
+
 
 ==== The "normal" ORM way: model depends on ORM.
 
@@ -120,6 +152,7 @@ the world of databases and relational algebra.
 The most important thing an ORM gives us is "persistence ignorance": the idea
 that our fancy domain model doesn't need to know anything about how data are
 loaded or persisted. This helps to keep our domain clean of dependencies.
+//TODO (DS): Might be interesting to point out that orms are following the DIP themselves...
 
 But if you follow the typical SQLAlchemy tutorial, you'll end up with something
 like this:
@@ -148,14 +181,51 @@ class OrderLine(Base):
     order = relationship(Order)
 
 class Allocation(Base):
-    #... and so on
+    ...
 ----
 ====
 
-...And our pristine model is now full of dependencies on the ORM, and is
-starting to look ugly as hell. Can we really say this model is ignorant
-of the database? How can it be separate from storage concerns when our model
-properties are directly coupled to database columns?
+You don't need to understand SQLAlchemy to see that our pristine model is now
+full of dependencies on the ORM, and is starting to look ugly as hell besides.
+Can we really say this model is ignorant of the database? How can it be
+separate from storage concerns when our model properties are directly coupled
+to database columns?
+
+.Django's ORM is essentially the same, but more restrictive
+*******************************************************************************
+
+If you're more used to Django, the SQLAlchemy snippet above translates to
+something like this:
+
+[[django_orm_example]]
+.Django ORM example
+====
+[source,python]
+[role="skip"]
+----
+class Order(models.Model):
+    pass
+
+class OrderLine(models.Model):
+    sku = models.CharField(max_length=255)
+    qty = models.IntegerField()
+    order = models.ForeignKey(Order)
+
+class Allocation(models.Model):
+    ...
+----
+====
+
+The point is the same -- our model classes inherit directly from ORM
+classes, so our model depends on the ORM.  We want it to be the other
+way around.
+
+Django doesn't provide an equivalent for SQLAlchemy's "classical mapper",
+but see <<appendix_django>> for some examples of how you apply dependency
+inversion and the Repository Pattern to Django.
+
+*******************************************************************************
+
 
 
 ==== Inverting the dependency: ORM depends on model.
@@ -182,26 +252,29 @@ metadata = MetaData()
 order_lines = Table(  #<2>
     'order_lines', metadata,
     Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('orderid', String(255)),
     Column('sku', String(255)),
     Column('qty', Integer, nullable=False),
+    Column('orderid', String(255)),
 )
-#...
 
+...
 
 def start_mappers():
     lines_mapper = mapper(model.OrderLine, order_lines)  #<3>
 ----
 ====
 
-
-
 <1> The ORM imports the domain model, and not the other way around
 
-<2> We define our database tables and columns using SQLAlchemy's Pythonic DDL.
+<2> We define our database tables and columns using SQLAlchemy's abstractions.
 
-<3> And when we call the `mapper` function, SqlAlchemy binds our domain model
-    classes to the various tables we've defined.
+<3> And when we call the `mapper` function, SqlAlchemy does its magic to bind
+    our domain model classes to the various tables we've defined.
+
+The end result will be that, if we call `start_mappers()`, we will be able to
+easily load and save domain model instances from and to the database. But if
+we never call that function, then our domain model classes stay blissfully
+unaware of the database.
 
 This gives us all the benefits of SQLAlchemy, including the ability to use
 `alembic` for migrations, and the ability to transparently query using our
@@ -218,8 +291,8 @@ some tests for it, as in <<orm_tests>>:
 ====
 [source,python]
 ----
-def test_orderline_mapper_can_load_lines(session):
-    session.execute(
+def test_orderline_mapper_can_load_lines(session):  #<1>
+    session.execute(  #<1>
         'INSERT INTO order_lines (orderid, sku, qty) VALUES '
         '("order1", "sku1", 12),'
         '("order1", "sku2", 13),'
@@ -243,12 +316,23 @@ def test_orderline_mapper_can_save_lines(session):
 ----
 ====
 
+<1> If you've not used pytest, the `session` argument to this test needs
+    explaining.  You don't need to worry about the details of pytest or its
+    fixtures for the purposes of this book, but the short explanation is that
+    you can define common dependencies for your tests as "fixtures", and
+    pytest will inject them to the tests that need them by looking at their
+    function arguments.  In this case, it's a SQLAlchemy database session.
 
-But you probably wouldn't keep these tests around--as we'll see shortly, once
+
+You probably wouldn't keep these tests around--as we'll see shortly, once
 you've taken the step of inverting the dependency of ORM and domain model, it's
 only a small additional step to implement an additional abstraction called the
 Repository pattern, which will be easier to write tests against, and will
 provide a simple, common interface for faking out later in tests.
+
+// TODO (DS): Not sure how valuable this bit about getting the orm directly is.
+// Perhaps it would make more sense to start with the abstraction (repository)
+// and then show how to use sqlalchemy to plug in the implementation.
 
 But we've already achieved our objective of inverting the traditional
 dependency: the domain model stays "pure" and free from infrastructure
@@ -265,7 +349,7 @@ maintainers, and Mike Bayer in particular].  As so often with
 architectural decisions, there is a trade-off you'll need to consider.  As the
 Zen of Python says, "Practicality beats purity!"
 
-At this point though, our flask API endpoint might look something like
+At this point though, our API endpoint might look something like
 <<api_endpoint_with_session>>, and we could get it to work just fine.
 
 [[api_endpoint_with_session]]
@@ -274,17 +358,31 @@ At this point though, our flask API endpoint might look something like
 [role="skip"]
 [source,python]
 ----
-@flask.route.gubbbins
+@flask.route.gubbins
 def allocate_endpoint():
-    order = Order(request.params['order_id'], request.params['lines'])
-    warehouse = session.query(Warehouse).one()
-    shipments = session.query(Shipment).all()
-    new_allocation = allocate(order, warehouse, shipments)
-    session.add(new_allocation)
+    session = start_session()
+
+    # extract order line from request
+    line = OrderLine(
+        request.params['order_id'], 
+        request.params['sku'], 
+        request.params['qty'], 
+    )
+
+    # load all batches from the DB
+    batches = session.query(Batch).all()
+
+    # call our domain service
+    allocate(line, batches)
+
+    # save the allocation back to the database
     session.commit()
+
     return 201
 ----
 ====
+
+
 
 === Introducing Repository Pattern.
 
@@ -301,7 +399,7 @@ like?
 [role="skip"]
 [source,python]
 ----
-from data import all_my_data
+import all_my_data
 
 def create_a_batch(self):
     batch = Batch(...)
@@ -324,6 +422,36 @@ The ideal repository has just two methods: `add` to put a new item in the
 repository, and `get` to return a previously added item. We stick rigidly to
 using these methods for data access in our domain and our _service layer_. This
 self-imposed simplicity stops us from coupling our domain model to the database.
+//TODO what about delete and update?
+
+[[repository_pattern_diagram]]
+.Repository pattern
+====
+[role="skip"]
+[source,text]
+----
+TODO ok fix this diagram
+
+               +----------------------------+   
+               | Presentation Layer (Flask) |   
+               +----------------------------+   
+                             |                 
+                             V                 
+   +---------------------------------------------------+
+   |                   Service layer                   |
+   +---------------------------------------------------+
+             |                 
+             V
+   +-------------------+            +-------------------+
+   |   Repository      |   -->      |   Database        |
+   +-------------------+            +-------------------+
+             |                           |                 
+             V                           V                 
+   +---------------------------------------------------+
+   |                   Domain model                    |
+   +---------------------------------------------------+
+----
+====
 
 Whenever we introduce an architectural pattern in this book, we'll always be
 trying to ask: "what do we get for this?  And what does it cost us?". Rich
@@ -338,7 +466,7 @@ ongoing maintenance.
 Repository pattern is probably one of the easiest choices in the book though,
 if you've already heading down the DDD and dependency inversion route.  As far
 as our code is concerned, we're really just swapping the SQLAlchemy abstraction
-(`session.query(Shipment)`) for a different one (`shipments_repo.get`) which we
+(`session.query(Batch)`) for a different one (`batches_repo.get`) which we
 designed.
 
 We will have to write a few lines of code in our repository class each time we
@@ -369,12 +497,18 @@ def test_repository_can_save_a_batch(session):
     session.commit()
 
     rows = list(session.execute(
-        'SELECT reference, sku, _purchased_quantity, eta FROM "batches"')
-    )
+        'SELECT reference, sku, _purchased_quantity, eta FROM "batches"'
+    ))
     assert rows == [('batch1', 'sku1', 100, None)]
 ----
 ====
 
+//TODO (DS) - Intuitively this test feels a little strange, mixing the add
+//method of the repo with raw SQL to check it's there. I would lean towards
+//either checking everything using its interface (i.e. adding to the repo, then
+//using the repo to get it back) or else testing that the add method executed
+//the SQL I was expecting. I'm not saying this way is worse - maybe it's better
+//- but I'd like to know why! 
 
 The next test involves retrieving batches and allocations so it's more
 complex:
@@ -385,40 +519,56 @@ complex:
 ====
 [source,python]
 ----
-def test_repository_can_retrieve_a_batch_with_allocations(session):
+def insert_order_line(session):
     session.execute(
         'INSERT INTO order_lines (orderid, sku, qty) VALUES ("order1", "sku1", 12)'
     )
-    [[olid]] = session.execute(
+    [[orderline_id]] = session.execute(
         'SELECT id FROM order_lines WHERE orderid=:orderid AND sku=:sku',
         dict(orderid='order1', sku='sku1')
     )
-    session.execute(
-        'INSERT INTO batches (reference, sku, _purchased_quantity, eta)'
-        ' VALUES ("batch1", "sku1", 100, null)'
-    )
-    [[b1id]] = session.execute(
-        'SELECT id FROM batches WHERE reference=:ref AND sku=:sku',
-        dict(ref='batch1', sku='sku1')
-    )
-    session.execute(
-        'INSERT INTO batches (reference, sku, _purchased_quantity, eta)'
-        ' VALUES ("batch2", "sku1", 100, null)'
-    )
-    session.execute(
-        'INSERT INTO allocations (orderline_id, batch_id) VALUES (:olid, :b1id)',
-        dict(olid=olid, b1id=b1id)
-    )
+    return orderline_id
+
+def insert_batch(session, batch_id):  #<1>
+    ...
+
+def test_repository_can_retrieve_a_batch_with_allocations(session):
+    orderline_id = insert_order_line(session)
+    batch1_id = insert_batch(session, 'batch1')
+    insert_batch(session, 'batch2')
+    insert_allocation(session, orderline_id, batch1_id)
 
     repo = repository.BatchRepository(session)
     retrieved = repo.get('batch1')
 
     expected = model.Batch('batch1', 'sku1', 100, eta=None)
-    expected._allocations = {model.OrderLine('order1', 'sku1', 12)}
-    assert retrieved == expected
+    assert retrieved == expected  # Batch.__eq__ only compares reference
+    assert retrieved.sku == expected.sku
+    assert retrieved._purchased_quantity == expected._purchased_quantity
+    assert retrieved._allocations == set(
+        model.OrderLine('order1', 'sku1', 12)
+    )
 ----
 ====
 
+<1> We'll spare you the details of the raw SQL for `insert_batch` and
+    `insert_allocation`.
+
+//TODO (HP) that assert retrieved == expected doesnt actually work. fix.
+
+//TODO (DS): This is hard to follow (particularly as we're not *that* familiar
+//with the data model). I've actually forgotten what a batch is, so I had to
+//flip back to remind myself. I think we need more help to understand what's
+//going on from a domain perspective. Maybe a table diagram, or at least
+//some comments, would allow a reader to skim it for understanding. 
+
+//Picking a descriptive SKU (e.g. 'comfy-sofa') would make this a bit more fun to read. 
+
+// Personally I'd find ol_id or even order_line_id easier to read. Same with b1id - batch1_id would be easier.
+
+// Worth explaining why we have to do a follow up query to get the id inserted?j
+
+// Why the underscore in _allocations here?
 
 Whether or not you painstakingly write tests for every model is a judgement
 call.  Once you have one class tested for create/modify/save, you might be
@@ -452,6 +602,11 @@ class BatchRepository:
 ----
 ====
 
+//TODO (DS) This is the first time we've seen the concrete implementation of an
+//abstraction. It's really important that readers understand that you've
+//already defined an interface (implicitly) which you're now implementing -
+//people might miss this. This might be a good point to discuss using an
+//abstract base class so that we know we're implementing the interface fully. 
 
 And now our flask endpoint might look something like <<api_endpoint_with_repo>>:
 
@@ -475,6 +630,10 @@ def allocate_endpoint():
 === Building a fake repository for tests is now trivial!
 
 Here's one of the biggest benefits of Repository pattern.
+
+
+//TODO (DS)As mentioned before, might be better to start with the fake before
+//mentioning sqlalchemy at all. 
 
 
 [[fake_repository]]

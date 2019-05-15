@@ -18,12 +18,15 @@ And then I was lucky enough to run into Bob, who has the answers
 to all these questions.
 
 Hi, I'm Bob. I... //TODO
+// DS: Maybe here would be a good place to mention where you work and the kind
+// of challenges you're used to addressing.
 
 === Why Python?
 
 If you're reading this book, you probably don't need convincing of the merits
 of Python itself.  So it's more "why does the world need a _Python_ book for
 this?", or possibly "why does the _Python_ world need a book like this?"
+// TODO (DS) I had to read this sentence a couple of times through before I understood it.
 
 The answer is about Python's popularity and maturity - although Python is
 probably the world's fastest-growing programming language, and nearing the top
@@ -42,10 +45,10 @@ new, but they are mostly new to the Python world.  And this book won't be
 a replacement for the classics in the field like 
 https://domainlanguage.com/ddd/[Evans' Domain-Driven Design]
 or
-https://www.martinfowler.com/books/eaa.html[Fowler's Patterns of Enterprise Application Architecture] (both of which we'll constantly refer to and encourage you to go and read).
+https://www.martinfowler.com/books/eaa.html[Fowler's Patterns of Enterprise Application Architecture] (both of which we'll often refer to and encourage you to go and read).
 
 But all the classic code examples in the literature do tend to be written in
-Java or C\+\+/#, and if you're a Python person and haven't used either of those
+Java or pass:[C++]/#, and if you're a Python person and haven't used either of those
 languages in a long time (or indeed ever), it can make them quite trying.
 There's a reason the latest edition of that other classic text, https://martinfowler.com/books/refactoring.html[Refactoring] is in JavaScript.
 
@@ -54,6 +57,33 @@ of the key architectural patterns that support Domain-Driven Design
 (DDD) and event-driven microservices, that it will serve as a reference
 for implementing them in a Pythonic way, and that it will serve as a
 first step for those who want to do further research  in this field.
+
+
+=== Who might be reading this book
+
+Here are a few things we're assuming about you, dear reader.
+
+We're assuming you've been close to some reasonably complex Python applications.
+
+We're assuming you've seen some of the pain that comes with trying to manage
+that complexity
+
+We're not assuming you already know anything about DDD, or any of the
+classic application architecture patterns.
+
+We're going to be structuring our explorations of architectural patterns
+by using an example app, building it up chapter by chapter.  We use TDD at
+work, so we tend to show listings of tests first, followed by implementation.
+If you're not used to working test-first, that may be a little strange at
+first, but we hope you'll soon get used to seeing code "being used", or from
+the outside, before you see how it's built on the inside.
+
+We will be using some specific Python (3) frameworks and technologies, like
+Flask, SQLAlchemy, Pytest, Docker and Redis.  If you're already familiar with
+them, that won't hurt, but we don't think it's required.  One of our main aims
+with this book is to build an architecture where specific technology choices
+become minor implementation details.
+
 
 
 === Outline
@@ -102,7 +132,12 @@ Chapter 10 Bootstrap, configuration root, and dependency injection::
     tidy up the dependencies and startup mess.  talk about DI vs mocks.
 
 
-
+// TODO (DS): (General thoughts) There's nothing in the book about how to
+// migrate to the pattern described here. I would have thought target readers
+// are likely to be working on an existing project that isn't scaling well -
+// how do they begin to apply these principles to existing architecture.
+// Perhaps some advice on how to begin if you have (a) traditional three layer
+// architecture or (b) big ball of mud.
 
 === Conventions Used in This Book
 

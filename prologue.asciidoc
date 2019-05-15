@@ -1,4 +1,4 @@
-[[prologue]]
+[[part1_prologue]]
 [preface]
 == Prologue: Why do our designs go wrong?
 
@@ -18,6 +18,12 @@ introduce order. For example, we could take all of your constituent atoms and
 move them so that the iron was over on one side of the bucket, and the water
 over on the other, but the moment we stop applying force, the whole thing will
 collapse once again to primordial ooze.
+//TODO: DS - I find this a confusing analogy. A human body is ordered, but not
+//in terms of iron all being on one side (has anyone ever done that?). If we
+//want to follow this analogy properly it's actually that we eat food, which
+//uses energy to organise our organs. When we stop eating food we decay...but
+//that's a bit morbid! Perhaps there is a simpler analogy such as tidying
+//one's room, or gardening?
 
 Software systems, too, tend toward chaos. When we first start building a new
 system, we have grand ideas that our code will be clean and well-ordered, but
@@ -49,10 +55,19 @@ snippets of Python code, <<urllib_example>> and <<requests_example>>:
 ====
 [source,python]
 ----
-import urllib
-import urllib2
+import json
+from urllib.request import urlopen
+from urllib.parse import urlencode
 
-# TODO: do horrible things to make a post to duck duck go and read the json
+params = dict(q='Sausages', format='json')
+handle = urlopen('http://api.duckduckgo.com' + '?' + urlencode(params))
+raw_text = handle.read().decode('utf8')
+parsed = json.loads(raw_text)
+
+results = parsed['RelatedTopics']
+for r in results:
+    if 'Text' in r:
+        print(r['FirstURL'] + ' - ' + r['Text'])
 ----
 ====
 
@@ -65,15 +80,23 @@ import urllib2
 ----
 import requests
 
-# TODO: do pleasant things to achieve the same
+params = dict(q='Sausages', format='json')
+parsed = requests.get('http://api.duckduckgo.com/', params=params).json()
+
+results = parsed['RelatedTopics']
+for r in results:
+    if 'Text' in r:
+        print(r['FirstURL'] + ' - ' + r['Text'])
 ----
 ====
 
 Both of these code listings do the same thing: they submit form encoded values
-to a URL in order to perform a Google search, but the second is simpler to read
+to a URL in order to use a search engine API, but the second is simpler to read
 and understand because it operates at a higher level of abstraction. We can
 take this one step further still by identifying the role the code is playing
 and making it explicit.
+
+image::images/galaxybrainmeme.jpg["Galaxybrain meme",width="200px",float="right"]
 
 [[ddg_example]]
 .Do a search with the duckduckgo module
@@ -81,10 +104,11 @@ and making it explicit.
 [source,python]
 ----
 import duckduckgo
-
-result = duckduckgo.search('sausages')
+for r in duckduckgo.query('Sausages').results:
+    print(r.url + ' - ' + r.text)
 ----
 ====
+
 
 Encapsulating the behaviour by identifying roles is a powerful tool for making
 our code more expressive, more testable, and easier to maintain.
@@ -183,6 +207,15 @@ details" seems clear enough, but "Details should depend on abstractions" is
 hard to imagine. How can we have an abstraction that doesn't depend on the
 details it's abstracting? We'll come to that shortly, but before we can turn
 our three-layered architecture inside out, we need to talk more about that
-middle layer.
+middle layer, the business logic.
 
+One of the most common reasons that our designs go wrong is that business
+logic becomes spread out throughout the layers of our application, hard to
+identify, understand and change.
+
+Over the next few chapters, we'll discuss some application architecture patterns
+that allow us to keep our business layer, the domain model, free of dependencies
+and easy to maintain.
+
+//TODO: bob to review these last two paras.
 

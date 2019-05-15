@@ -7,7 +7,26 @@ of our domain model and the domain service we need to allocate orders,
 and we have the Repository interface for permanent storage.
 
 Let's try and plug all the moving parts together as quickly as we
-can, and then refactor towards a cleaner architecture.
+can, and then refactor towards a cleaner architecture.  Here's our
+plan:
+
+* Use flask to put an API endpoint in front of our `allocate` domain service.
+  Wire up the database session and our repository.  Test it with
+  an end-to-end test and some quick and dirty SQL to prepare test
+  data.
+
+* Refactor out a _Service Layer_ to serve as an abstraction to
+  capture the use case, and sit between Flask and our Domain Model.
+  Build some service-layer tests and show how they can use the
+  FakeRepository.
+
+* Show how expressing our service layer functions in terms of
+  primitives allows the service-layer's users (our tests and our
+  flask API) to be decoupled from the model layer.
+
+* Add an extra service called `add_stock` so that our service-layer
+  tests and end-to-end tests no longer need to go directly to the
+  storage layer to set up test data.
 
 
 === A first end-to-end (E2E) test
@@ -37,7 +56,7 @@ def random_ref(prefix):
 def test_api_returns_allocation(add_stock):
     sku, othersku = random_ref('s1'), random_ref('s2')
     batch1, batch2, batch3 = random_ref('b1'), random_ref('b2'), random_ref('b3')
-    add_stock([
+    add_stock([  #<1>
         (batch1, sku, 100, '2011-01-02'),
         (batch2, sku, 100, '2011-01-01'),
         (batch3, othersku, 100, None),
@@ -47,12 +66,21 @@ def test_api_returns_allocation(add_stock):
         'sku': sku,
         'qty': 3,
     }
-    url = config.get_api_url()
-    r = requests.post(f'{url}/allocate', json=data)
+    url = config.get_api_url()  #<2>
+    r = requests.post(f'{url}/allocate', json=data)  #<3>
     assert r.status_code == 201
     assert r.json()['batchid'] == batch2
 ----
 ====
+
+<1> `add_stock` is a helper fixture that just hides away the details of
+    manually inserting rows into the database using SQL.  We'll find a nicer
+    way of doing this later in the chapter.
+
+<2> _config.py_ is a module for getting configuration information.  Again,
+    this is an unimportant detail, and everyone has different ways of
+    solving these problems, but if you're curious, you can find out more
+    in <<appendix_project_structure>>.
 
 Everyone solves these problems in different ways, but you're going
 to need some way of spinning up Flask, possibly in a container, and
@@ -71,6 +99,16 @@ Implementing things in the most obvious way, you might get something like this:
 [source,python]
 [role="non-head"]
 ----
+from flask import Flask, jsonify, request
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+import config
+import model
+import orm
+import repository
+
+
 orm.start_mappers()
 get_session = sessionmaker(bind=create_engine(config.get_postgres_uri()))
 app = Flask(__name__)
@@ -173,10 +211,12 @@ def test_400_message_for_invalid_sku():
 ----
 ====
 
+//TODO (DS) - not entirely clear what invalid means or how that test works
+
 And, sure we could implement it in the Flask app too:
 
 [[flask_error_handling]]
-.First cut Flask app (flask_app.py)
+.Flask app starting to get crufty (flask_app.py)
 ====
 [source,python]
 [role="non-head"]
@@ -223,7 +263,7 @@ web API endpoint (you'd need them if you were building a CLI for example, see
 end-to-end tests.
 
 It often makes sense to split out a "service layer", sometimes called
-"orchestration layer' or "use case layer".  And our `FakeRepository`
+"orchestration layer" or "use case layer".  And our `FakeRepository`
 will come in very useful for testing it with nice, fast unit tests:
 
 [[first_services_tests]]
@@ -254,9 +294,9 @@ def test_error_for_invalid_sku():
 ====
 
 
-Alongside `FakeRepository`, we also build `FakeSession` (that latter is a bit
-of a temporary solution though.  We'll get rid of it and make things _even nicer_
-in the next chapter, <<chapter_04_uow>>)
+Alongside `FakeRepository`, we also build `FakeSession` to fake out the database
+session. (The fake session is only a temporary solution.  We'll get rid of
+it and make things even nicer in the next chapter, <<chapter_04_uow>>)
 
 
 [[fake_repo]]
@@ -601,7 +641,7 @@ hazard, we again drop down to a low gear until we can pick up speed again.
 .Different types of test: Rules of thumb
 ******************************************************************************
 
-* Write one black-box test per featurefootnote:[what about happy path and
+* Write one end-to-end test per featurefootnote:[what about happy path and
   unhappy path? We say, error-handling is a feature, so yes you need one E2E
   test for error handling, but maybe not one per feature]
   to demonstrate that the feature exists
@@ -620,19 +660,23 @@ hazard, we again drop down to a low gear until we can pick up speed again.
 ******************************************************************************
 
 
-=== Fully Decoupling the service layer from the domain
+=== Fully Decoupling the service layer tests from the domain
 
 We still have some direct dependencies on the domain in our service-layer
 tests, because we use domain objects to set up our test data and to invoke
 our service-layer functions.
 
+//TODO (DS) While i think of it, it would be good to say something, somewhere
+//in the book, about how this general approach works with applications that
+//also handle presentation (i.e. don't just work via an api).
+
 To have a service layer that's fully decoupled from the domain, we need to
 rewrite its API to work in terms of primitives.
 
-Our service layer currently takes an `OrderLine` domain object.
+Our service layer currently takes an `OrderLine` domain object:
 
 [[service_domain]]
-.service takes a domain object: (services.py)
+.Before: allocate takes a domain object (services.py)
 ====
 [source,python]
 [role="skip"]
@@ -644,7 +688,7 @@ def allocate(line: OrderLine, repo: BatchRepository, session) -> str:
 How would it look if its parameters were all primitive types?
 
 [[service_takes_primitives]]
-.service takes strings and ints (services.py)
+.After: allocate takes strings and ints (services.py)
 ====
 [source,python]
 ----
@@ -673,9 +717,9 @@ def test_returns_allocation():
 ----
 ====
 
-But our tests still depend on the domain, because we still manually
-instantiate `Batch` objects.  So if we decide to massively refactor
-how our Batch model works, we'll have to change a bunch of tests.
+But our tests still depend on the domain, because we still manually instantiate
+`Batch` objects.  So if, one day, we decide to massively refactor how our Batch
+model works, we'll have to change a bunch of tests.
 
 
 ==== Mitigation: keep all domain dependencies in fixture functions
@@ -699,7 +743,7 @@ class FakeRepository(set):
             model.Batch(ref, sku, qty, eta),
         ])
 
-    #...
+    ...
 
 
 def test_returns_allocation():
@@ -748,6 +792,12 @@ def add_batch(
 ):
     repo.add(model.Batch(ref, sku, qty, eta))
     session.commit()
+
+
+def allocate(
+        orderid: str, sku: str, qty: int, repo: BatchRepository, session
+) -> str:
+    ...
 ----
 ====
 
@@ -863,6 +913,12 @@ def test_happy_path_returns_201_and_allocated_batch():
 ----
 ====
 
+//TODO: (DS) I notice that we don't have the concept of a product that needs to
+//be added (it's implicit in the batch presumably). It would be good to get a
+//sense of how much this is because this is a simplified example and how much
+//it's a design principle. It is possible that the explanations of the first
+//few chapters would be better served by a simpler example. (E.g just have a
+//model of product, amount available and order placing). 
 
 === Wrap-up
 
@@ -886,6 +942,10 @@ Adding the service layer has really bought us quite a lot:
 * And our "test pyramid" is looking good -- the bulk of our tests
   are fast/unit tests, with just the bare minimum of E2E and integration
   tests.
+
+
+//TODO (DS): Good wrap up. I'd really like to see a table or something that
+//sums up what belongs in each layer so far. And a diagram! 
   
 There's still a bit of awkwardness we'd like to get rid of. The service
 layer is tightly coupled to a `session` object.  In the next chapter, we'll

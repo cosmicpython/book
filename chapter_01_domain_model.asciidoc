@@ -4,7 +4,8 @@
 In the prologue, we used the term "business logic layer" to describe the
 central layer of a three-layered architecture. For the rest of the book we're
 going to use the term "domain model" instead. This is a term from the DDD
-community that does a better job of capturing our intended meaning.
+community that does a better job of capturing our intended meaning (see the
+sidebar below for more on DDD).
 
 
 === What is a domain model?
@@ -35,14 +36,18 @@ architecture patterns that we cover in this book, like Entity, Aggregate and
 Value Objects (see <<chapter_04_uow>>), Repository (in <<chapter_02,the next
 chapter>>) all come from the DDD tradition.
 
+// TODO: DS - I wonder if this sidebar could be addressed earlier in the book,
+// if we had a section on prior knowledge assumed.
+// Or even, a section somewhere that just describes DDD in a nutshell (hard, I
+// know), as many Python developers won't have encountered it.
+
 This book really can't give a proper overview of the DDD philosophy, and the
 associated tools and techniques for developing a domain model.  We really hope
 to give you a taste for it though, and cannot encourage you enough to go on and
 read a proper DDD book.
 
 * The original https://domainlanguage.com/ddd/[DDD "blue book"] by Eric Evans
-* Or some people seem to prefer the https://amzn.to/2tidSLb["red book"], by
-  Vaughn Vernon
+* Or some people prefer the https://amzn.to/2tidSLb["red book"], by Vaughn Vernon
 
 *****************************************************************
 
@@ -113,6 +118,7 @@ have an initial conversation with our business experts and we agree a glossary
 and some rules for the first minimal version of the domain model. Wherever
 possible, we ask for concrete examples to illustrate each rule.
 
+//TODO: Listening for business jargon.
 We make sure to express those rules in the business jargon (the _"ubiquitous
 language"_ in DDD terminology). We choose memorable identifiers for our objects
 so that the examples are easier to talk about.
@@ -143,22 +149,10 @@ so that the examples are easier to talk about.
   Example: I have a batch of 1 BLUE-CUSHION, and an order line for 2
   BLUE-CUSHION. I should not be able to allocate the line to the batch.
 
-* Customers can cancel orders. When an order is cancelled, we need to
-  _deallocate_ the order lines.  When I deallocate an order line from a batch,
-  the available quantity is increased by the quantity of the order line. 
-  Example: I have a batch of 3 CRIMSON-TOWEL and I allocate 1 CRIMSON-TOWEL.
-  When I deallocate the order line from the batch, the available quantity is 3.
-
-* I can't deallocate an order line from a batch unless I first allocate the
-  order line.
-  Example: I have a batch of 12 ELEGANT-CLOCK with no allocations. When I
-  deallocate an order line of 1 ELEGANT-CLOCK the available quantity should
-  still be 12.
-
 * I can't allocate the same line twice.
   Example: I have a batch of 10 BLUE-VASE, and I allocate an order line for 2
-  BLUE-VASE. When I allocate the order line again, the batch should still have
-  an available quantity of 8.
+  BLUE-VASE. If I allocate the order line again to the same batch, the batch
+  should still have an available quantity of 8.
 
 * Batches have an _ETA_ if they are currently shipping, or they may be in
   _Warehouse stock_.
@@ -208,12 +202,6 @@ they would agree that this correctly describes the behaviour of the system.
 [source,python]
 [role="non-head"]
 ----
-from __future__ import annotations
-from dataclasses import dataclass
-from datetime import date
-from typing import Optional
-
-
 @dataclass(frozen=True)  #<1>
 class OrderLine:
     orderid: str
@@ -363,6 +351,10 @@ class Batch:
 ----
 ====
 
+//TODO: (DS)  self._allocations: Set[OrderLine] = set() 
+// yuck yuck yuck.
+
+//TODO: get rid of those -> Nones while we're at it.  yuck
 
 Now we're getting somewhere! A batch now keeps track of a set of allocated
 OrderLine objects. When we allocate, if we have enough available quantity, we
@@ -410,8 +402,7 @@ from typing import NewType
 Quantity = NewType("Quantity", int)
 Sku = NewType("Sku", str)
 Reference = NewType("Reference", str)
-
-#...
+...
 
 class Batch:
     def __init__(self, ref: Reference, sku: Sku, qty: Quantity):
@@ -431,7 +422,7 @@ Please, please don't do this. Harry.] is a matter of debate.
 
 *******************************************************************************
 
-==== Datclasses are great for Value Objects
+==== Dataclasses are great for Value Objects
 
 We've used the _line_ liberally in the previous code listings, but what is a
 line? In the business language, an _order_ has multiple _line_ items, where
@@ -481,10 +472,10 @@ class OrderLine:
 ----
 ====
 
-Dataclasses are a neat way to represent value objects in Python 3.7, but if
-you're running an earlier version, we recommend using a named tuple. Either
-technique will give you _value equality_ which is the fancy way of saying "two
-lines with the same orderid, sku and qty are equal".
+Introduced in Python 3.7, Dataclasses are a neat way to represent value objects;
+if you're on Python 2, you could use named tuples instead. Either technique
+will give you _value equality_ which is the fancy way of saying "two lines with
+the same orderid, sku and qty are equal".
 
 
 [[more_value_objects]]
@@ -629,7 +620,7 @@ entities:
 [source,python]
 ----
 class Batch:
-    #...
+    ...
 
     def __eq__(self, other):
         if not isinstance(other, Batch):
@@ -646,13 +637,16 @@ Python's `__eq__` magic method defines the behaviour of the class for the
 
 For both entity and value objects it's also worth thinking through how
 `__hash__` will work.  It's the magic method Python uses to control the
-behaviour of objects when you add them to sets or use them as dict keys.
+behaviour of objects when you add them to sets or use them as dict keys;
+more info https://docs.python.org/3/glossary.html#term-hashable[in the Python docs].
 
-For value objects, the hash should be based on all the value attributes.
-For entities, the hash should either be `None`, or it should be based
+For Value Objects, the hash should be based on all the value attributes.
+For Entities, the hash should either be `None`, or it should be based
 on the attribute(s), like `.reference`, that define identity over time.
-More info https://docs.python.org/3/glossary.html#term-hashable[in the Python docs].
 
+//TODO (DS) Getting hash values right for these kinds of objects is quite
+//important (e.g. if you're using them in dictionaries or sets). I reckon it
+//might be worth spending more time on this.
 
 === Not everything has to be an object: a domain service function
 
@@ -665,11 +659,16 @@ ____
 Sometimes, it just isn't a thing.
 ____
 
-Evans discusses the idea of "domain services", operations that don't
-have a natural home in an Entity or Value object.  A thing that
-allocates an order line, given a set of batches, sounds a lot like
-a function, and we can take advantage of the fact that Python is
-a multi-paradigm language and just make it a function.
+Evans discusses the idea of "domain services"footnote:[Domain Services are
+not the same thing as the services from the
+<<chapter_03_flask_api_and_service_layer,Service Layer>>, although they are
+often closely related.  A Domain Service represents a business concept or
+process, whereas a service-layer service represents a use case for your
+application.  Often the service layer will call a domain service]
+operations that don't have a natural home in an Entity or Value object.  A
+thing that allocates an order line, given a set of batches, sounds a lot like a
+function, and we can take advantage of the fact that Python is a multi-paradigm
+language and just make it a function.
 
 <<test_allocate>> shows how we might test-drive such a function:
 
@@ -747,7 +746,7 @@ To make it work we implement `__gt__` on our domain model, as in <<dunder_gt>>:
 [source,python]
 ----
 class Batch:
-    #...
+    ...
 
     def __gt__(self, other):
         if self.eta is None:
@@ -801,11 +800,13 @@ class OutOfStock(Exception):
 def allocate(line: OrderLine, batches: List[Batch]) -> str:
     try:
         batch = next(
-        #...
+        ...
     except StopIteration:
         raise OutOfStock(f'Out of stock for sku {line.sku}')
 ----
 ====
+
+TODO: fix up ellipsis code listings
 
 
 That'll probably do for now! We have a domain service which we can use for our

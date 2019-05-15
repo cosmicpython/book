@@ -6,7 +6,8 @@
 --
 TODO: overview of DDD and the architecture we want to get to:
 - model with no dependencies
+- invert the normal ORM dependency
 - repository pattern as abstraction over db
-- service layer
-- unit of work pattern
+- service layer to do orchestration and define use cases
+- unit of work pattern to tie them together
 --

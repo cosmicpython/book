@@ -57,14 +57,16 @@ def check_listing(listing, chapter):
         actual_contents = file_contents_for_branch(listing.filename, chapter)
     actual_lines = actual_contents.split('\n')
 
-    if '#...' in listing.contents:
-        for section in listing.fixed_contents.split('#...'):
+    if '...' in listing.contents:
+        for section in re.split(r'#?\.\.\.', listing.fixed_contents):
             lines = section.splitlines()
             if section.strip() not in actual_contents:
-                assert lines == actual_lines, f'section from [{listing.tag}] not found within actual'
+                assert lines == actual_lines, \
+                        f'section from [{listing.tag}] not found within actual'
 
     elif listing.fixed_contents not in actual_contents:
-        assert listing.lines == actual_lines, f'listing [{listing.tag}] not found within actual'
+        assert listing.lines == actual_lines, \
+                f'listing [{listing.tag}] not found within actual'
 
 
 
