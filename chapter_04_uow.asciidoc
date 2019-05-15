@@ -506,7 +506,7 @@ Why do we go to the effort of abstracting away the SQLAlchemy session if it
 already implements the pattern we want?
 
 For one thing, the Session API is rich and supports operations that we don't
-want or need in our domain. Our UnitOfWork simplifies the Sessions to its
+want or need in our domain. Our UnitOfWork simplifies the Session to its
 essential core: it can be started, committed, or thrown away.
 
 For another, we're using the UnitOfWork to access our _Repository_ objects.
@@ -514,9 +514,9 @@ This is a neat bit of developer usability that we couldn't do with a plain
 SQLAlchemy Session.
 
 Lastly, we're motivated again by the dependency inversion principle: our
-service layer depends on a thin abstraction, and we attach a concrete at the
-outside edge of the system. This lines up nicely with SQLAlchemy's own
-documentation:
+service layer depends on a thin abstraction, and we attach a concrete 
+implementation at the outside edge of the system. This lines up nicely with 
+SQLAlchemy's own recommendations:
 
 > Keep the lifecycle of the session (and usually the transaction) separate and
 > external.
@@ -524,12 +524,6 @@ documentation:
 > will try to keep the details of session, transaction and exception management
 > as far as possible from the details of the program doing its work.
 
-
-
-//TODO this wrap-up needs work.
-
-//TODO: discuss the fact that sqla already gives us a unit of work.  check if
-//its a context manager. discuss using our own abstraction
 
 //TODO: django
 
