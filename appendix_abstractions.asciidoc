@@ -215,33 +215,32 @@ What could we do to abstract out the filesystem in each case?
 ====
 [source,python]
 ----
-def read_paths_and_hashes(root):
+def read_paths_and_hashes(root):  #<1>
     hashes = {}
     for folder, _, files in os.walk(root):
         for fn in files:
-            fullpath = Path(folder) / fn
-            hashes[hash_file(fullpath)] = fn #<3>
+            hashes[hash_file(Path(folder) / fn)] = fn
     return hashes
 
 
-def determine_actions(src_hashes, dst_hashes, src_folder, dst_folder):
+def determine_actions(src_hashes, dst_hashes, src_folder, dst_folder):  #<2>
     for sha, filename in src_hashes.items():
-        if sha not in dst_hashes: #<2>
+        if sha not in dst_hashes:
             sourcepath = src_folder / filename
             destpath = dst_folder / filename
             yield 'copy', sourcepath, destpath
 
-        elif dst_hashes[sha] != filename: #<3>
+        elif dst_hashes[sha] != filename:
             olddestpath = dst_folder / dst_hashes[sha]
             newdestpath = dst_folder / filename
             yield 'move', olddestpath, newdestpath
 
-    for sha, filename in dst_hashes.items(): #<4>
+    for sha, filename in dst_hashes.items():
         if sha not in src_hashes:
             yield 'delete', dst_folder / filename
 
 
-def sync(source, dest):
+def sync(source, dest):  #<3>
     source_hashes = read_paths_and_hashes(source)
     dest_hashes = read_paths_and_hashes(dest)
     actions = determine_actions(source_hashes, dest_hashes, source, dest)
@@ -255,8 +254,18 @@ def sync(source, dest):
 ----
 ====
 
+<1> The code to build up the dictionary of paths and hashes is now trivially
+    easy to write.
 
-and now the tests are easier too
+<2> The core of our "business logic", which says, given these two sets of
+    hashes and filenames, what should we copy/move/delete?  takes simple
+    data structures and returns simple data structures
+
+<3> And our top-level module now contains almost now logic whatseover
+
+
+We can now write tests much more easily:
+
 
 [[id_here]]
 .Nicer looking tests.
@@ -281,8 +290,8 @@ and now the tests are easier too
 
 
 Because we've disentangled the logic of our program - the code for identifying
-changes - from the low-level details of IO, we can easily test the code.
+changes - from the low-level details of IO, we can easily test the core of our code.
 
 
-TODO: use DI instead?
+TODO: functional core imperative shell vs DI
 TODO: discuss possible bugs
