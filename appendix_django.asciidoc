@@ -98,10 +98,10 @@ def test_repository_can_retrieve_a_batch_with_allocations():
     repo = repository.BatchRepository()
     retrieved = repo.get('batch1')
 
-    assert retrieved.reference == 'batch1'
-    assert retrieved.sku == 'sku1'
-    assert retrieved._purchased_quantity == 100
-    assert retrieved.eta == None
+    expected = model.Batch('batch1', 'sku1', 100, eta=None)
+    assert retrieved == expected  # Batch.__eq__ only compares reference
+    assert retrieved.sku == expected.sku
+    assert retrieved._purchased_quantity == expected._purchased_quantity
     assert retrieved._allocations == {model.OrderLine('order1', 'sku1', 12)}
 ----
 ====
@@ -274,6 +274,7 @@ def start():
         yield _UnitOfWork()
     finally:
         transaction.rollback()  #<2>
+        transaction.set_autocommit(True)
 
 
 class _UnitOfWork:

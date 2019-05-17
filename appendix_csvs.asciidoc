@@ -45,7 +45,7 @@ def test_cli_app_reads_csvs_with_batches_and_orders_and_outputs_allocations(
         [order_ref, sku2, 12],
     ])
 
-    subprocess.run(['allocate-from-csv', orders_csv.parent])
+    run_cli_script(orders_csv.parent)
 
     expected_output_csv = orders_csv.parent / 'allocations.csv'
     with open(expected_output_csv) as f:
@@ -157,7 +157,7 @@ def test_cli_app_also_reads_existing_allocations_and_can_append_to_them(
         [new_order, sku, 7],
     ])
 
-    subprocess.run(['allocate-from-csv', orders_csv.parent])
+    run_cli_script(orders_csv.parent)
 
     expected_output_csv = orders_csv.parent / 'allocations.csv'
     with open(expected_output_csv) as f:
