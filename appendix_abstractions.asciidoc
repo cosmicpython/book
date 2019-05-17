@@ -57,248 +57,232 @@ function like md5 or SHA.
 A gallon of coffee later, we've got a working prototype, and it looks
 something like this:
 
-====
-[source,python]
-----
-
-import os
-import shutil
-
-def synchronise_dirs(source, dest):
-
-    source_contents = read_paths_and_hashes(source) #<1>
-    dest_contents = read_paths_and_hashes(dest)
-
-    for sha, filepath in dest_contents.items():
-        if sha not in source_contents: #<2>
-            sourcepath = os.path.join(source,filepath)
-            destpath = os.path.join(dest, filepath)
-
-            shutil.copyfile(sourcepath, destpath)
-
-        elif source_contents[sha] != dest_contents[sha]: #<3>
-            sourcepath = os.path.join(source, filepath)
-            destpath = os.path.join(dest, dest_contents[sha])
-
-            shutil.move(sourcepath, destpath)
-
-    for sha, filepath in dest_contents.items(): #<4>
-        if sha not in source_contents:
-            os.remove(filepath)
-----
-====
-
-<1> read_paths_and_hashes returns a dictionary of hashes to relative file
-    paths. This makes it easy for us to detect that a file exists in two
-    places.
-
-<2> First we copy any files that are missing from the destination.
-
-<3> Secondly we move any files that have a different relative path in the
-    source.
-
-<4> Lastly we delete any files that existed in the destination but not the
-    source.
-
-Let's take quick look at the source for read_paths_and_hashes
-
+[[sync_first_cut]]
+.Basic sync algorithm (sync.py)
 ====
 [source,python]
 ----
 import hashlib
 import os
+import shutil
+from pathlib import Path
 
-BLOCKSIZE = 65536
+def sync(source, dest):
+    source_hashes = {}  #<1>
+    for folder, _, files in os.walk(source):
+        for fn in files:
+            source_hashes[hash_file(Path(folder) / fn)] = fn  #<1>
 
-def read_paths_and_hashes(root):
-    contents = os.walk(root) #<1>
-    result = dict()
+    seen = set()  #<5>
+    for folder, _, files in os.walk(dest):
+        for fn in files:
+            dest_path = Path(folder) / fn
+            dest_hash = hash_file(dest_path)
+            seen.add(dest_hash)
 
-    for path, dirs, files in contents:
-        for f in files:
-            hasher = hashlib.sha1() #<2>
-            fullpath = os.path.join(path, f)
+            if dest_hash not in source_hashes:
+                dest_path.remove()  #<3>
+            elif dest_hash in source_hashes and fn != source_hashes[dest_hash]:
+                shutil.move(dest_path, Path(folder) / source_hashes[dest_hash])  #<4>
 
-            with open(fullpath, "rb") as file:
-                buf = file.read(BLOCKSIZE)
-                while len(buf) > 0:
-                    hasher.update(buf)
-                    buf = file.read(BLOCKSIZE)
-            result[hasher.hexdigest()] = f #<3>
-    return result
+    for src_hash, fn in source_hashes.items():
+        if src_hash not in seen:
+            shutil.copy(source / fn, dest / fn)  #<5>
 ----
 ====
 
-<1> os.walk does a recursive walk of the directory and returns all the
-    files and directors it contains.
+<1> We first walk the source folder and build up a dictionary of hashes to
+    relative file paths.
 
-<2> We use a SHA1 hash to fingerprint each file.
+<2> We then walk the target folder and hash its files, in order to determine
 
-<3> And we compose a dictionary where the key is the hash, and the value is
-    the path of the file relative to the root directory.
+<3> If there are any hashes we don't recognise, we delete the file,
 
-Fantastic! We have some code and it _looks_ okay, but before we run it on our
-hard drive, maybe we should test it?  How do we go about testing this code?
+<3> Or if there is a hash we recognise but the filename doesn't match, we
+    do a rename.
 
+<4> Finally we run through any files in the source that we haven't seen
+    in the destination and we copy them.
+
+
+`hash_file` just returns the SHA-1 hash for a given path:
+
+[[hash_file]]
+.Listing title
 ====
 [source,python]
 ----
+BLOCKSIZE = 65536
 
-import tempfile
-import os
+def hash_file(path):
+    hasher = hashlib.sha1() #<2>
+    with path.open("rb") as file:
+        buf = file.read(BLOCKSIZE)
+        while buf:
+            hasher.update(buf)
+            buf = file.read(BLOCKSIZE)
+    return hasher.hexdigest()
+----
+====
 
+
+Fantastic! We have some code and it _looks_ okay, but before we run it on our
+hard drive, maybe we should test it?  How do we go about testing this sort of thing?
+
+
+[[ugly_sync_tests]]
+.Some end-to-end tests (test_sync.py)
+====
+[source,python]
+----
 def test_when_a_file_exists_in_the_source_but_not_the_destination():
-    source = tempfile.mkdtemp() #<1>
-    dest = tempfile.mkdtemp()
+    try:
+        source = Path(tempfile.mkdtemp())
+        dest = Path(tempfile.mkdtemp())
 
-    content = "I am a very useful file"
-    filepath = os.path.join(source, "my-file")
+        content = "I am a very useful file"
+        (source / 'my-file').write_text(content)
 
-    with open(filepath, "w") as f: #<2>
-        f.write(content)
+        sync(source, dest)
 
-    synchronise_dirs(source, dest)
+        expected_path = dest /  'my-file'
+        assert expected_path.exists()
+        assert expected_path.read_text() == content
 
-    expected_path = os.path.join(dest, "my-file")
-
-    assert os.path.isfile(expected_path) #<3>
-    with open(expected_path, "r") as f:
-        assert f.read() == content #<4>
-
-    os.remove(source) #<5>
-    os.remove(dest)
+    finally:
+        shutil.rmtree(source) #<5>
+        shutil.rmtree(dest)
 
 
 def test_when_a_file_has_been_renamed_in_the_source():
-    source = tempfile.mkdtemp()
-    dest = tempfile.mkdtemp()
+    try:
+        source = Path(tempfile.mkdtemp())
+        dest = Path(tempfile.mkdtemp())
 
-    content = "I am a file that was renamed"
+        content = "I am a file that was renamed"
+        source_path = source / 'source-filename'
+        old_dest_path = dest / 'dest-filename'
+        expected_dest_path = dest / 'source-filename'
+        source_path.write_text(content)
+        old_dest_path.write_text(content)
 
-    source_file_path = os.path.join(source, "source-file")
-    original_dest_path = os.path.join(dest, "dest-file")
-    expected_dest_path = os.path.join(dest, "source-file")
+        sync(source, dest)
 
-    with open(source_file_path, "w") as f:
-        f.write(content)
+        assert old_dest_path.exists() is False
+        assert expected_dest_path.read_text() == content
 
-    with open(original_dest_path, "w") as f:
-        f.write(content)
 
-    synchronise_dirs(source, dest)
-
-    assert not os.path.isfile(original_dest_path) #<6>
-    with open(expected_dest_path, "r") as f:
-        assert f.read() == content
-
-    os.remove(source)
-    os.remove(dest)
-
+    finally:
+        shutil.rmtree(source)
+        shutil.rmtree(dest)
 ----
 ====
 
 Wowsers, that's a lot of setup for two very simple cases! The problem is that
 our domain logic "figure out the difference between two directories" is tightly
 coupled to the IO code. We can't run our difference algorithm without calling
-the os, shutil, and hashlib modules.
+the pathlib, shutil, and hashlib modules.
 
-Our high-level code is coupled to low-level details, and its making life hard.
+Our high-level code is coupled to low-level details, and it's making life hard.
 As the scenarios we consider get more complex, our tests will get more unwieldy.
-We can definitely refactor these tests (see the appendix for some ideas) but
-what would our code look like if we removed those dependencies?
+We can definitely refactor these tests (some of the cleanup could go into pytest
+fixtures for example) but as long as we're doing filesystem operations, they're
+going to stay slow and hard to read and write.
+
+What could we do to rewrite our code to make it more testable?
 
 Firstly we need to think about what our code needs from the filesystem.
 Reading through the code, there are really three distinct things happening.
 
-1. We interrogate the filesystem and produce a dict of hashes and filepaths.
+1. We interrogate the filesystem using `os.walk` and determine hashes for a
+   series of paths. This is actually very similar in both the source and the
+   destination cases.
+
 2. We decide a file is new, renamed, or redundant.
-3. We move, delete, or copy files to match the source.
 
-The first responsibility is already taken care of by the read_paths_and_hashes
-function. The second and third are coupled together. We could split these out
-in a number of different ways, but we're going to choose something unintuitive.
+3. We copy, move, or delete, files to match the source.
 
-We'll rewrite the synchronise_dirs function to return a list of _actions_ that
-we want to take. Separately we'll write a function that takes a list of actions
-and executes them on a file system.
+What could we do to abstract out the filesystem in each case?
 
 
+* a dictionary of hashes to paths
+* a list of actions, which we can represent using 3-tuples of strings, eg
+    "copy sourcepath destpath" or "move old new"
 
+
+[[id_here]]
+.Listing title
 ====
 [source,python]
 ----
-
-class SyncFile:
-
-    def __init__(self, path, shasum):
-        self.path = path
-        self.shasum = shasum
-
-    def __hash__(self):
-        return self.shasum
-
-    def under(self, root):
-        return os.path.join(root, self.path)
-
-    def matches(self, other):
-        return self.path == other.path
+def read_paths_and_hashes(root):
+    hashes = {}
+    for folder, _, files in os.walk(root):
+        for fn in files:
+            fullpath = Path(folder) / fn
+            hashes[hash_file(fullpath)] = fn #<3>
+    return hashes
 
 
-def synchronise_dirs(reader, apply_func, source_root, dest_root):
+def determine_actions(src_hashes, dst_hashes, src_folder, dst_folder):
+    for sha, filename in src_hashes.items():
+        if sha not in dst_hashes: #<2>
+            sourcepath = src_folder / filename
+            destpath = dst_folder / filename
+            yield 'copy', sourcepath, destpath
 
-    source = reader(source_root)
-    dest = reader(dest_root)
+        elif dst_hashes[sha] != filename: #<3>
+            olddestpath = dst_folder / dst_hashes[sha]
+            newdestpath = dst_folder / filename
+            yield 'move', olddestpath, newdestpath
 
-    for file in dest:
-        if file not in source:
-           apply_func(("DELETE", file.path))
-
-    for file in source:
-        if file not in dest:
-            apply_func(("COPY", file.under(source_root), file.under(dest_root)))
-        elif not file.matches(dest[file]):
-            apply_func(("MOVE", dest[file].under(dest_root), file_under(dest_root))
-
-
-def test_when_a_file_exists_in_the_source_but_not_the_destination():
-
-    source = {"sha1": "my-file" }
-    dest = {}
-    actions = []
-
-    reader = [source, dest]
-    synchronise_dirs(reader.pop, actions.append, "/source", "/dest")
-
-    assert actions = [("COPY", "/source/my-file", "/dest/my-file")]
+    for sha, filename in dst_hashes.items(): #<4>
+        if sha not in src_hashes:
+            yield 'delete', dst_folder / filename
 
 
-def test_when_a_file_has_been_renamed_in_the_source():
-
-    source = {"sha1": "renamed-file" }
-    dest = {"sha1": "original-file" }
-    actions = []
-
-    reader = [source, dest]
-    synchronise_dirs(reader.pop, actions.append, "/source", "/dest")
-
-    assert actions = [("MOVE", "/dest/original-file", "/dest/renamed-file")]
-
+def sync(source, dest):
+    source_hashes = read_paths_and_hashes(source)
+    dest_hashes = read_paths_and_hashes(dest)
+    actions = determine_actions(source_hashes, dest_hashes, source, dest)
+    for action, *paths in actions:
+        if action == 'copy':
+            shutil.copyfile(*paths)
+        if action == 'move':
+            shutil.move(*paths)
+        if action == 'delete':
+            os.remove(paths[0])
 ----
 ====
 
+
+and now the tests are easier too
+
+[[id_here]]
+.Nicer looking tests.
+====
+[source,python]
+----
+    @staticmethod
+    def test_when_a_file_exists_in_the_source_but_not_the_destination():
+        src_hashes = {'hash1': 'fn1'}
+        dst_hashes = {}
+        actions = list(determine_actions(src_hashes, dst_hashes, Path('/src'), Path('/dst')))
+        assert actions == [('copy', Path('/src/fn1'), Path('/dst/fn1'))]
+
+    @staticmethod
+    def test_when_a_file_has_been_renamed_in_the_source():
+        src_hashes = {'hash1': 'fn1'}
+        dst_hashes = {'hash1': 'fn2'}
+        actions = list(determine_actions(src_hashes, dst_hashes, Path('/src'), Path('/dst')))
+        assert actions == [('move', Path('/dst/fn2'), Path('/dst/fn1'))]
+----
+====
+
+
 Because we've disentangled the logic of our program - the code for identifying
-changes - from the low-level details of IO, we can easily test the code. All we
-need to do is plug in two functions - one for generating hashes and file names,
-and the other for executing the resulting actions list.
+changes - from the low-level details of IO, we can easily test the code.
 
-This easier testing isn't the only benefit here, though. Consider a new feature
-requirement: we would like to add a "dry-run" mode to our program. If a flag is
-passed on the command line, then our program should output the changes it will
-make, but not actually execute any of them.
 
-Which of the two versions is easier to extend in this way?
-
-TODO: continue example to make the point.
-
-TODO: investigate using `pathlib` to make it all a bit easier to read?
-
+TODO: use DI instead?
+TODO: discuss possible bugs
