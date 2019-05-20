@@ -7,9 +7,8 @@
 
 ## Table of Contents
 
-O'Reilly have generously allowed us to publish this book under a [CC license](license.txt),
-and while it's still under construction you can read it here.  In return, pull requests,
-typofixes, and more substantial feedback + suggestions are enthusiastically solicited.
+O'Reilly have generously said that we will be able to publish this book under a [CC license](license.txt),
+In the meantime, pull requests, typofixes, and more substantial feedback + suggestions are enthusiastically solicited.
 
 | Chapter |       |
 | ------- | ----- |
