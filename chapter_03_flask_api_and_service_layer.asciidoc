@@ -20,9 +20,9 @@ plan:
   Build some service-layer tests and show how they can use the
   FakeRepository.
 
-* Show how expressing our service layer functions in terms of
-  primitives allows the service-layer's users (our tests and our
-  flask API) to be decoupled from the model layer.
+* Experiment with different types of parameters for our service layer
+  functions; show that using primitive data types allows the service-layer's
+  clients (our tests and our flask API) to be decoupled from the model layer.
 
 * Add an extra service called `add_stock` so that our service-layer
   tests and end-to-end tests no longer need to go directly to the
@@ -263,41 +263,9 @@ web API endpoint (you'd need them if you were building a CLI for example, see
 end-to-end tests.
 
 It often makes sense to split out a "service layer", sometimes called
-"orchestration layer" or "use case layer".  And our `FakeRepository`
-will come in very useful for testing it with nice, fast unit tests:
+"orchestration layer" or "use case layer".
 
-[[first_services_tests]]
-.Unit testing with fakes at the services layer (test_services.py)
-====
-[source,python]
-[role="non-head"]
-----
-def test_returns_allocation():
-    line = model.OrderLine('o1', 'sku1', 10)
-    batch = model.Batch('b1', 'sku1', 100, eta=None)
-    repo = FakeRepository([batch])
-
-    result = services.allocate(line, repo, FakeSession())
-    assert result == 'b1'
-
-
-def test_error_for_invalid_sku():
-    line = model.OrderLine('o1', 'nonexistentsku', 10)
-    batch = model.Batch('b1', 'actualsku', 100, eta=None)
-    repo = FakeRepository([batch])
-
-    with pytest.raises(services.InvalidSku) as ex:
-        services.allocate(line, repo, FakeSession())
-
-    assert 'Invalid sku nonexistentsku' in str(ex)
-----
-====
-
-
-Alongside `FakeRepository`, we also build `FakeSession` to fake out the database
-session. (The fake session is only a temporary solution.  We'll get rid of
-it and make things even nicer in the next chapter, <<chapter_04_uow>>)
-
+Do you remember the `FakeRepository` that we prepared in the last chapter?
 
 [[fake_repo]]
 .Our fake repository (test_services.py)
@@ -311,8 +279,55 @@ class FakeRepository(set):
 
     def list(self):
         return list(self)
+----
+====
+
+Here's where it will come in useful; it lets us test our service layer with
+nice, fast unit tests:
 
 
+[[first_services_tests]]
+.Unit testing with fakes at the services layer (test_services.py)
+====
+[source,python]
+[role="non-head"]
+----
+def test_returns_allocation():
+    line = model.OrderLine('o1', 'sku1', 10)
+    batch = model.Batch('b1', 'sku1', 100, eta=None)
+    repo = FakeRepository([batch])  #<1>
+
+    result = services.allocate(line, repo, FakeSession())  #<2><3>
+    assert result == 'b1'
+
+
+def test_error_for_invalid_sku():
+    line = model.OrderLine('o1', 'nonexistentsku', 10)
+    batch = model.Batch('b1', 'actualsku', 100, eta=None)
+    repo = FakeRepository([batch])  #<1>
+
+    with pytest.raises(services.InvalidSku) as ex:
+        services.allocate(line, repo, FakeSession())  #<2><3>
+
+    assert 'Invalid sku nonexistentsku' in str(ex)
+----
+====
+
+<1> `FakeRepository` (code below) holds the `Batch` objects that will be used
+    by our test.
+
+<2> Our services module (_services.py_) will define an `allocate()`
+    function. It will sit between our `allocate_endpoint()` in the API
+    layer and the `allocate()` domain service from our domain model.
+
+<3> We also need a `FakeSession` to fake out the database session, see below
+
+
+[[fake_session]]
+.A fake database session (test_services.py)
+====
+[source,python]
+----
 class FakeSession():
     committed = False
 
@@ -321,9 +336,10 @@ class FakeSession():
 ----
 ====
 
-And that lets us migrate a third test from the E2E layer, the one that
-checks that we do a commit:
+(The fake session is only a temporary solution.  We'll get rid of it and make
+things even nicer in the next chapter, <<chapter_04_uow>>)
 
+The fake `.commit()` also lets us migrate a third test from the E2E layer:
 
 
 [[second_services_test]]
@@ -524,6 +540,18 @@ terms of the service layer.
 [source,python]
 [role="skip"]
 ----
+# model-layer test:
+def test_prefers_warehouse_batches_to_shipments():
+    warehouse_batch = Batch('wh-batch', 'sku1', 100, eta=None)
+    shipment_batch = Batch('sh-batch', 'sku1', 100, eta=tomorrow)
+    line = OrderLine('oref', 'sku1', 10)
+
+    allocate(line, [warehouse_batch, shipment_batch])
+
+    assert warehouse_batch.available_quantity == 90
+    assert shipment_batch.available_quantity == 100
+
+# domain-layer test:
 def test_prefers_warehouse_batches_to_shipments():
     warehouse_batch = Batch('wh-batch', 'sku1', 100, eta=None)
     shipment_batch = Batch('sh-batch', 'sku1', 100, eta=tomorrow)

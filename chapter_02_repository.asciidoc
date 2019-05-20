@@ -655,11 +655,14 @@ class FakeRepository(set):
 
     def get(self, reference):
         return next(obj for obj in self if obj.reference == reference)
+
+    def list(self):
+        return list(self)
 ----
 ====
 
 Because we subclass `set` we get the `.add()` method for free, and
-`.get()` is a one-liner.
+`.get()` and `.list()` are one-liners.
 
 Using a fake repo in tests is really easy, and we have a simple
 abstraction that's easy to use and reason about:
