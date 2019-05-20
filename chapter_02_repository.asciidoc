@@ -520,6 +520,7 @@ def test_repository_can_save_a_batch(session):
 //an expectation in flask that all database changes for a given
 //request/response cycle happen in a single transaction and are committed at
 //the end? It feels like it goes against our idea of an ideal object repository
+// (this question does get answered in chapter 4...)
 
 The next test involves retrieving batches and allocations so it's more
 complex:

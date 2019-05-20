@@ -150,7 +150,7 @@ class FakeUnitOfWork:
 
 def test_add_batch():
     uow = FakeUnitOfWork()
-    start_uow = lambda: nullcontext(uow)
+    start_uow = lambda: nullcontext(uow)  #<3>
     services.add_batch('b1', 'sku1', 100, None, start_uow)
     assert uow.batches.get('b1') is not None
     assert uow.committed
@@ -173,6 +173,10 @@ def test_allocate_returns_allocation():
     a substantial improvement because we're now faking out
     code that we wrote, rather than 3rd party code.  Some
     people say https://github.com/testdouble/contributing-tests/wiki/Don%27t-mock-what-you-don%27t-own["don't mock what you don't own"].
+
+<3> `contextlib.nullcontext` is a standard library helper
+    that builds a do-nothing context manager to return
+    an object.
 
 
 TIP: See the end of <<chapter_06_events_and_message_bus>> for a few examples
@@ -321,11 +325,11 @@ Supposing we want to be able to deallocate and then reallocate orders?
 ----
 def reallocate(line: OrderLine, start_uow) -> str:
     with start_uow() as uow:
-        product = uow.products.get(sku=line.sku)
-        if product is None:
+        batch = uow.batches.get(sku=line.sku)
+        if batch is None:
             raise InvalidSku(f'Invalid sku {line.sku}')
-        product.deallocate(line)  #<1>
-        product.allocate(line)  #<2>
+        batch.deallocate(line)  #<1>
+        allocate(line)  #<2>
         uow.commit()
 ----
 ====
