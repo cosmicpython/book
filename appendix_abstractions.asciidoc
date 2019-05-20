@@ -138,7 +138,7 @@ def sync(source, dest):
 `hash_file` just returns the SHA-1 hash for a given path:
 
 [[hash_file]]
-.Listing title
+.Hashing a file (sunc.py)
 ====
 [source,python]
 ----
@@ -263,7 +263,7 @@ what _abstraction_ of filesystem actions will happen?"
 
 
 [[id_here]]
-.Listing title
+.Simplified inputs and outputs in our tests (test_sync.py)
 ====
 [source,python]
 ----
@@ -287,24 +287,28 @@ what _abstraction_ of filesystem actions will happen?"
 That's all very well, but how do we _actually_ write those new
 tests, and how do we change our implementation to make it all work?
 
-There are essentially two ways.  The first is to try and split out
-the core of our "business logic" into a functional core and test
-that directly, pushing the I/O out to a thin, imperative shell
-which we can either test with (few) end to end tests, or make simple
-enough that we're happy to not test at all.
+There are essentially two ways.  The first is to try and split out the core of
+our "business logic" into a functional core and test that directly, pushing the
+I/O out to a thin, imperative shell which we can either test with (few) end to
+end tests, or make simple enough that we're happy to not test at all.
 
 The second way would be to expose the IO dependencies in our top-level
-function, and use dependency injection to swap out stub versions of
-our abstraction for the tests, leaving the real versions for the real
-code.
+function, and use dependency injection to swap out stub versions of our
+abstraction for the tests, leaving the real versions for the real code.
 
 Let's see them in turn.
 
 
-==== Option 1 - Functional Core, Imperative Shell
+==== Option 1 - Functional Core, Imperative Shell. Ish.
+
+Let's call this the "Harry Way".  FCIS is probably a bit of an aspirational
+name, in fact the point is not to have a pure-functional solution in the 
+sense of not-using-classes, but more in the sense of having no (or minimal)
+side-effects.  The aim is to split out a core of business logic with minimal or
+no dependencies, and test that separately from the rest of our system.
 
 [[three_parts]]
-.Listing title
+.Split our code into three  (sunc.py)
 ====
 [source,python]
 ----
@@ -360,7 +364,7 @@ def sync(source, dest):  #<3>
 Our tests now act directly on the `determine_actions()` function:
 
 
-[[id_here]]
+[[harry_tests]]
 .Nicer looking tests.
 ====
 [source,python]
@@ -385,6 +389,88 @@ Our tests now act directly on the `determine_actions()` function:
 Because we've disentangled the logic of our program - the code for identifying
 changes - from the low-level details of IO, we can easily test the core of our code.
 
+==== Dependency Injection
 
-TODO: functional core imperative shell vs DI
-TODO: discuss possible bugs
+Let's call this the "Bob way", and it's about making dependencies explicit and
+modifiable:
+
+[[di_version]]
+.Explicit dependencies]
+====
+[source,python]
+----
+def synchronise_dirs(reader, apply_func, source_root, dest_root):  #<1>
+    source_hashes = reader(source_root)  #<2>
+    dest_hashes = reader(dest_root)  #<2>
+
+    for sha, filename in src_hashes.items():
+        if sha not in dst_hashes:
+            sourcepath = src_folder / filename
+            destpath = dst_folder / filename
+            apply_func('copy', sourcepath, destpath)  #<3>
+
+        elif dst_hashes[sha] != filename:
+            olddestpath = dst_folder / dst_hashes[sha]
+            newdestpath = dst_folder / filename
+            apply_func('move', olddestpath, newdestpath)  #<3>
+
+    for sha, filename in dst_hashes.items():
+        if sha not in src_hashes:
+            apply_func('delete', dst_folder / filename)  #<3>
+----
+====
+
+<1> Our top-level function now exposes two new dependencies, a `reader` and an `apply_func`
+<2> We invoke the `reader` to produce our dict-abstraction of the filesystems
+<3> And we invoke the `apply_func` using our action-abstraction for the actions we want to apply.
+
+
+[[bob_tests]]
+.Listing title
+====
+[source,python]
+----
+def test_when_a_file_exists_in_the_source_but_not_the_destination():
+    source = {"sha1": "my-file" }
+    dest = {}
+    actions = []
+
+    reader = [source, dest]
+    synchronise_dirs(reader.pop, actions.append, "/source", "/dest")
+
+    assert actions = [("COPY", "/source/my-file", "/dest/my-file")]
+
+
+def test_when_a_file_has_been_renamed_in_the_source():
+    source = {"sha1": "renamed-file" }
+    dest = {"sha1": "original-file" }
+    actions = []
+
+    reader = [source, dest]
+    synchronise_dirs(reader.pop, actions.append, "/source", "/dest")
+
+    assert actions = [("MOVE", "/dest/original-file", "/dest/renamed-file")]
+----
+====
+
+The advantage of this approach is that your tests act on the exact same function 
+that's used by your production code.  The disadvantage is that DI usually demands
+a bit more work on the part of the reader to understand what's going on.
+
+TODO: discuss the fact that our implementation is full of bugs and now we
+    can easily test for them.
+
+
+=== Wrap-up: "Depend on Abstractions".
+
+Choosing the right abstraction is very much an art. 
+
+* What's the simplest data structure I can use to represent these dependencies?
+* Where can I draw a line between my systems, where can I carve out a seam, to
+  stick that abstraction in?
+* What are the dependencies and what is the core business logic anyway?
+
+Practice makes less-imperfect!
+
+TODO: can we do a better wrap-up?
+
