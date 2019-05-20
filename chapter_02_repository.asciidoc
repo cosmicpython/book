@@ -123,6 +123,9 @@ Instead, as discussed in the prologue, we'll think of our model as being on the
 
 .Is this Ports and Adapters?
 *******************************************************************************
+If you've been reading around about architectural patterns, you may be asking
+yourself questions like this:
+
 > "Is this Ports and Adapters?  Or is it Hexagonal Architecture?  Is it the same
 > as the Onion architecture?  What about the Clean architecture?  What's a Port
 > and what's an Adapter?  Why do you people have so many words for the same thing?
@@ -265,6 +268,7 @@ def start_mappers():
 ====
 
 <1> The ORM imports the domain model, and not the other way around
+// (DS): I had to re-read that sentence a few times before it felt like it "flowed".
 
 <2> We define our database tables and columns using SQLAlchemy's abstractions.
 
@@ -509,6 +513,13 @@ def test_repository_can_save_a_batch(session):
 //using the repo to get it back) or else testing that the add method executed
 //the SQL I was expecting. I'm not saying this way is worse - maybe it's better
 //- but I'd like to know why! 
+
+
+//TODO (JM) In the Repository test for saving an object, it is not immediately
+//clear to me why the transaction is committed outside the add method. Is there
+//an expectation in flask that all database changes for a given
+//request/response cycle happen in a single transaction and are committed at
+//the end? It feels like it goes against our idea of an ideal object repository
 
 The next test involves retrieving batches and allocations so it's more
 complex:
