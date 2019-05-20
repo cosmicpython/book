@@ -25,18 +25,48 @@ change our systems.
 We can reduce the degree of coupling within a system by abstracting away the
 details.
 
-[[TODO: foo the poo]]
 
-[[TODO: Do the macGroo]]
+[[coupling_illustration1]]
+.Lots of coupling
+====
+[source,python]
+----
++--------+     +--------+
+|        |<--->|        |
+|        |<--->|        |
+| System |<--->| System |
+|   A    |<--->|   B    |
+|        |<--->|        |
+|        |<--->|        |
++--------+     +--------+
+----
+====
+
+[[coupling_illustration2]]
+.Less coupling
+====
+[source,python]
+----
++--------+     +--------+     +--------+
+|        |<--->|        |     |        |
+|        |<--->|        |     |        |
+| System |<--->|  Abs-  |     | System |
+|   A    |<--->|traction|<--->|   B    |
+|        |<--->|        |     |        |
+|        |<--->|        |     |        |
++--------+     +--------+     +--------+
+----
+====
+
 
 In both diagrams above, we have a pair of subsystems, with the one dependent on
-the other. In the first diagram, there is a high degree of coupling betweeen the
-two becausages of sausages. If we need to change feature B, there's a good
-chance that the change will ripple through to feature A.
+the other. In the first diagram, there is a high degree of coupling between the
+two because of reasons. If we need to change system B, there's a good
+chance that the change will ripple through to system A.
 
 In the second, though, we have reduced the degree of coupling by inserting a
 new, simpler, abstraction. This abstraction serves to protect us from change by
-hiding away the complex details of whatever feature B does.
+hiding away the complex details of whatever system B does.
 
 
 === Abstracting State Aids Testability
@@ -189,6 +219,8 @@ We can definitely refactor these tests (some of the cleanup could go into pytest
 fixtures for example) but as long as we're doing filesystem operations, they're
 going to stay slow and hard to read and write.
 
+=== Choosing the right abstraction(s)
+
 What could we do to rewrite our code to make it more testable?
 
 Firstly we need to think about what our code needs from the filesystem.
@@ -205,12 +237,73 @@ Reading through the code, there are really three distinct things happening.
 What could we do to abstract out the filesystem in each case?
 
 
-* a dictionary of hashes to paths
-* a list of actions, which we can represent using 3-tuples of strings, eg
-    "copy sourcepath destpath" or "move old new"
+For (1) and (2), we've already intuitively started using an abstraction, a
+dictionary of hashes to paths, and you may already have been thinking, "why not
+use build up a dictionary for the destination folder as well as the source,
+then we just compare two dicts".  That seems like a very nice way to abstract
+the current state of the filesystem.
+
+        source_files = {'hash1': 'path1', 'hash2': 'path2'}
+        dest_files = {'hash1': 'path1', 'hash2': 'pathX'}
+
+What about moving from step (2) to step (3)?  How can we abstract out the
+actual move/copy/delete filesystem interaction?  This one is perhaps a little
+less intuitive, but how about some sort of collection of strings?
+
+    ("COPY", "sourcepath", "destpath"),
+    ("MOVE", "old", "new"),
+
+
+Now we could write tests that just use 2 filesystem dicts as inputs, and
+expect lists of tuples of strings representing actions as outputs.
+
+Instead of saying "given this actual filesystem, when I run my function,
+check what actions have happened?" we say, "given this _abstraction_ of a filesystem,
+what _abstraction_ of filesystem actions will happen?"
 
 
 [[id_here]]
+.Listing title
+====
+[source,python]
+----
+    def test_when_a_file_exists_in_the_source_but_not_the_destination():
+        src_hashes = {'hash1': 'fn1'}
+        dst_hashes = {}
+        expected_actions = [('COPY', '/src/fn1', '/dst/fn1')]
+        ...
+
+    def test_when_a_file_has_been_renamed_in_the_source():
+        src_hashes = {'hash1': 'fn1'}
+        dst_hashes = {'hash1': 'fn2'}
+        expected_actions == [('MOVE', '/dst/fn2', '/dst/fn1')]
+        ...
+----
+====
+
+
+=== Implementing our chosen abstractions
+
+That's all very well, but how do we _actually_ write those new
+tests, and how do we change our implementation to make it all work?
+
+There are essentially two ways.  The first is to try and split out
+the core of our "business logic" into a functional core and test
+that directly, pushing the I/O out to a thin, imperative shell
+which we can either test with (few) end to end tests, or make simple
+enough that we're happy to not test at all.
+
+The second way would be to expose the IO dependencies in our top-level
+function, and use dependency injection to swap out stub versions of
+our abstraction for the tests, leaving the real versions for the real
+code.
+
+Let's see them in turn.
+
+
+==== Option 1 - Functional Core, Imperative Shell
+
+[[three_parts]]
 .Listing title
 ====
 [source,python]
@@ -264,7 +357,7 @@ def sync(source, dest):  #<3>
 <3> And our top-level module now contains almost now logic whatseover
 
 
-We can now write tests much more easily:
+Our tests now act directly on the `determine_actions()` function:
 
 
 [[id_here]]
