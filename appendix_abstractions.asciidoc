@@ -463,14 +463,20 @@ TODO: discuss the fact that our implementation is full of bugs and now we
 
 === Wrap-up: "Depend on Abstractions".
 
-Choosing the right abstraction is very much an art. 
+We'll see this idea come up again and again in the book: we can make our
+systems easier to test and maintain by simplifying the interface between our
+business logic and messy IO. Finding the right abstraction is tricky, but here's
+a few heuristics and questions to ask yourself:
 
-* What's the simplest data structure I can use to represent these dependencies?
+
+* Can I choose a familiar Python datastructure to represent the state of the
+  messy system, and try to imagine a single function that can return that
+  state.
 * Where can I draw a line between my systems, where can I carve out a seam, to
   stick that abstraction in?
 * What are the dependencies and what is the core business logic anyway?
 
 Practice makes less-imperfect!
 
-TODO: can we do a better wrap-up?
+//TODO: let's work on this wrap-up.
 
