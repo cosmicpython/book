@@ -14,7 +14,7 @@ In the meantime, pull requests, typofixes, and more substantial feedback + sugge
 | ------- | ----- |
 | [Preface](preface.asciidoc) | |
 | [**Part 1 Intro**](part1.asciidoc) | |
-| [Prologue](prologue.asciidoc)| |
+| [Prologue: Why do our designs go wrong?](prologue.asciidoc)| |
 | [Chapter 1: Domain Model](chapter_01_domain_model.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_01_domain_model)](https://travis-ci.org/python-leap/code) |
 | [Chapter 2: Repository](chapter_02_repository.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_02_repository)](https://travis-ci.org/python-leap/code) |
 | [Chapter 3: Flask API and Service Layer](chapter_03_flask_api_and_service_layer.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_03_flask_api_and_service_layer)](https://travis-ci.org/python-leap/code) |
