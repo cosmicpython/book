@@ -77,7 +77,7 @@ class Listing:
     contents: str
     classes: list
 
-    callouts = re.compile(r'  #?\(\d\)$', flags=re.MULTILINE)
+    callouts = re.compile(r'  #?(\(\d\) ?)+$', flags=re.MULTILINE)
     callouts_alone = re.compile(r'^\(\d\)$')
 
     @property
