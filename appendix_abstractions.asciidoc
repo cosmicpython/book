@@ -93,6 +93,7 @@ something like this:
 .Basic sync algorithm (sync.py)
 ====
 [source,python]
+[role="non-head"]
 ----
 import hashlib
 import os
@@ -119,7 +120,7 @@ def sync(source, dest):
 
     for src_hash, fn in source_hashes.items():
         if src_hash not in seen:
-            shutil.copy(source / fn, dest / fn)  #<5>
+            shutil.copy(Path(source) / fn, Path(dest) / fn)  #<5>
 ----
 ====
 
@@ -140,7 +141,7 @@ def sync(source, dest):
 `hash_file` just returns the SHA-1 hash for a given path:
 
 [[hash_file]]
-.Hashing a file (sunc.py)
+.Hashing a file (sync.py)
 ====
 [source,python]
 ----
@@ -169,32 +170,32 @@ hard drive, maybe we should test it?  How do we go about testing this sort of th
 ----
 def test_when_a_file_exists_in_the_source_but_not_the_destination():
     try:
-        source = Path(tempfile.mkdtemp())
-        dest = Path(tempfile.mkdtemp())
+        source = tempfile.mkdtemp()
+        dest = tempfile.mkdtemp()
 
         content = "I am a very useful file"
-        (source / 'my-file').write_text(content)
+        (Path(source) / 'my-file').write_text(content)
 
         sync(source, dest)
 
-        expected_path = dest /  'my-file'
+        expected_path = Path(dest) /  'my-file'
         assert expected_path.exists()
         assert expected_path.read_text() == content
 
     finally:
-        shutil.rmtree(source) #<5>
+        shutil.rmtree(source)
         shutil.rmtree(dest)
 
 
 def test_when_a_file_has_been_renamed_in_the_source():
     try:
-        source = Path(tempfile.mkdtemp())
-        dest = Path(tempfile.mkdtemp())
+        source = tempfile.mkdtemp()
+        dest = tempfile.mkdtemp()
 
         content = "I am a file that was renamed"
-        source_path = source / 'source-filename'
-        old_dest_path = dest / 'dest-filename'
-        expected_dest_path = dest / 'source-filename'
+        source_path = Path(source) / 'source-filename'
+        old_dest_path = Path(dest) / 'dest-filename'
+        expected_dest_path = Path(dest) / 'source-filename'
         source_path.write_text(content)
         old_dest_path.write_text(content)
 
