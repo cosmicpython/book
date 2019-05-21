@@ -191,9 +191,9 @@ Now we're looking at two more end-to-end tests:
 def test_400_message_for_out_of_stock(add_stock):
     sku, batch, order = random_ref('s'), random_ref('b'), random_ref('o')
     add_stock([
-        (batch, sku, 10, '2011-01-01'),
+        (batch, sku, 10, '2011-01-01'),  #<1>
     ])
-    data = {'orderid': order, 'sku': sku, 'qty': 20}
+    data = {'orderid': order, 'sku': sku, 'qty': 20}  #<1>
     url = config.get_api_url()
     r = requests.post(f'{url}/allocate', json=data)
     assert r.status_code == 400
@@ -203,7 +203,7 @@ def test_400_message_for_out_of_stock(add_stock):
 @pytest.mark.usefixtures('restart_api')
 def test_400_message_for_invalid_sku():
     sku, order = random_ref('s'), random_ref('o')
-    data = {'orderid': order, 'sku': sku, 'qty': 20}
+    data = {'orderid': order, 'sku': sku, 'qty': 20}  #<2>
     url = config.get_api_url()
     r = requests.post(f'{url}/allocate', json=data)
     assert r.status_code == 400
@@ -211,7 +211,9 @@ def test_400_message_for_invalid_sku():
 ----
 ====
 
-//TODO (DS) - not entirely clear what invalid means or how that test works
+<1> In the first test we're trying to allocate more units than we have in stock
+<2> In the second, the sku just doesn't exist (because we never called `add_stock`),
+    so it's invalid as far as our app is concerned.
 
 And, sure we could implement it in the Flask app too:
 
@@ -952,11 +954,11 @@ def test_happy_path_returns_201_and_allocated_batch():
 ====
 
 //TODO: (DS) I notice that we don't have the concept of a product that needs to
-//be added (it's implicit in the batch presumably). It would be good to get a
-//sense of how much this is because this is a simplified example and how much
-//it's a design principle. It is possible that the explanations of the first
-//few chapters would be better served by a simpler example. (E.g just have a
-//model of product, amount available and order placing). 
+// be added (it's implicit in the batch presumably). It would be good to get a
+// sense of how much this is because this is a simplified example and how much
+// it's a design principle. It is possible that the explanations of the first
+// few chapters would be better served by a simpler example. (E.g just have a
+// model of product, amount available and order placing). 
 
 === Wrap-up
 
