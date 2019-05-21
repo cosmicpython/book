@@ -59,7 +59,7 @@ database.
 === Applying the Dependency Inversion Principle to the Database
 
 As mentioned in <<part1_prologue>>, the "layered architecture" is a common
-approach to structuring an system that has a UI, some logic, and a database:  
+approach to structuring an system that has a UI, some logic, and a database:
 
 
 [[layered_architecture2]]
@@ -89,11 +89,11 @@ Model-View-Controller (MVC). In any case, the aim is to keep the layers
 separate (which is a good thing), and to have each layer depend only on the one
 below...
 
-But we want our domain model to have _no dependencies whatsoever_. We don't
-want infrastructure concerns bleeding over into our domain model and slowing
-down our unit tests or our ability to make changes.
-//TODO (DS) Is 'no dependencies whatsoever' an overstatement? E.g. there'd be
-//no problem depending on certain stdlib packages such as abc. 
+But we want our domain model to have __no dependencies whatsoever__footnote:[
+I suppose we mean, "no external dependencies".  Standard library dependencies are
+fine, depending on an ORM or a web framework is not].
+We don't want infrastructure concerns bleeding over into our domain model and
+slowing down our unit tests or our ability to make changes.
 
 Instead, as discussed in the prologue, we'll think of our model as being on the
 "inside", and dependencies flowing inwards to it;  what people sometimes call
@@ -105,16 +105,16 @@ Instead, as discussed in the prologue, we'll think of our model as being on the
 [role="skip"]
 [source,text]
 ----
-+------------------------+   
-|   Presentation Layer   |   
-+------------------------+   
-           |                 
-           V                 
++------------------------+
+|   Presentation Layer   |
++------------------------+
+           |
+           V
    +---------------------------------------------------+
    |                   Domain model                    |
    +---------------------------------------------------+
-                                        ^                 
-                                        |                 
+                                        ^
+                                        |
                                +-------------------+
                                |   Database Layer  |
                                +-------------------+
@@ -368,9 +368,9 @@ def allocate_endpoint():
 
     # extract order line from request
     line = OrderLine(
-        request.params['order_id'], 
-        request.params['sku'], 
-        request.params['qty'], 
+        request.params['order_id'],
+        request.params['sku'],
+        request.params['qty'],
     )
 
     # load all batches from the DB
@@ -428,35 +428,6 @@ using these methods for data access in our domain and our _service layer_. This
 self-imposed simplicity stops us from coupling our domain model to the database.
 //TODO what about delete and update?
 
-[[repository_pattern_diagram]]
-.Repository pattern
-====
-[role="skip"]
-[source,text]
-----
-TODO ok fix this diagram
-
-               +----------------------------+   
-               | Presentation Layer (Flask) |   
-               +----------------------------+   
-                             |                 
-                             V                 
-   +---------------------------------------------------+
-   |                   Service layer                   |
-   +---------------------------------------------------+
-             |                 
-             V
-   +-------------------+            +-------------------+
-   |   Repository      |   -->      |   Database        |
-   +-------------------+            +-------------------+
-             |                           |                 
-             V                           V                 
-   +---------------------------------------------------+
-   |                   Domain model                    |
-   +---------------------------------------------------+
-----
-====
-
 Whenever we introduce an architectural pattern in this book, we'll always be
 trying to ask: "what do we get for this?  And what does it cost us?". Rich
 Hickey once said "programmers know the benefits of everything and the tradeoffs
@@ -483,9 +454,39 @@ In addition, "Repository pattern" is so common in the DDD world that, if you
 do collaborate with programmers that have come to Python from the Java and C#
 worlds, they're likely to recognise it.
 
-As always we start with a test.  Unlike the ORM tests from earlier, these tests
-are good candidates for staying part of your codebase longer term, particularly
-if any parts of your domain model mean the object-relational map is nontrivial.
+[[repository_pattern_diagram]]
+.Repository pattern
+====
+[role="skip"]
+[source,text]
+----
+        +-----------------------------+
+        |      Presentation Layer     |
+        +-----------------------------+
+           |                      |
+           V                      V
++------------------+          +--------------+
+|   Domain Model   | <------- |  Repository  |
++------------------+          +--------------+
+           ^                      |
+           |                      V
+        +------------------------------+
+        |        Database Layer        |
+        +------------------------------+
+
+TODO: not sure if this diagram is helping.
+----
+====
+
+
+As always we start with a test. This would probably be classified as an
+"integration test", since we're checking that our code (the repository) is
+correctly integrated with the database;  hence, the tests tend to mix
+raw SQL with calls and assertions on our own code.
+
+TIP: Unlike the ORM tests from earlier, these tests are good candidates for
+    staying part of your codebase longer term, particularly if any parts of
+    your domain model mean the object-relational map is nontrivial.
 
 
 [[repo_test_save]]
@@ -497,30 +498,24 @@ def test_repository_can_save_a_batch(session):
     batch = model.Batch('batch1', 'sku1', 100, eta=None)
 
     repo = repository.BatchRepository(session)
-    repo.add(batch)
-    session.commit()
+    repo.add(batch)  #<1>
+    session.commit()  #<2>
 
     rows = list(session.execute(
-        'SELECT reference, sku, _purchased_quantity, eta FROM "batches"'
+        'SELECT reference, sku, _purchased_quantity, eta FROM "batches"'  #<3>
     ))
     assert rows == [('batch1', 'sku1', 100, None)]
 ----
 ====
 
-//TODO (DS) - Intuitively this test feels a little strange, mixing the add
-//method of the repo with raw SQL to check it's there. I would lean towards
-//either checking everything using its interface (i.e. adding to the repo, then
-//using the repo to get it back) or else testing that the add method executed
-//the SQL I was expecting. I'm not saying this way is worse - maybe it's better
-//- but I'd like to know why! 
+<1> `repo.add()` is the method under test here
 
+<2> We keep the `.commit()` outside of the repository, and make
+    it the responsibility of the caller.  There are pros and cons for
+    this, some of our reasons will become clearer when we get to
+    <<chapter_04_uow>>.
 
-//TODO (JM) In the Repository test for saving an object, it is not immediately
-//clear to me why the transaction is committed outside the add method. Is there
-//an expectation in flask that all database changes for a given
-//request/response cycle happen in a single transaction and are committed at
-//the end? It feels like it goes against our idea of an ideal object repository
-// (this question does get answered in chapter 4...)
+<3> And we use the raw SQL to verify that the right data has been saved.
 
 The next test involves retrieving batches and allocations so it's more
 complex:
@@ -532,7 +527,7 @@ complex:
 [source,python]
 ----
 def insert_order_line(session):
-    session.execute(
+    session.execute(  #<1>
         'INSERT INTO order_lines (orderid, sku, qty) VALUES ("order1", "sku1", 12)'
     )
     [[orderline_id]] = session.execute(
@@ -541,19 +536,19 @@ def insert_order_line(session):
     )
     return orderline_id
 
-def insert_batch(session, batch_id):  #<1>
+def insert_batch(session, batch_id):  #<2>
     ...
 
 def test_repository_can_retrieve_a_batch_with_allocations(session):
     orderline_id = insert_order_line(session)
     batch1_id = insert_batch(session, 'batch1')
     insert_batch(session, 'batch2')
-    insert_allocation(session, orderline_id, batch1_id)
+    insert_allocation(session, orderline_id, batch1_id)  #<3>
 
     repo = repository.BatchRepository(session)
     retrieved = repo.get('batch1')
 
-    expected = model.Batch('batch1', 'sku1', 100, eta=None)
+    expected = model.Batch('batch1', 'sku1', 100, eta=None)  #<3>
     assert retrieved == expected  # Batch.__eq__ only compares reference
     assert retrieved.sku == expected.sku
     assert retrieved._purchased_quantity == expected._purchased_quantity
@@ -561,21 +556,18 @@ def test_repository_can_retrieve_a_batch_with_allocations(session):
 ----
 ====
 
-<1> We'll spare you the details of the raw SQL for `insert_batch` and
-    `insert_allocation`.
+<1> This tests the read side, so the raw SQL is preparing data to be read
+    by the `repo.get()`
 
-//TODO (DS): This is hard to follow (particularly as we're not *that* familiar
-//with the data model). I've actually forgotten what a batch is, so I had to
-//flip back to remind myself. I think we need more help to understand what's
-//going on from a domain perspective. Maybe a table diagram, or at least
-//some comments, would allow a reader to skim it for understanding. 
+<2> We'll spare you the details of `insert_batch` and `insert_allocation`,
+    the point is to create a couple of different batches, and for the
+    batch we're interested in to have one existing order line allocated to it.
 
-//Picking a descriptive SKU (e.g. 'comfy-sofa') would make this a bit more fun to read. 
+<3> And that's what we verify here.
 
-// Personally I'd find ol_id or even order_line_id easier to read. Same with b1id - batch1_id would be easier.
-
+//TODO (DS): Picking a descriptive SKU (e.g. 'comfy-sofa') would make this a
+//bit more fun to read.
 // Worth explaining why we have to do a follow up query to get the id inserted?j
-
 // Why the underscore in _allocations here?
 
 Whether or not you painstakingly write tests for every model is a judgement
@@ -614,7 +606,7 @@ class BatchRepository:
 //abstraction. It's really important that readers understand that you've
 //already defined an interface (implicitly) which you're now implementing -
 //people might miss this. This might be a good point to discuss using an
-//abstract base class so that we know we're implementing the interface fully. 
+//abstract base class so that we know we're implementing the interface fully.
 
 And now our flask endpoint might look something like <<api_endpoint_with_repo>>:
 
@@ -641,7 +633,7 @@ Here's one of the biggest benefits of Repository pattern.
 
 
 //TODO (DS)As mentioned before, might be better to start with the fake before
-//mentioning sqlalchemy at all. 
+//mentioning sqlalchemy at all.
 
 
 [[fake_repository]]
