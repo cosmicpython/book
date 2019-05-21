@@ -268,7 +268,7 @@ It often makes sense to split out a "service layer", sometimes called
 Do you remember the `FakeRepository` that we prepared in the last chapter?
 
 [[fake_repo]]
-.Our fake repository (test_services.py)
+.Our fake repository, an in-memory collection of Batches (test_services.py)
 ====
 [source,python]
 ----
@@ -320,7 +320,7 @@ def test_error_for_invalid_sku():
     function. It will sit between our `allocate_endpoint()` in the API
     layer and the `allocate()` domain service from our domain model.
 
-<3> We also need a `FakeSession` to fake out the database session, see below
+<3> We also need a `FakeSession` to fake out the database session, see below:
 
 
 [[fake_session]]
@@ -358,6 +358,9 @@ def test_commits():
     assert session.committed is True
 ----
 ====
+
+
+==== A typical service function
 
 We'll get to a service function that looks something like <<service_function>>:
 
