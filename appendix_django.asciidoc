@@ -287,7 +287,6 @@ class _UnitOfWork:
         for batch in self.batches.seen:
             self.batches.update(batch)  #<3>
         transaction.commit()  #<2>
-        transaction.set_autocommit(False)
 ----
 ====
 
