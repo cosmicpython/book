@@ -2,9 +2,9 @@
 
 import subprocess
 from pathlib import Path
-from chapters import CHAPTERS
+from chapters import CHAPTERS, STANDALONE
 
-for chap in CHAPTERS:
+for chap in CHAPTERS + STANDALONE:
     subprocess.run(
         ['git', 'checkout', chap],
         cwd=Path(__file__).parent / 'code'
