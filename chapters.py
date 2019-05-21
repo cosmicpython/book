@@ -15,3 +15,7 @@ BRANCHES = {
     'appendix_csvs',
     'appendix_django',
 }
+
+STANDALONE = [
+    'appendix_abstractions',
+]

@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from lxml import html
 import pytest
-from chapters import CHAPTERS, BRANCHES
+from chapters import CHAPTERS, BRANCHES, STANDALONE
 
 
 
@@ -39,7 +39,7 @@ def test_each_chapter_follows_the_last(chapter):
     assert f'{previous})' in git_log(chapter), f'{chapter} did not follow {previous}'
 
 
-@pytest.mark.parametrize('chapter', CHAPTERS)
+@pytest.mark.parametrize('chapter', CHAPTERS + STANDALONE)
 def test_chapter(chapter):
     for listing in parse_listings(chapter):
         check_listing(listing, chapter)
