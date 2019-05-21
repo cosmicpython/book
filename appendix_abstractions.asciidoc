@@ -148,7 +148,7 @@ def sync(source, dest):
 BLOCKSIZE = 65536
 
 def hash_file(path):
-    hasher = hashlib.sha1() #<2>
+    hasher = hashlib.sha1()  #<2>
     with path.open("rb") as file:
         buf = file.read(BLOCKSIZE)
         while buf:
@@ -167,6 +167,7 @@ hard drive, maybe we should test it?  How do we go about testing this sort of th
 .Some end-to-end tests (test_sync.py)
 ====
 [source,python]
+[role="non-head"]
 ----
 def test_when_a_file_exists_in_the_source_but_not_the_destination():
     try:
@@ -312,10 +313,23 @@ side-effects.  The aim is to split out a core of business logic with minimal or
 no dependencies, and test that separately from the rest of our system.
 
 [[three_parts]]
-.Split our code into three  (sunc.py)
+.Split our code into three  (sync.py)
 ====
 [source,python]
 ----
+def sync(source, dest):  #<3>
+    source_hashes = read_paths_and_hashes(source)
+    dest_hashes = read_paths_and_hashes(dest)
+    actions = determine_actions(source_hashes, dest_hashes, source, dest)
+    for action, *paths in actions:
+        if action == 'copy':
+            shutil.copyfile(*paths)
+        if action == 'move':
+            shutil.move(*paths)
+        if action == 'delete':
+
+...
+
 def read_paths_and_hashes(root):  #<1>
     hashes = {}
     for folder, _, files in os.walk(root):
@@ -327,31 +341,18 @@ def read_paths_and_hashes(root):  #<1>
 def determine_actions(src_hashes, dst_hashes, src_folder, dst_folder):  #<2>
     for sha, filename in src_hashes.items():
         if sha not in dst_hashes:
-            sourcepath = src_folder / filename
-            destpath = dst_folder / filename
+            sourcepath = Path(src_folder) / filename
+            destpath = Path(dst_folder) / filename
             yield 'copy', sourcepath, destpath
 
         elif dst_hashes[sha] != filename:
-            olddestpath = dst_folder / dst_hashes[sha]
-            newdestpath = dst_folder / filename
+            olddestpath = Path(dst_folder) / dst_hashes[sha]
+            newdestpath = Path(dst_folder) / filename
             yield 'move', olddestpath, newdestpath
 
     for sha, filename in dst_hashes.items():
         if sha not in src_hashes:
             yield 'delete', dst_folder / filename
-
-
-def sync(source, dest):  #<3>
-    source_hashes = read_paths_and_hashes(source)
-    dest_hashes = read_paths_and_hashes(dest)
-    actions = determine_actions(source_hashes, dest_hashes, source, dest)
-    for action, *paths in actions:
-        if action == 'copy':
-            shutil.copyfile(*paths)
-        if action == 'move':
-            shutil.move(*paths)
-        if action == 'delete':
-            os.remove(paths[0])
 ----
 ====
 
@@ -369,7 +370,7 @@ Our tests now act directly on the `determine_actions()` function:
 
 
 [[harry_tests]]
-.Nicer looking tests.
+.Nicer looking tests (test_sync.py)
 ====
 [source,python]
 ----
@@ -399,9 +400,10 @@ Let's call this the "Bob way", and it's about making dependencies explicit and
 modifiable:
 
 [[di_version]]
-.Explicit dependencies]
+.Explicit dependencies (sync.py)
 ====
 [source,python]
+[role="skip"]
 ----
 def synchronise_dirs(reader, apply_func, source_root, dest_root):  #<1>
     source_hashes = reader(source_root)  #<2>
@@ -424,6 +426,8 @@ def synchronise_dirs(reader, apply_func, source_root, dest_root):  #<1>
 ----
 ====
 
+//TODO: test this listing
+
 <1> Our top-level function now exposes two new dependencies, a `reader` and an `apply_func`
 <2> We invoke the `reader` to produce our dict-abstraction of the filesystems
 <3> And we invoke the `apply_func` using our action-abstraction for the actions we want to apply.
@@ -433,6 +437,7 @@ def synchronise_dirs(reader, apply_func, source_root, dest_root):  #<1>
 .Listing title
 ====
 [source,python]
+[role="skip"]
 ----
 def test_when_a_file_exists_in_the_source_but_not_the_destination():
     source = {"sha1": "my-file" }
