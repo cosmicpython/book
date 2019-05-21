@@ -352,10 +352,34 @@ class Batch:
 ----
 ====
 
+
 //TODO: (DS)  self._allocations: Set[OrderLine] = set() 
 // yuck yuck yuck.
 
 //TODO: get rid of those -> Nones while we're at it.  yuck
+
+
+[[model_diagram]]
+.Our Model
+====
+[source,text]
+----
+
++=====================+
+| Batch               |
++---------------------+
+| reference           |
+| sku                 |
+| _purchased_quantity |
+|                     |       +=============+
+| allocations -------------->>| OrderLine   |
++---------------------+       +-------------+
+                              | order_id    |
+                              | sku         |
+                              | qty         |
+                              +-------------+
+----
+====
 
 Now we're getting somewhere! A batch now keeps track of a set of allocated
 OrderLine objects. When we allocate, if we have enough available quantity, we
