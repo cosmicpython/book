@@ -564,8 +564,6 @@ def test_repository_can_retrieve_a_batch_with_allocations(session):
 <1> We'll spare you the details of the raw SQL for `insert_batch` and
     `insert_allocation`.
 
-//TODO (HP) that assert retrieved == expected doesnt actually work. fix.
-
 //TODO (DS): This is hard to follow (particularly as we're not *that* familiar
 //with the data model). I've actually forgotten what a batch is, so I had to
 //flip back to remind myself. I think we need more help to understand what's
