@@ -17,7 +17,7 @@ In the meantime, pull requests, typofixes, and more substantial feedback + sugge
 | [Prologue: Why do our designs go wrong?](prologue.asciidoc)| |
 | [Chapter 1: Domain Model](chapter_01_domain_model.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_01_domain_model)](https://travis-ci.org/python-leap/code) |
 | [Chapter 2: Repository](chapter_02_repository.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_02_repository)](https://travis-ci.org/python-leap/code) |
-| [Chapter 3: Flask API and Service Layer](chapter_03_flask_api_and_service_layer.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_03_flask_api_and_service_layer)](https://travis-ci.org/python-leap/code) |
+| [Chapter 3: Flask API and Service Layer](chapter_03_service_layer.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_03_service_layer)](https://travis-ci.org/python-leap/code) |
 | [Chapter 4: Unit of Work](chapter_04_uow.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_04_uow)](https://travis-ci.org/python-leap/code) |
 | [Chapter 5: Aggregates](chapter_05_aggregate.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_05_aggregate)](https://travis-ci.org/python-leap/code) |
 | [**Part 2 Intro**](part2.asciidoc) | |
