@@ -29,7 +29,8 @@ details.
 [[coupling_illustration1]]
 .Lots of coupling
 ====
-[source,python]
+[source,text]
+[role="skip"]
 ----
 +--------+     +--------+
 |        |<--->|        |
@@ -45,7 +46,8 @@ details.
 [[coupling_illustration2]]
 .Less coupling
 ====
-[source,python]
+[source,text]
+[role="skip"]
 ----
 +--------+     +--------+     +--------+
 |        |<--->|        |     |        |
@@ -104,7 +106,7 @@ def sync(source, dest):
             source_hashes[hash_file(Path(folder) / fn)] = fn  #<1>
 
     seen = set()  #<5>
-    for folder, _, files in os.walk(dest):
+    for folder, _, files in os.walk(dest):  #<2>
         for fn in files:
             dest_path = Path(folder) / fn
             dest_hash = hash_file(dest_path)
@@ -128,10 +130,10 @@ def sync(source, dest):
 
 <3> If there are any hashes we don't recognise, we delete the file,
 
-<3> Or if there is a hash we recognise but the filename doesn't match, we
+<4> Or if there is a hash we recognise but the filename doesn't match, we
     do a rename.
 
-<4> Finally we run through any files in the source that we haven't seen
+<5> Finally we run through any files in the source that we haven't seen
     in the destination and we copy them.
 
 
@@ -209,7 +211,7 @@ def test_when_a_file_has_been_renamed_in_the_source():
 ====
 
 Wowsers, that's a lot of setup for two very simple cases! The problem is that
-our domain logic "figure out the difference between two directories" is tightly
+our domain logic, "figure out the difference between two directories", is tightly
 coupled to the IO code. We can't run our difference algorithm without calling
 the pathlib, shutil, and hashlib modules.
 
@@ -243,8 +245,8 @@ use build up a dictionary for the destination folder as well as the source,
 then we just compare two dicts".  That seems like a very nice way to abstract
 the current state of the filesystem.
 
-        source_files = {'hash1': 'path1', 'hash2': 'path2'}
-        dest_files = {'hash1': 'path1', 'hash2': 'pathX'}
+    source_files = {'hash1': 'path1', 'hash2': 'path2'}
+    dest_files = {'hash1': 'path1', 'hash2': 'pathX'}
 
 What about moving from step (2) to step (3)?  How can we abstract out the
 actual move/copy/delete filesystem interaction?  This one is perhaps a little
@@ -262,10 +264,11 @@ check what actions have happened?" we say, "given this _abstraction_ of a filesy
 what _abstraction_ of filesystem actions will happen?"
 
 
-[[id_here]]
+[[better_tests]]
 .Simplified inputs and outputs in our tests (test_sync.py)
 ====
 [source,python]
+[role="skip"]
 ----
     def test_when_a_file_exists_in_the_source_but_not_the_destination():
         src_hashes = {'hash1': 'fn1'}
