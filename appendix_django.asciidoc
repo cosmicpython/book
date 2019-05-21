@@ -50,10 +50,11 @@ package next to our main allocation code:
 
 === Repository pattern with Django
 
-I used a plugin called pytest-django (todo: link) to help with test database
-management.
+I used a plugin called
+https://github.com/pytest-dev/pytest-django[pytest-django] to help with test
+database management.
 
-rewriting the first repository test was a minimal change, just rewriting
+Rewriting the first repository test was a minimal change, just rewriting
 some raw SQL with a call to the Django ORM / Queryset language:
 
 
@@ -137,7 +138,7 @@ class BatchRepository:
 ====
 
 
-You can see that the implementation relies on the django models having
+You can see that the implementation relies on the Django models having
 some custom methods for translating to and from our domain model.
 
 
@@ -286,6 +287,7 @@ class _UnitOfWork:
         for batch in self.batches.seen:
             self.batches.update(batch)  #<3>
         transaction.commit()  #<2>
+        transaction.set_autocommit(False)
 ----
 ====
 
@@ -302,6 +304,7 @@ class _UnitOfWork:
     updated them back to the ORM.
 
 TODO: maybe `.seen()` should live on the uow not the repo
+
 
 === API: Django views are adapters
 
@@ -350,20 +353,23 @@ def allocate(request):
 
 === Conclusions: would you bother?
 
-OK it works but it does feel like more effort than Flask/SQLAlchemy.  Why is that, and
-when might you still choose Django?
+OK it works but it does feel like more effort than Flask/SQLAlchemy.  Why is
+that, and when might you still choose Django?
 
-- it's hard because the ORM doesn't work so well.  We can't do ActiveRecord, so we have
-  to build a manual translation layer behind the repository instead.  That's more work
-  (although once it's done the ongoing maintenance burden shouldn't be too high).
+- it's hard because the ORM doesn't work so well.  We can't do ActiveRecord, so
+  we have to build a manual translation layer behind the repository instead.
+  That's more work (although once it's done the ongoing maintenance burden
+  shouldn't be too high).
 
-- it's also hard because you need to integrate `pytest-django` and think carefully about
-  test databases etc
+- it's also hard because you need to integrate `pytest-django` and think
+  carefully about test databases etc
 
 So why might you still do it?
 
 * when migrating an existing project that has Django?
-* or because you want the Django Admin?
-
-TODO: expand on this
+* or because you want the Django Admin? (but we'd have to say that's likely to
+  be a bad idea, it goes against the grain of wanting to decouple your model
+  and business logic from the ORM...)
+  
+// TODO: Expand on this wrap-up?
 
