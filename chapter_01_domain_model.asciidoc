@@ -370,14 +370,14 @@ class Batch:
 +---------------------+
 | reference           |
 | sku                 |
-| _purchased_quantity |
-|                     |       +=============+
+| _purchased_quantity |       +=============+
 | allocations -------------->>| OrderLine   |
 +---------------------+       +-------------+
                               | order_id    |
                               | sku         |
                               | qty         |
                               +-------------+
+
 ----
 ====
 
