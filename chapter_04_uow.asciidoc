@@ -546,4 +546,9 @@ This is a lovely case for a context manager::
     context manager to automatically rollback our work at the end of request
     which means the system is safe by default.
 
+SqlAlchemy already implements this pattern::
+    We introduce a simpler abstraction over the SQLAlchemy Session object in
+    order to "narrow" the interface between the ORM and our code. This helps
+    to keep us loosely coupled.
+
 *****************************************************************
