@@ -536,10 +536,13 @@ Unit of Work is an abstraction around data integrity::
     end of an operation.
 
 It works closely with repository and service layer::
-    bla bla see <<appendix_csvs>>.
+    The Unit of Work pattern completes our abstractions over data-access by
+    representing atomic updates.
+    Each of our service-layer use-cases runs in a single unit of work which
+    succeeds or fails as a block.
 
 This is a lovely case for a context manager::
-    Context managers are an idiomatic way of delimiting scope. We can use a
+    Context managers are an idiomatic way of defining scope. We can use a
     context manager to automatically rollback our work at the end of request
     which means the system is safe by default.
 
