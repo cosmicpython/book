@@ -422,11 +422,37 @@ find them again. Our in memory data would let us add new objects, just like a
 list or a set, and since the objects are in memory we never need to call a
 "Save" method, we just fetch the object we care about, and modify it in memory.
 
-The ideal repository has just two methods: `add` to put a new item in the
+The simplest repository has just two methods: `add` to put a new item in the
 repository, and `get` to return a previously added item. We stick rigidly to
 using these methods for data access in our domain and our _service layer_. This
 self-imposed simplicity stops us from coupling our domain model to the database.
-//TODO what about delete and update?
+
+[[abstract_repo]]
+.The simplest possible repository (repository.py)
+====
+[source,python]
+----
+
+class AbstractRepository(abc.ABC):
+
+    @abc.abstractmethod
+    def add(self, batch):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get(self, reference):
+        raise NotImplementedError
+----
+====
+
+//TODO: what about .list()?
+
+WARNING: We're using abstract base classes in this book for didactic reasons;
+    we hope they help explain what the interface of the repository abstraction
+    is.  In real life, we've often found ourselves deleting ABCs from our
+    production code, because Python's makes it too easy to ignore them, and
+    they end up unmaintained and misleading at worst. Use with caution.
+
 
 Whenever we introduce an architectural pattern in this book, we'll always be
 trying to ask: "what do we get for this?  And what does it cost us?". Rich
@@ -497,7 +523,7 @@ TIP: Unlike the ORM tests from earlier, these tests are good candidates for
 def test_repository_can_save_a_batch(session):
     batch = model.Batch('batch1', 'sku1', 100, eta=None)
 
-    repo = repository.BatchRepository(session)
+    repo = repository.SqlAlchemyRepository(session)
     repo.add(batch)  #<1>
     session.commit()  #<2>
 
@@ -545,7 +571,7 @@ def test_repository_can_retrieve_a_batch_with_allocations(session):
     insert_batch(session, 'batch2')
     insert_allocation(session, orderline_id, batch1_id)  #<3>
 
-    repo = repository.BatchRepository(session)
+    repo = repository.SqlAlchemyRepository(session)
     retrieved = repo.get('batch1')
 
     expected = model.Batch('batch1', 'sku1', 100, eta=None)  #<3>
@@ -586,7 +612,7 @@ You end up with something like <<batch_repository>>:
 ====
 [source,python]
 ----
-class BatchRepository:
+class SqlAlchemyRepository(AbstractRepository):
 
     def __init__(self, session):
         self.session = session
@@ -602,11 +628,6 @@ class BatchRepository:
 ----
 ====
 
-//TODO (DS) This is the first time we've seen the concrete implementation of an
-//abstraction. It's really important that readers understand that you've
-//already defined an interface (implicitly) which you're now implementing -
-//people might miss this. This might be a good point to discuss using an
-//abstract base class so that we know we're implementing the interface fully.
 
 And now our flask endpoint might look something like <<api_endpoint_with_repo>>:
 
@@ -618,7 +639,7 @@ And now our flask endpoint might look something like <<api_endpoint_with_repo>>:
 ----
 @flask.route.gubbbins
 def allocate_endpoint():
-    batches = BatchRepository.list()
+    batches = SqlAlchemyRepository.list()
     lines = [OrderLine(l['orderid'], l['sku'], l['qty']) for l in lines]
     allocate(lines, batches)
     session.commit()
@@ -632,28 +653,28 @@ def allocate_endpoint():
 Here's one of the biggest benefits of Repository pattern.
 
 
-//TODO (DS)As mentioned before, might be better to start with the fake before
-//mentioning sqlalchemy at all.
-
-
 [[fake_repository]]
-.A simple fake repository subclassing set (repository.py)
+.A simple fake repository using a set (repository.py)
 ====
 [role="skip"]
 [source,python]
 ----
-class FakeRepository(set):
+class FakeRepository(AbstractRepository):
+    def __init__(self, batches):
+        self._batches = batches
+
+    def add(self, batch):
+        self._batches.add(batch)
 
     def get(self, reference):
-        return next(obj for obj in self if obj.reference == reference)
+        return next(b for b in self._batches if b.reference == reference)
 
     def list(self):
-        return list(self)
+        return list(self._batches)
 ----
 ====
 
-Because we subclass `set` we get the `.add()` method for free, and
-`.get()` and `.list()` are one-liners.
+Because we are a simple wrapper around a `set`, our methods are all one-liners.
 
 Using a fake repo in tests is really easy, and we have a simple
 abstraction that's easy to use and reason about:
