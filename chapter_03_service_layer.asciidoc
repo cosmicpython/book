@@ -274,13 +274,19 @@ Do you remember the `FakeRepository` that we prepared in the last chapter?
 ====
 [source,python]
 ----
-class FakeRepository(set):
+class FakeRepository(repository.AbstractRepository):
+
+    def __init__(self, batches):
+        self._batches = set(batches)
+
+    def add(self, batch):
+        self._batches.add(batch)
 
     def get(self, reference):
-        return next(x for x in self if x.reference == reference)
+        return next(b for b in self._batches if b.reference == reference)
 
     def list(self):
-        return list(self)
+        return list(self._batches)
 ----
 ====
 
@@ -379,7 +385,7 @@ class InvalidSku(Exception):
 def is_valid_sku(sku, batches):  #<2>
     return sku in {b.sku for b in batches}
 
-def allocate(line: OrderLine, repo: BatchRepository, session) -> str:
+def allocate(line: OrderLine, repo: AbstractRepository, session) -> str:
     batches = repo.list()  #<1>
     if not is_valid_sku(line.sku, batches):  #<2>
         raise InvalidSku(f'Invalid sku {line.sku}')
@@ -403,6 +409,46 @@ Typical service-layer functions have similar steps:
 That last step is a little unsatisfactory at the moment, our services
 layer is tightly coupled to our database layer, but we'll improve on
 that in the next chapter.
+
+
+."We depend on abstractions"
+*******************************************************************************
+Notice one more thing about our service-layer function:
+
+[[depend_on_abstraction]]
+.the service depends on an abstraction (services.py)
+====
+[source,python]
+[role="skip"]
+----
+def allocate(line: OrderLine, repo: AbstractRepository<1>, session) -> str:
+----
+====
+
+<1> It depends on a repository.  We've chosen to make the dependency explicit,
+    and we've used the type hint to say that we depend on ``AbstractRepository``footnote:[
+    Is this Pythonic?  Depending on who you ask, both abstract base classes and
+    type hints are hideous abominations, and serve only to add useless, unreadable
+    cruft to your code; beloved only by people who wish that Python was Haskell,
+    which it will never be.  "beautiful is better than ugly", "simple is better
+    than complex", and "readability counts"...
+    Or, perhaps they make explicit something that would otherwise be implicit
+    ("explicit is better than implicit").  For the purposes of this book, we've
+    decided that they help. What you decide to do in your own codebase is up to
+    you.]
+    This means it'll work both when the tests give it a `FakeRepository`, and
+    when the flask app gives it a `SqlAlchemyRepository`.
+
+
+This is what people mean when they say "depend on abstractions".
+
+//TODO: should we go into full detail?
+// "1. High-level modules should not depend on low-level modules. Both should depend on abstractions"
+// "2. Abstractions should not depend upon details. Details should depend upon abstractions"
+
+
+*******************************************************************************
+
 
 Still, the essentials of the services layer are there, and our Flask
 app now looks a lot cleaner, <<flask_app_using_service_layer>>:
@@ -721,7 +767,7 @@ Our service layer currently takes an `OrderLine` domain object:
 [source,python]
 [role="skip"]
 ----
-def allocate(line: OrderLine, repo: BatchRepository, session) -> str:
+def allocate(line: OrderLine, repo: AbstractRepository, session) -> str:
 ----
 ====
 
@@ -733,7 +779,7 @@ How would it look if its parameters were all primitive types?
 [source,python]
 ----
 def allocate(
-        orderid: str, sku: str, qty: int, repo: BatchRepository, session
+        orderid: str, sku: str, qty: int, repo: AbstractRepository, session
 ) -> str:
 ----
 ====
@@ -811,7 +857,7 @@ on the domain:
 [source,python]
 ----
 def test_add_batch():
-    repo, session = FakeRepository(), FakeSession()
+    repo, session = FakeRepository([]), FakeSession()
     services.add_batch('b1', 'sku1', 100, None, repo, session)
     assert repo.get('b1') is not None
     assert session.committed
@@ -828,14 +874,14 @@ And the implementation is just two lines
 ----
 def add_batch(
         ref: str, sku: str, qty: int, eta: Optional[date],
-        repo: BatchRepository, session,
+        repo: AbstractRepository, session,
 ):
     repo.add(model.Batch(ref, sku, qty, eta))
     session.commit()
 
 
 def allocate(
-        orderid: str, sku: str, qty: int, repo: BatchRepository, session
+        orderid: str, sku: str, qty: int, repo: AbstractRepository, session
 ) -> str:
     ...
 ----
@@ -861,14 +907,14 @@ any dependencies on the model.
 [source,python]
 ----
 def test_allocate_returns_allocation():
-    repo, session = FakeRepository(), FakeSession()
+    repo, session = FakeRepository([]), FakeSession()
     services.add_batch('b1', 'sku1', 100, None, repo, session)
     result = services.allocate('o1', 'sku1', 10, repo, session)
     assert result == 'b1'
 
 
 def test_allocate_errors_for_invalid_sku():
-    repo, session = FakeRepository(), FakeSession()
+    repo, session = FakeRepository([]), FakeSession()
     services.add_batch('b1', 'actualsku', 100, None, repo, session)
 
     with pytest.raises(services.InvalidSku) as ex:
