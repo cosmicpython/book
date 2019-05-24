@@ -450,8 +450,8 @@ class AbstractRepository(abc.ABC):
 WARNING: We're using abstract base classes in this book for didactic reasons;
     we hope they help explain what the interface of the repository abstraction
     is.  In real life, we've often found ourselves deleting ABCs from our
-    production code, because Python's makes it too easy to ignore them, and
-    they end up unmaintained and misleading at worst. Use with caution.
+    production code, because Python makes it too easy to ignore them, and
+    they end up unmaintained and, at worst, misleading. Use with caution.
 
 
 Whenever we introduce an architectural pattern in this book, we'll always be
