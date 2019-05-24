@@ -421,23 +421,23 @@ Notice one more thing about our service-layer function:
 [source,python]
 [role="skip"]
 ----
-def allocate(line: OrderLine, repo: AbstractRepository<1>, session) -> str:
+def allocate(line: OrderLine, repo: AbstractRepository, session) -> str:  #<1>
 ----
 ====
 
-<1> It depends on a repository.  We've chosen to make the dependency explicit,
-    and we've used the type hint to say that we depend on ``AbstractRepository``footnote:[
-    Is this Pythonic?  Depending on who you ask, both abstract base classes and
-    type hints are hideous abominations, and serve only to add useless, unreadable
-    cruft to your code; beloved only by people who wish that Python was Haskell,
-    which it will never be.  "beautiful is better than ugly", "simple is better
-    than complex", and "readability counts"...
-    Or, perhaps they make explicit something that would otherwise be implicit
-    ("explicit is better than implicit").  For the purposes of this book, we've
-    decided that they help. What you decide to do in your own codebase is up to
-    you.]
-    This means it'll work both when the tests give it a `FakeRepository`, and
-    when the flask app gives it a `SqlAlchemyRepository`.
+It depends on a repository.  We've chosen to make the dependency explicit,
+and we've used the type hint to say that we depend on ``AbstractRepository``footnote:[
+Is this Pythonic?  Depending on who you ask, both abstract base classes and
+type hints are hideous abominations, and serve only to add useless, unreadable
+cruft to your code; beloved only by people who wish that Python was Haskell,
+which it will never be.  "beautiful is better than ugly", "simple is better
+than complex", and "readability counts"...
+Or, perhaps they make explicit something that would otherwise be implicit
+("explicit is better than implicit").  For the purposes of this book, we've
+decided this argument carries the day. What you decide to do in your own
+codebase, however, is up to you.  We trust you'll do the right thing.]
+This means it'll work both when the tests give it a `FakeRepository`, and
+when the flask app gives it a `SqlAlchemyRepository`.
 
 
 This is what people mean when they say "depend on abstractions".
