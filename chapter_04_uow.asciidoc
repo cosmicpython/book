@@ -137,7 +137,7 @@ class AbstractUnitOfWork(abc.ABC):
     is needed because different subclasses will want to initialise repositories
     in slightly different ways, this just gives us a single place to do that.
 
-==== The Real Unit of uses SqlAlchemy sessions
+==== The Real Unit of Work uses SqlAlchemy Sessions
 
 [[unit_of_work]]
 .the real SQLAlchemy unit of work (src/allocation/unit_of_work.py)
