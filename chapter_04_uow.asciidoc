@@ -26,8 +26,9 @@ A context manager.
 
 === Test-driving a UoW with integration tests
 
-Here's a test for a new "unit of work" context manager that allows us to start
-a transaction, retrieve and get things from repos, and commit:
+Here's a test for a new "Unit of Work" (or UoW, which we pronounce, you-wow).
+It's a context manager that allows us to start a transaction, retrieve and get
+things from repos, and commit:
 
 
 [[test_unit_of_work]]
@@ -60,7 +61,8 @@ def test_uow_can_retrieve_a_batch_and_allocate_to_it(session_factory):
     insert_batch(session, 'batch1', 'sku1', 100, None)
     session.commit()
 
-    with unit_of_work.start(session_factory) as uow:  #<1>
+    uow = unit_of_work.SqlAlchemyUnitOfWork(session_factory)  #<1>
+    with uow:
         batch = uow.batches.get(reference='batch1')  #<2>
         line = model.OrderLine('o1', 'sku1', 10)
         batch.allocate(line)
@@ -71,7 +73,7 @@ def test_uow_can_retrieve_a_batch_and_allocate_to_it(session_factory):
 ----
 ====
 
-<1> We initialise the unit of work using a starter function,
+<1> We initialise the unit of work using our custom session factory,
     and get back a `uow` object to use in our `with` block.
 
 <2> The UoW gives us access to the batches repository via
@@ -82,50 +84,95 @@ def test_uow_can_retrieve_a_batch_and_allocate_to_it(session_factory):
 
 === Unit of Work and its context manager
 
-Here's an implementation:
+In our tests we've implicitly defined an interface for what a unit
+of work needs to do, let's make that explicit by using an abstract
+base class:
 
 
-[[unit_of_work]]
-.Basic unit of work context manager  (src/allocation/unit_of_work.py)
+[[abstract_unit_of_work]]
+.the unit of work context manager in the abstract (src/allocation/unit_of_work.py)
 ====
 [source,python]
 ----
-default_session_factory = sessionmaker(bind=create_engine(config.get_postgres_uri()))
+class AbstractUnitOfWork(abc.ABC):
 
-@contextmanager  #<1>
-def start(session_factory=default_session_factory):
-    session = session_factory()
-    try:
-        yield _UnitOfWork(session)  #<2>
-    finally:
-        session.rollback()  #<5>
+    def __enter__(self):  #<1>
+        return self  #<2>
 
+    def __exit__(self, *args):  #<2>
+        self.rollback()
 
-class _UnitOfWork:
-    def __init__(self, session):
-        self.session = session
-        self.batches = repository.BatchRepository(session)  #<3>
+    @abc.abstractmethod
+    def commit(self):  #<3>
+        raise NotImplementedError
 
-    def commit(self):  #<4>
-        self.session.commit()
+    @abc.abstractmethod
+    def rollback(self):  #<4>
+        raise NotImplementedError
+
+    def init_repositories(self, batches: repository.AbstractRepository):  #<5>
+        self._batches = batches
+
+    @property
+    def batches(self) -> repository.AbstractRepository:  #<5>
+        return self._batches
 ----
 ====
 
-<1> You can use class-based or generator-based context managers,
-    whichever you find more readable and Pythonic.
+<1> If you've never seen a context manager, `__enter__` and `__exit__` are
+    the two magic methods that execute when we enter the `with` block and
+    when we exit it.  They're our setup and teardown phases.
 
-<2> The context manager provides a `_UnitOfWork` instance, which
-    gets used in two ways in our code:
+<2> The enter returns `self`, because we want access to the `uow` instance
+    and its attributes and methods, inside the `with` block.
 
-<3> It provides access to the repository(-ies).
+<3> It provides a way to explicitly commit our work
 
-<4> And it provides a way to explicitly commit our work
-
-<5> If we don't commit, or if we exit the context manager by raising an error,
+<4> If we don't commit, or if we exit the context manager by raising an error,
     we do a `rollback`. (the rollback has no effect if `commit()` has been
     called.  Read on for more discussion of this).
 
-//TODO: should be DEFAULT_SESSION_FACTORY
+<5> The other thing we provide is an attribute called `.batches`, which will
+    give us access to the batches repository.  The `init_repositories()` method
+    is needed because different subclasses will want to initialise repositories
+    in slightly different ways, this just gives us a single place to do that.
+
+==== The Real Unit of uses SqlAlchemy sessions
+
+[[unit_of_work]]
+.the real SQLAlchemy unit of work (src/allocation/unit_of_work.py)
+====
+[source,python]
+----
+DEFAULT_SESSION_FACTORY = sessionmaker(bind=create_engine(  #<1>
+    config.get_postgres_uri(),
+    isolation_level="SERIALIZABLE"
+))
+
+class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
+
+    def __init__(self, session_factory=DEFAULT_SESSION_FACTORY):
+        self.session = session_factory()  # type: Session  #<2>
+        self.init_repositories(repository.SqlAlchemyRepository(self.session))  #<2>
+
+    def commit(self):  #<3>
+        self.session.commit()
+
+    def rollback(self):  #<3>
+        self.session.rollback()
+
+----
+====
+
+<1> the module defines a default session factory that will connect to postgres,
+    but we allow that to be overriden in our integration tests, so that we
+    can use SQLite instead.
+
+<2> the init is responsible for starting a database session, and starting
+    a real repository that can use that session
+
+<3> Finally, we provide concrete `commit()` and `rollback()` methods that
+    use our database session.
 
 
 
@@ -139,28 +186,31 @@ Here's how we use a fake unit of work in our service layer tests
 ====
 [source,python]
 ----
-class FakeUnitOfWork:
-    def __init__(self):
-        self.batches = FakeRepository()  #<1>
-        self.committed = False
+class FakeUnitOfWork(unit_of_work.AbstractUnitOfWork):
 
-    def commit(self):  #<2>
-        self.committed = True
+    def __init__(self):
+        self.init_repositories(FakeRepository([]))  #<1>
+        self.committed = False  #<2>
+
+    def commit(self):
+        self.committed = True  #<2>
+
+    def rollback(self):
+        pass
+
 
 
 def test_add_batch():
-    uow = FakeUnitOfWork()
-    start_uow = lambda: nullcontext(uow)  #<3>
-    services.add_batch('b1', 'sku1', 100, None, start_uow)
+    uow = FakeUnitOfWork()  #<3>
+    services.add_batch('b1', 'sku1', 100, None, uow)  #<3>
     assert uow.batches.get('b1') is not None
     assert uow.committed
 
 
 def test_allocate_returns_allocation():
     uow = FakeUnitOfWork()
-    start_uow = lambda: nullcontext(uow)
-    services.add_batch('b1', 'sku1', 100, None, start_uow)
-    result = services.allocate('o1', 'sku1', 10, start_uow)
+    services.add_batch('b1', 'sku1', 100, None, uow)
+    result = services.allocate('o1', 'sku1', 10, uow)
     assert result == 'b1'
 ----
 ====
@@ -174,14 +224,9 @@ def test_allocate_returns_allocation():
     code that we wrote, rather than 3rd party code.  Some
     people say https://github.com/testdouble/contributing-tests/wiki/Don%27t-mock-what-you-don%27t-own["don't mock what you don't own"].
 
-<3> `contextlib.nullcontext` is a standard library helper
-    that builds a do-nothing context manager to return
-    an object.
-
-
-TIP: See the end of <<chapter_06_events_and_message_bus>> for a few examples
-    of how you might use abstract base classes to share code between
-    `UnitOfWork` and `FakeUnitOfWork`
+<3> and in our tests, we can instantiate a UoW and pass it to
+    our service layer, instead of a repository and a session,
+    which is considerably less cumbersome.
 
 
 === Using the UoW in the service layer
@@ -194,16 +239,22 @@ And here's what our new service layer looks like:
 ====
 [source,python]
 ----
-def add_batch(ref: str, sku: str, qty: int, eta: Optional[date], start_uow):
-    with start_uow() as uow:
-        uow.batches.add(model.Batch(ref, sku, qty, eta))
+def add_batch(
+        ref: str, sku: str, qty: int, eta: Optional[date],
+        uow: unit_of_work.AbstractUnitOfWork  #<1>
+):
+    with uow:
+        uow.batches.add(model.Batch(ref, sku, qty, eta))  #<2>
         uow.commit()
 
 
-def allocate(orderid: str, sku: str, qty: int, start_uow) -> str:
+def allocate(
+        orderid: str, sku: str, qty: int,
+        uow: unit_of_work.AbstractUnitOfWork  #<1>
+) -> str:
     line = OrderLine(orderid, sku, qty)
-    with start_uow() as uow:
-        batches = uow.batches.list()
+    with uow:
+        batches = uow.batches.list()  #<2>
         if not is_valid_sku(line.sku, batches):
             raise InvalidSku(f'Invalid sku {line.sku}')
         batch = model.allocate(line, batches)
@@ -211,6 +262,9 @@ def allocate(orderid: str, sku: str, qty: int, start_uow) -> str:
     return batch
 ----
 ====
+
+<1> Our service layer now only has the one dependency, once again
+    on an _abstract_ unit of work.
 
 
 === Explicit tests for commit/rollback behaviour
@@ -224,7 +278,8 @@ a couple of tests:
 [source,python]
 ----
 def test_rolls_back_uncommitted_work_by_default(session_factory):
-    with unit_of_work.start(session_factory) as uow:
+    uow = unit_of_work.SqlAlchemyUnitOfWork(session_factory)
+    with uow:
         insert_batch(uow.session, 'batch1', 'sku1', 100, None)
 
     new_session = session_factory()
@@ -236,8 +291,9 @@ def test_rolls_back_on_error(session_factory):
     class MyException(Exception):
         pass
 
+    uow = unit_of_work.SqlAlchemyUnitOfWork(session_factory)
     with pytest.raises(MyException):
-        with unit_of_work.start(session_factory) as uow:
+        with uow:
             insert_batch(uow.session, 'batch1', 'sku1', 100, None)
             raise MyException()
 
@@ -246,6 +302,13 @@ def test_rolls_back_on_error(session_factory):
     assert rows == []
 ----
 ====
+
+TIP: We haven't shown it here, but it can be worth testing some of the more
+    "obcure" database behaviour, like transactions, against the "real"
+    database, ie the same engine.  For now we're getting away with using
+    SQLite instead of Postgres, but in <<chapter_05_aggregate>> we'll switch
+    some of the tests to using the real DB.  It's convenient that our UoW
+    class makes that easy!
 
 
 === Explicit vs implicit commits
@@ -261,16 +324,18 @@ and only rolls back if it spots an exception:
 [source,python]
 [role="skip"]
 ----
-@contextmanager
-def start(session_factory=default_session_factory):
-    session = session_factory()
-    try:
-        yield _UnitOfWork(session)
-        session.commit()  #<1>
-    except:
-        session.rollback()  #<2>
-    finally:
-        session.close()  #<3>
+
+class AbstractUnitOfWork(abc.ABC):
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exn_type, exn_value, traceback):
+        if exn_type is None:
+            self.commit()  #<1>
+        else:
+            self.rollback()  #<2>
+        self.session.close()  #<3>
 ----
 ====
 
@@ -323,8 +388,8 @@ Supposing we want to be able to deallocate and then reallocate orders?
 [source,python]
 [role="skip"]
 ----
-def reallocate(line: OrderLine, start_uow) -> str:
-    with start_uow() as uow:
+def reallocate(line: OrderLine, uow: AbstractUnitOfWork) -> str:
+    with uow:
         batch = uow.batches.get(sku=line.sku)
         if batch is None:
             raise InvalidSku(f'Invalid sku {line.sku}')
@@ -352,8 +417,8 @@ opened and half our sofas have fallen into the Indian Ocean.  oops!
 [source,python]
 [role="skip"]
 ----
-def change_batch_quantity(batch: Batch, new_qty: int, start_uow):
-    with start_uow() as uow:
+def change_batch_quantity(batch: Batch, new_qty: int, uow: AbstractUnitOfWork):
+    with uow:
         product = uow.products.get(sku=batch.sku)
         batch.change_purchased_quantity(new_qty)
         while batch.available_quantity < 0:
