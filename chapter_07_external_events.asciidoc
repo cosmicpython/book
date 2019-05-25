@@ -22,7 +22,7 @@ API to create batches, and then we'll test both inbound and outbound messages:
 
 
 [[redis_e2e_test]]
-.An end-to-end test for our pubsub model (tests/e2e/test_redis.py)
+.An end-to-end test for our pubsub model (tests/e2e/test_external_events.py)
 ====
 [source,python]
 [role="non-head"]
@@ -37,12 +37,8 @@ def test_change_batch_quantity_leading_to_reallocation():
     post_to_add_batch(batch2, sku, 10, '2011-01-03')
     post_to_allocate(orderid, sku, 10, expected_batch=batch1)
 
-    print('subscribing to allocated events')
     r = redis.Redis(**config.get_redis_host_and_port())
-    pubsub = r.pubsub()
-    pubsub.subscribe('line_allocated')  #<2>
-    confirmation = wait_for(pubsub.get_message)
-    assert confirmation['type'] == 'subscribe'
+    pubsub = subscribe_to_allocated_events(r)  #<2>
 
     print('sending change batch quantity for', batch1)
     r.publish('change_batch_quantity', json.dumps({  #<1>
@@ -51,15 +47,14 @@ def test_change_batch_quantity_leading_to_reallocation():
 
     print('waiting for reallocation event')
     messages = []
-    def check_messages():  #<2>
-        messages.append(wait_for(pubsub.get_message))
+    def check_messages():
+        messages.append(wait_for(pubsub.get_message))  #<2>
         print(messages)
         data = json.loads(messages[-1]['data'])
         assert data['orderid'] == orderid
         assert data['batchid'] == batch2
 
     wait_for_assertion(check_messages)
-
 ----
 ====
 
@@ -140,30 +135,34 @@ class TestChangeBatchQuantity:
     @staticmethod
     def test_changes_available_quantity():
         uow = FakeUnitOfWork()
-        start_uow = lambda: nullcontext(uow)
-        services.add_batch('b1', 'sku1', 100, None, start_uow)
+        services.add_batch('b1', 'sku1', 100, None, uow)
         [batch] = uow.products.get(sku='sku1').batches
         assert batch.available_quantity == 100
-        services.change_batch_quantity('b1', 50, start_uow)
-        assert batch.available_quantity == 50
+        services.change_batch_quantity('b1', 50, uow)  #<1>
+        assert batch.available_quantity == 50  #<1>
 
 
     @staticmethod
     def test_deallocates_if_necessary():
         uow = FakeUnitOfWork()
-        start_uow = lambda: nullcontext(uow)
-        services.add_batch('b1', 'sku1', 50, None, start_uow)
-        services.allocate('o1', 'sku1', 20, start_uow)
-        services.allocate('o2', 'sku1', 20, start_uow)
-
-        product = uow.products.get(sku='sku1')
-        [batch] = product.batches
+        services.add_batch('b1', 'sku1', 50, None, uow)
+        services.allocate('o1', 'sku1', 20, uow)
+        services.allocate('o2', 'sku1', 20, uow)
+        [batch] = uow.products.get(sku='sku1').batches
         assert batch.available_quantity == 10
 
-        services.change_batch_quantity('b1', 25, start_uow)
-        assert batch.available_quantity == 5
+        services.change_batch_quantity('b1', 25, uow)  #<2>
+
+        # o1 or o2 will be deallocated, so we'll have 25 - 20 * 1
+        assert batch.available_quantity == 5  #<2>
 ----
 ====
+
+<1> The simple case would be trivially easy to implement, we just
+    modify a quantity.
+
+<2> But if we try and change the quantity so that there's less than
+    has been allocated, we'll need to deallocate at least one order.
 
 
 ==== An internal event to express de-allocation
@@ -173,7 +172,7 @@ stock" email, rather than doing deallocation and re-allocation in-line in the
 service function, we can choose to clearly separate responsibility:
 
 * For the system to be in a consistent state, batch quantity changes should
-  cause deallocations, if necessary
+  immediately cause deallocations, if necessary.
 
 * But reallocation can happen in a separate unit of work.
 
