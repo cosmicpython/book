@@ -260,6 +260,8 @@ HANDLERS = {
 ====
 
 //TODO: backport explicit dependencies from redis chapter??
+//TODO: backport events.pop(0)
+//TODO: maybe handle should just take one event?
 
 
 ==== In a first cut, the service layer puts events on the message bus

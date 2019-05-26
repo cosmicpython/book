@@ -58,6 +58,8 @@ def test_change_batch_quantity_leading_to_reallocation():
 ----
 ====
 
+//TODO: use ignore_subscribe_messages in subscribe_to_allocated_events
+
 Because this is an end-to-end test and our publish/subscribe model is
 asynchronous, there's a bit of boilerplate to manage waiting, but
 essentially:
