@@ -58,12 +58,11 @@ So let's try and avoid that.  We can start by writing a test at the service laye
 ----
 def test_sends_email_on_out_of_stock_error():
     uow = FakeUnitOfWork()
-    start_uow = lambda: nullcontext(uow)
-    services.add_batch('b1', 'sku1', 9, None, start_uow)
+    services.add_batch('b1', 'sku1', 9, None, uow)
 
     with mock.patch('allocation.email.send_mail') as mock_send_mail:  #<1>
         with pytest.raises(exceptions.OutOfStock):
-            services.allocate('o1', 'sku1', 10, start_uow)
+            services.allocate('o1', 'sku1', 10, uow)
         assert mock_send_mail.call_args == mock.call(  #<2>
             'stock@made.com',
             f'Out of stock for sku1',
@@ -119,9 +118,12 @@ In the service layer it's a little better, but it's still not lovely:
 [source,python]
 [role="non-head"]
 ----
-def allocate(orderid: str, sku: str, qty: int, start_uow) -> str:
+def allocate(
+        orderid: str, sku: str, qty: int,
+        uow: unit_of_work.AbstractUnitOfWork
+) -> str:
     line = OrderLine(orderid, sku, qty)
-    with start_uow() as uow:
+    with uow:
         product = uow.products.get(sku=line.sku)
         if product is None:
             raise exceptions.InvalidSku(f'Invalid sku {line.sku}')
@@ -237,8 +239,8 @@ invoke the following handlers.  Here's a minimal implementation:
 ====
 [source,python]
 ----
-def handle(events: List[events.Event]):
-    for event in events:
+def handle(events_: List[events.Event]):
+    for event in events_:
         for handler in HANDLERS[type(event)]:
             handler(event)
 
@@ -258,6 +260,8 @@ HANDLERS = {
 ====
 
 //TODO: backport explicit dependencies from redis chapter??
+//TODO: backport events.pop(0)
+//TODO: maybe handle should just take one event?
 
 
 ==== In a first cut, the service layer puts events on the message bus
@@ -272,9 +276,12 @@ it...
 [source,python]
 [role="non-head"]
 ----
-def allocate(orderid: str, sku: str, qty: int, start_uow) -> str:
+def allocate(
+        orderid: str, sku: str, qty: int,
+        uow: unit_of_work.AbstractUnitOfWork
+) -> str:
     line = OrderLine(orderid, sku, qty)
-    with start_uow() as uow:
+    with uow:
         product = uow.products.get(sku=line.sku)
         if product is None:
             raise exceptions.InvalidSku(f'Invalid sku {line.sku}')
@@ -296,7 +303,7 @@ That avoids some of the ugliness that we had in our naive implementation,
 but we can do better.
 
 
-TODO: discussion, service layer can/could raise events too.
+TODO: discussion, service layer can/could raise events directly too.
 
 
 === The Unit of Work can pass events to the Message Bus
@@ -310,229 +317,7 @@ potentially a good place to spot events and pass them to the message bus:
 ====
 [source,python]
 ----
-@contextmanager
-def start(session_factory=default_session_factory):
-    session = session_factory()
-    try:
-        uow = _UnitOfWork(session)
-        yield uow
-    finally:
-        session.rollback()
-        for obj in uow.products.seen:
-            messagebus.handle(obj.events)
-----
-====
-
-That relies on the repository keeping track of aggregates that it's seen:
-
-[[repository_tracks_seen]]
-.Repository tracks aggregates seen (src/allocation/repository.py)
-====
-[source,python]
-----
-class ProductRepository:
-
-    def __init__(self, session):
-        self.session = session
-        self.seen = set()
-
-    def add(self, product):
-        self.seen.add(product)
-        self.session.add(product)
-
-    def get(self, sku):
-        p = self.session.query(model.Product).filter_by(sku=sku).first()
-        if p:
-            self.seen.add(p)
-        return p
-----
-====
-
-And now the service layer is actually totally free of any concerns of
-handling events:
-
-
-[[services_clean]]
-.Service layer is clean again (src/allocation/services.py)
-====
-[source,python]
-----
-def allocate(orderid: str, sku: str, qty: int, start_uow) -> str:
-    line = OrderLine(orderid, sku, qty)
-    with start_uow() as uow:
-        product = uow.products.get(sku=line.sku)
-        if product is None:
-            raise exceptions.InvalidSku(f'Invalid sku {line.sku}')
-        batch = product.allocate(line)
-        uow.commit()
-        return batch
-----
-====
-
-
-But we do end up having to modify our fakes in the service layer
-quite a lot:
-
-[[services_tests_ugly_fake_messagebus]]
-.Service-layer fakes are starting to be hard work. (tests/unit/test_services.py)
-====
-[source,python]
-[role="non-head"]
-----
-class FakeRepository(set):
-    def __init__(self, *args):
-        self.seen = set()
-        super().__init__(*args)
-
-    def get(self, sku):
-        try:
-            obj = next(x for x in self if x.sku == sku)
-            self.seen.add(obj)
-            return obj
-        except StopIteration:
-            return None
-#...
-
-def fake_start_uow_with_message_handling(uow):
-    @contextmanager
-    def _start_uow():
-        try:
-            yield uow
-        finally:
-            for obj in uow.products.seen:
-                messagebus.handle(obj.events)
-    return _start_uow
-
-
-def test_sends_email_on_out_of_stock_error():
-    uow = FakeUnitOfWork()
-    start_uow = fake_start_uow_with_message_handling(uow)
-    services.add_batch('b1', 'sku1', 9, None, start_uow)
-
-    with mock.patch('allocation.email.send_mail') as mock_send_mail:
-        with pytest.raises(exceptions.OutOfStock):
-            services.allocate('o1', 'sku1', 10, start_uow)
-    #...
-----
-====
-
-
-=== Unit Testing with a fake message bus
-
-TODO: discuss replacing @mock test with `FakeMessageBus`
-
-
-
-=== Discussion: abstract base classes
-
-TODO: this section is under construction, tidy up and finish
-
-* show how abcs can reduce that duplication between tests and actual.
-* discussion of abcs as documentation
-* but they soon rot if not maintained!  make sure they're tested eg by pylint.
-
-
-some abcs for fake repository, these allow us to share the `.seen` logic:
-
-[[abstract_repository]]
-.Abstract and actual Repository (src/allocation/repository.py)
-====
-[source,python]
-[role="non-head"]
-----
-class AbstractRepository(abc.ABC):
-
-    def __init__(self):
-        self.seen = set()
-
-    def add(self, obj):
-        self._add(obj)
-        self.seen.add(obj)
-
-    def get(self, sku):
-        obj = self._get(sku)
-        if obj is not None:
-            self.seen.add(obj)
-        return obj
-
-    @abc.abstractmethod  #<1>
-    def _add(self, obj):
-        raise NotImplementedError  #<2>
-
-    @abc.abstractmethod  #<1>
-    def _get(self, sku):
-        raise NotImplementedError  #<2>
-
-
-
-class SqlAlchemyRepository(AbstractRepository):
-
-    def __init__(self, session):
-        super().__init__()
-        self.session = session
-
-    def _add(self, product):
-        self.session.add(product)
-
-    def _get(self, sku):
-        return self.session.query(model.Product).filter_by(sku=sku).first()
-----
-====
-
-
-<1> Python tip: `@abc.abstractmethod` is one of the only things that makes
-    ABCs actually "work" in Python.   Python will refuse to let you instantiate
-    a class that does not implement all the `abstractmethods` defined in its
-    parent class
-
-<2> `raise NotImplementedError` is nice but neither necessary nor sufficient.
-    In fact, your abstract methods can have real behaviour which subclasses
-    can call out to, if you want.
-
-
-NOTE: To really reap the benefits of ABCs (such as they may be) you'll want to
-    be running some helpers like `pylint` and `mypy`.
-
-
-
-[[fake_repository_inherits]]
-.Fake repository inheriting from the abstract one (tests/unit/test_services.py)
-====
-[source,python]
-[role="non-head"]
-----
-class FakeRepository(repository.AbstractRepository):
-
-    def __init__(self):
-        super().__init__()
-        self.objects = set()
-
-    def _get(self, sku):
-        try:
-            return next(x for x in self.objects if x.sku == sku)
-        except StopIteration:
-            return None
-
-    def _add(self, obj):
-        self.objects.add(obj)
-----
-====
-
-
-For the UoW, it's much harder work, and you may decide it's more effort than
-it's worth.
-
-[[abstract_uow]]
-.The abstract UoW is really just documentation of intent (src/allocation/unit_of_work.py)
-====
-[source,python]
-[role="non-head"]
-----
 class AbstractUnitOfWork(abc.ABC):
-
-    @abc.abstractmethod
-    def __init__(self, products: repository.AbstractRepository):
-        self.products = products
 
     def __enter__(self):
         return self
@@ -544,65 +329,133 @@ class AbstractUnitOfWork(abc.ABC):
 
     @abc.abstractmethod
     def commit(self):
-        raise NotImplementedError
+        ...
+----
+====
+
+That relies on the repository keeping track of aggregates that it's seen:
+
+[[repository_tracks_seen]]
+.Repository tracks aggregates seen (src/allocation/repository.py)
+====
+[source,python]
+----
+class AbstractRepository(abc.ABC):
+
+    def __init__(self):
+        self.seen = set()  # type: Set[model.Product]  #<1>
 
     @abc.abstractmethod
-    def rollback(self):
+    def add(self, product):  #<2>
+        self.seen.add(product)
+
+    def get(self, sku):  #<3>
+        p = self._get(sku)
+        if p:
+            self.seen.add(p)  #<3>
+        return p
+
+    @abc.abstractmethod
+    def _get(self, sku):  #<3>
         raise NotImplementedError
 
 
 
-class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
+class SqlAlchemyRepository(AbstractRepository):
 
     def __init__(self, session):
+        super().__init__()  #<1>
         self.session = session
-        super().__init__(repository.SqlAlchemyRepository(self.session))
 
-    def commit(self):
-        self.session.commit()
+    def add(self, product):
+        super().add(product)  #<1>
+        self.session.add(product)
 
-    def rollback(self):
-        self.session.rollback()
+    def _get(self, sku):  #<3>
+        return self.session.query(model.Product).filter_by(sku=sku).first()
+----
+====
+
+<1> We initialise a set to store objects seen.  That means our implementations
+    need to call `super().__init__()`
+
+<2> The parent `add()` method adds things to `.seen` as well, so we make sure
+    to call `super.add()`
+
+<3> And `.get()` delegates to a `._get()` function, to be implemented by subclasses,
+    in order to capture objects seen.
+
+
+Once the UoW and repository collaborate in this way to automatically keep
+track of live objects and process their events, the service layer can now be
+totally free of event-handling concerns:
+
+
+[[services_clean]]
+.Service layer is clean again (src/allocation/services.py)
+====
+[source,python]
+----
+def allocate(
+        orderid: str, sku: str, qty: int,
+        uow: unit_of_work.AbstractUnitOfWork
+) -> str:
+    line = OrderLine(orderid, sku, qty)
+    with uow:
+        product = uow.products.get(sku=line.sku)
+        if product is None:
+            raise exceptions.InvalidSku(f'Invalid sku {line.sku}')
+        batch = product.allocate(line)
+        uow.commit()
+        return batch
 ----
 ====
 
 
-And here's us reusing them in our tests:
+We do also have to remember to change the fakes in the service layer and make them
+call `super()` in the right places, but the changes are minimal:
 
-[[fake_uow_from_abc]]
-.Fake UoW and starter (tests/unit/test_services.py)
+[[services_tests_ugly_fake_messagebus]]
+.Service-layer fakes are starting to be hard work. (tests/unit/test_services.py)
 ====
 [source,python]
 [role="non-head"]
 ----
-class FakeUnitOfWork(unit_of_work.AbstractUnitOfWork):
+class FakeRepository(repository.AbstractRepository):
 
-    def __init__(self):
-        self.committed = False
-        super().__init__(FakeRepository())
+    def __init__(self, products):
+        super().__init__()
+        self._products = set(products)
 
-    def commit(self):
-        self.committed = True
+    def add(self, product):
+        super().add(product)
+        self._products.add(product)
 
-    def rollback(self):
-        pass
+    def _get(self, sku):
+        return next((p for p in self._products if p.sku == sku), None)
 ----
 ====
 
 
+=== Unit Testing with a fake message bus
 
-What have we achieved?
-
-* we've deduped the `.seen` attribute on repositories between tests and actual
-* we've deduped the event-catching code in the "after" phase of the UoW context
-  manager.
-* and we've documented our intention:  this is what a Repository or UoW should "look like",
+TODO: discuss replacing @mock test with `FakeMessageBus`
 
 
-TODO: "depend on abstractions" chat?
 
-But this comes at a significant cost in terms of added complexity.  Judgement call,
-as always.  We'd probably err on the side of not using ABCs.
+=== ABC tips (TODO: move earlier in book)
+
+<1> Python tip: `@abc.abstractmethod` is one of the only things that makes
+    ABCs actually "work" in Python.   Python will refuse to let you instantiate
+    a class that does not implement all the `abstractmethods` defined in its
+    parent class
+
+<2> `raise NotImplementedError` is nice but neither necessary nor sufficient.
+    In fact, your abstract methods can have real behaviour which subclasses
+    can call out to, if you want.
+
+NOTE: To really reap the benefits of ABCs (such as they may be) you'll want to
+    be running some helpers like `pylint` and `mypy`.
 
 
 

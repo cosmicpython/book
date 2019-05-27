@@ -188,8 +188,11 @@ And our service layer evolves to use `Product` as its main entrypoint:
 ====
 [source,python]
 ----
-def add_batch(ref: str, sku: str, qty: int, eta: Optional[date], start_uow):
-    with start_uow() as uow:
+def add_batch(
+        ref: str, sku: str, qty: int, eta: Optional[date],
+        uow: unit_of_work.AbstractUnitOfWork
+):
+    with uow:
         product = uow.products.get(sku=sku)
         if product is None:
             product = model.Product(sku, batches=[])
@@ -198,9 +201,12 @@ def add_batch(ref: str, sku: str, qty: int, eta: Optional[date], start_uow):
         uow.commit()
 
 
-def allocate(orderid: str, sku: str, qty: int, start_uow) -> str:
+def allocate(
+        orderid: str, sku: str, qty: int,
+        uow: unit_of_work.AbstractUnitOfWork
+) -> str:
     line = OrderLine(orderid, sku, qty)
-    with start_uow() as uow:
+    with uow:
         product = uow.products.get(sku=line.sku)
         if product is None:
             raise InvalidSku(f'Invalid sku {line.sku}')
@@ -352,7 +358,7 @@ def test_concurrent_updates_to_version_are_not_allowed(postgres_session_factory)
 def try_to_allocate(orderid, sku, exceptions):
     line = model.OrderLine(orderid, sku, 10)
     try:
-        with unit_of_work.start() as uow:
+        with unit_of_work.SqlAlchemyUnitOfWork() as uow:
             product = uow.products.get(sku=sku)
             product.allocate(line)
             time.sleep(0.2)
@@ -374,9 +380,9 @@ on our session:
 ====
 [source,python]
 ----
-default_session_factory = sessionmaker(bind=create_engine(
+DEFAULT_SESSION_FACTORY = sessionmaker(bind=create_engine(
     config.get_postgres_uri(),
-    isolation_level="SERIALIZABLE"
+    isolation_level="SERIALIZABLE",
 ))
 ----
 ====

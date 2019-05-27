@@ -22,7 +22,7 @@ API to create batches, and then we'll test both inbound and outbound messages:
 
 
 [[redis_e2e_test]]
-.An end-to-end test for our pubsub model (tests/e2e/test_redis.py)
+.An end-to-end test for our pubsub model (tests/e2e/test_external_events.py)
 ====
 [source,python]
 [role="non-head"]
@@ -37,12 +37,8 @@ def test_change_batch_quantity_leading_to_reallocation():
     post_to_add_batch(batch2, sku, 10, '2011-01-03')
     post_to_allocate(orderid, sku, 10, expected_batch=batch1)
 
-    print('subscribing to allocated events')
     r = redis.Redis(**config.get_redis_host_and_port())
-    pubsub = r.pubsub()
-    pubsub.subscribe('line_allocated')  #<2>
-    confirmation = wait_for(pubsub.get_message)
-    assert confirmation['type'] == 'subscribe'
+    pubsub = subscribe_to_allocated_events(r)  #<2>
 
     print('sending change batch quantity for', batch1)
     r.publish('change_batch_quantity', json.dumps({  #<1>
@@ -51,17 +47,18 @@ def test_change_batch_quantity_leading_to_reallocation():
 
     print('waiting for reallocation event')
     messages = []
-    def check_messages():  #<2>
-        messages.append(wait_for(pubsub.get_message))
+    def check_messages():
+        messages.append(wait_for(pubsub.get_message))  #<2>
         print(messages)
         data = json.loads(messages[-1]['data'])
         assert data['orderid'] == orderid
         assert data['batchid'] == batch2
 
     wait_for_assertion(check_messages)
-
 ----
 ====
+
+//TODO: use ignore_subscribe_messages in subscribe_to_allocated_events
 
 Because this is an end-to-end test and our publish/subscribe model is
 asynchronous, there's a bit of boilerplate to manage waiting, but
@@ -89,24 +86,22 @@ from allocation import config, orm, services, unit_of_work
 
 r = redis.Redis(**config.get_redis_host_and_port())
 
+
 def main():  #<1>
     orm.start_mappers()
-    pubsub = r.pubsub()
+    pubsub = r.pubsub(ignore_subscribe_messages=True)
     pubsub.subscribe('change_batch_quantity')
 
     for m in pubsub.listen():
-        if m['type'] == 'subscribe':
-            print('subscribed successfully')
-            continue
         handle_change_batch_quantity(m)
 
 
 def handle_change_batch_quantity(m):  #<2>
-    print('handling', m)
+    print('handling', m, flush=True)
     data = json.loads(m['data'])
     services.change_batch_quantity(
         ref=data['batchid'], qty=data['qty'],
-        start_uow=unit_of_work.start
+        uow=unit_of_work.SqlAlchemyUnitOfWork(),
     )
 ----
 ====
@@ -135,35 +130,41 @@ look like:
 [source,python]
 [role="non-head"]
 ----
-class TestChangeBatchQuantity:
-
-    @staticmethod
     def test_changes_available_quantity():
         uow = FakeUnitOfWork()
-        start_uow = lambda: nullcontext(uow)
-        services.add_batch('b1', 'sku1', 100, None, start_uow)
+        services.add_batch('b1', 'sku1', 100, None, uow)
         [batch] = uow.products.get(sku='sku1').batches
         assert batch.available_quantity == 100
-        services.change_batch_quantity('b1', 50, start_uow)
-        assert batch.available_quantity == 50
+        services.change_batch_quantity('b1', 50, uow)  #<1>
+        assert batch.available_quantity == 50  #<1>
 
+    ...
 
     @staticmethod
-    def test_deallocates_if_necessary():
+    def test_reallocates_if_necessary():
         uow = FakeUnitOfWork()
-        start_uow = lambda: nullcontext(uow)
-        services.add_batch('b1', 'sku1', 50, None, start_uow)
-        services.allocate('o1', 'sku1', 20, start_uow)
-        services.allocate('o2', 'sku1', 20, start_uow)
+        services.add_batch('b1', 'sku1', 50, None, uow)
+        services.add_batch('b2', 'sku1', 50, date.today(), uow)
+        services.allocate('o1', 'sku1', 20, uow)
+        services.allocate('o2', 'sku1', 20, uow)
+        [batch1, batch2] = uow.products.get(sku='sku1').batches
+        assert batch1.available_quantity == 10  #<2>
 
-        product = uow.products.get(sku='sku1')
-        [batch] = product.batches
-        assert batch.available_quantity == 10
+        services.change_batch_quantity('b1', 25, uow)  #<2>
 
-        services.change_batch_quantity('b1', 25, start_uow)
-        assert batch.available_quantity == 5
+        # o1 or o2 will be deallocated, so we'll have 25 - 20 * 1
+        assert batch1.available_quantity == 5  #<2>
+        # and 20 will be reallocated to the next batch
+        assert batch2.available_quantity == 30  #<2>
 ----
 ====
+
+<1> The simple case would be trivially easy to implement, we just
+    modify a quantity.
+
+<2> But if we try and change the quantity so that there's less than
+    has been allocated, we'll need to deallocate at least one order,
+    and we expect to reallocated it to a new batch
 
 
 ==== An internal event to express de-allocation
@@ -173,35 +174,26 @@ stock" email, rather than doing deallocation and re-allocation in-line in the
 service function, we can choose to clearly separate responsibility:
 
 * For the system to be in a consistent state, batch quantity changes should
-  cause deallocations, if necessary
+  immediately cause deallocations, if necessary.
 
 * But reallocation can happen in a separate unit of work.
 
-So we use internal/domain events to capture this distinction:
+So our flow would be:
 
+* call change batch quantity service
+* start uow
+* change quantity
+* deallocate, emit Deallocated events
+* end uow
+* enter deallocation handler
+* start new uow
+* re-allocate
+* emit allocated event
+* enter allocated event handler
+* publish allocated event to redis
 
-[[expect_event_for_deallocated]]
-.A domain event for Deallocation (tests/unit/test_services.py)
-====
-[source,python]
-[role="non-head"]
-----
-    @staticmethod
-    def test_emits_deallocation_event():
-        uow = FakeUnitOfWork()
-        start_uow = lambda: nullcontext(uow)
-        services.add_batch('b1', 'sku1', 50, None, start_uow)
-        services.allocate('o1', 'sku1', 40, start_uow)
-
-        product = uow.products.get(sku='sku1')
-        services.change_batch_quantity('b1', 30, start_uow)
-
-        assert product.events[-1] == events.Deallocated('o1', 'sku1', 40)
-----
-====
 
 ==== Implementation
-
 
 [[change_quantity_service]]
 .Service delegates to model layer (src/allocation/services.py)
@@ -209,13 +201,18 @@ So we use internal/domain events to capture this distinction:
 [source,python]
 [role="non-head"]
 ----
-def change_batch_quantity(ref: str, qty: int, start_uow):
-    with start_uow() as uow:
+def change_batch_quantity(
+        ref: str, qty: int,
+        uow: unit_of_work.AbstractUnitOfWork
+):
+    with uow:
         product = uow.products.get_by_batchid(batchid=ref)
         product.change_batch_quantity(ref=ref, qty=qty)
         uow.commit()
 ----
 ====
+
+//TODO: move up in file
 
 (along the way we need a new query type on our repository)
 
@@ -224,31 +221,89 @@ def change_batch_quantity(ref: str, qty: int, start_uow):
 ====
 [source,python]
 ----
-class ProductRepository:
-    #...
+class AbstractRepository(abc.ABC):
+    ...
 
-    @capture_seen
     def get(self, sku):
-        #...
+        ...
 
-    @capture_seen
     def get_by_batchid(self, batchid):
+        p = self._get_by_batchid(batchid)
+        if p:
+            self.seen.add(p)
+        return p
+
+    @abc.abstractmethod
+    def _get(self, sku):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def _get_by_batchid(self, batchid):
+        raise NotImplementedError
+
+
+
+
+class SqlAlchemyRepository(AbstractRepository):
+    ...
+
+    def _get(self, sku):
+        return self.session.query(model.Product).filter_by(sku=sku).first()
+
+    def _get_by_batchid(self, batchid):
         return self.session.query(model.Product).join(model.Batch).filter(
             orm.batches.c.reference == batchid,
         ).first()
+
 ----
 ====
 
-TODO: discuss alternative methods on repository.
+and on our fakerepository too (you can get a feeling for the maintenance burden
+of our fakes here.  it's not much work, but it is work.)
+
+[[get_by_batchid]]
+.Updating the fake repo too (tests/unit/test_services.py)
+====
+[source,python]
+[role="non-head"]
+----
+class FakeRepository(repository.AbstractRepository):
+    ...
+
+    def _get(self, sku):
+        return next((p for p in self._products if p.sku == sku), None)
+
+    def _get_by_batchid(self, batchid):
+        return next((
+            p for p in self._products for b in p.batches
+            if b.reference == batchid
+        ), None)
+----
+====
+
+TODO: discuss finder methods on repository.
 
 
-[[model_layer_change]]
+We add the new method to the model, which does the quantity change
+and deallocation(s) inline, and publishes a new event.  We also
+modify the existing allocate function to publish an event.
+
+
+[[change_batch_model_layer]]
 .Our model evolves to capture the new requirement (src/allocation/model.py)
 ====
 [source,python]
 ----
 class Product:
     #...
+    def allocate(self, line: OrderLine) -> str:
+        try:
+            ...
+            batch.allocate(line)
+            self.events.append(events.Allocated(
+                line.orderid, line.sku, line.qty, batch.reference
+            ))
+    ...
 
     def change_batch_quantity(self, ref: str, qty: int):
         batch = next(b for b in self.batches if b.reference == ref)
@@ -272,26 +327,53 @@ class Batch:
 TODO: should we have `Batch.change_purchased_quantity`?  But how to
     pass events back up to Product object?
 
+//TODO: access to underscore variable
+//TODO: we changed from Batch.deallocate to Batch.deallocate_one,
+// need do delete/amend some unit tests
 
 === New handlers for allocated and deallocated events
 
-What we need to do is pretty straightforward:
+Here's what the events will look like:
+
+[[two_new_events]]
+.Allocated and Deallocated events (src/allocation/events.py)
+====
+[source,python]
+----
+@dataclass
+class Allocated(Event):
+    orderid: str
+    sku: str
+    qty: int
+    batchid: str
+
+@dataclass
+class Deallocated(Event):
+    orderid: str
+    sku: str
+    qty: int
+----
+====
 
 
-[[new_handlers]]
+The handlers themselves aren't very complicated:
+
+
+[[change_batch_new_handlers]]
 .New handlers for allocate and reallocate (src/allocation/messagebus.py)
 ====
 [source,python]
 [role="non-head"]
 ----
 def reallocate(
-        event: events.Deallocated, start_uow
+        event: events.Deallocated, uow: unit_of_work.AbstractUnitOfWork
 ):
-    services.allocate(event.orderid, event.sku, event.qty, start_uow)  #<1>
+    services.allocate(event.orderid, event.sku, event.qty, uow=uow)  #<1>
 
 
 def publish_allocated_event(
-        event: events.Allocated, start_uow, publish=redis_pubsub.publish
+        event: events.Allocated, uow: unit_of_work.AbstractUnitOfWork,
+        publish=redis_pubsub.publish,
 ):
     publish('line_allocated', event)  #<2>
 
@@ -308,6 +390,8 @@ HANDLERS = {
 <1> reallocate just calls our existing service-layer `allocate` function
 <2> and publishing an external event is very easy too:
 
+//TODO, type hinting hints, use from __future__ import annotations
+
 
 [[redis_publish]]
 .Publishing an event as JSON (src/allocation/redis_pubsub.py)
@@ -315,44 +399,93 @@ HANDLERS = {
 [source,python]
 ----
 def publish(channel, event):
+    print('publishing', channel, event, flush=True)
     r.publish(channel, json.dumps(asdict(event)))
 ----
 ====
 
 
+==== But handlers do now need a UoW
 
-==== Testing handlers
+Our event handlers do now need a UoW.  We make a small modification
+to _unit_of_work.py_:
 
-Because our handlers have an explicit dependency on `start_uow`,
-we can test them individually:
 
-[[test_handler_directly]]
-.Testing the reallocate handler directly (tests/unit/test_services.py)
+[[uow_passes_self_to_messagebus]]
+.UoW passes self to message bus (src/allocation/unit_of_work.py)
+====
+[source,python]
+----
+class AbstractUnitOfWork(abc.ABC):
+    ...
+
+    def __exit__(self, *args):
+        self.rollback()
+        for obj in self.products.seen:
+            messagebus.handle(obj.events, uow=self)  #<1>
+----
+====
+
+<1> The UoW passes itself to the messagebus handlers.
+
+
+And that will get us to passing tests.  Things are starting to
+feel a little messy, however.
+
+
+
+=== Services can become event handlers
+
+Let's take a look at our services and message handlers side-by-side:
+
+
+[[halfway_point]]
+.Services recap (src/allocation/services.py)
+====
+[source,python]
+[role="non-head"]
+----
+def add_batch(
+        ref: str, sku: str, qty: int, eta: Optional[date],
+        uow: unit_of_work.AbstractUnitOfWork
+):
+...
+def allocate(
+        orderid: str, sku: str, qty: int,
+        uow: unit_of_work.AbstractUnitOfWork
+) -> str:
+...
+def change_batch_quantity(
+        ref: str, qty: int,
+        uow: unit_of_work.AbstractUnitOfWork
+):
+----
+====
+
+
+[[handlers_recap]]
+.Handlers recap (src/allocation/messagebus.py)
 ====
 [source,python]
 [role="skip"]
 ----
-    @staticmethod
-    def test_reallocation_handler():
-        uow = FakeUnitOfWork()
-        start_uow = lambda: nullcontext(uow)
-        services.add_batch('b1', 'sku1', 50, None, start_uow)
-
-        [reallocate] = messagebus.HANDLERS[events.Deallocated]
-        e = events.Deallocated(orderid='o1', sku='sku1', qty=10)
-        reallocate(e, start_uow=start_uow)
-
-        [batch] = uow.products.get(sku='sku1').batches
-        assert batch.available_quantity == 40
+def send_out_of_stock_email(
+        event: events.OutOfStock, uow: unit_of_work.AbstractUnitOfWork
+):
+...
+def reallocate(
+        event: events.Deallocated, uow: unit_of_work.AbstractUnitOfWork
+):
+    services.allocate(event.orderid, event.sku, event.qty, uow=uow)
+...
+def publish_allocated_event(
+        event: events.Allocated, uow: unit_of_work.AbstractUnitOfWork,
+        publish=redis_pubsub.publish,
+):
 ----
 ====
 
-//TODO: test this listing by splitting out a commit?
-
-But it's a little fiddly.
-
-
-=== Services can become event handlers
+//TODO: can we test that one?
 
 There are a few code smells hanging around:
 
@@ -368,22 +501,6 @@ There are a few code smells hanging around:
   command or event, whether it's internal or external.
 
 
-.A handler and a service
-====
-[source,python]
-[role="skip"]
-----
-def reallocate(
-        event: events.Deallocated, start_uow
-):
-    services.allocate(event.orderid, event.sku, event.qty, start_uow)
-
-#...
-
-def allocate(orderid: str, sku: str, qty: int, start_uow) -> str:
-----
-====
-
 Let's see what would happen if we pushed the event-driven metaphor a little
 further, and made all the services into event handlers too.  Event classes
 will solve the "primitive obsession" problems, and the message bus will become
@@ -396,16 +513,12 @@ the core of our application:
 ====
 [source,python]
 ----
-def handle(start_uow, events_: List[events.Event]):
-    #...
-
-
 HANDLERS = {
     events.BatchCreated: [handlers.add_batch],
     events.BatchQuantityChanged: [handlers.change_batch_quantity],
     events.AllocationRequest: [handlers.allocate],
     events.Deallocated: [handlers.allocate],
-    events.OutOfStock: [handlers.send_out_of_stock_email],
+    events.OutOfStock: [handlers.send_out_of_stock_notification],
     events.Allocated: [handlers.publish_allocated_event],
 
 }  # type: Dict[Type[events.Event], List[Callable]]
@@ -454,26 +567,27 @@ _handlers.py_:
 ====
 [source,python]
 ----
-def add_batch(start_uow, event: events.BatchCreated):
-    with start_uow() as uow:
-        product = uow.products.get(sku=event.sku)
-        #...
-
-def change_batch_quantity(start_uow, event: events.BatchQuantityChanged):
-    #...
-
-def allocate(start_uow, event: events.AllocationRequest) -> str:
-    #...
-
-def send_out_of_stock_email(
-        start_uow, event: events.OutOfStock, send_email=email.send
+def add_batch(
+        event: events.BatchCreated, uow: unit_of_work.AbstractUnitOfWork
 ):
-    #...
-
+...
+def change_batch_quantity(
+        event: events.BatchQuantityChanged, uow: unit_of_work.AbstractUnitOfWork
+):
+...
+def allocate(
+        event: events.AllocationRequest, uow: unit_of_work.AbstractUnitOfWork
+) -> str:
+...
+def send_out_of_stock_notification(
+        event: events.OutOfStock, uow: unit_of_work.AbstractUnitOfWork,
+        send_mail=email.send
+):
+...
 def publish_allocated_event(
-        start_uow, event: events.Allocated, publish=redis_pubsub.publish
+        event: events.Allocated, uow: unit_of_work.AbstractUnitOfWork,
+        publish=redis_pubsub.publish,
 ):
-    #...
 ----
 ====
 
@@ -496,8 +610,18 @@ def add_batch():
     event = events.BatchCreated(
         request.json['ref'], request.json['sku'], request.json['qty'], eta,
     )
-    messagebus.handle(unit_of_work.start, [event])
+    messagebus.handle([event], unit_of_work.SqlAlchemyUnitOfWork())
     return 'OK', 201
+
+...
+
+@app.route("/allocate", methods=['POST'])
+def allocate_endpoint():
+    try:
+        event = events.AllocationRequest(
+            request.json['orderid'], request.json['sku'], request.json['qty'],
+        )
+        ...
 ----
 ====
 
@@ -510,14 +634,20 @@ Redis now looks very similar
 [source,python]
 ----
 def handle_change_batch_quantity(m):
+    print('handling', m, flush=True)
     data = json.loads(m['data'])
     event = events.BatchQuantityChanged(ref=data['batchid'], qty=data['qty'])
-    messagebus.handle(unit_of_work.start, [event])
+    messagebus.handle([event], uow=unit_of_work.SqlAlchemyUnitOfWork())
 ----
 ====
 
 
 And our system is now entirely event-driven.
+
+TODO add a bit on validating input (and outputs) by using event schemas.
+    Maybe a whole chapter on validation, including that bit about validating
+    at the edges and not programming defensively in your inner layers.
+
 
 .Internal vs External events
 *******************************************************************************
@@ -551,5 +681,4 @@ We've added bit of complexity to our architecture, but hopefully you can
 see how we've now made it very easy to plug in almost any new requirement
 from the business, whether it's a new use case, a new integration with
 one of our internal systems, or an integration with external systems.
-
 
