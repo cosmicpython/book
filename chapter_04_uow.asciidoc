@@ -5,9 +5,15 @@ In this chapter we'll introduce a final piece of the puzzle that really pulls
 the _Repository_ and _Service layer_ patterns together, the _Unit of Work_
 pattern.
 
-A unit of work is a tool that lets us load objects from our persistent
-storage. At the end of a request, it can tell us what objects were loaded and
-what changes we made to them. This gives us two useful things:
+//TODO: Big Lebowski illustration
+
+
+A repository is an abstraction over the idea of persistent storage. A Unit of
+Work is an abstraction over the idea of atomic operation.
+
+The unit of work will give us access to our repository(-ies), and then keep
+track of what objects were loaded and what the latest state is. This gives us
+two useful things:
 
 1) It gives us a stable snapshot of the database to work with, so that the
 objects we use aren't changing halfway through an operation.
@@ -19,7 +25,6 @@ For now, that translates straight into a database transaction, but by giving
 ourselves our own abstraction, we can make it mean more things, as we'll see
 when we get to <<chapter_06_events_and_message_bus>>.
 
-//TODO: Big Lebowski illustration
 
 In the last chapter, the service layer was tightly coupled to the SQLAlchemy
 session object, so we'll fix that.
@@ -372,10 +377,11 @@ def add_batch(ref: str, sku: str, qty: int, eta: Optional[date], start_uow):
 This is a judgement call, but we tend to prefer requiring the explicit commit
 so that we have to choose when to flush state.
 
-Although it's an extra line of code this makes the software safe-by-default. The 
-default behaviour is to _not change anything_. In turn, that makes our code
-easier to reason about since any errors in our service function will leave the
-system untouched.
+Although it's an extra line of code this makes the software safe-by-default.
+The default behaviour is to _not change anything_. In turn, that makes our code
+easier to reason about because there's only one code path that leads to changes
+in the system: total success and an explicit commit. Any other code path, any
+exception, any early exit from the uow's scope, leads to a safe state.
 
 As to the option of using `session.close()`, and our preference of putting the
 `rollback` in the `finally` clause, rather than only in the `except` clause,
