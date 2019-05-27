@@ -434,6 +434,7 @@ feel a little messy, however.
 
 
 
+
 === Services can become event handlers
 
 Let's take a look at our services and message handlers side-by-side:
@@ -658,6 +659,13 @@ if you get into event sourcing (TODO: link)
 
 *******************************************************************************
 
+
+TODO: talk about the fact that we've implemented quite a complicated use case
+    (change quantity, deallocate, start new transaction, reallocate,
+    publish external notification), but thanks to our architecture the
+    _complexity_ stays constant.  we just have events, handlers, and a unit
+    of work.  it's easy to reason about, and easy to explain.  Possibly
+    show a hacky version for comparison?
 
 
 === What have we achieved?
