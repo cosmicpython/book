@@ -5,6 +5,20 @@ In this chapter we'll introduce a final piece of the puzzle that really pulls
 the _Repository_ and _Service layer_ patterns together, the _Unit of Work_
 pattern.
 
+A unit of work is a tool that lets us load objects from our persistent
+storage. At the end of a request, it can tell us what objects were loaded and
+what changes we made to them. This gives us two useful things:
+
+1) It gives us a stable snapshot of the database to work with, so that the
+objects we use aren't changing halfway through an operation.
+
+2) It gives us a way to persist all of our changes at once so that if something
+goes wrong, we don't end up in an inconsistent state.
+
+For now, that translates straight into a database transaction, but by giving
+ourselves our own abstraction, we can make it mean more things, as we'll see
+when we get to <<chapter_06_events_and_message_bus>>.
+
 //TODO: Big Lebowski illustration
 
 In the last chapter, the service layer was tightly coupled to the SQLAlchemy
@@ -13,14 +27,11 @@ session object, so we'll fix that.
 But we'll also use be giving ourself a tool for explicitly saying that some
 work needs to work as an atomic unit.  We either do all of it, or none of it.
 An error part of the way along should lead to any interim work being reverted.
-In normal life (and for now) that translates straight into a database transaction,
-but by giving ourself our own abstraction, we can make it mean more things,
-as we'll see when we get to <<chapter_06_events_and_message_bus>>.
 
 What's a nice, Pythonic way of expressing that a block of code should run
 as a coherent whole, with some setup at the beginning, and some tidy-up at
 the end, some different handling for error and success cases?  Something like
-`try/except/finally`?  
+`try/except/finally`?
 
 A context manager.
 
@@ -218,7 +229,7 @@ def test_allocate_returns_allocation():
     just like the real unit of work and repository classes
 
 <2> Notice the similarity with the fake `commit()` function
-    from `FakeSession` (which we can now get rid of).  But it's 
+    from `FakeSession` (which we can now get rid of).  But it's
     a substantial improvement because we're now faking out
     code that we wrote, rather than 3rd party code.  Some
     people say https://github.com/testdouble/contributing-tests/wiki/Don%27t-mock-what-you-don%27t-own["don't mock what you don't own"].
@@ -358,8 +369,13 @@ def add_batch(ref: str, sku: str, qty: int, eta: Optional[date], start_uow):
 ----
 ====
 
-This is a judgement call, but we tend to prefer requiring the explicit commit.
-"explicit is better than implicit", and all that.
+This is a judgement call, but we tend to prefer requiring the explicit commit
+so that we have to choose when to flush state.
+
+Although it's an extra line of code this makes the software safe-by-default. The 
+default behaviour is to _not change anything_. In turn, that makes our code
+easier to reason about since any errors in our service function will leave the
+system untouched.
 
 As to the option of using `session.close()`, and our preference of putting the
 `rollback` in the `finally` clause, rather than only in the `except` clause,
@@ -369,6 +385,9 @@ user did one, or we blow their changes away.  harsh but simple.  But
 `session.close()`, well, we'd have to look up the SQLAlchemy docs to find out
 exactly what that does.   And besides, why not leave the session open for the
 next time?
+
+// TODO: Ponder this some more ^ I'm not convinced that we shouldn't close the
+// session.
 
 
 === Examples: Using UoW to group multiple operations into an atomic unit
@@ -472,12 +491,38 @@ TODO: expand on this a bit?
 
 Hopefully we've convinced you that the unit of work is a useful pattern, and
 hopefully you'll agree that the context manager is a really nice Pythonic way
-of visually grouping  code into blocks that we want to happen atomically.
+of visually grouping code into blocks that we want to happen atomically.
 
-//TODO this wrap-up needs work.
+This pattern is so useful, in fact, that SQLAlchemy already uses a unit-of-work
+in the shape of the Session object. The Session object in SqlAlchemy is the way
+that your application loads data from the database.
 
-//TODO: discuss the fact that sqla already gives us a unit of work.  check if
-//its a context manager. discuss using our own abstraction
+Every time you load a new Entity from the db, the Session begins to _track_
+changes to the Entity, and when the Session is _flushed_, all your changes are
+persisted together.
+
+Why do we go to the effort of abstracting away the SQLAlchemy session if it
+already implements the pattern we want?
+
+For one thing, the Session API is rich and supports operations that we don't
+want or need in our domain. Our UnitOfWork simplifies the Session to its
+essential core: it can be started, committed, or thrown away.
+
+For another, we're using the UnitOfWork to access our _Repository_ objects.
+This is a neat bit of developer usability that we couldn't do with a plain 
+SQLAlchemy Session.
+
+Lastly, we're motivated again by the dependency inversion principle: our
+service layer depends on a thin abstraction, and we attach a concrete 
+implementation at the outside edge of the system. This lines up nicely with 
+SQLAlchemy's own recommendations:
+
+> Keep the lifecycle of the session (and usually the transaction) separate and
+> external.
+> The most comprehensive approach, recommended for more substantial applications,
+> will try to keep the details of session, transaction and exception management
+> as far as possible from the details of the program doing its work.
+
 
 //TODO: django
 
@@ -485,12 +530,24 @@ of visually grouping  code into blocks that we want to happen atomically.
 .Unit of Work pattern: wrap-up
 *****************************************************************
 Unit of Work is an abstraction around data integrity::
-    bla  TODO
+    It helps to enforce the consistency of our domain model, and improves
+    performance, by letting us perform a single _flush_ operation at the
+    end of an operation.
 
 It works closely with repository and service layer::
-    bla bla see <<appendix_csvs>>.
+    The Unit of Work pattern completes our abstractions over data-access by
+    representing atomic updates.
+    Each of our service-layer use-cases runs in a single unit of work which
+    succeeds or fails as a block.
 
 This is a lovely case for a context manager::
-    bla bla bla.
+    Context managers are an idiomatic way of defining scope. We can use a
+    context manager to automatically rollback our work at the end of request
+    which means the system is safe by default.
+
+SqlAlchemy already implements this pattern::
+    We introduce a simpler abstraction over the SQLAlchemy Session object in
+    order to "narrow" the interface between the ORM and our code. This helps
+    to keep us loosely coupled.
 
 *****************************************************************
