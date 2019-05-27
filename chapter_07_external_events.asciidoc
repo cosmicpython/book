@@ -393,6 +393,10 @@ HANDLERS = {
 //TODO, type hinting hints, use from __future__ import annotations
 
 
+//TODO: get rid of explicit dependencies for publish= and send_mail=
+//      We'll do them in the next chapter.
+
+
 [[redis_publish]]
 .Publishing an event as JSON (src/allocation/redis_pubsub.py)
 ====
