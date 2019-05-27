@@ -1,6 +1,43 @@
 [[part1]]
 [part]
-== Part 1: Building an Architecture to Enable Domain modelling - the Dependency Inversion Principle
+== Part 1: Building an Architecture to Support Domain modelling.
+
+[quote, Cyrille Martraire]
+____
+Most developers have never seen a Domain Model, only a Data Model.
+----
+
+Most developers that we talk to about architecture have a nagging sense that
+things could be better. They're often trying to rescue a system that has gone
+wrong somehow, and trying to put some structure back into a ball of mud.
+They often know that their business logic shouldn't end up spread all over the
+place, but they've no idea how to fix it.
+
+We've found that many developers, when asked to design a new system, will
+immediately start to build a database schema, with the object model treated
+as a afterthought. This is where it all starts to go wrong. Instead, behaviour
+should come first, and drive our storage requirements.
+
+After all, our customers don't care about the data model, they care about the 
+what the system *does*, otherwise they'd just use a spreadsheet.
+
+In this first part we'll look at how to build a rich object model through TDD
+and how to keep that model decoupled from technical concerns. We'll see how to
+build persistence-agnostic code and how to create stable apis around our domain
+so that we can refactor aggressively.
+
+To do that, we'll look at four key design patterns:
+
+ * The repository pattern, an abstraction over the idea of persistent storage,
+ * A service layer that clearly defines where our use-cases begin and end,
+ * The unit-of-work pattern to provide atomic operations,
+ * And the Aggregate pattern to enforce the integrity of our data.
+
+image::diagrams/Chapter1Components.svg[]
+
+For more info, you should check the appendices on choosing abstractions,
+project structure, and the worked "CSV repository" example.
+
 
 [partintro]
 --
