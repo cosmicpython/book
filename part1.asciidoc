@@ -12,15 +12,15 @@ Most developers have never seen a Domain Model, only a Data Model.
 Most developers that we talk to about architecture have a nagging sense that
 things could be better. They're often trying to rescue a system that has gone
 wrong somehow, and trying to put some structure back into a ball of mud.
-They often know that their business logic shouldn't end up spread all over the
-place, but they've no idea how to fix it.
+They know that their business logic shouldn't be spread all over the place,
+but they've no idea how to fix it.
 
 We've found that many developers, when asked to design a new system, will
 immediately start to build a database schema, with the object model treated
 as a afterthought. This is where it all starts to go wrong. Instead, behaviour
 should come first, and drive our storage requirements.
 
-After all, our customers don't care about the data model, they care about the 
+After all, our customers don't care about the data model. They care about the 
 what the system *does*, otherwise they'd just use a spreadsheet.
 
 In this first part we'll look at how to build a rich object model through TDD
