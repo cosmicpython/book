@@ -197,13 +197,19 @@ collection of domain objects.
 ====
 [source,python]
 ----
-class CsvRepository:
+class CsvRepository(repository.AbstractRepository):
 
     def __init__(self, folder):
         self._batches_path = Path(folder) / 'batches.csv'
         self._allocations_path = Path(folder) / 'allocations.csv'
-        self._batches = {}
+        self._batches = {}  # type: Dict[str, model.Batch]
         self._load()
+
+    def get(self, reference):
+        return self._batches.get(reference)
+
+    def add(self, batch):
+        self._batches[batch.reference] = batch
 
     def _load(self):
         with self._batches_path.open() as f:
@@ -218,7 +224,7 @@ class CsvRepository:
                 self._batches[ref] = model.Batch(
                     ref=ref, sku=sku, qty=qty, eta=eta
                 )
-        if not self._allocations_path.exists():
+        if self._allocations_path.exists() is False:
             return
         with self._allocations_path.open() as f:
             reader = csv.DictReader(f)
@@ -244,9 +250,10 @@ And here's what a Unit of Work for CSVs would look like:
 ====
 [source,python]
 ----
-class CsvUnitOfWork:
+class CsvUnitOfWork(unit_of_work.AbstractUnitOfWork):
+
     def __init__(self, folder):
-        self.batches = CsvRepository(folder)
+        self.init_repositories(CsvRepository(folder))
 
     def commit(self):
         with self.batches._allocations_path.open('w') as f:
@@ -257,6 +264,9 @@ class CsvUnitOfWork:
                     writer.writerow(
                         [line.orderid, line.sku, line.qty, batch.reference]
                     )
+
+    def rollback(self):
+        pass
 ----
 ====
 
@@ -274,13 +284,13 @@ _existing_ service layer:
 ----
 def main(folder):
     orders_path = Path(folder) / 'orders.csv'
-    start_uow = lambda: nullcontext(csv_uow.CsvUnitOfWork(folder))
+    uow = csv_uow.CsvUnitOfWork(folder)
     with orders_path.open() as f:
         reader = csv.DictReader(f)
         for row in reader:
             orderid, sku = row['orderid'], row['sku']
             qty = int(row['qty'])
-            services.allocate(orderid, sku, qty, start_uow)
+            services.allocate(orderid, sku, qty, uow)
 ----
 ====
 
