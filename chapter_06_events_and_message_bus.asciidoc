@@ -443,24 +443,10 @@ TODO: discuss replacing @mock test with `FakeMessageBus`
 
 
 
-=== ABC tips (TODO: move earlier in book)
-
-<1> Python tip: `@abc.abstractmethod` is one of the only things that makes
-    ABCs actually "work" in Python.   Python will refuse to let you instantiate
-    a class that does not implement all the `abstractmethods` defined in its
-    parent class
-
-<2> `raise NotImplementedError` is nice but neither necessary nor sufficient.
-    In fact, your abstract methods can have real behaviour which subclasses
-    can call out to, if you want.
-
-NOTE: To really reap the benefits of ABCs (such as they may be) you'll want to
-    be running some helpers like `pylint` and `mypy`.
-
-
 
 === Wrap-up
 
+TODO - wrap up for domain events chapter
 
 
 

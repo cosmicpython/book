@@ -422,6 +422,8 @@ find them again. Our in memory data would let us add new objects, just like a
 list or a set, and since the objects are in memory we never need to call a
 "Save" method, we just fetch the object we care about, and modify it in memory.
 
+==== The repository in the abstract
+
 The simplest repository has just two methods: `add` to put a new item in the
 repository, and `get` to return a previously added item.footnote:[
 You may be thinking, what about `list` or `delete` or `update`, but in the
@@ -431,6 +433,8 @@ taken care of by the unit of work, as we'll see in <<chapter_04_uow>>.].
 We stick rigidly to using these methods for data access in our domain and our
 _service layer_. This self-imposed simplicity stops us from coupling our domain
 model to the database.
+
+Here's what an abstract base class for our repository would look like:
 
 [[abstract_repo]]
 .The simplest possible repository (repository.py)
@@ -450,11 +454,24 @@ class AbstractRepository(abc.ABC):
 ----
 ====
 
-WARNING: We're using abstract base classes in this book for didactic reasons;
+WARNING: We're using abstract base classes in this book for didactic reasons:
     we hope they help explain what the interface of the repository abstraction
     is.  In real life, we've often found ourselves deleting ABCs from our
     production code, because Python makes it too easy to ignore them, and
     they end up unmaintained and, at worst, misleading. Use with caution.
+
+<1> Python tip: `@abc.abstractmethod` is one of the only things that makes
+    ABCs actually "work" in Python.   Python will refuse to let you instantiate
+    a class that does not implement all the `abstractmethods` defined in its
+    parent class
+
+<2> `raise NotImplementedError` is nice but neither necessary nor sufficient.
+    In fact, your abstract methods can have real behaviour which subclasses
+    can call out to, if you want.
+
+NOTE: To really reap the benefits of ABCs (such as they may be) you'll want to
+    be running some helpers like `pylint` and `mypy`.
+
 
 
 Whenever we introduce an architectural pattern in this book, we'll always be
