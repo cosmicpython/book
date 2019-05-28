@@ -7,6 +7,9 @@ ____
 Most developers have never seen a Domain Model, only a Data Model.
 ----
 
+
+[partintro]
+--
 Most developers that we talk to about architecture have a nagging sense that
 things could be better. They're often trying to rescue a system that has gone
 wrong somehow, and trying to put some structure back into a ball of mud.
@@ -38,9 +41,6 @@ image::diagrams/Chapter1Components.png[]
 For more info, you should check the appendices on choosing abstractions,
 project structure, and the worked "CSV repository" example.
 
-
-[partintro]
---
 TODO: overview of DDD and the architecture we want to get to:
 - model with no dependencies
 - invert the normal ORM dependency
