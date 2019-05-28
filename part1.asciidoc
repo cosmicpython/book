@@ -1,15 +1,54 @@
 [[part1]]
 [part]
-== Part 1: Building an Architecture to Enable Domain modelling - the Dependency Inversion Principle
+== Part 1: Building an Architecture to Support Domain modelling.
 
-[partintro]
---
-TODO: overview of DDD and the architecture we want to get to:
-- model with no dependencies
-- invert the normal ORM dependency
-- repository pattern as abstraction over db
-- service layer to do orchestration and define use cases
-- unit of work pattern to tie them together
-- choosing aggregates to control data integrity
-- also suggest reading appendices on abstractions, project structure, csvs
---
+
+[quote, Cyrille Martraire, DDD EU 2017]
+____
+Most developers have never seen a Domain Model, only a Data Model.
+____
+
+Most developers that we talk to about architecture have a nagging sense that
+things could be better. They're often trying to rescue a system that has gone
+wrong somehow, and trying to put some structure back into a ball of mud.
+They know that their business logic shouldn't be spread all over the place,
+but they've no idea how to fix it.
+
+We've found that many developers, when asked to design a new system, will
+immediately start to build a database schema, with the object model treated
+as a afterthought. This is where it all starts to go wrong. Instead, behaviour
+should come first, and drive our storage requirements.
+
+After all, our customers don't care about the data model. They care about the
+what the system *does*, otherwise they'd just use a spreadsheet.
+
+In this first part we'll look at how to build a rich object model through TDD
+(in <<chapter_01_domain_model,Chapter 1>>), and then how to keep that model
+decoupled from technical concerns. We'll see how to build persistence-agnostic
+code and how to create stable APIs around our domain so that we can refactor
+aggressively.
+
+To do that, we'll look at four key design patterns:
+
+* The <<chapter_02_repository,repository pattern>>, an abstraction over the
+  idea of persistent storage,
+
+* A <<chapter_03_service_layer,service layer>> that clearly defines where our
+  use-cases begin and end,
+
+* The <<chapter_04_uow,unit-of-work pattern>> to provide atomic operations,
+
+* And the <<chapter_05_aggregate,Aggregate pattern>> to enforce the integrity
+  of our data.
+
+image::diagrams/Chapter1Components.png[]
+
+//TODO: inline this diagram's source using asciidoc-diagram?
+
+For more info, you should check the appendices on
+<<appendix_abstractions,choosing abstractions>>,
+<<appendix_project_structure,project structure>>, and the worked
+<<appendix_csvs,"CSV repository">> example.
+
+//TODO: appendix_django?
+
