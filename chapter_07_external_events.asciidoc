@@ -373,9 +373,8 @@ def reallocate(
 
 def publish_allocated_event(
         event: events.Allocated, uow: unit_of_work.AbstractUnitOfWork,
-        publish=redis_pubsub.publish,
 ):
-    publish('line_allocated', event)  #<2>
+    redis_pubsub.publish('line_allocated', event)  #<2>
 
 
 HANDLERS = {
@@ -391,10 +390,6 @@ HANDLERS = {
 <2> and publishing an external event is very easy too:
 
 //TODO, type hinting hints, use from __future__ import annotations
-
-
-//TODO: get rid of explicit dependencies for publish= and send_mail=
-//      We'll do them in the next chapter.
 
 
 [[redis_publish]]
@@ -472,7 +467,7 @@ def change_batch_quantity(
 .Handlers recap (src/allocation/messagebus.py)
 ====
 [source,python]
-[role="skip"]
+[role="non-head"]
 ----
 def send_out_of_stock_email(
         event: events.OutOfStock, uow: unit_of_work.AbstractUnitOfWork
@@ -485,12 +480,10 @@ def reallocate(
 ...
 def publish_allocated_event(
         event: events.Allocated, uow: unit_of_work.AbstractUnitOfWork,
-        publish=redis_pubsub.publish,
 ):
 ----
 ====
 
-//TODO: can we test that one?
 
 There are a few code smells hanging around:
 
@@ -586,12 +579,10 @@ def allocate(
 ...
 def send_out_of_stock_notification(
         event: events.OutOfStock, uow: unit_of_work.AbstractUnitOfWork,
-        send_mail=email.send
 ):
 ...
 def publish_allocated_event(
         event: events.Allocated, uow: unit_of_work.AbstractUnitOfWork,
-        publish=redis_pubsub.publish,
 ):
 ----
 ====
