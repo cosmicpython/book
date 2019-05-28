@@ -77,7 +77,8 @@ def test_sends_email_on_out_of_stock_error():
 
 
 NOTE: If you find yourself using `unittest.mock` to test external dependencies
-    at the service layer, it may be a code smell.  See <<chapter_07_bootstrap>>.
+    at the service layer, it may be a code smell.  See
+    <<chapter_08_dependency_injection>>.
 
 
 ==== ... And let's not make a mess of our model either

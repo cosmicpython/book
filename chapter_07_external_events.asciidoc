@@ -261,7 +261,7 @@ class SqlAlchemyRepository(AbstractRepository):
 and on our fakerepository too (you can get a feeling for the maintenance burden
 of our fakes here.  it's not much work, but it is work.)
 
-[[get_by_batchid]]
+[[fakerepo_get_by_batchid]]
 .Updating the fake repo too (tests/unit/test_services.py)
 ====
 [source,python]
