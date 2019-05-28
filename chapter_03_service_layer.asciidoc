@@ -116,7 +116,7 @@ app = Flask(__name__)
 @app.route("/allocate", methods=['POST'])
 def allocate_endpoint():
     session = get_session()
-    batches = repository.BatchRepository(session).list()
+    batches = repository.SqlAlchemyRepository(session).list()
     line = model.OrderLine(
         request.json['orderid'],
         request.json['sku'],
@@ -229,7 +229,7 @@ def is_valid_sku(sku, batches):
 @app.route("/allocate", methods=['POST'])
 def allocate_endpoint():
     session = get_session()
-    batches = repository.BatchRepository(session).list()
+    batches = repository.SqlAlchemyRepository(session).list()
     line = model.OrderLine(
         request.json['orderid'],
         request.json['sku'],
@@ -465,7 +465,7 @@ app now looks a lot cleaner, <<flask_app_using_service_layer>>:
 @app.route("/allocate", methods=['POST'])
 def allocate_endpoint():
     session = get_session()  #<1>
-    repo = repository.BatchRepository(session)  #<1>
+    repo = repository.SqlAlchemyRepository(session)  #<1>
     line = model.OrderLine(
         request.json['orderid'],  #<2>
         request.json['sku'],  #<2>
@@ -950,7 +950,7 @@ json-wrangling and a single function call:
 @app.route("/add_batch", methods=['POST'])
 def add_batch():
     session = get_session()
-    repo = repository.BatchRepository(session)
+    repo = repository.SqlAlchemyRepository(session)
     eta = request.json['eta']
     if eta is not None:
         eta = datetime.fromisoformat(eta).date()
