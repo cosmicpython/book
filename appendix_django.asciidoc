@@ -69,7 +69,7 @@ from djangoproject.alloc import models as django_models
 def test_repository_can_save_a_batch():
     batch = model.Batch('batch1', 'sku1', 100, eta=date(2011, 12, 25))
 
-    repo = repository.BatchRepository()
+    repo = repository.DjangoRepository()
     repo.add(batch)
 
     [saved_batch] = django_models.Batch.objects.all()
@@ -96,7 +96,7 @@ def test_repository_can_retrieve_a_batch_with_allocations():
     d_batch2 = django_models.Batch.objects.create(reference='batch2', sku='sku1', qty=100, eta=None)
     django_models.Allocation.objects.create(line=d_line, batch=d_batch1)
 
-    repo = repository.BatchRepository()
+    repo = repository.DjangoRepository()
     retrieved = repo.get('batch1')
 
     expected = model.Batch('batch1', 'sku1', 100, eta=None)
@@ -115,19 +115,16 @@ Here's how the actual repository ends up looking:
 ====
 [source,python]
 ----
-class BatchRepository:
-    def __init__(self):
-        self.seen = set()
+class DjangoRepository(AbstractRepository):
 
-    @capture_seen
     def add(self, batch):
+        super().add(batch)
         self.update(batch)
 
     def update(self, batch):
         django_models.Batch.update_from_domain(batch)
 
-    @capture_seen
-    def get(self, reference):
+    def _get(self, reference):
         return django_models.Batch.objects.filter(
             reference=reference
         ).first().to_domain()
@@ -229,7 +226,8 @@ def get_allocated_batch_id(orderid, sku):  #<1>
 def test_uow_can_retrieve_a_batch_and_allocate_to_it():
     insert_batch('batch1', 'sku1', 100, None)
 
-    with unit_of_work.start() as uow:
+    uow = unit_of_work.DjangoUnitOfWork()
+    with uow:
         batch = uow.batches.get(reference='batch1')
         line = model.OrderLine('o1', 'sku1', 10)
         batch.allocate(line)
@@ -241,11 +239,11 @@ def test_uow_can_retrieve_a_batch_and_allocate_to_it():
 
 @pytest.mark.django_db(transaction=True)  #<2>
 def test_rolls_back_uncommitted_work_by_default():
-    #...
+    ...
 
 @pytest.mark.django_db(transaction=True)  #<2>
 def test_rolls_back_on_error():
-    #...
+    ...
 ----
 ====
 
@@ -268,25 +266,26 @@ would work:
 ====
 [source,python]
 ----
-@contextmanager
-def start():
-    transaction.set_autocommit(False)  #<1>
-    try:
-        yield _UnitOfWork()
-    finally:
-        transaction.rollback()  #<2>
+class DjangoUnitOfWork(AbstractUnitOfWork):
+
+    def __init__(self):
+        self.init_repositories(repository.DjangoRepository())
+
+    def __enter__(self):
+        transaction.set_autocommit(False)  #<1>
+        return super().__enter__()
+
+    def __exit__(self, *args):
+        super().__exit__(*args)
         transaction.set_autocommit(True)
 
-
-class _UnitOfWork:
-    def __init__(self):
-        self.batches = repository.BatchRepository()
-
-
     def commit(self):
-        for batch in self.batches.seen:
+        for batch in self.batches.seen:  #<3>
             self.batches.update(batch)  #<3>
         transaction.commit()  #<2>
+
+    def rollback(self):
+        transaction.rollback()  #<2>
 ----
 ====
 
@@ -328,7 +327,7 @@ def add_batch(request):
         eta = datetime.fromisoformat(eta).date()
     services.add_batch(
         data['ref'], data['sku'], data['qty'], eta,
-        unit_of_work.start
+        unit_of_work.DjangoUnitOfWork(),
     )
     return HttpResponse('OK', status=201)
 
@@ -340,7 +339,7 @@ def allocate(request):
             data['orderid'],
             data['sku'],
             data['qty'],
-            unit_of_work.start
+            unit_of_work.DjangoUnitOfWork(),
         )
     except (model.OutOfStock, services.InvalidSku) as e:
         return JsonResponse({'message': str(e)}, status=400)
@@ -355,10 +354,11 @@ def allocate(request):
 OK it works but it does feel like more effort than Flask/SQLAlchemy.  Why is
 that, and when might you still choose Django?
 
-- it's hard because the ORM doesn't work so well.  We can't do ActiveRecord, so
-  we have to build a manual translation layer behind the repository instead.
-  That's more work (although once it's done the ongoing maintenance burden
-  shouldn't be too high).
+- it's hard because the ORM doesn't work in the same way.  We don't have
+  an equivalent of the SQLAlchemy classical mapper, so our ActiveRecord
+  and our domain model can't be the same object.  Instead we have to build a
+  manual translation layer behind the repository instead. That's more work
+  (although once it's done the ongoing maintenance burden shouldn't be too high).
 
 - it's also hard because you need to integrate `pytest-django` and think
   carefully about test databases etc
