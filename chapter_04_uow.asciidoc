@@ -189,6 +189,8 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 <3> Finally, we provide concrete `commit()` and `rollback()` methods that
     use our database session.
 
+//TODO: why not swap out db using os.environ?
+
 
 
 === Fake Unit of Work for testing:
@@ -383,17 +385,21 @@ easier to reason about because there's only one code path that leads to changes
 in the system: total success and an explicit commit. Any other code path, any
 exception, any early exit from the uow's scope, leads to a safe state.
 
-As to the option of using `session.close()`, and our preference of putting the
-`rollback` in the `finally` clause, rather than only in the `except` clause,
-that's another personal preference, but the "always-rollback` version does feel
-easier to understand.  rollback rolls back to the last commit, so either the
-user did one, or we blow their changes away.  harsh but simple.  But
-`session.close()`, well, we'd have to look up the SQLAlchemy docs to find out
-exactly what that does.   And besides, why not leave the session open for the
-next time?
+Similarly, we prefer "always-rollback" to "only-rollback-on-error",  because
+the former feels easier to understand;  rollback rolls back to the last commit,
+so either the user did one, or we blow their changes away.  Harsh but simple.
+
+As to the option of using `session.close()`, we have played with that in the
+past, but we always end up having to look up the SQLAlchemy docs to find out
+exactly what it does.   And besides, why not leave the session open for the
+next time?  But you should experiment and figure out your own preferences here.
 
 // TODO: Ponder this some more ^ I'm not convinced that we shouldn't close the
 // session.
+// HP - i wonder if maybe we'd run into trouble with long-running scripts?
+// also - if you close the session, the current uow design won't reopen it
+// on next use, so the repo will try and work on a closed session and fail
+// hard, presumably.
 
 
 === Examples: Using UoW to group multiple operations into an atomic unit
@@ -515,12 +521,12 @@ want or need in our domain. Our UnitOfWork simplifies the Session to its
 essential core: it can be started, committed, or thrown away.
 
 For another, we're using the UnitOfWork to access our _Repository_ objects.
-This is a neat bit of developer usability that we couldn't do with a plain 
+This is a neat bit of developer usability that we couldn't do with a plain
 SQLAlchemy Session.
 
 Lastly, we're motivated again by the dependency inversion principle: our
-service layer depends on a thin abstraction, and we attach a concrete 
-implementation at the outside edge of the system. This lines up nicely with 
+service layer depends on a thin abstraction, and we attach a concrete
+implementation at the outside edge of the system. This lines up nicely with
 SQLAlchemy's own recommendations:
 
 > Keep the lifecycle of the session (and usually the transaction) separate and
@@ -530,7 +536,8 @@ SQLAlchemy's own recommendations:
 > as far as possible from the details of the program doing its work.
 
 
-//TODO: django
+//TODO:  not sure where, but we should maybe talk about the option of separating
+// the uow into a uow plus a uowm.
 
 
 .Unit of Work pattern: wrap-up
