@@ -444,9 +444,9 @@ Here's what an abstract base class for our repository would look like:
 
 class AbstractRepository(abc.ABC):
 
-    @abc.abstractmethod
+    @abc.abstractmethod  #<1>
     def add(self, batch):
-        raise NotImplementedError
+        raise NotImplementedError  #<2>
 
     @abc.abstractmethod
     def get(self, reference):
@@ -472,7 +472,7 @@ WARNING: We're using abstract base classes in this book for didactic reasons:
 NOTE: To really reap the benefits of ABCs (such as they may be) you'll want to
     be running some helpers like `pylint` and `mypy`.
 
-
+==== What is the trade-off?
 
 [quote, Rich Hickey]
 ____
