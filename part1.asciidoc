@@ -8,8 +8,6 @@ ____
 Most developers have never seen a Domain Model, only a Data Model.
 ____
 
-[partintro]
---
 Most developers that we talk to about architecture have a nagging sense that
 things could be better. They're often trying to rescue a system that has gone
 wrong somehow, and trying to put some structure back into a ball of mud.
@@ -31,10 +29,10 @@ so that we can refactor aggressively.
 
 To do that, we'll look at four key design patterns:
 
- * The repository pattern, an abstraction over the idea of persistent storage,
- * A service layer that clearly defines where our use-cases begin and end,
- * The unit-of-work pattern to provide atomic operations,
- * And the Aggregate pattern to enforce the integrity of our data.
+* The repository pattern, an abstraction over the idea of persistent storage,
+* A service layer that clearly defines where our use-cases begin and end,
+* The unit-of-work pattern to provide atomic operations,
+* And the Aggregate pattern to enforce the integrity of our data.
 
 image::diagrams/Chapter1Components.png[]
 
@@ -42,11 +40,11 @@ For more info, you should check the appendices on choosing abstractions,
 project structure, and the worked "CSV repository" example.
 
 TODO: overview of DDD and the architecture we want to get to:
-- model with no dependencies
-- invert the normal ORM dependency
-- repository pattern as abstraction over db
-- service layer to do orchestration and define use cases
-- unit of work pattern to tie them together
-- choosing aggregates to control data integrity
-- also suggest reading appendices on abstractions, project structure, csvs
---
+
+* model with no dependencies
+* invert the normal ORM dependency
+* repository pattern as abstraction over db
+* service layer to do orchestration and define use cases
+* unit of work pattern to tie them together
+* choosing aggregates to control data integrity
+* also suggest reading appendices on abstractions, project structure, csvs
