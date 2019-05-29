@@ -89,7 +89,7 @@ a model from our current employment. Made.com are a successful furniture
 retailer. When you buy a sofa or a coffee table, we have to figure out how best
 to get your goods to your home.
 
-//TODO: [Context diagram for allocation]
+
 
 At a high level, we have separate systems that are responsible for buying
 stock, selling stock to customers, and shipping goods to customers. There's a
@@ -111,6 +111,27 @@ can save money by keeping lower inventory in the domestic warehouse.
 But allocating orders is no longer a trivial matter of decrementing a single
 quantity in the warehouse system.  We need a more complex allocation mechanism.
 Time for some domain modelling.
+
+[[id_here]]
+.Listing title
+====
+[source,text]
+----
+ Orders                          +------------+        Shipments, Stock
+  OrderLines(product, qty) ----> | Allocation | ----->  Batches (product, qty, eta)
+  OrderLines(product, qty) ----> |  Service   | ----->  Batches (product, qty, eta)
+  ...                            |            |         ...
+                                 +------------+
+                                       |
+                                       V
+                                "An allocation"
+                                orderline->batch.
+----
+====
+
+//TODO: Better diagram for allocation? context diag?"
+
+
 
 
 === Exploring the domain language
