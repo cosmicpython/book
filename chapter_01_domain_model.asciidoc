@@ -112,10 +112,10 @@ But allocating orders is no longer a trivial matter of decrementing a single
 quantity in the warehouse system.  We need a more complex allocation mechanism.
 Time for some domain modelling.
 
-[[id_here]]
-.Listing title
+.A sort-of context diagram for the allocation service.
 ====
 [source,text]
+[role="skip"]
 ----
  Orders                          +------------+        Shipments, Stock
   OrderLines(product, qty) ----> | Allocation | ----->  Batches (product, qty, eta)
