@@ -117,15 +117,16 @@ Time for some domain modelling.
 [source,text]
 [role="skip"]
 ----
- Orders                          +------------+        Shipments, Stock
-  OrderLines(product, qty) ----> | Allocation | ----->  Batches (product, qty, eta)
-  OrderLines(product, qty) ----> |  Service   | ----->  Batches (product, qty, eta)
-  ...                            |            |         ...
-                                 +------------+
-                                       |
-                                       V
-                                "An allocation"
-                                orderline->batch.
+Orders                          +------------+         Shipments, Stock
+ OrderLines(product/qty) -----> | Allocation | ------>  Batches(product/qty/eta)
+ OrderLines(product/qty) -----> |  Service   | ------>  Batches(product/qty/eta)
+ ...                      sent  |            |  looks   ...
+                           to   +------------+   up
+                                      |
+                                      | outputs
+                                      V
+                               "An allocation"
+                               orderline->batch.
 ----
 ====
 
