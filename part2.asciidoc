@@ -2,12 +2,47 @@
 [part]
 == Part 2: Event-Driven Architecture
 
-TODO: preview our move from onion architecture to event-driven.
+[quote, Alan Kay, DDD EU 2017]
+____
 
-* domain events
-* events as input and output
-* message bus
-* commands vs events
+I'm sorry that I long ago coined the term "objects" for this topic because it
+gets many people to focus on the lesser idea.
 
-we also throw in cqrs and configuration root / di
+The big idea is "messaging" ... The key in making great and growable systems is
+much more to design how its modules communicate rather than what their internal
+properties and behaviors should be. 
+____
 
+It's all very well being able to write *one* domain model to manage a single bit
+of business process, but what happens when we need to write *many* models? In
+the real world, our applications sit within an organisation and need to exchange
+information with other parts of the system.
+
+Faced with this rquirement, many teams reach for microservices via HTTP APIs
+but if they're not careful, they'll end up producing the most chaotic mess of
+all: the distributed big ball of mud.
+
+Fortunately, the cosmic bower bird is here to show how the techniques from part
+one can be extended to distributed systems.
+
+
+In part two, we'll zoom out to look at how we can compose a system from many
+small components that interact through message passing. 
+
+We'll see how our service layer and unit of work allow us to reconfigure our app
+to run as an asynchronous message processor, and how event driven systems help
+us to decouple aggregates and applications from one another.
+
+[[part2_context_diag]]
+
+We'll look at the following patterns and techniques:
+
+* Domain events
+  Trigger workflows that cross consistency boundaries.
+* Message bus
+  Provide a unified way of invoking use-cases from any endpoint.
+* CQRS
+  Improve performance and scalability by separating reads and writes.
+
+Plus we'll introduce a Dependency Injection framework that uses type hints, just
+to annoy Harry.
