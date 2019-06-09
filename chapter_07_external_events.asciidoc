@@ -234,6 +234,10 @@ class AbstractRepository(abc.ABC):
         return p
 
     @abc.abstractmethod
+    def _add(self, product):
+        raise NotImplementedError
+
+    @abc.abstractmethod
     def _get(self, sku):
         raise NotImplementedError
 
@@ -378,7 +382,7 @@ def publish_allocated_event(
 
 
 HANDLERS = {
-    events.OutOfStock: [send_out_of_stock_email],
+    events.OutOfStock: [send_out_of_stock_notification],
     events.Allocated: [publish_allocated_event],
     events.Deallocated: [reallocate],
 
@@ -418,8 +422,8 @@ to _unit_of_work.py_:
 class AbstractUnitOfWork(abc.ABC):
     ...
 
-    def __exit__(self, *args):
-        self.rollback()
+    def commit(self):
+        self._commit()
         for obj in self.products.seen:
             messagebus.handle(obj.events, uow=self)  #<1>
 ----
@@ -469,7 +473,7 @@ def change_batch_quantity(
 [source,python]
 [role="non-head"]
 ----
-def send_out_of_stock_email(
+def send_out_of_stock_notification(
         event: events.OutOfStock, uow: unit_of_work.AbstractUnitOfWork
 ):
 ...
