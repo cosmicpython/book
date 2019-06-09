@@ -141,6 +141,7 @@ def allocate(
 Catching an exception and re-raising it?  I mean, it could be worse, but it's
 definitely making us unhappy.
 
+
 ===  Single Responsibility Principle
 
 Really this is a violation of the Single Responsibility Principle.  Our use
@@ -173,6 +174,7 @@ recording "events"--facts about things that have happened:
 .The model records a domain event (src/allocation/model.py)
 ====
 [source,python]
+[role="non-head"]
 ----
 class Product:
 
@@ -187,7 +189,8 @@ class Product:
             #...
         except StopIteration:
             self.events.append(events.OutOfStock(line.sku))  #<2>
-            raise exceptions.OutOfStock(f'Out of stock for sku {line.sku}')
+            # raise exceptions.OutOfStock(f'Out of stock for sku {line.sku}')  #<3>
+            return None
 ----
 ====
 
@@ -196,6 +199,14 @@ class Product:
 
 <2> Rather than invoking some email-sending code directly, we record those
     events at the place they occur, using only the language of the domain.
+
+<3> We're also going to stop raising an exception for the out-of-stock 
+    case.  The event will do the job the exception was doing.
+
+TIP: Exceptions and Events don't mix.  If you're implementing domain
+    events, don't raise exceptions to describe the same domain concept.
+    As we'll see later when we handle events in the unit of work, it's
+    confusing to have to reason about events and exceptions together.
 
 
 ==== Events are simple dataclasses
@@ -241,12 +252,13 @@ invoke the following handlers.  Here's a minimal implementation:
 [source,python]
 ----
 def handle(events_: List[events.Event]):
-    for event in events_:
+    while events_:
+        event = events_.pop(0)
         for handler in HANDLERS[type(event)]:
             handler(event)
 
 
-def handle_out_of_stock(event: events.OutOfStock):
+def send_out_of_stock_notification(event: events.OutOfStock):
     email.send_mail(
         'stock@made.com',
         f'Out of stock for {event.sku}',
@@ -254,14 +266,12 @@ def handle_out_of_stock(event: events.OutOfStock):
 
 
 HANDLERS = {
-    events.OutOfStock: [handle_out_of_stock],
+    events.OutOfStock: [send_out_of_stock_notification],
 
 }  # type: Dict[Type[events.Event], List[Callable]]
 ----
 ====
 
-//TODO: backport explicit dependencies from redis chapter??
-//TODO: backport events.pop(0)
 //TODO: maybe handle should just take one event?
 
 
@@ -311,7 +321,7 @@ TODO: discussion, service layer can/could raise events directly too.
 
 The UoW already has a `try/finally`, and it knows about all the aggregates
 currently in play because it provides access to the _Repository_.  So it's
-potentially a good place to spot events and pass them to the message bus:
+a good place to spot events and pass them to the message bus:
 
 [[uow_with_messagebus]]
 .The UoW meets the Message Bus (src/allocation/unit_of_work.py)
@@ -319,20 +329,32 @@ potentially a good place to spot events and pass them to the message bus:
 [source,python]
 ----
 class AbstractUnitOfWork(abc.ABC):
+    ...
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *args):
-        self.rollback()
-        for obj in self.products.seen:
+    def commit(self):
+        self._commit()  #<1>
+        for obj in self.products.seen:  #<2>
             messagebus.handle(obj.events)
 
     @abc.abstractmethod
-    def commit(self):
-        ...
+    def _commit(self):
+        raise NotImplementedError
+
+...
+
+class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
+    ...
+
+    def _commit(self):  #<1>
+        self.session.commit()
 ----
 ====
+
+<1> We'll change our commit method to require a private `._commit()`
+    method from subclasses
+
+<2> After committing, we run through all the objects that our
+    repository has seen and pass their events to the message bus.
 
 That relies on the repository keeping track of aggregates that it's seen:
 
@@ -346,18 +368,22 @@ class AbstractRepository(abc.ABC):
     def __init__(self):
         self.seen = set()  # type: Set[model.Product]  #<1>
 
-    @abc.abstractmethod
     def add(self, product):  #<2>
+        self._add(product)
         self.seen.add(product)
 
     def get(self, sku):  #<3>
         p = self._get(sku)
         if p:
-            self.seen.add(p)  #<3>
+            self.seen.add(p)
         return p
 
     @abc.abstractmethod
-    def _get(self, sku):  #<3>
+    def _add(self, product):  #<2>
+        raise NotImplementedError
+
+    @abc.abstractmethod  #<3>
+    def _get(self, sku):
         raise NotImplementedError
 
 
@@ -365,11 +391,10 @@ class AbstractRepository(abc.ABC):
 class SqlAlchemyRepository(AbstractRepository):
 
     def __init__(self, session):
-        super().__init__()  #<1>
+        super().__init__()
         self.session = session
 
-    def add(self, product):
-        super().add(product)  #<1>
+    def _add(self, product):  #<2>
         self.session.add(product)
 
     def _get(self, sku):  #<3>
@@ -380,12 +405,11 @@ class SqlAlchemyRepository(AbstractRepository):
 <1> We initialise a set to store objects seen.  That means our implementations
     need to call `super().__init__()`
 
-<2> The parent `add()` method adds things to `.seen` as well, so we make sure
-    to call `super.add()`
+<2> The parent `add()` method adds things to `.seen`, and now requires subclasses
+    to implement `._add()`
 
-<3> And `.get()` delegates to a `._get()` function, to be implemented by subclasses,
-    in order to capture objects seen.
-
+<3> Similarly, `.get()` delegates to a `._get()` function, to be implemented by
+    subclasses, in order to capture objects seen.
 
 Once the UoW and repository collaborate in this way to automatically keep
 track of live objects and process their events, the service layer can now be
@@ -414,13 +438,13 @@ def allocate(
 
 
 We do also have to remember to change the fakes in the service layer and make them
-call `super()` in the right places, but the changes are minimal:
+call `super()` in the right places, and implement underscorey methods, but the
+changes are minimal:
 
 [[services_tests_ugly_fake_messagebus]]
-.Service-layer fakes are starting to be hard work. (tests/unit/test_services.py)
+.Service-layer fakes need tweaking. (tests/unit/test_services.py)
 ====
 [source,python]
-[role="non-head"]
 ----
 class FakeRepository(repository.AbstractRepository):
 
@@ -428,12 +452,20 @@ class FakeRepository(repository.AbstractRepository):
         super().__init__()
         self._products = set(products)
 
-    def add(self, product):
-        super().add(product)
+    def _add(self, product):
         self._products.add(product)
 
     def _get(self, sku):
         return next((p for p in self._products if p.sku == sku), None)
+
+...
+
+class FakeUnitOfWork(unit_of_work.AbstractUnitOfWork):
+    ...
+
+    def _commit(self):
+        self.committed = True
+
 ----
 ====
 
