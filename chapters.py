@@ -9,6 +9,7 @@ CHAPTERS = [
     "chapter_05_aggregate",
     "chapter_06_events_and_message_bus",
     "chapter_07_external_events",
+    "chapter_08_commands",
 ]
 
 BRANCHES = {

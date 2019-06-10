@@ -1,0 +1,149 @@
+[[chapter_08_commands]]
+== Commands and Command Handler
+
+NOTE: placeholder chapter, under construction
+
+
+It's sometimes worth distinguishing events from commands.  They have subtly
+different semantics.
+
+* commands express a wish to get the system to do something.  They usually
+  map to our system's main use cases
+* the system can say "no" to a command -- it can be invalid, or the system's
+  state can make the command impossible
+* whereas an event records a fact that has happened.  the system can't say
+  no to it.
+
+
+[[commands_dot_py]]
+.Pulling out some commands (src/allocation/commands.py)
+====
+[source,python]
+----
+class Command:
+    pass
+
+
+@dataclass
+class Allocate(Command):
+    orderid: str
+    sku: str
+    qty: int
+
+
+@dataclass
+class CreateBatch(Command):
+    ref: str
+    sku: str
+    qty: int
+    eta: Optional[date] = None
+
+
+@dataclass
+class ChangeBatchQuantity(Command):
+    ref: str
+    qty: int
+----
+====
+
+
+
+As a result, our messagebus changes somewhat.
+
+[[new_messagebus]]
+.Messagebus handles events and commands differently (src/allocation/messagebus.py)
+====
+[source,python]
+----
+Message = Union[commands.Command, events.Event]
+
+
+def handle(message_queue: List[Message], uow: unit_of_work.AbstractUnitOfWork):  #<1>
+    while message_queue:
+        m = message_queue.pop(0)
+        if isinstance(m, events.Event):
+            handle_event(m, uow)
+        elif isinstance(m, commands.Command):
+            handle_command(m, uow)
+        else:
+            raise Exception(f'{m} was not an Event or Command')
+
+
+def handle_event(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):  #<2>
+    for handler in EVENT_HANDLERS[type(event)]:
+        try:
+            print('handling event', event, 'with handler', handler, flush=True)
+            handler(event, uow=uow)
+        except:  #<2>
+            print(f'Exception handling event {event}\n:{traceback.format_exc()}')
+            continue
+
+
+def handle_command(command, uow: unit_of_work.AbstractUnitOfWork):  #<3>
+    print('handling command', command, flush=True)
+    try:
+        handler = COMMAND_HANDLERS[type(command)]
+        return handler(command, uow=uow)
+    except Exception as e:
+        print(f'Exception handling command {command}: {e}')
+        raise e  #<3>
+
+
+EVENT_HANDLERS = {
+    events.Allocated: [handlers.publish_allocated_event],
+    events.Deallocated: [handlers.allocate],
+    events.OutOfStock: [handlers.send_out_of_stock_notification],
+}  # type: Dict[Type[events.Event], List[Callable]]  #<2>
+
+COMMAND_HANDLERS = {
+    commands.Allocate: handlers.allocate,
+    commands.CreateBatch: handlers.add_batch,
+    commands.ChangeBatchQuantity: handlers.change_batch_quantity,
+}  # type: Dict[Type[commands.Command], Callable]  #<3>
+----
+====
+
+
+<1> It still has a main `handle()` entrypoint, that takes a list of messages,
+    that may be commands or events.
+
+<2> We dispatch to a function for handling events.  It can delegate to multiple
+    handlers per event, and it catches and logs any errors, but does not let them
+    interrupt message processing.
+
+<3> The command handler expects just one handler per command.  If any errors
+    are raised, they fail hard and will bubble up.
+
+
+Why does `handle_command` have a `return`, but `handle_events` doesn't, I hear
+you ask?  It's so that we can return the batchid from the API.  
+
+
+[[flask_uses_command]]
+.Flask gets a response from the command handler (src/allocation/flask_app.py)
+====
+[source,python]
+----
+@app.route("/allocate", methods=['POST'])
+def allocate_endpoint():
+    try:
+        command = commands.Allocate(
+            request.json['orderid'], request.json['sku'], request.json['qty'],
+        )
+        uow = unit_of_work.SqlAlchemyUnitOfWork()
+        batchid = messagebus.handle_command(command, uow)
+    except exceptions.InvalidSku as e:
+        return jsonify({'message': str(e)}), 400
+
+    return jsonify({'batchid': batchid}), 201
+----
+====
+
+
+That's a bit ugly.  In the next chapter, we'll look at a way of separating out command
+handling from read requests.
+
+
+TODO: discussion, can events raise commands?
+
+
