@@ -115,6 +115,8 @@ COMMAND_HANDLERS = {
     are raised, they fail hard and will bubble up.
 
 
+//TODO: consider using a dispatcher thingie from functools?
+
 Why does `handle_command` have a `return`, but `handle_events` doesn't, I hear
 you ask?  It's so that we can return the batchid from the API.  
 

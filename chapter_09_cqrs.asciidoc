@@ -3,3 +3,274 @@
 
 NOTE: placeholder chapter, under construction
 
+Just, honestly, read this for now: https://io.made.com/commands-and-queries-handlers-and-views/
+
+
+=== Always Redirect after a POST?
+
+The API returns information from the post request and that's bad, arguably.
+
+Let's have an endpoint to go and get the updated state instead:
+
+
+[[api_test_does_get_after_post]]
+.API test does a GET after the POST (tests/e2e/test_api.py)
+====
+[source,python]
+----
+def get_allocation(orderid):
+    url = config.get_api_url()
+    return requests.get(f'{url}/allocations/{orderid}')
+
+
+@pytest.mark.usefixtures('postgres_db')
+@pytest.mark.usefixtures('restart_api')
+def test_happy_path_returns_202_and_batch_is_allocated():
+    orderid = random_ref('o')
+    sku, othersku = random_ref('s1'), random_ref('s2')
+    batch1, batch2, batch3 = random_ref('b1'), random_ref('b2'), random_ref('b3')
+    post_to_add_batch(batch1, sku, 100, '2011-01-02')
+    post_to_add_batch(batch2, sku, 100, '2011-01-01')
+    post_to_add_batch(batch3, othersku, 100, None)
+    data = {
+        'orderid': orderid,
+        'sku': sku,
+        'qty': 3,
+    }
+    url = config.get_api_url()
+    r = requests.post(f'{url}/allocate', json=data)
+    assert r.status_code == 202
+    r = get_allocation(orderid)
+    assert r.ok
+    assert r.json() == [
+        {'sku': sku, 'batchid': batch2},
+    ]
+
+
+@pytest.mark.usefixtures('postgres_db')
+@pytest.mark.usefixtures('restart_api')
+def test_unhappy_path_returns_400_and_error_message():
+    ...
+    r = requests.post(f'{url}/allocate', json=data)
+    assert r.status_code == 400
+    assert r.json()['message'] == f'Invalid sku {sku}'
+    r = get_allocation(orderid)
+    assert r.status_code == 404
+----
+====
+
+
+OK what might the flask app look like?
+
+
+[[flask_app_calls_view]]
+.Endpoint for viewing allocations (src/allocation/flask_app.py)
+====
+[source,python]
+----
+@app.route("/allocations/<orderid>", methods=['GET'])
+def allocations_view_endpoint(orderid):
+    uow = unit_of_work.SqlAlchemyUnitOfWork()
+    result = views.allocations(orderid, uow)
+    if not result:
+        return 'not found', 404
+    return jsonify(result), 200
+----
+====
+
+
+=== Hold on to your lunch folks.
+
+All right, a _views.py_, fair enough, we can keep read-only stuff in there,
+and it'll be a real views.py, not like Django's...
+
+
+[[views_dot_py]]
+.Views do... raw sql??? (src/allocation/views.py)
+====
+[source,python]
+[role="non-head"]
+----
+from allocation import unit_of_work
+
+def allocations(orderid: str, uow: unit_of_work.SqlAlchemyUnitOfWork):
+    with uow:
+        results = list(uow.session.execute(
+            'SELECT ol.sku, b.reference'
+            ' FROM allocations AS a'
+            ' JOIN batches AS b ON a.batch_id = b.id'
+            ' JOIN order_lines AS ol ON a.orderline_id = ol.id'
+            ' WHERE ol.orderid = :orderid',
+            dict(orderid=orderid)
+        ))
+        print('results', results, flush=True)
+    return [{'sku': sku, 'batchid': batchid} for sku, batchid in results]
+----
+====
+
+WHAT THE ACTUAL F?  ARE YOU GUYS TRIPPING F-ING BALLS?
+
+Yes.  yes we are.  Obviously don't do this.  Unless you really need to.  Now,
+allow us to explain some possible places where this total insanity might make
+a shred of sense.
+
+* Link to CQRS paper
+* SELECT N+1
+
+
+btw you can test this stuff. note that it can't be unit tested, because it
+needs a real db, it's an integration test:
+
+[[integration_testing_views]]
+.An integration test for a view (tests/integration/test_views.py)
+====
+[source,python]
+----
+from datetime import date
+from allocation import commands, events, unit_of_work, messagebus, views
+
+
+def test_allocations_view(session_factory):
+    uow = unit_of_work.SqlAlchemyUnitOfWork(session_factory)
+    messagebus.handle([
+        commands.CreateBatch('b1', 'sku1', 50, None),
+        commands.CreateBatch('b2', 'sku2', 50, date.today()),
+        commands.Allocate('o1', 'sku1', 20),
+        commands.Allocate('o1', 'sku2', 20),
+    ], uow)
+
+    assert views.allocations('o1', uow) == [
+        {'sku': 'sku1', 'batchid': 'b1'},
+        {'sku': 'sku2', 'batchid': 'b2'},
+    ]
+----
+====
+
+
+=== Doubling down on the madness.
+
+that hardcoded sql query is pretty ugly right?  what if we made it nicer
+by keeping a totally separate, denormalised datastore for our view model?
+
+Horrific right? wait 'til we tell you we're not even going to use postgres
+or triggers or anything known and reliable and boring like that to keep it
+up to date.  We're going to use our amazing event-driven architecture!
+that's right!  may as well join the cult and start drinking folks, the ship
+is made of cardboard and the captains are crazy and there's nothing you can
+do to stop them.
+
+
+[[much_nicer_query]]
+.A much nicer query (src/allocation/views.py)
+====
+[source,python]
+----
+def allocations(orderid: str, uow: unit_of_work.SqlAlchemyUnitOfWork):
+    with uow:
+        results = list(uow.session.execute(
+            'SELECT sku, batchid FROM allocations_view WHERE orderid = :orderid',
+            dict(orderid=orderid)
+        ))
+        ...
+----
+====
+
+Here's our table.  Hee hee hee, no foreign keys, just strings, yolo
+
+[[new_table]]
+.A very simple table (src/allocation/orm.py)
+====
+[source,python]
+----
+allocations_view = Table(
+    'allocations_view', metadata,
+    Column('orderid', String(255)),
+    Column('sku', String(255)),
+    Column('batchid', String(255)),
+)
+----
+====
+
+We add a second handler to the `Allocated` event:
+
+[[new_handler_for_allocated]]
+.Allocated event gets a new handler (src/allocation/messagebus.py)
+====
+[source,python]
+----
+EVENT_HANDLERS = {
+    events.Allocated: [
+        handlers.publish_allocated_event, handlers.add_allocation_to_read_model
+    ],
+----
+====
+
+
+
+Here's what our update-view-model code looks like:
+
+
+[[update_view_model_1]]
+.Update on allocation (src/allocation/handlers.py)
+====
+[source,python]
+----
+
+def add_allocation_to_read_model(
+        event: events.Allocated, uow: unit_of_work.SqlAlchemyUnitOfWork,
+):
+    with uow:
+        uow.session.execute(
+            'INSERT INTO allocations_view (orderid, sku, batchid)'
+            ' VALUES (:orderid, :sku, :batchid)',
+            dict(orderid=event.orderid, sku=event.sku, batchid=event.batchid)
+        )
+        uow.commit()
+----
+====
+
+
+And it'll work!
+
+
+(OK you'll also need to handle deallocated:)
+
+
+[[id_here]]
+.Listing title
+====
+[source,python]
+[role="skip"]
+----
+events.Deallocated: [
+    handlers.remove_allocation_from_read_model, handlers.allocate
+],
+
+...
+
+def remove_allocation_from_read_model(
+        event: events.Deallocated, uow: unit_of_work.SqlAlchemyUnitOfWork,
+):
+    with uow:
+        uow.session.execute(
+            'DELETE FROM allocations_view '
+            ' WHERE orderid = :orderid AND sku = :sku',
+----
+====
+
+=== But whyyyyyyy?
+
+OK.  horrible, right? But also, look how nice it is?  our events and message
+bus give us a really nice place to do this sort of stuff, *if you need to*
+
+And think how easy it'd be to swap our read model from postgres to redis?
+super-simple.  _We don't even need to change the integration test_.
+
+TODO: demo this.
+
+
+So definitely don't do this. ever.  But, if you do need to, see how easy
+the event-driven model makes it?
+
+OK.  On that note, let's sally forth into our final chapter.
+
