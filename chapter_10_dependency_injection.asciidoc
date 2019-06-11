@@ -1,10 +1,7 @@
-[[chapter_10_bootstrap]]
-== Dependency Injection and Configuration Root (aka bootstrap script)
+[[chapter_10_dependency_injection]]
+== Dependency Injection (and Mocks)
 
 NOTE: placeholder chapter, under construction
-
-TODO: split this out into two chapters (or one chapter and an appendix),
-    one on DI and one on bootstrap.
 
 Depending on your particular brain type, you may have a slight feeling of
 unease at the back of your mind at this point.  Let's bring it out into the
@@ -131,13 +128,13 @@ sake of our tests? `mock.patch` makes monkeypatching nice and easy:
 ====
 
 The trouble is that we've made it look easy because our toy example doesn't
-send real emails (`email.send_mail` just does a `print()`, but in real life
+send real emails (`email.send_mail` just does a `print`), but in real life
 you'd end up having to call `mock.patch` for _every single test_ that might
 cause an out-of-stock notification. If you've worked on codebases with lots of
 mocks used to prevent unwanted side-effects, you'll know how annoying that
-mocky boilerplate gets.  
+mocky boilerplate gets.
 
-And you'll know that mocks tightly couple us to the implementation.  By
+And, you'll know that mocks tightly couple us to the implementation.  By
 choosing to monkeypatch `email.send_mail`, we are tied to doing `import email`,
 and if we ever want to do `from email import send_mail`, a trivial refactor,
 we'd have to change all our mocks.
@@ -168,88 +165,17 @@ def send_out_of_stock_notification(
 ====
 
 
+But if we do declare these dependencies explicitly, who will inject them and how?
+So far, we've only really been dealing with passing the UoW around.  What about
+all these other things?
 
-=== Defaults and config
-
-TODO: split out DI stuff and bootstrap stuff
-
-There's a related question:  if we have explicit dependencies, where do
-we declare defaults for them?
-
-_unit_of_work.py_ currently declares the "default" database session manager.
-maybe that's not too bad...
-
-[[default_session_factory]]
-.Default config declared next to uow (src/allocation/unit_of_work.py)
-====
-[source,python]
-[role="existing"]
-----
-DEFAULT_SESSION_FACTORY = sessionmaker(bind=create_engine(
-    config.get_postgres_uri(),
-    isolation_level="SERIALIZABLE"
-))
-----
-====
-
-But what about other default config?  _config.py_ has some info, and other bits 
-are spread around, in places like _redis_pubsub.py_
-
-
-
-=== Other setup code: initialisation
-
-Defaults are feeling a bit messy, but so are some other aspects of the initial
-setup or "bootsrapping" of our application; `orm.start_mappers()` for example.
-We call it in various places in our tests, and at twice in our "real"
-application...
-
-
-[[flask_calls_start_mappers]]
-.Flask calls start_mappers (src/allocation/flask_app.py)
-====
-[source,python]
-[role="existing"]
-----
-app = Flask(__name__)
-orm.start_mappers()
-
-@app.route("/allocate", methods=['POST'])
-def allocate_endpoint():
-----
-====
-
-
-=== Bootstrap script
-
-Here's what a bootstrap script could look like:
-
-[[bootstrap_v1]]
-.A bootstrap function (src/allocation/bootstrap.py)
-====
-[source,python]
-----
-def bootstrap(
-        start_orm=orm.start_mappers,
-        session_factory=DEFAULT_SESSION_FACTORY,
-        send_mail=email.send,
-        publish=redis_pubsub.publish,
-):
-    start_orm()
-    uow = unit_of_work.SqlAlchemyUnitOfWork(session_factory=session_factory)
-    bus = messagebus.MessageBus(uow=uow, send_mail=send_mail, publish=publish)
-    return bus
-----
-====
-
-* it declares default dependencies but allows you to override them
-* it does the "init" stuff that we need to get our app going in one place
-* it gives us back the core of our app, the messagebus
+Since we've now made the messagebus into the core of our application, it's the
+ideal place to manage these dependencies.
 
 
 === MessageBus does DI
 
-The messagebus turns into a class
+Here's one way to do it:
 
 
 [[messagebus_as_class]]
@@ -282,17 +208,14 @@ class MessageBus:  #<1>
 ----
 ====
 
-<1> It's a class
-<2> Which asks for all our dependencies in one place
-<3> and it stores them into a dict
-<4> finally one change to the relationship between bus and uow -- the bus
-    asks the uow for new events after it's finished running each handler,
-    and adds them to its queue (details to follow)
+<1> The messagebus becomes a class...
+<2> ...which asks for all our dependencies in one place
+<3> and stores them into a dict
+<4> We also make a small change to the relationship between bus and UoW -- the bus
+    asks the UoW for new events after it's finished running each handler,
+    and adds them to its own queue (details to follow)
 
-What else changes in the bus? `handle_event` and `handle_command` are
-substantially the same, but instead of calling handlers directly and
-only passing in the UoW, they call a new method,
-`self.call_handler_with_dependencies()` :
+What else changes in the bus? 
 
 
 [[messagebus_handlers_change]]
@@ -300,30 +223,37 @@ only passing in the UoW, they call a new method,
 ====
 [source,python]
 ----
-    def handle_event(self, event: events.Event):
+    def handle_event(self, event: events.Event):  #<1>
         for handler in EVENT_HANDLERS[type(event)]:
             try:
                 print('handling event', event, 'with handler', handler, flush=True)
-                self.call_handler_with_dependencies(handler, event)  #<5>
+                self.call_handler_with_dependencies(handler, event)  #<2>
             except:
                 print(f'Exception handling event {event}\n:{traceback.format_exc()}')
                 continue
 
-    def handle_command(self, command: commands.Command):
+    def handle_command(self, command: commands.Command):  #<1>
         print('handling command', command, flush=True)
         try:
             handler = COMMAND_HANDLERS[type(command)]
-            return self.call_handler_with_dependencies(handler, command)  #<5>
+            return self.call_handler_with_dependencies(handler, command)  #<2>
         except Exception as e:
             print(f'Exception handling command {command}: {e}')
             raise e
 ----
 ====
 
+<1> `handle_event` and `handle_command` are substantially the same, but instead
+    of calling handlers directly and only passing in the UoW, they call a new method:
+
+<2> `self.call_handler_with_dependencies()`, which takes the handler function and
+    the event we want to call:
+
 
 ==== Depenency injection with minimal magic
 
-Here's the core of our DI then.  As you'll see there's not much to it:
+Here's the core of our dependency injection approach then.  As you'll see
+there's not much to it:
 
 [[messagebus_does_DI]]
 .Dependency injection in 3 lines of code (src/alloction/messagebus.py)
@@ -346,15 +276,18 @@ Here's the core of our DI then.  As you'll see there's not much to it:
 
 //TODO: rename deps to kwargs?
 
-Note this is only really possible because we've made the messagebus into
-the core of our app -- if we still had a mixture of messages and events,
-our depencies would be all over the place.
+Note this is simple approach is only really possible because we've made the
+messagebus into the core of our app -- if we still had a mixture of service
+functions and event handlers and other entrypoints, our dependencies would be
+all over the place.
 
 
-==== Other changes
+==== The messagebus takes ownership of adding new events to its queue
 
-In the Uow, we no longer raise events on commit, instead we offer a way
-of retrieving them:
+We've seen that the messagebus now has responsibility for collecting
+any new events raised by a handler, and adding them to the end of the queue.
+Consequently, in the Uow, we no longer raise events on commit, instead we offer
+a way of retrieving them:
 
 [[uow_collects_events]]
 .UoW just collects events rather than putting them on the bus (src/allocation/unit_of_work.py)
@@ -379,64 +312,66 @@ class AbstractUnitOfWork(abc.ABC):
 ====
 
 
-In our application's entrypoints, we just call `bootstrap.bootstrap()`
-to get a messagebus, rather than configuring a UoW:
+=== Initialising DI in our app entrypoints
 
-[[flask_calls_bootstrap]]
-.Flask calls bootstrap (src/allocation/flask_app.py)
+In our flask app, we can just initialise the messagebus inline with
+the rest of our app config and setup, passing it in the actual
+dependencies we want to use:
+
+[[flask_initialises_bus]]
+.Flask initialises a bus with the production dependencies (src/allocation/flask_app.py)
 ====
 [source,python]
 ----
+from allocation import (
+    commands, email, exceptions, messagebus, orm, redis_pubsub, unit_of_work,
+    views,
+)
+
 app = Flask(__name__)
-bus = bootstrap.bootstrap()
-
-
-@app.route("/add_batch", methods=['POST'])
-def add_batch():
-    ...
-    bus.handle([command])
-    return 'OK', 201
+orm.start_mappers()
+bus = messagebus.MessageBus(
+    uow=unit_of_work.SqlAlchemyUnitOfWork(),
+    send_mail=email.send,
+    publish=redis_pubsub.publish
+)
 ----
 ====
 
 
-In some test, we can use our `bootstrap.bootstrap()` with overridden defaults
-to get a custom messagebus:
 
-
-[[custom_bootstrap]]
-.Overriding bootstrap defaults (test/integration/test_views.py)
+[[redis_initialises_bus]]
+.So does redis (src/allocation/redis_pubsub.py)
 ====
 [source,python]
 ----
-@pytest.fixture
-def sqlite_bus(in_memory_sqlite_db):
-    yield bootstrap.bootstrap(
-        session_factory=sessionmaker(bind=in_memory_sqlite_db),
-        send_mail=mock.Mock(),
-        publish=mock.Mock(),
+def get_bus():  #<1>
+    return messagebus.MessageBus(
+        uow=unit_of_work.SqlAlchemyUnitOfWork(),
+        send_mail=email.send,
+        publish=publish
     )
-    clear_mappers()
+
+def main():
+    pubsub = r.pubsub(ignore_subscribe_messages=True)
+    pubsub.subscribe('change_batch_quantity')
+    bus = get_bus()  #<1>
+
+    for m in pubsub.listen():
+        handle_change_batch_quantity(m, bus)
 
 
-def test_allocations_view(sqlite_bus):
-    sqlite_bus.handle([
-        commands.CreateBatch('b1', 'sku1', 50, None),
-        commands.CreateBatch('b2', 'sku2', 50, date.today()),
-        commands.Allocate('o1', 'sku1', 20),
-        commands.Allocate('o1', 'sku2', 20),
-    ])
-
-    assert views.allocations('o1', sqlite_bus.uow) == [
-        {'sku': 'sku1', 'batchid': 'b1'},
-        {'sku': 'sku2', 'batchid': 'b2'},
-    ]
+def handle_change_batch_quantity(m, bus: messagebus.MessageBus):
 ----
 ====
 
+<1> In the redis case we can't do the initalisation at import-time,
+    because we have a circular dependency between flask and redis
+    (we'll look at fixing that in <<appendix_bootstrap>>.
 
 
-Or we can just fully reimplement our own bootstrap script if we want:
+=== Initialising DI in our tests
+
 
 
 [[totally_reimplement_bootstrap]]
@@ -444,18 +379,21 @@ Or we can just fully reimplement our own bootstrap script if we want:
 ====
 [source,python]
 ----
-def bootstrap_fake_bus():
-    uow = FakeUnitOfWork()
-    bus = messagebus.MessageBus(uow=uow, send_mail=mock.Mock(), publish=mock.Mock())
-    return bus
+class FakeBus(messagebus.MessageBus):
+    def __init__(self):
+        super().__init__(
+            uow=FakeUnitOfWork(),
+            send_mail=mock.Mock(),
+            publish=mock.Mock(),
+        )
 
-
+...
 
 class TestAddBatch:
 
     @staticmethod
     def test_for_new_product():
-        bus = bootstrap_fake_bus()
+        bus = FakeBus()
         bus.handle([commands.CreateBatch('b1', 'sku1', 100, None)])
         assert bus.uow.products.get('sku1') is not None
         assert bus.uow.committed
@@ -463,10 +401,5 @@ class TestAddBatch:
 ====
 
 
-TODO: bootstrapper as class instead?
-
-TODO: bootstrap redis?
-
 TODO: show option of custom fakes for email etc instead of mocks
 
-TODO: add dependency graph diagrams using david's tool
