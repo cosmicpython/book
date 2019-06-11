@@ -3,6 +3,9 @@
 
 NOTE: placeholder chapter, under construction
 
+TODO: split this out into two chapters (or one chapter and an appendix),
+    one on DI and one on bootstrap.
+
 Depending on your particular brain type, you may have a slight feeling of
 unease at the back of your mind at this point.  Let's bring it out into the
 open. We've currently shown two different ways of managing dependencies, and
@@ -17,10 +20,11 @@ dependencies and easy options for overriding them in tests:
 Our main handler functions declare an explicit dependency on the unit
 of work:
 
-[[id_here0]]
-.Listing title
+[[existing_handler]]
+.Our handlers have an explicit dependency on the UoW (src/allocation/handlers.py)
 ====
 [source,python]
+[role="existing"]
 ----
 def allocate(
         event: commands.Allocate, uow: unit_of_work.AbstractUnitOfWork
@@ -31,10 +35,11 @@ def allocate(
 And that makes it easy to swap in a fake unit of work in our
 service-layer tests
 
-[[id_here4]]
+[[existing_services_test]]
 .Service layer tests against a fake uow: (tests/unit/test_services.py)
 ====
 [source,python]
+[role="skip"]
 ----
     uow = FakeUnitOfWork()
     messagebus.handle([...], uow)
@@ -45,10 +50,11 @@ service-layer tests
 The UoW itself declares an explicit dependency on the session factory:
 
 
-[[id_here1]]
-.Listing title
+[[existing_uow]]
+.The UoW depends on a session factory (src/allocation/unit_of_work.py)
 ====
 [source,python]
+[role="existing"]
 ----
 class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 
@@ -58,13 +64,14 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 ----
 ====
 
-we take advantage of it in our unit tests to be able to use sqlite instead
-of postgres, sometimes
+we take advantage of it in our integration tests to be able to use sqlite
+instead of Postgres, sometimes
 
-[[id_here2]]
+[[existing_integration_test]]
 .Integration tests against a different DB (tests/integration/test_uow.py)
 ====
 [source,python]
+[role="existing"]
 ----
 def test_rolls_back_uncommitted_work_by_default(session_factory):  #<1>
     with unit_of_work.start(session_factory) as uow:  #<1>
@@ -76,19 +83,20 @@ def test_rolls_back_uncommitted_work_by_default(session_factory):  #<1>
 
 
 
-=== But not everything is nice:
+=== Explicit dependencies are totally weird an java-ey tho
+
+If you're used to the way things normally happen in Python, you'll be thinking
+all this is a bit weird.  The standard way to do things is to declare our
+depenency "implicitly" by simply importing it, and then if we ever need to
+change it for tests, we can monkeypatch, as is Right and True in dynamic
+languages:
 
 
-But some of our handlers don't have explicit dependencies.  Our handler that
-sends out-of-stock notifications currently has a hardcoded dependency on a
-particular email-sending integration:
-
-
-
-[[id_here5]]
-.Listing title
+[[normal_implicit_dependency]]
+.Email-sending as a normal import-based dependency (src/allocation/handlers.py)
 ====
 [source,python]
+[role="existing"]
 ----
 from allocation import email, events  #<1>
 # ...
@@ -107,32 +115,75 @@ def send_out_of_stock_notification(
 <2> calls specific email sender directly.
 
 
-As a result, in our tests we need to manually monkeypatch out that dependency:
+Why pollute our application code with unnecessary arguments just for the
+sake of our tests? `mock.patch` makes monkeypatching nice and easy:
 
 
-[[id_here6]]
-.Listing title
+[[mocking_is_easy]]
+.mock dot patch, thank you Michael Foord (tests/unit/test_handlers.py)
 ====
 [source,python]
+[role="existing"]
 ----
     with mock.patch('allocation.email.send_mail') as mock_send_mail:
         ...
 ----
 ====
 
-We're lucky because our toy example doesn't send real emails, but in real life you'd
-end up with these calls to `mock.patch` all over the place!
+The trouble is that we've made it look easy because our toy example doesn't
+send real emails (`email.send_mail` just does a `print()`, but in real life
+you'd end up having to call `mock.patch` for _every single test_ that might
+cause an out-of-stock notification. If you've worked on codebases with lots of
+mocks used to prevent unwanted side-effects, you'll know how annoying that
+mocky boilerplate gets.  
+
+And you'll know that mocks tightly couple us to the implementation.  By
+choosing to monkeypatch `email.send_mail`, we are tied to doing `import email`,
+and if we ever want to do `from email import send_mail`, a trivial refactor,
+we'd have to change all our mocks.
+
+So it's a trade-off.  Yes declaring explicit dependencies is "unnecessary",
+strictly speaking, and using them would make our application code marginally
+more complex.  But in return, we'd get tests that are easier to write and
+manage.
+
+On top of which, declaring an explicit dependency is an implementation of
+the DIP -- rather than having an (implicit) dependency on a specific detail,
+we have an (explicit) dependency on an abstraction:
+
+
+[[handler_with_explicit_depenency]]
+.The explicit dependency is more abstract (src/allocation/handlers.py)
+====
+[source,python]
+----
+def send_out_of_stock_notification(
+        event: events.OutOfStock, send_mail: Callable,
+):
+    send_mail(
+        'stock@made.com',
+        f'Out of stock for {event.sku}',
+    )
+----
+====
+
 
 
 === Defaults and config
 
-_unit_of_work.py_ currently declares a "default" database session manager.
+TODO: split out DI stuff and bootstrap stuff
+
+There's a related question:  if we have explicit dependencies, where do
+we declare defaults for them?
+
+_unit_of_work.py_ currently declares the "default" database session manager.
 maybe that's not too bad...
 
-[[id_here7]]
-.Listing title
+[[default_session_factory]]
+.Default config declared next to uow (src/allocation/unit_of_work.py)
 ====
 [source,python]
+[role="existing"]
 ----
 DEFAULT_SESSION_FACTORY = sessionmaker(bind=create_engine(
     config.get_postgres_uri(),
@@ -141,71 +192,24 @@ DEFAULT_SESSION_FACTORY = sessionmaker(bind=create_engine(
 ----
 ====
 
+But what about other default config?  _config.py_ has some info, and other bits 
+are spread around, in places like _redis_pubsub.py_
 
-... but we also have different defaults in tests.
 
 
+=== Other setup code: initialisation
 
-[[id_here8]]
-.Listing title
+Defaults are feeling a bit messy, but so are some other aspects of the initial
+setup or "bootsrapping" of our application; `orm.start_mappers()` for example.
+We call it in various places in our tests, and at twice in our "real"
+application...
+
+
+[[flask_calls_start_mappers]]
+.Flask calls start_mappers (src/allocation/flask_app.py)
 ====
 [source,python]
-----
-@pytest.fixture
-def in_memory_db():
-    engine = create_engine('sqlite:///:memory:')
-    metadata.create_all(engine)
-    return engine
-
-@pytest.fixture
-def session_factory(in_memory_db):
-    start_mappers()
-    yield sessionmaker(bind=in_memory_db)
-    clear_mappers()
-
-@pytest.fixture
-def session(session_factory):
-    return session_factory()
-
-
-def wait_for_postgres_to_come_up(engine):
-    deadline = time.time() + 10
-    while time.time() < deadline:
-        try:
-            return engine.connect()
-        except OperationalError:
-            time.sleep(0.5)
-    pytest.fail('Postgres never came up')
-
-
-@pytest.fixture(scope='session')
-def postgres_db():
-    engine = create_engine(config.get_postgres_uri())
-    wait_for_postgres_to_come_up(engine)
-    metadata.create_all(engine)
-    return engine
-
-@pytest.fixture
-def u(postgres_db):
-    start_mappers()
-    yield sessionmaker(bind=postgres_db)
-    clear_mappers()
-----
-====
-
-
-
-
-=== Other setup code
-
-And what about `start_mappers`?  We call it in various places in our tests, and in 
-at least one in our "real" application...
-
-
-[[id_here9]]
-.Listing title
-====
-[source,python]
+[role="existing"]
 ----
 app = Flask(__name__)
 orm.start_mappers()
@@ -220,8 +224,8 @@ def allocate_endpoint():
 
 Here's what a bootstrap script could look like:
 
-[[id_here]]
-.Listing title
+[[bootstrap_v1]]
+.A bootstrap function (src/allocation/bootstrap.py)
 ====
 [source,python]
 ----
@@ -248,8 +252,8 @@ def bootstrap(
 The messagebus turns into a class
 
 
-[[id_here]]
-.Listing title
+[[messagebus_as_class]]
+.MessageBus as a class (src/allocation/messagebus.py)
 ====
 [source,python]
 ----
@@ -291,8 +295,8 @@ only passing in the UoW, they call a new method,
 `self.call_handler_with_dependencies()` :
 
 
-[[id_here]]
-.Listing title
+[[messagebus_handlers_change]]
+.Event and Command handler logic stays the same (src/allocation/messagebus.py)
 ====
 [source,python]
 ----
@@ -321,8 +325,8 @@ only passing in the UoW, they call a new method,
 
 Here's the core of our DI then.  As you'll see there's not much to it:
 
-[[id_here]]
-.Listing title
+[[messagebus_does_DI]]
+.Dependency injection in 3 lines of code (src/alloction/messagebus.py)
 ====
 [source,python]
 ----
@@ -340,6 +344,8 @@ Here's the core of our DI then.  As you'll see there's not much to it:
 <2> We match them by name to our dependencies
 <3> And we inject them in as kwargs when we actually call the handler
 
+//TODO: rename deps to kwargs?
+
 Note this is only really possible because we've made the messagebus into
 the core of our app -- if we still had a mixture of messages and events,
 our depencies would be all over the place.
@@ -350,11 +356,14 @@ our depencies would be all over the place.
 In the Uow, we no longer raise events on commit, instead we offer a way
 of retrieving them:
 
-[[id_here]]
-.Listing title
+[[uow_collects_events]]
+.UoW just collects events rather than putting them on the bus (src/allocation/unit_of_work.py)
 ====
 [source,python]
 ----
+class AbstractUnitOfWork(abc.ABC):
+    ...
+
     def commit(self):
         self._commit()
 
@@ -370,12 +379,11 @@ of retrieving them:
 ====
 
 
-
 In our application's entrypoints, we just call `bootstrap.bootstrap()`
 to get a messagebus, rather than configuring a UoW:
 
-[[id_here]]
-.Listing title
+[[flask_calls_bootstrap]]
+.Flask calls bootstrap (src/allocation/flask_app.py)
 ====
 [source,python]
 ----
@@ -396,8 +404,8 @@ In some test, we can use our `bootstrap.bootstrap()` with overridden defaults
 to get a custom messagebus:
 
 
-[[id_here]]
-.Listing title
+[[custom_bootstrap]]
+.Overriding bootstrap defaults (test/integration/test_views.py)
 ====
 [source,python]
 ----
@@ -431,8 +439,8 @@ def test_allocations_view(sqlite_bus):
 Or we can just fully reimplement our own bootsrap script if we want:
 
 
-[[id_here]]
-.Listing title
+[[totally_reimplement_bootstrap]]
+.Handler tests just do their own bootstrap (tests/unit/test_handlers.py)
 ====
 [source,python]
 ----
@@ -459,6 +467,6 @@ TODO: bootstrapper as class instead?
 
 TODO: bootstrap redis?
 
-TODO: bootstrap with custom fakes for email etc
+TODO: show option of custom fakes for email etc instead of mocks
 
 
