@@ -184,10 +184,6 @@ TODO: bootstrapper as class instead?
 
 TODO: bootstrap redis? and/or fix redis circular dependency
 
-TODO: show option of custom fakes for email etc instead of mocks
-
-TODO: add dependency graph diagrams using david's tool
-
 
 === Dependency diagrams
 
@@ -203,4 +199,11 @@ image::images/chapter_10_dependency_graph.png["Dependency graph for chapter 10 (
 Does the bootstrap script help? Kinda.
 
 image::images/appendix_bootstrap_dependency_graph_1.png["Dependency graph with bootstrap script"]
+
+
+Well kindo not actually.  that redis circular dependency is back and looking
+ugly.
+
+TODO: fix by making an abstract redis thingie?  or maybe splitting out
+redis-pub and redis-sub?
 
