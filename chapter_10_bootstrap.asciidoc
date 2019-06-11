@@ -340,6 +340,10 @@ Here's the core of our DI then.  As you'll see there's not much to it:
 <2> We match them by name to our dependencies
 <3> And we inject them in as kwargs when we actually call the handler
 
+Note this is only really possible because we've made the messagebus into
+the core of our app -- if we still had a mixture of messages and events,
+our depencies would be all over the place.
+
 
 ==== Other changes
 
