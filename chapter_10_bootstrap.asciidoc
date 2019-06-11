@@ -3,10 +3,10 @@
 
 NOTE: placeholder chapter, under construction
 
-Depending on your particular brain type, you may have a slight feeling of unease
-at the back of your mind at this point.  Let's bring it out into the open.
-We've currently shown two different ways of managing dependencies, and testing
-them.
+Depending on your particular brain type, you may have a slight feeling of
+unease at the back of your mind at this point.  Let's bring it out into the
+open. We've currently shown two different ways of managing dependencies, and
+testing them.
 
 For our database dependency, we've built a careful framework of explicit
 dependencies and easy options for overriding them in tests:
@@ -14,20 +14,52 @@ dependencies and easy options for overriding them in tests:
 
 === Implicit vs explicit dependencies
 
+Our main handler functions declare an explicit dependency on the unit
+of work:
+
+[[id_here0]]
+.Listing title
+====
+[source,python]
+----
+def allocate(
+        event: commands.Allocate, uow: unit_of_work.AbstractUnitOfWork
+):
+----
+====
+
+And that makes it easy to swap in a fake unit of work in our
+service-layer tests
+
+[[id_here4]]
+.Service layer tests against a fake uow: (tests/unit/test_services.py)
+====
+[source,python]
+----
+    uow = FakeUnitOfWork()
+    messagebus.handle([...], uow)
+----
+====
+
+
+The UoW itself declares an explicit dependency on the session factory:
+
+
 [[id_here1]]
 .Listing title
 ====
 [source,python]
 ----
-@contextmanager
-def start(session_factory=default_session_factory):
+class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
+
+    def __init__(self, session_factory=DEFAULT_SESSION_FACTORY):
+        self.session = session_factory()  # type: Session
+        ...
 ----
 ====
 
-Our unit of work, which is the main abstraction around our database dependency,
-provides an explicit argument in its constructor allowing us to choose a
-different database/session type
-
+we take advantage of it in our unit tests to be able to use sqlite instead
+of postgres, sometimes
 
 [[id_here2]]
 .Integration tests against a different DB (tests/integration/test_uow.py)
@@ -43,37 +75,13 @@ def test_rolls_back_uncommitted_work_by_default(session_factory):  #<1>
 
 
 
-[[id_here3]]
-.Listing title
-====
-[source,python]
-----
-def allocate(line: OrderLine, start_uow) -> str:
-----
-====
 
-Our service layer explicitly declares a dependency on `start_uow`, once again
-making it easy to replace or test.
-
-[[id_here4]]
-.Service layer tests against a fake uow: (tests/unit/test_services.py)
-====
-[source,python]
-----
-    uow = FakeUnitOfWork()
-    uow.products.add(model.Product(sku='sku1', batches=[
-        model.Batch(ref='b1', sku='sku1', qty=100, eta=None),
-    ]))
-    start_uow = lambda: nullcontext(uow)
-
-    services.allocate(line, start_uow)
-----
-====
+=== But not everything is nice:
 
 
-
-But our messagebus currently has a hardcoded dependency on a particular
-email-sending integration:
+But some of our handlers don't have explicit dependencies.  Our handler that
+sends out-of-stock notifications currently has a hardcoded dependency on a
+particular email-sending integration:
 
 
 
@@ -85,16 +93,19 @@ email-sending integration:
 from allocation import email, events  #<1>
 # ...
 
-def handle_out_of_stock(event: events.OutOfStock):
-    email.send_mail(  #<1>
+def send_out_of_stock_notification(
+        event: events.OutOfStock, uow: unit_of_work.AbstractUnitOfWork
+):
+    email.send_mail(  #<2>
         'stock@made.com',
         f'Out of stock for {event.sku}',
     )
 ----
 ====
 
-Anything that depends on `messagebus.py` is currently importing, and using, some real
-email-sending code.
+<1> hardcoded import
+<2> calls specific email sender directly.
+
 
 As a result, in our tests we need to manually monkeypatch out that dependency:
 
@@ -105,7 +116,7 @@ As a result, in our tests we need to manually monkeypatch out that dependency:
 [source,python]
 ----
     with mock.patch('allocation.email.send_mail') as mock_send_mail:
-        with pytest.raises(exceptions.OutOfStock):
+        ...
 ----
 ====
 
@@ -115,15 +126,15 @@ end up with these calls to `mock.patch` all over the place!
 
 === Defaults and config
 
-_unit_of_work.py_ currently declares a "default" database session manager.  maybe that's not
-too bad...
+_unit_of_work.py_ currently declares a "default" database session manager.
+maybe that's not too bad...
 
 [[id_here7]]
 .Listing title
 ====
 [source,python]
 ----
-default_session_factory = sessionmaker(bind=create_engine(
+DEFAULT_SESSION_FACTORY = sessionmaker(bind=create_engine(
     config.get_postgres_uri(),
     isolation_level="SERIALIZABLE"
 ))
@@ -175,7 +186,7 @@ def postgres_db():
     return engine
 
 @pytest.fixture
-def postgres_session_factory(postgres_db):
+def u(postgres_db):
     start_mappers()
     yield sessionmaker(bind=postgres_db)
     clear_mappers()
@@ -207,10 +218,243 @@ def allocate_endpoint():
 
 === Bootstrap script
 
-* to do orm init and maybe redis?
+Here's what a bootstrap script could look like:
 
-=== Dependency injection / configuration root
+[[id_here]]
+.Listing title
+====
+[source,python]
+----
+def bootstrap(
+        start_orm=orm.start_mappers,
+        session_factory=DEFAULT_SESSION_FACTORY,
+        send_mail=email.send,
+        publish=redis_pubsub.publish,
+):
+    start_orm()
+    uow = unit_of_work.SqlAlchemyUnitOfWork(session_factory=session_factory)
+    bus = messagebus.MessageBus(uow=uow, send_mail=send_mail, publish=publish)
+    return bus
+----
+====
 
-* to set up all the dependencies for handlers
-* depends on command-handler pattern having been introduced
+* it declares default dependencies but allows you to override them
+* it does the "init" stuff that we need to get our app going in one place
+* it gives us back the core of our app, the messagebus
+
+
+=== MessageBus does DI
+
+The messagebus turns into a class
+
+
+[[id_here]]
+.Listing title
+====
+[source,python]
+----
+class MessageBus:  #<1>
+
+    def __init__(
+            self,
+            uow: unit_of_work.AbstractUnitOfWork,  #<2>
+            send_mail: Callable,  #<2>
+            publish: Callable,  #<2>
+    ):
+        self.uow = uow
+        self.dependencies = dict(uow=uow, send_mail=send_mail, publish=publish)  #<3>
+
+    def handle(self, message_queue: List[Message]):
+        while message_queue:
+            m = message_queue.pop(0)
+            print('handling message', m, flush=True)
+            if isinstance(m, events.Event):
+                self.handle_event(m)
+            elif isinstance(m, commands.Command):
+                self.handle_command(m)
+            else:
+                raise Exception(f'{m} was not an Event or Command')
+            message_queue.extend(self.uow.collect_events())  #<4>
+----
+====
+
+<1> It's a class
+<2> Which asks for all our dependencies in one place
+<3> and it stores them into a dict
+<4> finally one change to the relationship between bus and uow -- the bus
+    asks the uow for new events after it's finished running each handler,
+    and adds them to its queue (details to follow)
+
+What else changes in the bus? `handle_event` and `handle_command` are
+substantially the same, but instead of calling handlers directly and
+only passing in the UoW, they call a new method,
+`self.call_handler_with_dependencies()` :
+
+
+[[id_here]]
+.Listing title
+====
+[source,python]
+----
+    def handle_event(self, event: events.Event):
+        for handler in EVENT_HANDLERS[type(event)]:
+            try:
+                print('handling event', event, 'with handler', handler, flush=True)
+                self.call_handler_with_dependencies(handler, event)  #<5>
+            except:
+                print(f'Exception handling event {event}\n:{traceback.format_exc()}')
+                continue
+
+    def handle_command(self, command: commands.Command):
+        print('handling command', command, flush=True)
+        try:
+            handler = COMMAND_HANDLERS[type(command)]
+            return self.call_handler_with_dependencies(handler, command)  #<5>
+        except Exception as e:
+            print(f'Exception handling command {command}: {e}')
+            raise e
+----
+====
+
+
+==== Depenency injection with minimal magic
+
+Here's the core of our DI then.  As you'll see there's not much to it:
+
+[[id_here]]
+.Listing title
+====
+[source,python]
+----
+    def call_handler_with_dependencies(self, handler: Callable, message: Message):
+        params = inspect.signature(handler).parameters  #<1>
+        deps = {
+            name: dependency for name, dependency in self.dependencies.items()  #<2>
+            if name in params
+        }
+        return handler(message, **deps)  #<3>
+----
+====
+
+<1> We inspect our command/event handler's arguments
+<2> We match them by name to our dependencies
+<3> And we inject them in as kwargs when we actually call the handler
+
+
+==== Other changes
+
+In the Uow, we no longer raise events on commit, instead we offer a way
+of retrieving them:
+
+[[id_here]]
+.Listing title
+====
+[source,python]
+----
+    def commit(self):
+        self._commit()
+
+    @abc.abstractmethod
+    def _commit(self):
+        ...
+
+    def collect_events(self):
+        for product in self.products.seen:
+            while product.events:
+                yield product.events.pop(0)
+----
+====
+
+
+
+In our application's entrypoints, we just call `bootstrap.bootstrap()`
+to get a messagebus, rather than configuring a UoW:
+
+[[id_here]]
+.Listing title
+====
+[source,python]
+----
+app = Flask(__name__)
+bus = bootstrap.bootstrap()
+
+
+@app.route("/add_batch", methods=['POST'])
+def add_batch():
+    ...
+    bus.handle([command])
+    return 'OK', 201
+----
+====
+
+
+In some test, we can use our `bootstrap.bootstrap()` with overridden defaults
+to get a custom messagebus:
+
+
+[[id_here]]
+.Listing title
+====
+[source,python]
+----
+@pytest.fixture
+def sqlite_bus(in_memory_sqlite_db):
+    yield bootstrap.bootstrap(
+        session_factory=sessionmaker(bind=in_memory_sqlite_db),
+        send_mail=mock.Mock(),
+        publish=mock.Mock(),
+    )
+    clear_mappers()
+
+
+def test_allocations_view(sqlite_bus):
+    sqlite_bus.handle([
+        commands.CreateBatch('b1', 'sku1', 50, None),
+        commands.CreateBatch('b2', 'sku2', 50, date.today()),
+        commands.Allocate('o1', 'sku1', 20),
+        commands.Allocate('o1', 'sku2', 20),
+    ])
+
+    assert views.allocations('o1', sqlite_bus.uow) == [
+        {'sku': 'sku1', 'batchid': 'b1'},
+        {'sku': 'sku2', 'batchid': 'b2'},
+    ]
+----
+====
+
+
+
+Or we can just fully reimplement our own bootsrap script if we want:
+
+
+[[id_here]]
+.Listing title
+====
+[source,python]
+----
+def bootstrap_fake_bus():
+    uow = FakeUnitOfWork()
+    bus = messagebus.MessageBus(uow=uow, send_mail=mock.Mock(), publish=mock.Mock())
+    return bus
+
+
+
+class TestAddBatch:
+
+    @staticmethod
+    def test_for_new_product():
+        bus = bootstrap_fake_bus()
+        bus.handle([commands.CreateBatch('b1', 'sku1', 100, None)])
+        assert bus.uow.products.get('sku1') is not None
+        assert bus.uow.committed
+----
+====
+
+
+TODO: bootstrapper as class instead?
+
+TODO: bootstrap redis?
+
+TODO: bootstrap with custom fakes for email etc
+
 
