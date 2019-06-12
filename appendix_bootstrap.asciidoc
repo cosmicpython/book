@@ -30,7 +30,7 @@ manager. maybe that's not too bad...
 ----
 DEFAULT_SESSION_FACTORY = sessionmaker(bind=create_engine(
     config.get_postgres_uri(),
-    isolation_level="SERIALIZABLE"
+    isolation_level="SERIALIZABLE",
 ))
 ----
 ====
@@ -56,9 +56,11 @@ application...
 ----
 app = Flask(__name__)
 orm.start_mappers()
+bus = messagebus.MessageBus(
+...
 
-@app.route("/allocate", methods=['POST'])
-def allocate_endpoint():
+@app.route("/add_batch", methods=['POST'])
+def add_batch():
 ----
 ====
 
@@ -117,12 +119,12 @@ def add_batch():
 ====
 
 
-In some tests, we can use our `bootstrap.bootstrap()` with overridden defaults
+And in tests, we can use our `bootstrap.bootstrap()` with overridden defaults
 to get a custom messagebus:
 
 
 [[custom_bootstrap]]
-.Overriding bootstrap defaults (test/integration/test_views.py)
+.Overriding bootstrap defaults (tests/integration/test_views.py)
 ====
 [source,python]
 ----
@@ -148,34 +150,6 @@ def test_allocations_view(sqlite_bus):
         {'sku': 'sku1', 'batchid': 'b1'},
         {'sku': 'sku2', 'batchid': 'b2'},
     ]
-----
-====
-
-
-
-Or we can just fully reimplement our own bootstrap script if we want:
-
-
-[[totally_reimplement_bootstrap]]
-.Handler tests just do their own bootstrap (tests/unit/test_handlers.py)
-====
-[source,python]
-----
-def bootstrap_fake_bus():
-    uow = FakeUnitOfWork()
-    bus = messagebus.MessageBus(uow=uow, send_mail=mock.Mock(), publish=mock.Mock())
-    return bus
-
-
-
-class TestAddBatch:
-
-    @staticmethod
-    def test_for_new_product():
-        bus = bootstrap_fake_bus()
-        bus.handle([commands.CreateBatch('b1', 'sku1', 100, None)])
-        assert bus.uow.products.get('sku1') is not None
-        assert bus.uow.committed
 ----
 ====
 

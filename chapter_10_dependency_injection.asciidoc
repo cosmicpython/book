@@ -61,7 +61,7 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 ----
 ====
 
-we take advantage of it in our integration tests to be able to use sqlite
+We take advantage of it in our integration tests to be able to use sqlite
 instead of Postgres, sometimes
 
 [[existing_integration_test]]
@@ -70,8 +70,8 @@ instead of Postgres, sometimes
 [source,python]
 [role="existing"]
 ----
-def test_rolls_back_uncommitted_work_by_default(session_factory):  #<1>
-    with unit_of_work.start(session_factory) as uow:  #<1>
+def test_rolls_back_uncommitted_work_by_default(sqlite_session_factory):
+    uow = unit_of_work.SqlAlchemyUnitOfWork(sqlite_session_factory)  #<1>
 ----
 ====
 
@@ -95,13 +95,13 @@ languages:
 [source,python]
 [role="existing"]
 ----
-from allocation import email, events  #<1>
-# ...
+from allocation import commands, events, email, exceptions, model, redis_pubsub  #<1>
+...
 
 def send_out_of_stock_notification(
-        event: events.OutOfStock, uow: unit_of_work.AbstractUnitOfWork
+        event: events.OutOfStock, uow: unit_of_work.AbstractUnitOfWork,
 ):
-    email.send_mail(  #<2>
+    email.send(  #<2>
         'stock@made.com',
         f'Out of stock for {event.sku}',
     )
@@ -122,7 +122,7 @@ sake of our tests? `mock.patch` makes monkeypatching nice and easy:
 [source,python]
 [role="existing"]
 ----
-    with mock.patch('allocation.email.send_mail') as mock_send_mail:
+    with mock.patch('allocation.email.send') as mock_send_mail:
         ...
 ----
 ====
@@ -256,7 +256,7 @@ Here's the core of our dependency injection approach then.  As you'll see
 there's not much to it:
 
 [[messagebus_does_DI]]
-.Dependency injection in 3 lines of code (src/alloction/messagebus.py)
+.Dependency injection in 3 lines of code (src/allocation/messagebus.py)
 ====
 [source,python]
 ----
@@ -299,6 +299,7 @@ class AbstractUnitOfWork(abc.ABC):
 
     def commit(self):
         self._commit()
+
 
     @abc.abstractmethod
     def _commit(self):
@@ -351,6 +352,7 @@ def get_bus():  #<1>
         send_mail=email.send,
         publish=publish
     )
+
 
 def main():
     pubsub = r.pubsub(ignore_subscribe_messages=True)

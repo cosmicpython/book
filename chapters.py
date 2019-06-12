@@ -18,6 +18,7 @@ CHAPTERS = [
 BRANCHES = {
     'appendix_csvs',
     'appendix_django',
+    'appendix_bootstrap',
 }
 
 STANDALONE = [
