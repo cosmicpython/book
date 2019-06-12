@@ -1,22 +1,29 @@
 [[chapter_06_events_and_message_bus]]
 == Events and the Message Bus
 
-//TODO: Eventual cosistency between aggregates?
+So far we've spent a lot of time and energy on a simple problem that we could
+easily have solved with Django. You might be asking if the increased testability
+and expressiveness are *really* worth all the effort.
 
-Another new requirement:  when allocation fails, someone should be emailed.
-But we don't want to have email-sending code be a potential cause of
-bugs/failures in our core model/state changes.  We introduce events and
-a message bus as a pattern for kicking off related work after a use case is
-complete.
+In practice, though, we find that it's not the obvious features that make a mess
+of our codebases: it's the goop around the edge. It's reporting, and permissions
+and workflows that touch a zillion objects.
 
+Let's see how our architecture holds up once we need to plug in some of the
+mundane stuff that makes up so much of our systems.
 
+Another day, another new requirement:  when we can't allocate an order because
+we're out of stock, we should alert the buying team. They'll go and fix the
+problem by buying more stock, and all will be well.
+
+For a first version, our product owner says we can just send the alert by email.
 
 === Avoiding making a mess.
 
 ==== First, avoid making a mess of of our web controllers
 
 When we have a new requirement like this, that's not _really_ to do with the
-core domain, it's all to easy to start dumping these things into our web
+core domain, it's all too easy to start dumping these things into our web
 controllers:
 
 
@@ -47,8 +54,11 @@ def allocate_endpoint():
 ----
 ====
 
-So let's try and avoid that.  We can start by writing a test at the service layer:
+As a one-off hack, this might be okay, but it's easy to see how we can quickly
+end up in a mess by patching things in this way. Sending emails isn't the job of
+our HTTP layer, and we'd like to be able to unit test this new feature.
 
+Let's start with a unit test written against our service layer.
 
 [[mocky_test_for_send_email]]
 .A Mocky test at the service layer (tests/unit/test_services.py)
@@ -145,27 +155,33 @@ definitely making us unhappy.
 ===  Single Responsibility Principle
 
 Really this is a violation of the Single Responsibility Principle.  Our use
-case is allocation, our endpoint, service function and domain methods are all
+case is allocation. Our endpoint, service function, and domain methods are all
 called `allocate`, not `allocate_and_send_mail_if_out_of_stock`.
 
-What we'd like is to keep our domain working in the language of the domain.
-We might want to signal that allocation has happened, but the responsibility
-of actually invoking some email-sending code in response to that fact belongs
-elsewhere.  It's something we want to be able to switch on and off, or change
-the implementation of (changing email services, switching to SMS notifications)
-without needing to change our model.
+NOTE: Rule of thumb: if you can't describe what your class does without using
+    words like "then" or "and", you might be violating SRP.
 
-We'd also like to keep the service layer free of implementation concerns,
-in the same way as the service layer doesn't depend on a specific database,
-it just uses the `UnitOfWork` abstraction.
+This email sending thing is unwelcome *goop* messing up the nice clean flow
+of our system. What we'd like is to keep our domain model focused on the rule
+"You can't allocate more stuff than is actually available". 
 
+The domain model's job is to know that we're out of stock, but the
+responsibility of sending an alert belongs elsewhere. We should be able to turn
+this feature on or off, or to switch to SMS notifications instead, without
+needing to change the rules of our domain model.
+
+We'd also like to keep the service layer free of implementation details. We
+want to apply the Dependency Inversion Principle to notifications, so that our
+service layer depends on an abstraction, in the same way as we avoid depending
+on the database by using a UnitOfWork.
 
 === All aboard the Message Bus!
 
 The pattern we're going to introduce here is _Domain Events_ and the _Message Bus_.
 
-First, rather than being concerned about emails, our domain is in charge of
-recording "events"--facts about things that have happened:
+First, rather than being concerned about emails, our model will be in charge of
+recording "events"--facts about things that have happened. We'll use a Message
+Bus to respond to events, and invoke some new operation.
 
 
 ==== The model records events
