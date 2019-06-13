@@ -94,11 +94,11 @@ to get your goods to your home.
 At a high level, we have separate systems that are responsible for buying
 stock, selling stock to customers, and shipping goods to customers. There's a
 system in the middle that needs to coordinate the process by allocating stock
-to a customer's orders. footnote:[e.j. It might be helpful to describe how the
-Made functions from the viewpoint of other stakeholders (e.g., a customer ordering furniture, 
-an accountant tracking disbursements, etc., or a customer service representative.
-It will help make the example clearer, and drive home some of the value of DDD
-and domain modeling. ]
+to a customer's orders. footnote:[e.j. Maybe describe how 
+MADE operates from the viewpoint of other stakeholders (e.g., a customer ordering furniture, 
+an accountant tracking credits and debits, a customer service representative, or
+the warehouse that actually has to store the stock) 
+before diving into the Stock Allocation Service.  It will help home the value of DDD and domain modeling. ]
 
 For the purposes of this book, we're imagining a situation where the business
 decide to implement an exciting new way of allocating stock.  Until now, the
