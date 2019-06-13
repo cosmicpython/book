@@ -440,7 +440,10 @@ This means it'll work both when the tests give it a `FakeRepository`, and
 when the flask app gives it a `SqlAlchemyRepository`.
 
 
-This is what people mean when they say "depend on abstractions".
+This is what people mean when they say "depend on abstractions". footnote:[e.j. I would
+go ahead into full detail here.  It's a very straightforward example of "details depending
+on abstractions."  The other way to motivate this is by posing hypothetical scenarios, like
+using the local filesystem for testing, or switching to MongoDB instead of SQL.]
 
 //TODO: should we go into full detail?
 // "1. High-level modules should not depend on low-level modules. Both should depend on abstractions"
@@ -624,7 +627,9 @@ Why would we want to do that?
 Tests are supposed to help us change our system fearlessly, but very often
 we see teams writing too many tests against their domain model. This causes
 problems when they come to change their codebase, and find that they need to
-update tens or even hundreds of unit tests.
+update tens or even hundreds of unit tests.  footnote:[e.j. I think
+this is one of those things that borders on a war of religion.  Might want to have
+some sidebar on BDD, and the perils of test coverage metrics.]
 
 This makes sense if you stop to think about the purpose of automated tests. We
 use tests to enforce that some property of the system doesn't change while we're
@@ -695,13 +700,15 @@ code might look.
 
 When we want to improve the design of the code, though, we will need to replace
 or delete these tests, because they are tightly coupled to a particular
-implementation.
+implementation. footnote:[e.j. an example that is overmocked would be good here
+if you decide to add one.]
 
 // TODO (SG) - maybe we could do with a/some concrete examples here?  Eg an 
 // example where a unit test would break but a service-layer test wouldn't?
 // and maybe make the analogy of "you should only write tests against public
 // methods of your classes, and the service layer is just another more-public
 // layer
+
 
 
 ==== Low and High Gear
@@ -722,7 +729,7 @@ The metaphor we use is that of shifting gears. When starting off a journey, the
 bicycle needs to be in a low gear so that it can overcome inertia. Once we're off
 and running, we can go faster and more efficiently by changing into a high gear
 but if we suddenly encounter a steep hill, or we're forced to slow down by a
-hazard, we again drop down to a low gear until we can pick up speed again.
+hazard, we again drop down to a low gear until we can pick up speed again. 
 
 
 
