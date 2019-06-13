@@ -116,7 +116,6 @@ But allocating orders is no longer a trivial matter of decrementing a single
 quantity in the warehouse system.  We need a more complex allocation mechanism.
 Time for some domain modelling.  footnote:[e.j. I find myself using collboration diagrams most frequently for these kinds of things. A sequence diagram here would be good too, but they are a little bit cumbersome to draw.  More https://www.codemag.com/Article/0205051/UML-Collaboration-Diagrams[info]. ]
 
-
 .A sort-of context diagram for the allocation service. 
 ====
 [source,text]
@@ -140,7 +139,7 @@ Orders                          +------------+         Shipments, Stock
 
 
 
-=== Exploring the domain language 
+=== Exploring the domain language
 
 Understanding the domain model takes time,and patience, and post-it notes. We
 have an initial conversation with our business experts and we agree a glossary
@@ -324,7 +323,8 @@ the same sku; and we've written four simple tests for a new method
 domain experts, and the examples we agreed are directly written into code.
 
 We can implement this straightforwardly, too, by writing the can_allocate
-method of the Batch. 
+method of the Batch.
+
 
 [[can_allocate]]
 .A new method in the model (model.py)
@@ -674,7 +674,6 @@ def test_barry_is_harry():
     barry.name = Name("Barry", "Percival")
 
     assert harry is barry and barry is harry
-
 ----
 ====
 
@@ -865,7 +864,7 @@ def test_raises_out_of_stock_exception_if_cannot_allocate():
 
 We won't bore you too much with the implementation, but the main thing
 to note is that we take care in naming our exceptions in the ubiquitous
-language, just like we do our entities, value objects and services. 
+language, just like we do our entities, value objects and services.
 
 [[out_of_stock]]
 .Raising a domain exception (model.py)
