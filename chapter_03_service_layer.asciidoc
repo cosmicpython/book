@@ -581,8 +581,6 @@ a healthy-looking test pyramid.
 
 === Should domain layer tests move to the service layer?
 
-//TODO consider splitting this out to its own chapter
-
 We could take this a step further. Since we can test the our software against
 the service layer, we don't really need tests for the domain model any more.
 Instead, we could rewrite all of the domain-level tests from chapter one in

@@ -154,8 +154,10 @@ the world of databases and relational algebra.
 
 The most important thing an ORM gives us is "persistence ignorance": the idea
 that our fancy domain model doesn't need to know anything about how data are
-loaded or persisted. This helps to keep our domain clean of dependencies.
-//TODO (DS): Might be interesting to point out that orms are following the DIP themselves...
+loaded or persisted. This helps to keep our domain clean of direct dependencies
+on particular databases technologies.footnote:[In this sense, using an ORM is
+already an example of the DIP. Instead of depending on hardcoded SQL, we depend
+on an abstraction, the ORM.  But that's not enough for us, not in this book!]
 
 But if you follow the typical SQLAlchemy tutorial, you'll end up with something
 like this:
