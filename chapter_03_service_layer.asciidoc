@@ -1030,6 +1030,58 @@ Adding the service layer has really bought us quite a lot:
   tests.
 
 
+[[service_layer_diagram]]
+.Diagram of the service layer
+====
+[role="skip"]
+[source,text]
+----
+Abstract dependencies:
+        +-----------------------------+
+        |      Any client, eg tests   |----\
+        +-----------------------------+    |
+                       |                   |
+                       V                   |
+        +-----------------------------+    |
+        |         Service Layer       |    |
+        +-----------------------------+    |
+           |                     |         |
+           V                     V         V
++------------------+     +-----------------------+
+|   Domain Model   |     | (Abstract) Repository |
++------------------+     +-----------------------+
+
+
+Runtime dependencies:
+
+       +--------------------------------+
+       | Flask API (Presentation layer) |----\
+       +--------------------------------+    |
+                       |                     |
+                       V                     |
+        +-----------------------------+      |
+        |         Service Layer       |      |
+        +-----------------------------+      |
+           |                     |           |
+           V                     V           V
++------------------+     +-----------------------+
+|   Domain Model   |     | SqlAlchemy Repository |
++------------------+     +-----------------------+
+              ^                |
+              |                V
+           +----------------------+
+           |          ORM         |
+           +----------------------+
+                       |
+                       V
+           +------------------------+
+           |       Database         |
+           +------------------------+
+
+TODO: not sure if this diagram is helping.
+----
+====
+
 //TODO (DS): Good wrap up. I'd really like to see a table or something that
 //sums up what belongs in each layer so far. And a diagram! 
   
