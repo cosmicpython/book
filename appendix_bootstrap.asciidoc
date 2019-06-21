@@ -156,8 +156,6 @@ def test_allocations_view(sqlite_bus):
 
 TODO: bootstrapper as class instead?
 
-TODO: bootstrap redis? and/or fix redis circular dependency
-
 
 === Dependency diagrams
 
@@ -175,9 +173,15 @@ Does the bootstrap script help? Kinda.
 image::images/appendix_bootstrap_dependency_graph_1.png["Dependency graph with bootstrap script"]
 
 
-Well kindo not actually.  that redis circular dependency is back and looking
+Well kindo not actually.  that redis circular dependency is still there and looking
 ugly.
 
-TODO: fix by making an abstract redis thingie?  or maybe splitting out
-redis-pub and redis-sub?
+One fix is to split the "pub" from the "sub":
+
+image::images/appendix_bootstrap_dependency_graph_2.png["Dependency graph with bootstrap script and no circular deps"]
+
+Now we have what our esteemed tech reviewer David Seddon would call a "rocky road architecture": all the dependencies
+flow in one direction.
+
+TODO: alternative fix by making an abstract redis thingie?  
 
