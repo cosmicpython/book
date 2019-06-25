@@ -378,13 +378,13 @@ class Batch:
 
 //TODO: get rid of those -> Nones while we're at it.  yuck
 
-Here's what it looks like:
-
 
 [[model_diagram]]
 .Our Model
-[ditaa,images/model-class-diag.png]
-....
+====
+[source,text]
+[role="skip"]
+----
 +=====================+
 | Batch               |
 +---------------------+
@@ -397,7 +397,9 @@ Here's what it looks like:
                               | sku         |
                               | qty         |
                               +-------------+
-....
+
+----
+====
 
 Now we're getting somewhere! A batch now keeps track of a set of allocated
 OrderLine objects. When we allocate, if we have enough available quantity, we
