@@ -1,5 +1,5 @@
 html:
-	asciidoctor -a source-highlighter=pygments -a '!example-caption' *.asciidoc
+	asciidoctor -a source-highlighter=pygments *.asciidoc
 
 test: html
 	pytest tests.py --tb=short -vv
