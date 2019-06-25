@@ -113,20 +113,22 @@ quantity in the warehouse system.  We need a more complex allocation mechanism.
 Time for some domain modelling.
 
 .A sort-of context diagram for the allocation service.
-[ditaa,images/context-diagram-allocation.png]
-....
+====
+[source,text]
+[role="skip"]
+----
 Orders                          +------------+         Shipments, Stock
  OrderLines(product/qty) -----> | Allocation | ------>  Batches(product/qty/eta)
- OrderLines(product/qty)  sent  |  Service   |  looks   Batches(product/qty/eta)
- ...                       to   |            |   up     ...
-                                +------------+
+ OrderLines(product/qty) -----> |  Service   | ------>  Batches(product/qty/eta)
+ ...                      sent  |            |  looks   ...
+                           to   +------------+   up
                                       |
                                       | outputs
                                       V
-
-                                "an allocation":
-                               (orderline + batch)
-....
+                               "An allocation"
+                               orderline->batch.
+----
+====
 
 //TODO: Better diagram for allocation? context diag?"
 
