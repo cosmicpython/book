@@ -113,6 +113,7 @@ quantity in the warehouse system.  We need a more complex allocation mechanism.
 Time for some domain modelling.
 
 .A sort-of context diagram for the allocation service.
+====
 [source,text]
 [role="skip"]
 ----
@@ -127,6 +128,7 @@ Orders                          +------------+         Shipments, Stock
                                "An allocation"
                                orderline->batch.
 ----
+====
 
 //TODO: Better diagram for allocation? context diag?"
 
@@ -196,6 +198,7 @@ Here's what one of our first tests might look like:
 
 [[first_test]]
 .A first test for allocation (test_batches.py)
+====
 [source,python]
 ----
 def test_allocating_to_a_batch_reduces_the_available_quantity():
@@ -206,6 +209,7 @@ def test_allocating_to_a_batch_reduces_the_available_quantity():
 
     assert batch.available_quantity == 18
 ----
+====
 
 
 The name of our unit test describes the behaviour that we want to see from the
@@ -217,6 +221,7 @@ And here is a domain model that meets our requirements:
 
 [[domain_model_1]]
 .First cut of a domain model for batches (model.py)
+====
 [source,python]
 [role="non-head"]
 ----
@@ -239,6 +244,7 @@ class Batch:
     def allocate(self, line: OrderLine):
         self.available_quantity -= line.qty
 ----
+====
 
 
 <1> OrderLine is an immutable dataclass with no behaviour. In python 3.6 or
@@ -260,6 +266,7 @@ Let's write some new failing tests, as in <<test_can_allocate>>:
 
 [[test_can_allocate]]
 .Testing logic for what we can allocate (test_batches.py)
+====
 [source,python]
 ----
 def make_batch_and_line(sku, batch_qty, line_qty):
@@ -286,6 +293,7 @@ def test_cannot_allocate_if_skus_do_not_match():
     line = OrderLine("order-123", 'sku2', 10)
     assert batch.can_allocate(line) is False
 ----
+====
 
 There's nothing too unexpected here. We've refactored our test suite so that we
 don't keep repeating the same lines of code to create a batch and a line for
@@ -299,11 +307,13 @@ method of the Batch.
 
 [[can_allocate]]
 .A new method in the model (model.py)
+====
 [source,python]
 ----
     def can_allocate(self, line: OrderLine) -> bool:
         return self.sku == line.sku and self.available_quantity >= line.qty
 ----
+====
 
 Let's skip the deallocate method because we can trivially implement it as an
 increment of the Batch.available_quantity property, and jump to the next test:
@@ -311,6 +321,7 @@ increment of the Batch.available_quantity property, and jump to the next test:
 
 [[test_deallocate_unallocated]]
 .This test is going to require a smarter model (test_batches.py)
+====
 [source,python]
 ----
 def test_can_only_deallocate_allocated_lines():
@@ -318,6 +329,7 @@ def test_can_only_deallocate_allocated_lines():
     batch.deallocate(line)
     assert batch.available_quantity == 20
 ----
+====
 
 In this test we're asserting that deallocating a line from a batch has no effect
 unless the batch previously allocated the line. For this to work, our Batch
@@ -327,6 +339,7 @@ implementation.
 
 [[domain_model_complete]]
 .A decent first cut of the domain model (model.py)
+====
 [source,python]
 [role="non-head"]
 ----
@@ -359,6 +372,7 @@ class Batch:
     def can_allocate(self, line: OrderLine) -> bool:
         return self.sku == line.sku and self.available_quantity >= line.qty
 ----
+====
 
 
 //TODO: (DS)  self._allocations: Set[OrderLine] = set()
@@ -369,6 +383,7 @@ class Batch:
 
 [[model_diagram]]
 .Our Model
+====
 [source,text]
 [role="skip"]
 ----
@@ -386,6 +401,7 @@ class Batch:
                               +-------------+
 
 ----
+====
 
 Now we're getting somewhere! A batch now keeps track of a set of allocated
 OrderLine objects. When we allocate, if we have enough available quantity, we
@@ -396,6 +412,7 @@ to handle the last test, because items in a set are unique.
 
 [[last_test]]
 .Last batch test!  (test_batches.py)
+====
 [source,python]
 ----
 def test_allocation_is_idempotent():
@@ -404,6 +421,7 @@ def test_allocation_is_idempotent():
     batch.allocate(line)
     assert batch.available_quantity == 18
 ----
+====
 
 Perhaps you think this model is too trivial to bother with object-orientation,
 but throughout this book, we're going to extend our simple domain model, and
@@ -421,6 +439,7 @@ wrapping primitive types using `typing.NewType`:
 
 [[too_many_types]]
 .Just taking it way too far, Bob.
+====
 [source,python]
 [role="skip"]
 ----
@@ -439,6 +458,7 @@ class Batch:
         self.available_quantity = qty
 
 ----
+====
 
 
 That would allow our type checker to make sure that we don't pass a Sku where a
@@ -459,6 +479,7 @@ containing order information might look like this:
 
 [[yaml_order_example]]
 .Order info as YAML
+====
 [source,yaml]
 [role="skip"]
 ----
@@ -471,6 +492,7 @@ Lines:
   - sku: GRN-CHAIR
     qty: 25
 ----
+====
 
 
 
@@ -485,6 +507,7 @@ domain object that is uniquely identified by the data it holds.
 
 [[orderline_value_object]]
 .OrderLine is a Value Object.
+====
 [source,python]
 [role="skip"]
 ----
@@ -494,6 +517,7 @@ class OrderLine:
     sku: ProductReference
     qty: Quantity
 ----
+====
 
 Introduced in Python 3.7, Dataclasses are a neat way to represent value objects;
 if you're on Python 2, you could use named tuples instead. Either technique
@@ -503,6 +527,7 @@ the same orderid, sku and qty are equal".
 
 [[more_value_objects]]
 .More examples of Value Objects
+====
 [source,python]
 [role="skip"]
 ----
@@ -526,6 +551,7 @@ def test_equality():
     assert Name('Harry', 'Percival') != Name('Bob', 'Gregory')
     assert Line('RED-CHAIR', 5) == Line('RED-CHAIR', 5)
 ----
+====
 
 These value objects match our real-world intuitions about how their values work.
 It doesn't matter _which_ £10 note we're talking about, because they all have
@@ -538,6 +564,7 @@ operators.
 
 [[value_object_maths]]
 .Maths with Value Objects.
+====
 [source,python]
 [role="skip"]
 ----
@@ -561,6 +588,7 @@ def multiplying_two_money_values_is_an_error():
     with pytest.raises(TypeError):
         tenner * fiver
 ----
+====
 
 
 
@@ -583,12 +611,14 @@ It should be clear that "Harry Percival" is not equal to "Barry Percival".
 
 [[test_equality]]
 .A name itself cannot change
+====
 [source,python]
 [role="skip"]
 ----
 def test_name_equality():
     assert Name("Harry", "Percival") != Name("Barry", "Percival")
 ----
+====
 
 
 But what about Harry as a _person_? People do change their names, and their
@@ -599,6 +629,7 @@ _identity_.
 
 [[person_identity]]
 .But a person can...
+====
 [source,python]
 [role="skip"]
 ----
@@ -616,6 +647,7 @@ def test_barry_is_harry():
 
     assert harry is barry and barry is harry
 ----
+====
 
 
 
@@ -631,6 +663,7 @@ entities:
 
 [[equality_on_batches]]
 .Implementing equality operators (model.py)
+====
 [source,python]
 ----
 class Batch:
@@ -644,6 +677,7 @@ class Batch:
     def __hash__(self):
         return hash(self.reference)
 ----
+====
 
 Python's `__eq__` magic method defines the behaviour of the class for the
 `==` operator.
@@ -688,6 +722,7 @@ Let's see how we might test-drive such a function:
 
 [[test_allocate]]
 .Testing our domain service (test_allocate.py)
+====
 [source,python]
 ----
 def test_prefers_warehouse_batches_to_shipments():
@@ -721,6 +756,7 @@ def test_returns_allocated_batch_id():
     allocation = allocate(line, [warehouse_batch, shipment_batch])
     assert allocation == 'wh-batch'
 ----
+====
 
 
 And our service looks might look like this:
@@ -728,6 +764,7 @@ And our service looks might look like this:
 
 [[domain_service]]
 .A standalone function for our domain service (model.py)
+====
 [source,python]
 [role="non-head"]
 ----
@@ -738,6 +775,7 @@ def allocate(line: OrderLine, batches: List[Batch]) -> str:
     batch.allocate(line)
     return batch.reference
 ----
+====
 
 
 ==== Python's magic methods let us use our models with idomatic Python
@@ -751,6 +789,7 @@ To make it work we implement `__gt__` on our domain model:
 
 [[dunder_gt]]
 .Magic methods can express domain semantics (model.py)
+====
 [source,python]
 ----
 class Batch:
@@ -763,6 +802,7 @@ class Batch:
             return True
         return self.eta > other.eta
 ----
+====
 
 That's lovely.
 
@@ -778,6 +818,7 @@ we can capture that using a Domain Exception:
 
 [[test_out_of_stock]]
 .Testing out of stock exception (test_allocate.py)
+====
 [source,python]
 ----
 def test_raises_out_of_stock_exception_if_cannot_allocate():
@@ -788,6 +829,7 @@ def test_raises_out_of_stock_exception_if_cannot_allocate():
         allocate(sku2_line, [sku1_batch])
     assert 'sku2' in str(ex)
 ----
+====
 
 We won't bore you too much with the implementation, but the main thing
 to note is that we take care in naming our exceptions in the ubiquitous
@@ -795,6 +837,7 @@ language, just like we do our entities, value objects and services.
 
 [[out_of_stock]]
 .Raising a domain exception (model.py)
+====
 [source,python]
 ----
 class OutOfStock(Exception):
@@ -808,6 +851,7 @@ def allocate(line: OrderLine, batches: List[Batch]) -> str:
     except StopIteration:
         raise OutOfStock(f'Out of stock for sku {line.sku}')
 ----
+====
 
 That'll probably do for now! We have a domain service which we can use for our
 first use case.   But first we'll need a database.
