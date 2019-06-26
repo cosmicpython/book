@@ -469,6 +469,17 @@ a bit more work on the part of the reader to understand what's going on.
 TODO: discuss the fact that our implementation is full of bugs and now we
     can easily test for them.
 
+.So which do we use in this book? FCIS or DI?
+******************************************************************************
+Both. Our domain model is entirely free of dependencies and side-effects,
+so that's our functional core.  The service layer that we build around it
+(in <<chapter_03_service_layer>>) is its imperative shell, but we actually
+use dependency injection to provide that imperative shell with things like
+access to the database, so we can still unit test it.
+
+See <<chapter_10_dependency_injection>> for more exploration of making our
+dependency injection more explict and centralised.
+******************************************************************************
 
 === Wrap-up: "Depend on Abstractions".
 
