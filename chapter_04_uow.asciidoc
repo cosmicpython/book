@@ -321,7 +321,7 @@ def test_rolls_back_on_error(session_factory):
 ====
 
 TIP: We haven't shown it here, but it can be worth testing some of the more
-    "obcure" database behaviour, like transactions, against the "real"
+    "obscure" database behaviour, like transactions, against the "real"
     database, ie the same engine.  For now we're getting away with using
     SQLite instead of Postgres, but in <<chapter_05_aggregate>> we'll switch
     some of the tests to using the real DB.  It's convenient that our UoW
@@ -440,20 +440,19 @@ Our shipping company gives us a call to say that one of the container doors
 opened and half our sofas have fallen into the Indian Ocean.  oops!
 
 
-
 [[change_batch_quantity]]
 .Change quantity
 ====
 [source,python]
 [role="skip"]
 ----
-def change_batch_quantity(batch: Batch, new_qty: int, uow: AbstractUnitOfWork):
+def change_batch_quantity(batchid: str, new_qty: int, uow: AbstractUnitOfWork):
     with uow:
-        product = uow.products.get(sku=batch.sku)
+        batch = uow.batches.get(reference=batchid)
         batch.change_purchased_quantity(new_qty)
         while batch.available_quantity < 0:
             line = batch.deallocate_one()  #<1>
-            product.allocate(line)  #<1>
+        model.allocate(line)
         uow.commit()
 ----
 ====
