@@ -119,7 +119,9 @@ a shred of sense.
 
 
 btw you can test this stuff. note that it can't be unit tested, because it
-needs a real db, it's an integration test:
+needs a real db, it's an integration test!  Just another anti-feather in the
+anti-cap of this total anti-pattern.
+
 
 [[integration_testing_views]]
 .An integration test for a view (tests/integration/test_views.py)
@@ -152,10 +154,10 @@ def test_allocations_view(sqlite_session_factory):
 that hardcoded sql query is pretty ugly right?  what if we made it nicer
 by keeping a totally separate, denormalised datastore for our view model?
 
-Horrific right? wait 'til we tell you we're not even going to use postgres
+Horrifying, right? wait 'til we tell you we're not even going to use postgres
 or triggers or anything known and reliable and boring like that to keep it
 up to date.  We're going to use our amazing event-driven architecture!
-that's right!  may as well join the cult and start drinking folks, the ship
+That's right!  may as well join the cult and start drinking folks, the ship
 is made of cardboard and the captains are crazy and there's nothing you can
 do to stop them.
 
