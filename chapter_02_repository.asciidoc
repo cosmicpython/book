@@ -681,6 +681,22 @@ def allocate_endpoint():
 ====
 
 
+.Exercise for the Reader
+******************************************************************************
+We bumped into a friend at a DDD conference the other day who said "I haven't
+used an ORM in 10 years".  Repository pattern and an ORM both act as abstractions
+in front of raw SQL, so using one behind the other isn't really necessary.  Why
+not have a go at implementing our repository without using the ORM?
+
+https://github.com/python-leap/code/tree/chapter_02_repository_exercise
+
+We've left the repository tests, but figuring out what SQL to write is up
+to you.  Perhaps it'll be harder than you think, perhaps it'll be easier,
+but the nice thing is--the rest of your application just doesn't care.
+
+******************************************************************************
+
+
 === Building a fake repository for tests is now trivial!
 
 Here's one of the biggest benefits of Repository pattern.
