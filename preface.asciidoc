@@ -139,6 +139,53 @@ Chapter 10 Dependency injection::
 // Perhaps some advice on how to begin if you have (a) traditional three layer
 // architecture or (b) big ball of mud.
 
+
+=== Example Code and Coding along
+
+You're reading a book, but you'll probably agree with us when we way that
+the best way to learn about code is to code.  Bob and I learned most of what
+we know from pairing with people, writing code with them, and learning-by
+doing, and we'd like to recreate that experience as much as possible for you
+in this book.
+
+As a result, we've structured the book around a single example project
+(although we do sometimes throw in other examples), which we build up as we go,
+and the narrative of the book is as if you're pairing with us as we go, and
+we're explaining what we're doing and why at each step.
+
+But to really get to grips with these patterns, you need to mess about with the
+code and actually get a feel for how it works.  You'll find all the code on
+GitHub; each chapter has its own branch.  You can find a list of them here:
+https://github.com/python-leap/code/branches/all
+
+Here's three different ways you might code along with the book:
+
+* Start your own repo and try and build up the app as we do, following the
+  examples from listings in the book, and occasionally looking to our repo
+  for hints.
+
+* Try to apply these each pattern, chapter-by-chapter, to your own (preferably
+  small/toy) project, and see if you can make it work for your use case.  This
+  is high-risk / high-reward (and high effort besides!).  It may take quite some
+  work to get things working for the specifics of your project, but on the other
+  hand you're likely to learn the most
+
+* For lower effort, in each chapter we'll outline an "exercise for the reader",
+  and point you to a Github location where you can download some partially-finished
+  code for the chapter with a few missing parts to write yourself.
+
+
+If you want to go all the way to town, why not try and build up the code
+as you read along?  Particularly if you're intending to apply some of these
+patterns in your own projects, then working through a simple example can really
+help you to get some safe practice.
+
+The code (and the online version of the book) is licensed under a Creative
+Commons CC-By-ND license. If you want to re-use any of the content from this
+book and you have any worries about the license terms you can contact O'Reilly
+at pass:[<a class="email" href="mailto:permissions@oreilly.com"><em>permissions@oreilly.com</em></a>].
+
+
 === Conventions Used in This Book
 
 The following typographical conventions are used in this book:
@@ -166,38 +213,6 @@ This element signifies a general note.
 ====
 This element indicates a warning or caution.
 ====
-
-=== Example Code and Coding along
-
-The book is built around a single example project (although we do sometimes
-throw in other examples), and we'd like to strongly encourage you to download
-that code and play around with it, to make sure you understand how everything
-fits together.
-
-Each chapter has its own branch in the code repository.  You can find
-a list of them here:
-
-https://github.com/python-leap/code/branches/all
-
-If you want to go all the way to town, why not try and build up the code
-as you read along?  Particularly if you're intending to apply some of these
-patterns in your own projects, then working through a simple example can really
-help you to get some safe practice.
-
-
-++++
-<!--PROD: Please reach out to author to find out if they will be uploading code examples to oreilly.com or their own site (e.g., GitHub). If there is no code download, delete this whole section. If there is, when you email digidist with the link, let them know what you filled in for title_title (should be as close to book title as possible, i.e., learning_python_2e). This info will determine where digidist loads the files.-->
-++++
-
-// Supplemental material (code examples, exercises, etc.) is available for
-// download at link:$$https://github.com/oreillymedia/title_title$$[].
-
-The code is made available under a Creative Commons CC-By-ND license.
-
-If you want to re-use any of the content from this book and you have any
-worries about the license terms you can contact O'Reilly 
-at pass:[<a class="email" href="mailto:permissions@oreilly.com"><em>permissions@oreilly.com</em></a>].
-
 === O'Reilly Safari
 
 [role = "safarienabled"]
