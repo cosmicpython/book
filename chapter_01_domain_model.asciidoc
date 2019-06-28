@@ -566,7 +566,7 @@ def test_equality():
 These value objects match our real-world intuitions about how their values work.
 It doesn't matter _which_ £10 note we're talking about, because they all have
 the same value. Likewise two names are equal if both the first and last name
-match, and two lines are equivalent if they have the same product code and
+match, and two lines are equivalent if they have the same customer order, product code and
 quantity. We can still have complex behaviour on a value object, though. In
 fact, it's common to support operations on values, for example mathematical
 operators.
