@@ -13,7 +13,7 @@ browsers and race conditions. For the next few chapters we're going to look at
 how we can connect our idealised domain model to external state.
 
 We expect to be working in an agile manner, so our priority is to get to an MVP
-as quickly as possible.  In our case that's going to be a web API. In a real
+as quickly as possible.  In our case, that's going to be a web API. In a real
 project, you might dive straight in with some end-to-end tests and start
 plugging in a web framework, test-driving things outside-in.
 
@@ -59,7 +59,7 @@ database.
 === Applying the Dependency Inversion Principle to the Database
 
 As mentioned in <<part1_prologue>>, the "layered architecture" is a common
-approach to structuring an system that has a UI, some logic, and a database:
+approach to structuring a system that has a UI, some logic, and a database:
 
 
 [[layered_architecture2]]
@@ -86,7 +86,7 @@ approach to structuring an system that has a UI, some logic, and a database:
 
 Django's Model-View-Template structure is closely related, as is
 Model-View-Controller (MVC). In any case, the aim is to keep the layers
-separate (which is a good thing), and to have each layer depend only on the one
+separate (which is a good thing), and to have each layer depends only on the one
 below...
 
 But we want our domain model to have __no dependencies whatsoever__footnote:[
@@ -193,7 +193,7 @@ class Allocation(Base):
 You don't need to understand SQLAlchemy to see that our pristine model is now
 full of dependencies on the ORM, and is starting to look ugly as hell besides.
 Can we really say this model is ignorant of the database? How can it be
-separate from storage concerns when our model properties are directly coupled
+separated from storage concerns when our model properties are directly coupled
 to database columns?
 
 .Django's ORM is essentially the same, but more restrictive
@@ -274,7 +274,7 @@ def start_mappers():
 
 <2> We define our database tables and columns using SQLAlchemy's abstractions.
 
-<3> And when we call the `mapper` function, SqlAlchemy does its magic to bind
+<3> And when we call the `mapper` function, SQLAlchemy does its magic to bind
     our domain model classes to the various tables we've defined.
 
 The end result will be that, if we call `start_mappers()`, we will be able to
@@ -489,7 +489,7 @@ trying to ask: "what do we get for this?  And what does it cost us?".
 
 Usually at the very least we'll be introducing an extra layer of abstraction,
 and although we may hope it will be reducing complexity overall, it does add
-complexity locally, and it has a cost in terms raw numbers of moving parts and
+complexity locally, and it has a cost in terms of moving parts and
 ongoing maintenance.
 
 Repository pattern is probably one of the easiest choices in the book though,
@@ -538,7 +538,7 @@ TODO: not sure if this diagram is helping.
 ====
 
 
-As always we start with a test. This would probably be classified as an
+As always, we start with a test. This would probably be classified as an
 "integration test", since we're checking that our code (the repository) is
 correctly integrated with the database;  hence, the tests tend to mix
 raw SQL with calls and assertions on our own code.
@@ -627,12 +627,14 @@ def test_repository_can_retrieve_a_batch_with_allocations(session):
 //TODO (DS): Picking a descriptive SKU (e.g. 'comfy-sofa') would make this a
 //bit more fun to read.
 // Worth explaining why we have to do a follow up query to get the id inserted?j
-// Why the underscore in _allocations here?
+// Why the underscore in _allocations here? It was already private in the definition
+// of the Batch class in chapter 1. Maybe for consistency we want to make them all
+// private ('_') and explain that we want to access them through properties for better control?
 
 Whether or not you painstakingly write tests for every model is a judgement
 call.  Once you have one class tested for create/modify/save, you might be
 happy to go on and do the others with a minimal roundtrip test, or even nothing
-at all, if they all follow a similar pattern.  In our case, the ORM config
+at all, if they all follow a similar pattern. In our case, the ORM config
 that sets up the `._allocations` set is a little complex, so it merited a
 specific test.
 
@@ -670,7 +672,7 @@ And now our flask endpoint might look something like <<api_endpoint_with_repo>>:
 [role="skip"]
 [source,python]
 ----
-@flask.route.gubbbins
+@flask.route.gubbins
 def allocate_endpoint():
     batches = SqlAlchemyRepository.list()
     lines = [OrderLine(l['orderid'], l['sku'], l['qty']) for l in lines]
@@ -708,6 +710,7 @@ class FakeRepository(AbstractRepository):
 ====
 
 Because we are a simple wrapper around a `set`, our methods are all one-liners.
+// this sentence looks weird ^ , is the 1st "are" the correct word?
 
 Using a fake repo in tests is really easy, and we have a simple
 abstraction that's easy to use and reason about:
@@ -745,7 +748,7 @@ Apply Dependency Inversion to your ORM::
 Repository pattern is a simple abstraction around permanent storage::
     The repository gives you the illusion of a collection of in-memory
     objects. It makes it very easy to create a `FakeRepository` for
-    testing, and it makes it easy to swap fundamental details of you
+    testing, and it makes it easy to swap fundamental details of your
     infrastructure without disrupting your core application. See
     <<appendix_csvs>> for an example.
 
