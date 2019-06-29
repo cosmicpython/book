@@ -156,9 +156,11 @@ def test_allocations_are_persisted(add_stock):
     line1 = {'orderid': order1, 'sku': sku, 'qty': 10}
     line2 = {'orderid': order2, 'sku': sku, 'qty': 10}
     url = config.get_api_url()
+
     r = requests.post(f'{url}/allocate', json=line1)
     assert r.status_code == 201
     assert r.json()['batchid'] == batch1
+
     r = requests.post(f'{url}/allocate', json=line2)
     assert r.status_code == 201
     assert r.json()['batchid'] == batch2
@@ -1006,7 +1008,6 @@ def test_happy_path_returns_201_and_allocated_batch():
 // model of product, amount available and order placing).
 
 
-
 .Exercise for the Reader
 ******************************************************************************
 We've now got services for `add_batch` and `allocate`, why not build out
@@ -1016,6 +1017,7 @@ service-layer tests for you to get started here:
 https://github.com/python-leap/code/tree/chapter_03_service_layer_exercise
 
 ******************************************************************************
+
 
 === Wrap-up
 
