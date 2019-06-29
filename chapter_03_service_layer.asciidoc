@@ -697,7 +697,7 @@ When we want to improve the design of the code, though, we will need to replace
 or delete these tests, because they are tightly coupled to a particular
 implementation.
 
-// TODO (SG) - maybe we could do with a/some concrete examples here?  Eg an 
+// TODO (SG) - maybe we could do with a/some concrete examples here?  Eg an
 // example where a unit test would break but a service-layer test wouldn't?
 // and maybe make the analogy of "you should only write tests against public
 // methods of your classes, and the service layer is just another more-public
@@ -896,9 +896,9 @@ NOTE: Should you write a new service just because it would help remove
 TIP: In general, if you find yourself needing to do domain-layer stuff directly
     in your service-layer tests, it may be an indication that your service
     layer is incomplete.
-    
 
-That now allows us to rewrite _all_ of our service-layer tests purely 
+
+That now allows us to rewrite _all_ of our service-layer tests purely
 in terms of the services themselves, using only primitives, and without
 any dependencies on the model.
 
@@ -1006,7 +1006,7 @@ def test_happy_path_returns_201_and_allocated_batch():
 // sense of how much this is because this is a simplified example and how much
 // it's a design principle. It is possible that the explanations of the first
 // few chapters would be better served by a simpler example. (E.g just have a
-// model of product, amount available and order placing). 
+// model of product, amount available and order placing).
 
 === Wrap-up
 
@@ -1021,10 +1021,10 @@ Adding the service layer has really bought us quite a lot:
   entrypoints that can be used by any adapter without needing to know anything
   about our domain model classes--whether that's an API, a CLI (see
   <<appendix_csvs>>), or the tests! They're an adapter for our domain too.
-    
+
 * We can write tests in "high gear" using the service layer, leaving us
   free to refactor the domain model in any way we see fit.  As long as
-  we can still deliver the same use cases, we can experiment with new 
+  we can still deliver the same use cases, we can experiment with new
   designs without needing to rewrite a load of tests.
 
 * And our "test pyramid" is looking good -- the bulk of our tests
@@ -1033,8 +1033,8 @@ Adding the service layer has really bought us quite a lot:
 
 
 //TODO (DS): Good wrap up. I'd really like to see a table or something that
-//sums up what belongs in each layer so far. And a diagram! 
-  
+//sums up what belongs in each layer so far. And a diagram!
+
 There's still a bit of awkwardness we'd like to get rid of. The service
 layer is tightly coupled to a `session` object.  In the next chapter, we'll
 introduce one more pattern that works closely with _Repository_ and _Service
