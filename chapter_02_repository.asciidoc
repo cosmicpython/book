@@ -325,7 +325,7 @@ def test_orderline_mapper_can_save_lines(session):
     fixtures for the purposes of this book, but the short explanation is that
     you can define common dependencies for your tests as "fixtures", and
     pytest will inject them to the tests that need them by looking at their
-    function arguments.  In this case, it's a SQLAlchemy database session.
+    function arguments.  In this case, it's an SQLAlchemy database session.
 
 
 You probably wouldn't keep these tests around--as we'll see shortly, once
@@ -705,7 +705,8 @@ class FakeRepository(AbstractRepository):
 ----
 ====
 
-Because we are a simple wrapper around a `set`, our methods are all one-liners.
+Because we are using a simple wrapper around a `set`, our methods are all
+one-liners.
 
 Using a fake repo in tests is really easy, and we have a simple
 abstraction that's easy to use and reason about:
