@@ -86,7 +86,7 @@ approach to structuring a system that has a UI, some logic, and a database:
 
 Django's Model-View-Template structure is closely related, as is
 Model-View-Controller (MVC). In any case, the aim is to keep the layers
-separate (which is a good thing), and to have each layer depends only on the one
+separate (which is a good thing), and to have each layer depend only on the one
 below...
 
 But we want our domain model to have __no dependencies whatsoever__footnote:[
@@ -193,7 +193,7 @@ class Allocation(Base):
 You don't need to understand SQLAlchemy to see that our pristine model is now
 full of dependencies on the ORM, and is starting to look ugly as hell besides.
 Can we really say this model is ignorant of the database? How can it be
-separated from storage concerns when our model properties are directly coupled
+separate from storage concerns when our model properties are directly coupled
 to database columns?
 
 .Django's ORM is essentially the same, but more restrictive
@@ -489,7 +489,7 @@ trying to ask: "what do we get for this?  And what does it cost us?".
 
 Usually at the very least we'll be introducing an extra layer of abstraction,
 and although we may hope it will be reducing complexity overall, it does add
-complexity locally, and it has a cost in terms of moving parts and
+complexity locally, and it has a cost in terms raw numbers of moving parts and
 ongoing maintenance.
 
 Repository pattern is probably one of the easiest choices in the book though,
@@ -634,7 +634,7 @@ def test_repository_can_retrieve_a_batch_with_allocations(session):
 Whether or not you painstakingly write tests for every model is a judgement
 call.  Once you have one class tested for create/modify/save, you might be
 happy to go on and do the others with a minimal roundtrip test, or even nothing
-at all, if they all follow a similar pattern. In our case, the ORM config
+at all, if they all follow a similar pattern.  In our case, the ORM config
 that sets up the `._allocations` set is a little complex, so it merited a
 specific test.
 
@@ -725,8 +725,7 @@ class FakeRepository(AbstractRepository):
 ----
 ====
 
-Because we are a simple wrapper around a `set`, our methods are all one-liners.
-// this sentence looks weird ^ , is the 1st "are" the correct word?
+Because it's a simple wrapper around a `set`, all the methods are one-liners.
 
 Using a fake repo in tests is really easy, and we have a simple
 abstraction that's easy to use and reason about:
