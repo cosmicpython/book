@@ -391,9 +391,9 @@ def allocate(line: OrderLine, repo: AbstractRepository, session) -> str:
     batches = repo.list()  #<1>
     if not is_valid_sku(line.sku, batches):  #<2>
         raise InvalidSku(f'Invalid sku {line.sku}')
-    batch = model.allocate(line, batches)  #<3>
+    batchref = model.allocate(line, batches)  #<3>
     session.commit()  #<4>
-    return batch
+    return batchref
 ----
 ====
 

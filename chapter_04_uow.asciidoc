@@ -274,9 +274,9 @@ def allocate(
         batches = uow.batches.list()  #<2>
         if not is_valid_sku(line.sku, batches):
             raise InvalidSku(f'Invalid sku {line.sku}')
-        batch = model.allocate(line, batches)
+        batchref = model.allocate(line, batches)
         uow.commit()
-    return batch
+    return batchref
 ----
 ====
 
