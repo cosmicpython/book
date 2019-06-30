@@ -41,7 +41,7 @@ def allocate_endpoint():
         request.json['qty'],
     )
     try:
-        batchid = services.allocate(line, unit_of_work.start)
+        batchref = services.allocate(line, unit_of_work.start)
     except (model.OutOfStock, services.InvalidSku) as e:
         send_mail(
             'out of stock', 
@@ -50,7 +50,7 @@ def allocate_endpoint():
         )
         return jsonify({'message': str(e)}), 400
 
-    return jsonify({'batchid': batchid}), 201
+    return jsonify({'batchref': batchref}), 201
 ----
 ====
 

@@ -118,7 +118,7 @@ COMMAND_HANDLERS = {
 //TODO: consider using a dispatcher thingie from functools?
 
 Why does `handle_command` have a `return`, but `handle_events` doesn't, I hear
-you ask?  It's so that we can return the batchid from the API.  
+you ask?  It's so that we can return the batchref from the API.  
 
 
 [[flask_uses_command]]
@@ -133,11 +133,11 @@ def allocate_endpoint():
             request.json['orderid'], request.json['sku'], request.json['qty'],
         )
         uow = unit_of_work.SqlAlchemyUnitOfWork()
-        batchid = messagebus.handle_command(command, uow)
+        batchref = messagebus.handle_command(command, uow)
     except exceptions.InvalidSku as e:
         return jsonify({'message': str(e)}), 400
 
-    return jsonify({'batchid': batchid}), 201
+    return jsonify({'batchref': batchref}), 201
 ----
 ====
 

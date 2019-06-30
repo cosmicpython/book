@@ -147,8 +147,8 @@ def test_allocations_view(sqlite_bus):
     ])
 
     assert views.allocations('o1', sqlite_bus.uow) == [
-        {'sku': 'sku1', 'batchid': 'b1'},
-        {'sku': 'sku2', 'batchid': 'b2'},
+        {'sku': 'sku1', 'batchref': 'b1'},
+        {'sku': 'sku2', 'batchref': 'b2'},
     ]
 ----
 ====

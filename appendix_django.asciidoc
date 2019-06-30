@@ -233,8 +233,8 @@ def test_uow_can_retrieve_a_batch_and_allocate_to_it():
         batch.allocate(line)
         uow.commit()
 
-    batchid = get_allocated_batch_id('o1', 'sku1')
-    assert batchid == 'batch1'
+    batchref = get_allocated_batch_id('o1', 'sku1')
+    assert batchref == 'batch1'
 
 
 @pytest.mark.django_db(transaction=True)  #<2>
@@ -335,7 +335,7 @@ def add_batch(request):
 def allocate(request):
     data = json.loads(request.body)
     try:
-        batchid = services.allocate(
+        batchref = services.allocate(
             data['orderid'],
             data['sku'],
             data['qty'],
@@ -344,7 +344,7 @@ def allocate(request):
     except (model.OutOfStock, services.InvalidSku) as e:
         return JsonResponse({'message': str(e)}, status=400)
 
-    return JsonResponse({'batchid': batchid}, status=201)
+    return JsonResponse({'batchref': batchref}, status=201)
 ----
 ====
 

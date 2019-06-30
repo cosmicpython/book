@@ -43,7 +43,7 @@ def test_happy_path_returns_202_and_batch_is_allocated():
     r = get_allocation(orderid)
     assert r.ok
     assert r.json() == [
-        {'sku': sku, 'batchid': batch2},
+        {'sku': sku, 'batchref': batch2},
     ]
 
 
@@ -104,7 +104,7 @@ def allocations(orderid: str, uow: unit_of_work.SqlAlchemyUnitOfWork):
             dict(orderid=orderid)
         ))
         print('results', results, flush=True)
-    return [{'sku': sku, 'batchid': batchid} for sku, batchid in results]
+    return [{'sku': sku, 'batchref': batchref} for sku, batchref in results]
 ----
 ====
 
@@ -142,8 +142,8 @@ def test_allocations_view(sqlite_session_factory):
     ], uow)
 
     assert views.allocations('o1', uow) == [
-        {'sku': 'sku1', 'batchid': 'b1'},
-        {'sku': 'sku2', 'batchid': 'b2'},
+        {'sku': 'sku1', 'batchref': 'b1'},
+        {'sku': 'sku2', 'batchref': 'b2'},
     ]
 ----
 ====
@@ -170,7 +170,7 @@ do to stop them.
 def allocations(orderid: str, uow: unit_of_work.SqlAlchemyUnitOfWork):
     with uow:
         results = list(uow.session.execute(
-            'SELECT sku, batchid FROM allocations_view WHERE orderid = :orderid',
+            'SELECT sku, batchref FROM allocations_view WHERE orderid = :orderid',
             dict(orderid=orderid)
         ))
         ...
@@ -188,7 +188,7 @@ allocations_view = Table(
     'allocations_view', metadata,
     Column('orderid', String(255)),
     Column('sku', String(255)),
-    Column('batchid', String(255)),
+    Column('batchref', String(255)),
 )
 ----
 ====
@@ -223,9 +223,9 @@ def add_allocation_to_read_model(
 ):
     with uow:
         uow.session.execute(
-            'INSERT INTO allocations_view (orderid, sku, batchid)'
-            ' VALUES (:orderid, :sku, :batchid)',
-            dict(orderid=event.orderid, sku=event.sku, batchid=event.batchid)
+            'INSERT INTO allocations_view (orderid, sku, batchref)'
+            ' VALUES (:orderid, :sku, :batchref)',
+            dict(orderid=event.orderid, sku=event.sku, batchref=event.batchref)
         )
         uow.commit()
 ----

@@ -42,7 +42,7 @@ def test_change_batch_quantity_leading_to_reallocation():
 
     print('sending change batch quantity for', batch1)
     r.publish('change_batch_quantity', json.dumps({  #<1>
-        'batchid': batch1, 'sku': sku, 'qty': 5
+        'batchref': batch1, 'sku': sku, 'qty': 5
     }))
 
     print('waiting for reallocation event')
@@ -52,7 +52,7 @@ def test_change_batch_quantity_leading_to_reallocation():
         print(messages)
         data = json.loads(messages[-1]['data'])
         assert data['orderid'] == orderid
-        assert data['batchid'] == batch2
+        assert data['batchref'] == batch2
 
     wait_for_assertion(check_messages)
 ----
@@ -100,7 +100,7 @@ def handle_change_batch_quantity(m):  #<2>
     print('handling', m, flush=True)
     data = json.loads(m['data'])
     services.change_batch_quantity(
-        ref=data['batchid'], qty=data['qty'],
+        ref=data['batchref'], qty=data['qty'],
         uow=unit_of_work.SqlAlchemyUnitOfWork(),
     )
 ----
@@ -206,7 +206,7 @@ def change_batch_quantity(
         uow: unit_of_work.AbstractUnitOfWork
 ):
     with uow:
-        product = uow.products.get_by_batchid(batchid=ref)
+        product = uow.products.get_by_batchref(batchref=ref)
         product.change_batch_quantity(ref=ref, qty=qty)
         uow.commit()
 ----
@@ -216,7 +216,7 @@ def change_batch_quantity(
 
 (along the way we need a new query type on our repository)
 
-[[get_by_batchid]]
+[[get_by_batchref]]
 .A new query type on our repository (src/allocation/repository.py)
 ====
 [source,python]
@@ -227,8 +227,8 @@ class AbstractRepository(abc.ABC):
     def get(self, sku):
         ...
 
-    def get_by_batchid(self, batchid):
-        p = self._get_by_batchid(batchid)
+    def get_by_batchref(self, batchref):
+        p = self._get_by_batchref(batchref)
         if p:
             self.seen.add(p)
         return p
@@ -242,7 +242,7 @@ class AbstractRepository(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def _get_by_batchid(self, batchid):
+    def _get_by_batchref(self, batchref):
         raise NotImplementedError
 
 
@@ -254,9 +254,9 @@ class SqlAlchemyRepository(AbstractRepository):
     def _get(self, sku):
         return self.session.query(model.Product).filter_by(sku=sku).first()
 
-    def _get_by_batchid(self, batchid):
+    def _get_by_batchref(self, batchref):
         return self.session.query(model.Product).join(model.Batch).filter(
-            orm.batches.c.reference == batchid,
+            orm.batches.c.reference == batchref,
         ).first()
 
 ----
@@ -265,7 +265,7 @@ class SqlAlchemyRepository(AbstractRepository):
 and on our fakerepository too (you can get a feeling for the maintenance burden
 of our fakes here.  it's not much work, but it is work.)
 
-[[fakerepo_get_by_batchid]]
+[[fakerepo_get_by_batchref]]
 .Updating the fake repo too (tests/unit/test_services.py)
 ====
 [source,python]
@@ -277,10 +277,10 @@ class FakeRepository(repository.AbstractRepository):
     def _get(self, sku):
         return next((p for p in self._products if p.sku == sku), None)
 
-    def _get_by_batchid(self, batchid):
+    def _get_by_batchref(self, batchref):
         return next((
             p for p in self._products for b in p.batches
-            if b.reference == batchid
+            if b.reference == batchref
         ), None)
 ----
 ====
@@ -349,7 +349,7 @@ class Allocated(Event):
     orderid: str
     sku: str
     qty: int
-    batchid: str
+    batchref: str
 
 @dataclass
 class Deallocated(Event):
@@ -636,7 +636,7 @@ Redis now looks very similar
 def handle_change_batch_quantity(m):
     print('handling', m, flush=True)
     data = json.loads(m['data'])
-    event = events.BatchQuantityChanged(ref=data['batchid'], qty=data['qty'])
+    event = events.BatchQuantityChanged(ref=data['batchref'], qty=data['qty'])
     messagebus.handle([event], uow=unit_of_work.SqlAlchemyUnitOfWork())
 ----
 ====

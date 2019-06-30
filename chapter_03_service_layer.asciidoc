@@ -69,7 +69,7 @@ def test_api_returns_allocation(add_stock):
     url = config.get_api_url()  #<2>
     r = requests.post(f'{url}/allocate', json=data)  #<3>
     assert r.status_code == 201
-    assert r.json()['batchid'] == batch2
+    assert r.json()['batchref'] == batch2
 ----
 ====
 
@@ -123,9 +123,9 @@ def allocate_endpoint():
         request.json['qty'],
     )
 
-    batchid = model.allocate(line, batches)
+    batchref = model.allocate(line, batches)
 
-    return jsonify({'batchid': batchid}), 201
+    return jsonify({'batchref': batchref}), 201
 ----
 ====
 
@@ -159,11 +159,11 @@ def test_allocations_are_persisted(add_stock):
 
     r = requests.post(f'{url}/allocate', json=line1)
     assert r.status_code == 201
-    assert r.json()['batchid'] == batch1
+    assert r.json()['batchref'] == batch1
 
     r = requests.post(f'{url}/allocate', json=line2)
     assert r.status_code == 201
-    assert r.json()['batchid'] == batch2
+    assert r.json()['batchref'] == batch2
 ----
 ====
 
@@ -242,12 +242,12 @@ def allocate_endpoint():
         return jsonify({'message': f'Invalid sku {line.sku}'}), 400
 
     try:
-        batchid = model.allocate(line, batches)
+        batchref = model.allocate(line, batches)
     except model.OutOfStock as e:
         return jsonify({'message': str(e)}), 400
 
     session.commit()
-    return jsonify({'batchid': batchid}), 201
+    return jsonify({'batchref': batchref}), 201
 ----
 ====
 
@@ -474,11 +474,11 @@ def allocate_endpoint():
         request.json['qty'],  #<2>
     )
     try:
-        batchid = services.allocate(line, repo, session)  #<2>
+        batchref = services.allocate(line, repo, session)  #<2>
     except (model.OutOfStock, services.InvalidSku) as e:
         return jsonify({'message': str(e)}), 400  <3>
 
-    return jsonify({'batchid': batchid}), 201  <3>
+    return jsonify({'batchref': batchref}), 201  <3>
 ----
 ====
 
@@ -532,7 +532,7 @@ def test_happy_path_returns_201_and_allocated_batch(add_stock):
     url = config.get_api_url()
     r = requests.post(f'{url}/allocate', json=data)
     assert r.status_code == 201
-    assert r.json()['batchid'] == batch2
+    assert r.json()['batchref'] == batch2
 
 
 @pytest.mark.usefixtures('restart_api')
@@ -996,7 +996,7 @@ def test_happy_path_returns_201_and_allocated_batch():
     url = config.get_api_url()
     r = requests.post(f'{url}/allocate', json=data)
     assert r.status_code == 201
-    assert r.json()['batchid'] == batch2
+    assert r.json()['batchref'] == batch2
 ----
 ====
 

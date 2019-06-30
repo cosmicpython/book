@@ -64,12 +64,12 @@ def get_allocated_batch_id(session, orderid, sku):
         'SELECT id FROM order_lines WHERE orderid=:orderid AND sku=:sku',
         dict(orderid=orderid, sku=sku)
     )
-    [[batchid]] = session.execute(
+    [[batchref]] = session.execute(
         'SELECT b.reference FROM allocations JOIN batches AS b ON batch_id = b.id'
         ' WHERE orderline_id=:orderlineid',
         dict(orderlineid=orderlineid)
     )
-    return batchid
+    return batchref
 
 
 def test_uow_can_retrieve_a_batch_and_allocate_to_it(session_factory):
@@ -84,8 +84,8 @@ def test_uow_can_retrieve_a_batch_and_allocate_to_it(session_factory):
         batch.allocate(line)
         uow.commit()  #<3>
 
-    batchid = get_allocated_batch_id(session, 'o1', 'sku1')
-    assert batchid == 'batch1'
+    batchref = get_allocated_batch_id(session, 'o1', 'sku1')
+    assert batchref == 'batch1'
 ----
 ====
 
@@ -446,9 +446,9 @@ opened and half our sofas have fallen into the Indian Ocean.  oops!
 [source,python]
 [role="skip"]
 ----
-def change_batch_quantity(batchid: str, new_qty: int, uow: AbstractUnitOfWork):
+def change_batch_quantity(batchref: str, new_qty: int, uow: AbstractUnitOfWork):
     with uow:
-        batch = uow.batches.get(reference=batchid)
+        batch = uow.batches.get(reference=batchref)
         batch.change_purchased_quantity(new_qty)
         while batch.available_quantity < 0:
             line = batch.deallocate_one()  #<1>
