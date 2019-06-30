@@ -139,9 +139,9 @@ def allocate(
         if product is None:
             raise exceptions.InvalidSku(f'Invalid sku {line.sku}')
         try:
-            batch = product.allocate(line)
+            batchref = product.allocate(line)
             uow.commit()
-            return batch
+            return batchref
         except exceptions.OutOfStock:
             email.send_mail('stock@made.com', f'Out of stock for {line.sku}')
             raise
@@ -313,9 +313,9 @@ def allocate(
         if product is None:
             raise exceptions.InvalidSku(f'Invalid sku {line.sku}')
         try:  #<1>
-            batch = product.allocate(line)
+            batchref = product.allocate(line)
             uow.commit()
-            return batch
+            return batchref
         finally:  #<1>
             messagebus.handle(product.events)  #<2>
 ----
@@ -446,9 +446,9 @@ def allocate(
         product = uow.products.get(sku=line.sku)
         if product is None:
             raise exceptions.InvalidSku(f'Invalid sku {line.sku}')
-        batch = product.allocate(line)
+        batchref = product.allocate(line)
         uow.commit()
-        return batch
+        return batchref
 ----
 ====
 

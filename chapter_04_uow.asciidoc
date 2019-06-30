@@ -59,7 +59,7 @@ def insert_batch(session, ref, sku, qty, eta):
         dict(ref=ref, sku=sku, qty=qty, eta=eta)
     )
 
-def get_allocated_batch_id(session, orderid, sku):
+def get_allocated_batch_ref(session, orderid, sku):
     [[orderlineid]] = session.execute(
         'SELECT id FROM order_lines WHERE orderid=:orderid AND sku=:sku',
         dict(orderid=orderid, sku=sku)
@@ -84,7 +84,7 @@ def test_uow_can_retrieve_a_batch_and_allocate_to_it(session_factory):
         batch.allocate(line)
         uow.commit()  #<3>
 
-    batchref = get_allocated_batch_id(session, 'o1', 'sku1')
+    batchref = get_allocated_batch_ref(session, 'o1', 'sku1')
     assert batchref == 'batch1'
 ----
 ====

@@ -216,7 +216,7 @@ The tests don't change too much
 def insert_batch(ref, sku, qty, eta):  #<1>
     django_models.Batch.objects.create(reference=ref, sku=sku, qty=qty, eta=eta)
 
-def get_allocated_batch_id(orderid, sku):  #<1>
+def get_allocated_batch_ref(orderid, sku):  #<1>
     return django_models.Allocation.objects.get(
         line__orderid=orderid, line__sku=sku
     ).batch.reference
@@ -233,7 +233,7 @@ def test_uow_can_retrieve_a_batch_and_allocate_to_it():
         batch.allocate(line)
         uow.commit()
 
-    batchref = get_allocated_batch_id('o1', 'sku1')
+    batchref = get_allocated_batch_ref('o1', 'sku1')
     assert batchref == 'batch1'
 
 
