@@ -210,9 +210,9 @@ def allocate(
         product = uow.products.get(sku=line.sku)
         if product is None:
             raise InvalidSku(f'Invalid sku {line.sku}')
-        batch = product.allocate(line)
+        batchref = product.allocate(line)
         uow.commit()
-    return batch
+    return batchref
 ----
 ====
 
