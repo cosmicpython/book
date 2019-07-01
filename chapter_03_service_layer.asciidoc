@@ -316,10 +316,8 @@ def test_error_for_invalid_sku():
     batch = model.Batch('b1', 'actualsku', 100, eta=None)
     repo = FakeRepository([batch])  #<1>
 
-    with pytest.raises(services.InvalidSku) as ex:
+    with pytest.raises(services.InvalidSku, match='Invalid sku nonexistentsku'):
         services.allocate(line, repo, FakeSession())  #<2><3>
-
-    assert 'Invalid sku nonexistentsku' in str(ex)
 ----
 ====
 
@@ -918,10 +916,8 @@ def test_allocate_errors_for_invalid_sku():
     repo, session = FakeRepository([]), FakeSession()
     services.add_batch('b1', 'actualsku', 100, None, repo, session)
 
-    with pytest.raises(services.InvalidSku) as ex:
+    with pytest.raises(services.InvalidSku, match='Invalid sku nonexistentsku'):
         services.allocate('o1', 'nonexistentsku', 10, repo, FakeSession())
-
-    assert 'Invalid sku nonexistentsku' in str(ex)
 ----
 ====
 
