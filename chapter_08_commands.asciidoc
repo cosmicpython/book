@@ -10,6 +10,8 @@ processing machine.
 Notice though that we now have two different ways of invoking behaviour. One
 half of our application is dedicated to handling _events_ from other systems,
 but the other half of our application handles API calls from our users.
+//TODO: need to tweak the language here, because we're using events to represent
+// API calls, eg AllocationRequested
 
 In this chapter we're going to unify the two approaches by treating events
 and commands in the same way. Before we do, let's quickly talk about the
