@@ -39,9 +39,9 @@ too late, and OO-enthusiasts will tell you to look further back to Ivar
 Jacobson and Grady Booch; the term has been around since the mid-1980s.]
 and it's been a hugely successful movement in transforming the way people
 design software by focusing on the core business domain.  Many of the
-architecture patterns that we cover in this book, like Entity, Aggregate and
-Value Objects (see <<chapter_04_uow>>), and Repository Pattern (in <<chapter_02,the next
-chapter>>) all come from the DDD tradition.
+architecture patterns that we cover in this book, like _entity_, _aggregate_
+and _value objects_ (see <<chapter_04_uow>>), and _repository pattern_ (in
+<<chapter_02,the next chapter>>) all come from the DDD tradition.
 
 In a nutshell, the central conceit of DDD is that the most important thing
 about software is that it provides a model of the business.  If we get that
@@ -543,7 +543,7 @@ domain object that is uniquely identified by the data it holds.
 
 
 [[orderline_value_object]]
-.OrderLine is a Value Object.
+.OrderLine is a value object.
 ====
 [source,python]
 [role="skip"]
@@ -600,7 +600,7 @@ operators.
 
 
 [[value_object_maths]]
-.Maths with Value Objects.
+.Maths with value objects.
 ====
 [source,python]
 [role="skip"]
@@ -901,7 +901,7 @@ Domain modelling::
     the most likely to change, and the place where you deliver the
     most value to the business.  Make it easy to understand and modify
 
-Distinguish Entities from Value Objects::
+Distinguish entities from value objects::
     A "value object" is defined by its attributes.  It's usually best
     implemented as an immutable type.  If you change an attribute on
     a value object, it represents a different object.  In contrast,

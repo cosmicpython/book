@@ -544,8 +544,8 @@ This pattern is so useful, in fact, that SQLAlchemy already uses a unit-of-work
 in the shape of the Session object. The Session object in SqlAlchemy is the way
 that your application loads data from the database.
 
-Every time you load a new Entity from the db, the Session begins to _track_
-changes to the Entity, and when the Session is _flushed_, all your changes are
+Every time you load a new entity from the db, the Session begins to _track_
+changes to the entity, and when the Session is _flushed_, all your changes are
 persisted together.
 
 Why do we go to the effort of abstracting away the SQLAlchemy session if it
