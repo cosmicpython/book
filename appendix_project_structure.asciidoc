@@ -106,6 +106,22 @@ but concretely, how do we implement it in our code and our containers?
 
 
 === Config.py
+////
+TODO:
+Ed:
+
+Would you consider this a singleton?
+
+I have some past negative experiences with this style of configuration, because it can be easily abused. The env var mitigates against that, and I suppose this varies from codebase to codebase.
+
+Bob:
+Not strictly. It's possible to create more than one of them, but it's unlikely that I'd do so outside of unit tests. I more or less think of these config classes as part of my composition root. They tend only to be used by the entry point to the application.
+
+Ed:
+"Entry point to the application" is key, I think. The anti-pattern I've seen is where the config just gets imported anywhere, and anything remotely related to configuration gets put in there.
+
+https://github.com/python-leap/book/issues/52
+////
 
 Whenever our application code needs access to some config, it's going to
 get it from a file called _config.py__. <<config_dot_py>> shows a couple of
