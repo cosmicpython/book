@@ -224,6 +224,9 @@ TIP: Exceptions and Events don't mix.  If you're implementing domain
     As we'll see later when we handle events in the unit of work, it's
     confusing to have to reason about events and exceptions together.
 
+TODO: This ^^^ is true, but I think the real problem is that you shouldn't use
+exceptions for control-of-flow. It's like a classic design smell.
+
 
 ==== Events are simple dataclasses
 

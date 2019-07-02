@@ -1,19 +1,50 @@
 [[chapter_08_commands]]
 == Commands and Command Handler
 
-NOTE: placeholder chapter, under construction
+In the previous chapter we talked about using event messages as a way of
+integrating systems. This starts to turn our application into a message
+processing machine.
+
+[DIAGRAM: message processor]
+
+Notice though that we now have two different ways of invoking behaviour. One
+half of our application is dedicated to handling _events_ from other systems,
+but the other half of our application handles API calls from our users.
+
+In this chapter we're going to unify the two approaches by treating events
+and commands in the same way. Before we do, let's quickly talk about the
+differences between them.
+
+== Commands and Events ==
+
+Commands are sent by one actor to another specific actor. When I post a form
+to an API handler, I am sending a command. We name commands with imperative
+tense verb phrases like "allocate stock", or "delay shipment".
+
+Commands capture _intent_. They express our wish for the system to do something.
+As a result, when they fail, the sender needs to receive error information.
+
+Events are broadcast by an actor to all interested listeners. When we pubish the
+`batch_quantity_changed` we don't know who's going to pick it up. We name events
+with past-tense verb phrases like "order allocated to stock", or
+"shipment delayed".
+
+We often use events to spread the knowledge about successful commands.
+
+Events capture _facts_ about things that happened in the past. Since we don't
+know who's handling an event, senders should not care whether the receivers
+succeeded or failed.
+
+| Type | Event | Command |
+| Named | Past-Tense | Imperative Tense |
+| Error Handling | Fail independently | Fail noisily |
+| Sent to | All listeners | One recipient |
+
+// TODO: Diagram of user "buy stock" -> "stock purchased"
+                         "create batch" -> "batch created"
 
 
-It's sometimes worth distinguishing events from commands.  They have subtly
-different semantics.
-
-* commands express a wish to get the system to do something.  They usually
-  map to our system's main use cases
-* the system can say "no" to a command -- it can be invalid, or the system's
-  state can make the command impossible
-* whereas an event records a fact that has happened.  the system can't say
-  no to it.
-
+What kinds of commands do we have in our system right now? 
 
 [[commands_dot_py]]
 .Pulling out some commands (src/allocation/commands.py)
@@ -46,9 +77,12 @@ class ChangeBatchQuantity(Command):
 ----
 ====
 
-
-
-As a result, our messagebus changes somewhat.
+Each of the use-cases that we discussed earlier in the book is really a command,
+an instruction for the system to try and do a thing. To unify the two halves of
+the domain, we're going to make a simple change: instead of directly invoking
+our use case functions, like we did before, we're going to take these
+commands, and we're going to put them on the message bus. As a result, our
+message bus changes somewhat.
 
 [[new_messagebus]]
 .Messagebus handles events and commands differently (src/allocation/messagebus.py)
