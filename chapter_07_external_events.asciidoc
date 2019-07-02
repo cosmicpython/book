@@ -1,5 +1,11 @@
 [[chapter_07_external_events]]
 == Event-Driven Architecture (using events to integrate microservices)
+////
+TODO: 
+It would be cool to see the event flow in An internal event to express de-allocation as a diagram. Perhaps even an abstracted wall of sticky-notes?
+
+https://github.com/python-leap/book/issues/37
+////
 
 We've got a microservice with a web api, but what about other ways of talking
 to other systems?  how does it know if, say, a shipment is delayed or the
@@ -596,6 +602,13 @@ Now the places in our code where we need to parse external input have a clearly
 defined data structure for making requests into the system, the events, and a
 single entrypoint into the system, the message bus:
 
+////
+TODO:
+By the time we hit Example 17. Flask creates events and puts them on the messagebus. (src/allocation/flask_app.py), it would be nice to have a formal definition of the messagebus.handle function.
+My guess is that it's just a simple loop mapping an event type to a handler using the HANDLERS dictionary, but explicitly stating that would be helpful.
+
+https://github.com/python-leap/book/issues/37
+////
 
 [[flask_with_events]]
 .Flask creates events and puts them on the messagebus. (src/allocation/flask_app.py)

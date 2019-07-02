@@ -321,7 +321,27 @@ Now to actually make sure we can get the behaviour we want: if we have two
 concurrent attempts to do allocation against the same `Product`, one of them
 should fail, because they can't both update the version number:
 
+////
+TODO:
+In Example 5. An integration test for concurrency behaviour (tests/integration/test_uow.py)
+it might be helpful to use order1 and order2 instead of o1 and o2.
 
+This might have been morning-brain, but I had to read the code over a few times to figure out why product version was 4 instead of 1 or 2.
+Perhaps instead something like:
+
+product_version = 3
+insert_batch(session, batch, sku, 100, eta=None, product_version=product_version)
+...
+assert version == 4
+...
+
+Or if you're ok leaving the constant behind:
+
+...
+assert version == product_version +1
+...
+https://github.com/python-leap/book/issues/36
+////
 [[data_integrity_test]]
 .An integration test for concurrency behaviour (tests/integration/test_uow.py)
 ====

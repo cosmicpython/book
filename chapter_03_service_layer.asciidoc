@@ -183,6 +183,30 @@ we even invoke the domain service.
 
 Now we're looking at two more end-to-end tests:
 
+////
+TODO:
+
+https://github.com/python-leap/book/blame/master/chapter_03_service_layer.asciidoc#L192
+For the id generation, fluent helpers will make the code flow read a bit easier.
+
+def random_sku(id_=None):
+    return random_ref(''.join(['s', str(id_)]))
+
+def random_order(id_=None):
+    return random_ref(''.join(['o', str(id_)]))
+
+def random_batch(id_=None):
+    return random_ref(''.join(['b', str(id_)]))
+
+@pytest.mark.usefixtures('restart_api')
+def test_something():
+    sku, order = random_sku(), random_order()
+    sku1, order1 = random_sku(1), random_order(1)
+    # etc., etc.
+
+https://github.com/python-leap/book/issues/43
+////
+
 [[test_error_cases]]
 .Yet more tests at the e2e layer...  (test_api.py)
 ====
@@ -295,6 +319,18 @@ class FakeRepository(repository.AbstractRepository):
 Here's where it will come in useful; it lets us test our service layer with
 nice, fast unit tests:
 
+////
+TODO:
+
+https://github.com/python-leap/book/blame/master/chapter_03_service_layer.asciidoc#L320
+FWIW, pytest.raises also works with a regex
+
+with pytest.raises(InvalidSkuException, match="nonexistentsku"):
+    doit()
+
+https://github.com/python-leap/book/issues/43
+
+////
 
 [[first_services_tests]]
 .Unit testing with fakes at the services layer (test_services.py)
@@ -330,6 +366,13 @@ def test_error_for_invalid_sku():
 
 <3> We also need a `FakeSession` to fake out the database session, see below:
 
+////
+TODO:
+
+Is there supposed to be an @DataClass annotation on FakeSession? Otherwise there is a class instance and object instance "committed" variable. If not, deleting the "committed = False" line will be OK.
+
+https://github.com/python-leap/book/issues/43
+////
 
 [[fake_session]]
 .A fake database session (test_services.py)
@@ -343,6 +386,17 @@ class FakeSession():
         self.committed = True
 ----
 ====
+
+////
+TODO:
+
+Sidebar on fakes, stubs, spies?
+Sidebar on London vs Chicago testing?
+
+Good inspiration here: https://softwareengineering.stackexchange.com/questions/123627/what-are-the-london-and-chicago-schools-of-tdd
+More feedback on this in https://github.com/python-leap/book/issues/43
+
+////
 
 (The fake session is only a temporary solution.  We'll get rid of it and make
 things even nicer in the next chapter, <<chapter_04_uow>>)
@@ -586,6 +640,14 @@ the service layer, we don't really need tests for the domain model any more.
 Instead, we could rewrite all of the domain-level tests from chapter one in
 terms of the service layer.
 
+////
+TODO:
+
+Are the source code comments supposed to be "domain-layer" and "service-layer" instead of
+"model-layer" and "domain-layer"? Otherwise I'm a bit confused.
+
+https://github.com/python-leap/book/issues/43
+////
 .Rewriting a domain test at the service layer (test_services.py)
 ====
 [source,python]
@@ -936,6 +998,20 @@ of those hardcoded SQL queries and the direct dependency on the database.
 The service function means adding the endpoint is very easy, just a little
 json-wrangling and a single function call:
 
+////
+TODO:
+
+/add_batch route looks a bit funny to me because it's not quite RESTful, and more like RPC over HTTP. Something like POST /batches would make for a much more obvious boundary between "outside" and "inside", or "addapter" and "domain" model.
+
+That could then help drive discussion around "Clean Architecture". The REST API does not involve Inversion-Of-Control or Dependency Inversion, and would be handy for comparing/contrasting the ideas behind "Ports-And-Adapters" vs "Functional-Core/Imperative Shell."
+
+https://github.com/python-leap/book/issues/43
+
+----
+
+I think this actually makes a lot of sense. IT helps us to demonstrate that our choice of architectural patterns allows us to decouple the operations of our system from the interface we present to the outside world. -- bob
+
+////
 
 [[api_for_add_batch]]
 .API for adding a batch (flask_app.py)

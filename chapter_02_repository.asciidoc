@@ -1,6 +1,19 @@
 [[chapter_02_repository]]
 == Repository Pattern
 
+////
+I would find having an object or class diagram (or maybe ER diagram) upfront helpful to keep the classes, objects, and tables straight in my mind.
+
+https://github.com/python-leap/book/issues/42
+
+
+-----
+
+Maybe we do this just before we do the SQL Alchemy mapping? I think people find
+it helpful to have a map of where they're going, rather than a map of where
+they've just been.
+////
+
 In the previous chapter we built a simple domain model that can allocate orders
 to batches of stock. It's easy for us to write tests against this code because
 there aren't any dependencies or infrastructure to set up. If we needed to run
@@ -271,6 +284,12 @@ def start_mappers():
 
 <1> The ORM imports the domain model, and not the other way around
 // (DS): I had to re-read that sentence a few times before it felt like it "flowed".
+////
+TODO:
+Maybe a good opportunity to reinforce some language by saying something like, "The ORM imports (or "depends on" or "knows about") the domain model, and not the other way around.
+
+https://github.com/python-leap/book/issues/42
+////
 
 <2> We define our database tables and columns using SQLAlchemy's abstractions.
 
@@ -455,6 +474,12 @@ class AbstractRepository(abc.ABC):
         raise NotImplementedError
 ----
 ====
+////
+TODO:
+Someone in the audience of my mocking talk at PyCon asked if doing dependency injection would require defining and deriving IWhatever interfaces everywhere. My answer was that in Python you can rely on duck-typing. (I am unsure how well this plays out with type annotations). It may be worth calling out explicitly what you would do instead of ABCs.
+
+https://github.com/python-leap/book/issues/42
+////
 
 WARNING: We're using abstract base classes in this book for didactic reasons:
     we hope they help explain what the interface of the repository abstraction

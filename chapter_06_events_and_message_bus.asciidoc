@@ -342,6 +342,14 @@ The UoW already has a `try/finally`, and it knows about all the aggregates
 currently in play because it provides access to the _Repository_.  So it's
 a good place to spot events and pass them to the message bus:
 
+////
+TODO
+In Example 9. The UoW meets the Message Bus (src/allocation/unit_of_work.py), I got stuck trying to figure out where the seen attribute had come from.
+It might be helpful to add a line explicitly introducing it before Example 9.
+Once I read on to Example 10 everything cleared up immediately.
+
+https://github.com/python-leap/book/issues/35
+////
 [[uow_with_messagebus]]
 .The UoW meets the Message Bus (src/allocation/unit_of_work.py)
 ====
@@ -459,7 +467,13 @@ def allocate(
 We do also have to remember to change the fakes in the service layer and make them
 call `super()` in the right places, and implement underscorey methods, but the
 changes are minimal:
-
+////
+TODO
+In Example 12 we have to go back and update our FakeRepository object.
+In a large project with many contributors, it feels to me that keeping these fakes in sync with the real objects might become an issue.
+Do you guys have any strategies for dealing with that?
+https://github.com/python-leap/book/issues/35
+////
 [[services_tests_ugly_fake_messagebus]]
 .Service-layer fakes need tweaking. (tests/unit/test_services.py)
 ====
