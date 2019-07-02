@@ -118,41 +118,43 @@ Chapter 1: Domain modelling and DDD::
     problems need to be reflected in code, in the form of a model of the domain.
     But why does it always seem to be so hard to do it, without getting tangled
     up with infrastructure concerns, with our web frameworks,or whatever else?
-    In this chapter we give a broad overview of Domain Modelling and DDD, and
+    In this chapter we give a broad overview of _domain modelling_ and DDD, and
     show how to get started with a model that has no external dependencies, and
     fast unit tests.
 
-Chapter 2-4: Repository, Service Layer and Unit of Work patterns::
+Chapter 2, 3 & 4: Repository, Service Layer and Unit of Work patterns::
     In these 3 chapters we present 3 closely related and mutually reinforcing
     patterns that support our ambition to keep the model free of extraneous
     dependencies.  We build a layer of abstraction around persistent storage,
-    and we build a service layer to define the entrypoints to our system, to
+    and we build a _service layer_ to define the entrypoints to our system, and
     capture the primary use cases. We show how this layer makes it easy to
     build very thin entrypoints to our system, be it a Flask API or a CLI.
 
 Chapter 5: Aggregate pattern::
     A brief return to the world of DDD, where we discuss how to choose the
-    right _Aggregate_, and how this choice relates to questions of data
+    right _aggregate_, and how this choice relates to questions of data
     integrity
+
 
 ==== Part 2: Event-Driven Architecture
 
-Chapters 6-8: Event-Driven Architecture::
+Chapters 6, 7 & 8: Event-Driven Architecture::
     We introduce three more mutually-reinforcing patterns, starting with 
-    the concept of _Domain Events_, a vehicle for capturing the idea that some
-    interactions with a system are triggers for others.  We use  a _Message
-    Bus_ to allow actions to trigger events, and call appropriate _Handlers_.
+    the concept of _domain events_, a vehicle for capturing the idea that some
+    interactions with a system are triggers for others.  We use  a _message
+    bus_ to allow actions to trigger events, and call appropriate _handlers_.
     We move on to discuss how events can be used as a pattern for integration
     between services, in a microservices architecture. Finally we add the
-    distinction between _Commands_ and events.  Our application is now
+    distinction between _commands_ and _events_.  Our application is now
     fundamentally a message-processing system.
 
 Chapter 9: CQRS::
-    An example of Command-Query Responsibility Segregation, with and without
+    An example of _command-query responsibility segregation_, with and without
     events.
 
 Chapter 10 Dependency injection::
-    tidy up the explicit vs implicit dependencies.  talk about DI vs mocks.
+    We tidy up our explicit and implicit dependencies, and implement a very
+    simple dependency injection framework.
 
 
 // TODO (DS): (General thoughts) There's nothing in the book about how to
