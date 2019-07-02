@@ -257,8 +257,10 @@ class Batch:
 ====
 
 
-<1> OrderLine is an immutable dataclass with no behaviour. In python 3.6 or
-    below we would use a named tuple for this kind of object.
+<1> OrderLine is an immutable dataclassfootnote:[In previous Python versions we
+    might have used a namedtuple.  You could also check out Hynek Schlawack's
+    excellent https://pypi.org/project/attrs/[attrs].]
+    with no behaviour.
 
 <2> Type hints are still a matter of controversy in the Python world. For
     domain models, they can sometimes help to clarify or document what the
