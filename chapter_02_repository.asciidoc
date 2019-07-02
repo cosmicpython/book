@@ -282,14 +282,8 @@ def start_mappers():
 ----
 ====
 
-<1> The ORM imports the domain model, and not the other way around
-// (DS): I had to re-read that sentence a few times before it felt like it "flowed".
-////
-TODO:
-Maybe a good opportunity to reinforce some language by saying something like, "The ORM imports (or "depends on" or "knows about") the domain model, and not the other way around.
-
-https://github.com/python-leap/book/issues/42
-////
+<1> The ORM imports (or "depends on" or "knows about") the domain model, and
+    not the other way around.
 
 <2> We define our database tables and columns using SQLAlchemy's abstractions.
 
