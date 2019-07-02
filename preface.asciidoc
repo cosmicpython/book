@@ -84,24 +84,24 @@ first step for those who want to do further research  in this field.
 
 === Who Should Read This Book
 
-Here are a few things we're assuming about you, dear reader.
+Here are a few things we assume about you, dear reader.
 
-We're assuming you've been close to some reasonably complex Python applications.
+We assume you've been close to some reasonably complex Python applications.
 
-We're assuming you've seen some of the pain that comes with trying to manage
+We assume you've seen some of the pain that comes with trying to manage
 that complexity
 
-We're _not_ assuming that you already know anything about DDD, or any of the
+We do _not_ assume that you already know anything about DDD, or any of the
 classic application architecture patterns.
 
-Our explorations of architectural patterns will use an example app, building it
-up chapter by chapter.  We use Test-Driven Development (TDD) at work, so we
-tend to show listings of tests first, followed by implementation. If you're not
-used to working test-first, that may be a little strange at first, but we hope
-you'll soon get used to seeing code "being used," i.e. from the outside, before
-you see how it's built on the inside.
+We structure our explorations of architectural patterns around an example app,
+building it up chapter by chapter.  We use Test-Driven Development (TDD) at
+work, so we tend to show listings of tests first, followed by implementation.
+If you're not used to working test-first, that may be a little strange at
+first, but we hope you'll soon get used to seeing code "being used," i.e. from
+the outside, before you see how it's built on the inside.
 
-We will be using some specific Python (3) frameworks and technologies, like
+We use some specific Python (version 3) frameworks and technologies, like
 Flask, SQLAlchemy, and Pytest, as well as Docker and Redis.  If you're already
 familiar with them, that won't hurt, but we don't think it's required.  One of
 our main aims with this book is to build an architecture where specific
@@ -109,7 +109,7 @@ technology choices become minor implementation details.
 
 
 
-=== Overview
+=== A Brief Overview Of What You'll Learn
 
 ==== Part 1: Dependency Inversion and Domain modelling
 
