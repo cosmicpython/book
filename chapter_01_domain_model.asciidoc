@@ -153,17 +153,22 @@ We make sure to express those rules in the business jargon (the _"ubiquitous
 language"_ in DDD terminology). We choose memorable identifiers for our objects
 so that the examples are easier to talk about.
 
+Here are some notes we might have taken while having a conversation with our
+domain experts about allocation.
+
 * A _product_ is identified by a _sku_, pronounced "skew", which is short for
-  "Stock Keeping Unit".
+  "Stock Keeping Unit."
 
 * _Customers_ place _orders_. An order is identified by an _order reference_,
-  and comprises multiple _order lines_, where each line has a sku, and a
+  and comprises multiple _order lines_, where each line has a _sku_, and a
   _quantity_.
-   Example: 10 units of RED-CHAIR
-            1 unit of TASTELESS-LAMP
++
+.Example:
+** 10 units of RED-CHAIR
+** 1 unit of TASTELESS-LAMP
 
 * The purchasing department orders small _batches_ of stock. A _batch_ of stock
-  has a unique id which they call a _reference_, a sku and a _quantity_.
+  has a unique id which they call a _reference_, a _sku_ and a _quantity_.
 
 * We need to _allocate_ _order lines_ to _batches_. When we've allocated an
   order line to a batch, we will send stock from that specific batch to the
@@ -171,18 +176,27 @@ so that the examples are easier to talk about.
 
 * When I allocate 1 unit of stock to a batch, the _available quantity_ is
   reduced.
-  Example: I have a batch of 20 SMALL-TABLE, and I allocate an order line for 2
-  SMALL-TABLE. The batch should have 18 SMALL-TABLE remaining.
++
+.Example:
+** I have a batch of 20 SMALL-TABLE, and I allocate an order line for 2
+   SMALL-TABLE.
+** The batch should have 18 SMALL-TABLE remaining.
 
 * I can't allocate to a batch if the available quantity is less than the
   quantity of the order line.
-  Example: I have a batch of 1 BLUE-CUSHION, and an order line for 2
-  BLUE-CUSHION. I should not be able to allocate the line to the batch.
++
+.Example:
+** I have a batch of 1 BLUE-CUSHION, and an order line for 2
+   BLUE-CUSHION.
+** I should not be able to allocate the line to the batch.
 
 * I can't allocate the same line twice.
-  Example: I have a batch of 10 BLUE-VASE, and I allocate an order line for 2
-  BLUE-VASE. If I allocate the order line again to the same batch, the batch
-  should still have an available quantity of 8.
++
+.Example:
+** I have a batch of 10 BLUE-VASE, and I allocate an order line for 2
+   BLUE-VASE.
+** If I allocate the order line again to the same batch, the batch
+   should still have an available quantity of 8.
 
 * Batches have an _ETA_ if they are currently shipping, or they may be in
   _Warehouse stock_.
