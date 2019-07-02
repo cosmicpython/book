@@ -2,7 +2,7 @@
 == Unit Of Work Pattern
 
 In this chapter we'll introduce a final piece of the puzzle that really pulls
-the _Repository_ and _Service layer_ patterns together, the _Unit of Work_
+the _repository_ and _service layer_ patterns together, the _unit of work_
 pattern.
 
 //TODO: Big Lebowski illustration
@@ -552,10 +552,10 @@ Why do we go to the effort of abstracting away the SQLAlchemy session if it
 already implements the pattern we want?
 
 For one thing, the Session API is rich and supports operations that we don't
-want or need in our domain. Our UnitOfWork simplifies the Session to its
+want or need in our domain. Our `UnitOfWork` simplifies the Session to its
 essential core: it can be started, committed, or thrown away.
 
-For another, we're using the UnitOfWork to access our _Repository_ objects.
+For another, we're using the `UnitOfWork` to access our `Repository` objects.
 This is a neat bit of developer usability that we couldn't do with a plain
 SQLAlchemy Session.
 
@@ -575,14 +575,14 @@ SQLAlchemy's own recommendations:
 // the uow into a uow plus a uowm.
 
 
-.Unit of Work pattern: wrap-up
+.Unit of Work Pattern: Wrap-up
 *****************************************************************
-Unit of Work is an abstraction around data integrity::
+_Unit of work_ is an abstraction around data integrity::
     It helps to enforce the consistency of our domain model, and improves
     performance, by letting us perform a single _flush_ operation at the
     end of an operation.
 
-It works closely with repository and service layer::
+It works closely with _repository_ and _service layer_::
     The Unit of Work pattern completes our abstractions over data-access by
     representing atomic updates.
     Each of our service-layer use-cases runs in a single unit of work which
@@ -594,8 +594,8 @@ This is a lovely case for a context manager::
     which means the system is safe by default.
 
 SqlAlchemy already implements this pattern::
-    We introduce a simpler abstraction over the SQLAlchemy Session object in
-    order to "narrow" the interface between the ORM and our code. This helps
+    We introduce an even simpler abstraction over the SQLAlchemy Session object
+    in order to "narrow" the interface between the ORM and our code. This helps
     to keep us loosely coupled.
 
 *****************************************************************

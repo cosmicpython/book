@@ -177,7 +177,7 @@ on the database by using a UnitOfWork.
 
 === All Aboard The Message Bus!
 
-The pattern we're going to introduce here is _Domain Events_ and the _Message Bus_.
+The pattern we're going to introduce here is _domain events_ and the _message bus_.
 
 First, rather than being concerned about emails, our model will be in charge of
 recording "events"--facts about things that have happened. We'll use a Message
@@ -256,7 +256,7 @@ class OutOfStock(Event):  #<2>
     class that can store common behaviour.  It's also useful for type
     hints in our message bus, as we'll see shortly.
 
-<2> `dataclasses` are great for Domain events too.
+<2> `dataclasses` are great for domain events too.
 
 
 
@@ -351,7 +351,7 @@ Once I read on to Example 10 everything cleared up immediately.
 https://github.com/python-leap/book/issues/35
 ////
 [[uow_with_messagebus]]
-.The UoW meets the Message Bus (src/allocation/unit_of_work.py)
+.The UoW meets the message bus (src/allocation/unit_of_work.py)
 ====
 [source,python]
 ----
@@ -516,7 +516,7 @@ TODO - wrap up for domain events chapter
 
 
 
-.Recap: Domain events and the Message Bus
+.Recap: Domain Events and the Message Bus
 *****************************************************************
 Events can help with SRP::
     bla

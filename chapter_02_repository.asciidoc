@@ -240,7 +240,7 @@ way around.
 
 Django doesn't provide an equivalent for SQLAlchemy's "classical mapper,"
 but see <<appendix_django>> for some examples of how you apply dependency
-inversion and the Repository Pattern to Django.
+inversion and the repository pattern to Django.
 
 *******************************************************************************
 
@@ -346,7 +346,7 @@ def test_orderline_mapper_can_save_lines(session):
 You probably wouldn't keep these tests around--as we'll see shortly, once
 you've taken the step of inverting the dependency of ORM and domain model, it's
 only a small additional step to implement an additional abstraction called the
-Repository pattern, which will be easier to write tests against, and will
+repository pattern, which will be easier to write tests against, and will
 provide a simple, common interface for faking out later in tests.
 
 // TODO (DS): Not sure how valuable this bit about getting the orm directly is.
@@ -511,7 +511,7 @@ and although we may hope it will be reducing complexity overall, it does add
 complexity locally, and it has a cost in terms raw numbers of moving parts and
 ongoing maintenance.
 
-Repository pattern is probably one of the easiest choices in the book though,
+_Repository pattern_ is probably one of the easiest choices in the book though,
 if you've already heading down the DDD and dependency inversion route.  As far
 as our code is concerned, we're really just swapping the SQLAlchemy abstraction
 (`session.query(Batch)`) for a different one (`batches_repo.get`) which we
@@ -523,7 +523,7 @@ simple abstraction over our storage layer, which we control. It would make
 it very easy to make fundamental changes to the way we store things (see
 <appendix_csvs>>), and as we'll see, it is very easy to fake out for unit tests.
 
-In addition, "Repository pattern" is so common in the DDD world that, if you
+In addition, repository pattern is so common in the DDD world that, if you
 do collaborate with programmers that have come to Python from the Java and C#
 worlds, they're likely to recognise it.
 
@@ -720,7 +720,7 @@ but the nice thing is--the rest of your application just doesn't care.
 
 === Building A Fake Repository For Tests Is Now Trivial!
 
-Here's one of the biggest benefits of Repository pattern.
+Here's one of the biggest benefits of _repository pattern_.
 
 
 [[fake_repository]]
