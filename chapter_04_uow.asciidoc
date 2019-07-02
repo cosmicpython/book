@@ -231,9 +231,26 @@ def test_allocate_returns_allocation():
     assert result == 'b1'
 ----
 ====
+////
+TODO:
+This is another good opportunity to drive home the idea of roles and collaborations. UOW and Repository are collaborators.
+
+https://github.com/python-leap/book/issues/44
+////
 
 <1> `FakeUnitOfWork` and `FakeRepository` are tightly coupled,
     just like the real unit of work and repository classes
+
+////
+TODO:
+
+https://github.com/python-leap/book/blame/master/chapter_04_uow.asciidoc#L238
+Maybe "Only mock your immediate neighbors" is more applicable?
+
+I think of "Don't mock what you don't own" as referring specifically to "mock verification" (e.g. assert mock_session.commit.assert_called_once()), with the reason for this advice being that you cannot change those interfaces. So the mock has no value in providing feedback to your design.
+
+https://github.com/python-leap/book/issues/44
+////
 
 <2> Notice the similarity with the fake `commit()` function
     from `FakeSession` (which we can now get rid of).  But it's
