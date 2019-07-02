@@ -29,16 +29,15 @@ but it does mean that some predictions fall outside of its domain.
 
 .This is not a DDD book.  You should read a DDD book.
 *****************************************************************
-////
-TODO:
-Domain Modelling
-DDD did not originate domain modelling. It itself calls out Object Design from Rebecca Whirfs-Brock and Alan McKean, which introduced Responsibility Driven Design of which DDD is a special case, dealing with the domain. That is the book with CRC cards, object stereotypes etc. But even that is too late and you need to call out Ivar Jacobson and Grady Booch. The term has been around since the mid-1980s. The big change was perhaps that Jacobson and Whirfs-Brock called out using UML to model something other than the domain. DDD’s main ‘addition’ to our knowledge was ubiquitous language and bounded context.
 
-https://github.com/python-leap/book/issues/49
-////
-
-Domain-Driven Design, or DDD, is where the concept of domain modelling came
-from, and it's been a hugely successful movement in transforming the way people
+Domain-Driven Design, or DDD, is where the concept of domain modelling was
+popularized,footnote:[
+DDD did not originate domain modelling. Eric Evans refers to _Object Design_
+from Rebecca Whirfs-Brock and Alan McKean, which introduced Responsibility-Driven
+Design of which DDD is a special case, dealing with the domain. But even that is
+too late, and OO-enthusiasts will tell you to look further back to Ivar
+Jacobson and Grady Booch; the term has been around since the mid-1980s.]
+and it's been a hugely successful movement in transforming the way people
 design software by focusing on the core business domain.  Many of the
 architecture patterns that we cover in this book, like Entity, Aggregate and
 Value Objects (see <<chapter_04_uow>>), Repository (in <<chapter_02,the next
