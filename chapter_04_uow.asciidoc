@@ -42,7 +42,7 @@ A context manager.
 
 === Test-driving A Uow With Integration Tests
 
-Here's a test for a new "Unit of Work" (or UoW, which we pronounce, you-wow).
+Here's a test for a new _Unit of Work_ (or UoW, which we pronounce "you-wow").
 It's a context manager that allows us to start a transaction, retrieve and get
 things from repos, and commit:
 
@@ -583,7 +583,7 @@ _Unit of work_ is an abstraction around data integrity::
     end of an operation.
 
 It works closely with _repository_ and _service layer_::
-    The Unit of Work pattern completes our abstractions over data-access by
+    The unit of work pattern completes our abstractions over data-access by
     representing atomic updates.
     Each of our service-layer use-cases runs in a single unit of work which
     succeeds or fails as a block.

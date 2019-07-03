@@ -113,7 +113,7 @@ technology choices become minor implementation details.
 
 ==== Part 1: Dependency Inversion and Domain modelling
 
-Chapter 1: Domain modelling and DDD::
+Chapter 1: Domain Modelling and DDD::
     At some level, everyone has learned the lesson that complex business
     problems need to be reflected in code, in the form of a model of the domain.
     But why does it always seem to be so hard to do it, without getting tangled
@@ -122,7 +122,7 @@ Chapter 1: Domain modelling and DDD::
     show how to get started with a model that has no external dependencies, and
     fast unit tests.
 
-Chapter 2, 3 & 4: Repository, Service Layer and Unit of Work patterns::
+Chapter 2, 3 & 4: Repository, Service Layer and Unit of Work Patterns::
     In these 3 chapters we present 3 closely related and mutually reinforcing
     patterns that support our ambition to keep the model free of extraneous
     dependencies.  We build a layer of abstraction around persistent storage,
@@ -130,7 +130,7 @@ Chapter 2, 3 & 4: Repository, Service Layer and Unit of Work patterns::
     capture the primary use cases. We show how this layer makes it easy to
     build very thin entrypoints to our system, be it a Flask API or a CLI.
 
-Chapter 5: Aggregate pattern::
+Chapter 5: Aggregate Pattern::
     A brief return to the world of DDD, where we discuss how to choose the
     right _aggregate_, and how this choice relates to questions of data
     integrity
@@ -152,7 +152,7 @@ Chapter 9: CQRS::
     An example of _command-query responsibility segregation_, with and without
     events.
 
-Chapter 10 Dependency injection::
+Chapter 10 Dependency Injection::
     We tidy up our explicit and implicit dependencies, and implement a very
     simple dependency injection framework.
 
