@@ -8,30 +8,14 @@ jumbled. When you think of the word "order" perhaps you think of an empty room,
 serene and calm. For scientists, though, chaos is characterised by homogeneity,
 and order by complexity.
 
-For example, you are a highly ordered system. Your body has a rigid structure
-provided by your skeleton, which supports your organs, which are made up of
-differentiated tissues, which are composed of cells, which comprise organelles.
-By contrast, if we took all of your component atoms and stirred them into a
-bucket full of goop, you would be in a disordered, chaotic state. The natural
-tendency of things is to collapse into chaos because it requires energy to
-introduce order. For example, we could take all of your constituent atoms and
-move them so that the iron was over on one side of the bucket, and the water
-over on the other, but the moment we stop applying force, the whole thing will
-collapse once again to primordial ooze.
-//TODO: DS - I find this a confusing analogy. A human body is ordered, but not
-//in terms of iron all being on one side (has anyone ever done that?). If we
-//want to follow this analogy properly it's actually that we eat food, which
-//uses energy to organise our organs. When we stop eating food we decay...but
-//that's a bit morbid! Perhaps there is a simpler analogy such as tidying
-//one's room, or gardening?
+For example, a well-tended garden is a highly ordered system. Gardeners define
+boundaries with paths and fences, and they mark out flower beds or vegetable
+patches.
 
-////
-TODO:
-
-— I’m not sure that software is inherently unstable without energy. If I applied no energy, in other words did not work on it, it might become out-of-date, un-patched and decay but not become chaotic. A big-ball of mud occurs because we trade-off the modifiability of the software against another requirement such as time-to-market or performance. We might have valid reasons to make that trade-off, but we incur a modifiability debt as a result.
-
-https://github.com/python-leap/book/issues/49
-////
+Over time, the garden evolves, growing richer and thicker, but without deliberate
+effort, the garden will run wild. Weeds and grasses will choke out other plants,
+covering over the paths until, eventually, every part looks the same again - wild
+and unmanaged.
 
 Software systems, too, tend toward chaos. When we first start building a new
 system, we have grand ideas that our code will be clean and well-ordered, but
@@ -45,10 +29,10 @@ to everything else so that changing any part of the system becomes fraught with
 danger. This is so common that software engineers have their own word for
 chaos: The Big Ball of Mud anti-pattern.
 
-Big ball of mud is the natural state of software in the same way that goop in a
-bucket is the natural state of your constituent atoms. It takes energy and
-direction to prevent the collapse. Fortunately, the techniques to avoid
-creating a big ball of mud aren't complex.
+Big ball of mud is the natural state of software in the same way that wilderness
+bucket is the natural state of your garden. It takes energy and direction to
+prevent the collapse. Fortunately, the techniques to avoid creating a big ball
+of mud aren't complex.
 
 === Encapsulation
 
@@ -175,6 +159,13 @@ rest of this book, we're going to be systematically turning this model inside
 out by obeying one simple principle.
 
 === The Dependency Inversion Principle
+
+////
+TODO:
+— You can explain DI more easily once you have introduced layers by noting that as we depend downwards, it becomes impossible to use something from a higher layer. To correct this, you need to create an interface in your layer, and have something in the higher layer implement that. The DI is when you provide the concrete dependency when calling the lower layer. Hexagonal architectures with their ‘depend inwards’ model are even clearer here, because for the port layer to do I/O it must depend on the adapter layer above it, which it can’t do, so it creates a DAO abstraction, depends on that, and has that implemented in the adapter layer.
+
+https://github.com/python-leap/book/issues/49
+////
 
 You might be familiar with the dependency inversion principle already, because
 it's the D in the SOLID mnemonic. Formally, the DIP says:
