@@ -27,15 +27,26 @@ that model real world business problems. Our example domain is the first system
 Bob built for MADE, and this book is an attempt to write down all the _stuff_ we
 have to teach new programmers when they join one of our teams.
 
-// DS: Maybe here would be a good place to mention where you work and the kind
-// of challenges you're used to addressing.
+MADE.com operate a global supply chain of freight partners and manufacturers.
+To try and keep costs low, we try to optimise the delivery of stock to our
+warehouses so that we don't have unsold goods lying around the place.
+
+Ideally, the sofa that you want to buy will arrive in port on the very day
+that you decide to buy it, and we'll ship it straight to your house without
+ever storing it. Managing that balancing act is tricky when goods take 3 months
+to arrive by container ship. Along the way things get broken, or water damaged;
+storms cause unexpected delays, logistics partners mishandle goods, and paperwork
+goes missing.
+
+We solve those problems by building intelligent software that represents the
+kind of operations taking place in the real world so that we can automate as
+much of the business as possible.
 
 === Why Python?
 
-If you're reading this book, you probably don't need convincing of the merits
-of Python itself.  So it's more "why does the world need a _Python_ book for
-this?", or possibly "why does the _Python_ world need a book like this?"
-// TODO (DS) I had to read this sentence a couple of times through before I understood it.
+If you're reading this book, we probably don't need to convince you that Python
+is great, so the real question is "Why does the _Python_ community need a book
+like this?"
 
 The answer is about Python's popularity and maturity - although Python is
 probably the world's fastest-growing programming language, and nearing the top
