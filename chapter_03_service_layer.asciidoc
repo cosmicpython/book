@@ -319,18 +319,6 @@ class FakeRepository(repository.AbstractRepository):
 Here's where it will come in useful; it lets us test our service layer with
 nice, fast unit tests:
 
-////
-TODO:
-
-https://github.com/python-leap/book/blame/master/chapter_03_service_layer.asciidoc#L320
-FWIW, pytest.raises also works with a regex
-
-with pytest.raises(InvalidSkuException, match="nonexistentsku"):
-    doit()
-
-https://github.com/python-leap/book/issues/43
-
-////
 
 [[first_services_tests]]
 .Unit testing with fakes at the services layer (test_services.py)
@@ -366,13 +354,6 @@ def test_error_for_invalid_sku():
 
 <3> We also need a `FakeSession` to fake out the database session, see below:
 
-////
-TODO:
-
-Is there supposed to be an @DataClass annotation on FakeSession? Otherwise there is a class instance and object instance "committed" variable. If not, deleting the "committed = False" line will be OK.
-
-https://github.com/python-leap/book/issues/43
-////
 
 [[fake_session]]
 .A fake database session (test_services.py)
@@ -626,7 +607,7 @@ test_api.py:4
 ----
 ====
 
-//TODO: test listing this too?
+//NICE-TO-HAVE: test listing this too?
 
 Not bad!  15 unit tests, 8 integration tests, and just 2 end-to-end tests.  That's
 a healthy-looking test pyramid.
@@ -640,20 +621,13 @@ the service layer, we don't really need tests for the domain model any more.
 Instead, we could rewrite all of the domain-level tests from chapter one in
 terms of the service layer.
 
-////
-TODO:
 
-Are the source code comments supposed to be "domain-layer" and "service-layer" instead of
-"model-layer" and "domain-layer"? Otherwise I'm a bit confused.
-
-https://github.com/python-leap/book/issues/43
-////
 .Rewriting a domain test at the service layer (test_services.py)
 ====
 [source,python]
 [role="skip"]
 ----
-# model-layer test:
+# domain-layer test:
 def test_prefers_warehouse_batches_to_shipments():
     warehouse_batch = Batch('wh-batch', 'sku1', 100, eta=None)
     shipment_batch = Batch('sh-batch', 'sku1', 100, eta=tomorrow)
@@ -664,7 +638,7 @@ def test_prefers_warehouse_batches_to_shipments():
     assert warehouse_batch.available_quantity == 90
     assert shipment_batch.available_quantity == 100
 
-# domain-layer test:
+# service-layer test:
 def test_prefers_warehouse_batches_to_shipments():
     warehouse_batch = Batch('wh-batch', 'sku1', 100, eta=None)
     shipment_batch = Batch('sh-batch', 'sku1', 100, eta=tomorrow)
