@@ -1,5 +1,5 @@
 [[chapter_06_events_and_message_bus]]
-== Events and the Message Bus
+== Events And The Message Bus
 
 So far we've spent a lot of time and energy on a simple problem that we could
 easily have solved with Django. You might be asking if the increased testability
@@ -18,9 +18,9 @@ problem by buying more stock, and all will be well.
 
 For a first version, our product owner says we can just send the alert by email.
 
-=== Avoiding making a mess.
+=== Avoiding Making A Mess.
 
-==== First, avoid making a mess of of our web controllers
+==== First, Avoid Making A Mess Of Of Our Web Controllers
 
 When we have a new requirement like this, that's not _really_ to do with the
 core domain, it's all too easy to start dumping these things into our web
@@ -91,7 +91,7 @@ NOTE: If you find yourself using `unittest.mock` to test external dependencies
     <<chapter_10_dependency_injection>>.
 
 
-==== ... And let's not make a mess of our model either
+==== ... And Let's Not Make A Mess Of Our Model Either
 
 Assuming we don't want to put this code into our web controllers, because
 we want them to be as thin as possible, we may look at putting it right at
@@ -119,7 +119,7 @@ But that's even worse!  We don't want our model to have any dependencies on
 infrastructure concerns like `email.send_mail`.
 
 
-==== Or the service layer!
+==== Or The Service Layer!
 
 In the service layer it's a little better, but it's still not lovely:
 
@@ -152,7 +152,7 @@ Catching an exception and re-raising it?  I mean, it could be worse, but it's
 definitely making us unhappy.
 
 
-===  Single Responsibility Principle
+=== Single Responsibility Principle
 
 Really this is a violation of the Single Responsibility Principle.  Our use
 case is allocation. Our endpoint, service function, and domain methods are all
@@ -175,7 +175,7 @@ want to apply the Dependency Inversion Principle to notifications, so that our
 service layer depends on an abstraction, in the same way as we avoid depending
 on the database by using a UnitOfWork.
 
-=== All aboard the Message Bus!
+=== All Aboard The Message Bus!
 
 The pattern we're going to introduce here is _Domain Events_ and the _Message Bus_.
 
@@ -184,7 +184,7 @@ recording "events"--facts about things that have happened. We'll use a Message
 Bus to respond to events, and invoke some new operation.
 
 
-==== The model records events
+==== The Model Records Events
 
 [[domain_event]]
 .The model records a domain event (src/allocation/model.py)
@@ -228,7 +228,7 @@ TODO: This ^^^ is true, but I think the real problem is that you shouldn't use
 exceptions for control-of-flow. It's like a classic design smell.
 
 
-==== Events are simple dataclasses
+==== Events Are Simple Dataclasses
 
 Events are part of our domain.  We could store them in _model.py_, but we
 may as well keep them in their own file.  (this might be a good time to
@@ -260,7 +260,7 @@ class OutOfStock(Event):  #<2>
 
 
 
-==== The message bus maps events to handlers
+==== The Message Bus Maps Events To Handlers
 
 A message bus essentially says: when I see this event, I should
 invoke the following handlers.  Here's a minimal implementation:
@@ -294,7 +294,7 @@ HANDLERS = {
 //TODO: maybe handle should just take one event?
 
 
-==== In a first cut, the service layer puts events on the message bus
+==== In A First Cut, The Service Layer Puts Events On The Message Bus
 
 And now we need something to catch events from the model and pass
 them to the message bus.  The service layer might be one place to do
@@ -336,7 +336,7 @@ but we can do better.
 TODO: discussion, service layer can/could raise events directly too.
 
 
-=== The Unit of Work can pass events to the Message Bus
+=== The Unit Of Work Can Pass Events To The Message Bus
 
 The UoW already has a `try/finally`, and it knows about all the aggregates
 currently in play because it provides access to the _Repository_.  So it's
@@ -503,7 +503,7 @@ class FakeUnitOfWork(unit_of_work.AbstractUnitOfWork):
 ====
 
 
-=== Unit Testing with a fake message bus
+=== Unit Testing With A Fake Message Bus
 
 TODO: discuss replacing @mock test with `FakeMessageBus`
 

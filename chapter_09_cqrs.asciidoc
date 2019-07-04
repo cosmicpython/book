@@ -1,12 +1,12 @@
 [[chapter_09_cqrs]]
-== Command-Query Responsibility Separation (CQRS)
+== Command-query Responsibility Separation (CQRS)
 
 NOTE: placeholder chapter, under construction
 
 Just, honestly, read this for now: https://io.made.com/commands-and-queries-handlers-and-views/
 
 
-=== Always Redirect after a POST?
+=== Always Redirect After A POST?
 
 The API returns information from the post request and that's bad, arguably.
 
@@ -79,7 +79,7 @@ def allocations_view_endpoint(orderid):
 ====
 
 
-=== Hold on to your lunch folks.
+=== Hold On To Your Lunch Folks.
 
 All right, a _views.py_, fair enough, we can keep read-only stuff in there,
 and it'll be a real views.py, not like Django's...
@@ -149,7 +149,7 @@ def test_allocations_view(sqlite_session_factory):
 ====
 
 
-=== Doubling down on the madness.
+=== Doubling Down On The Madness.
 
 that hardcoded sql query is pretty ugly right?  what if we made it nicer
 by keeping a totally separate, denormalised datastore for our view model?
@@ -260,7 +260,7 @@ def remove_allocation_from_read_model(
 ----
 ====
 
-=== But whyyyyyyy?
+=== But Whyyyyyyy?
 
 OK.  horrible, right? But also, kinda, surprisingly nice, considering? Our
 events and message bus give us a really nice place to do this sort of stuff,
@@ -276,4 +276,3 @@ So definitely don't do this. ever.  But, if you do need to, see how easy
 the event-driven model makes it?
 
 OK.  On that note, let's sally forth into our final chapter.
-

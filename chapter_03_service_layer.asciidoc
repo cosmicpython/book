@@ -1,5 +1,5 @@
 [[chapter_03_service_layer]]
-== Our first use case:  Flask API and service layer.
+== Our First Use Case: Flask API And Service Layer.
 
 Like any good agile team, we're hustling to try and get an MVP out and
 in front of the users to start gathering feedback.  We have the core
@@ -29,7 +29,7 @@ plan:
   storage layer to set up test data.
 
 
-=== A first end-to-end (E2E) test
+=== A First End-to-end (E2E) Test
 
 No-one is interested in getting into a long terminology debate about what
 counts as an E2E test vs a functional test vs an acceptance test vs an
@@ -88,7 +88,7 @@ also talking to a postgres database.  If you want to see how we did
 it, check out <<appendix_project_structure>>.
 
 
-=== The straightforward implementation
+=== The Straightforward Implementation
 
 Implementing things in the most obvious way, you might get something like this:
 
@@ -171,7 +171,7 @@ Not quite so lovely, but that will force us to get a commit in.
 
 
 
-=== Error conditions that require database checks
+=== Error Conditions That Require Database Checks
 
 If we keep going like this though, things are going to get uglier and uglier.
 
@@ -280,7 +280,7 @@ E2E tests is starting to get out of control, and soon we'll end up with an
 inverted test pyramid (or "ice cream cone model" as Bob likes to call it).
 
 
-=== Introducing a service layer, and using FakeRepository to unit test it
+=== Introducing A Service Layer, And Using Fakerepository To Unit Test It
 
 If we look at what our Flask app is doing, there's quite a lot of what we
 might call "orchestration" -- fetching stuff out of our repository, validating
@@ -422,7 +422,7 @@ def test_commits():
 ====
 
 
-==== A typical service function
+==== A Typical Service Function
 
 We'll get to a service function that looks something like <<service_function>>:
 
@@ -603,7 +603,7 @@ We've successfully split our tests into two broad categories: tests about web
 stuff, which we implement end-to-end; and tests about orchestration stuff, which
 we can test against the service layer in memory.
 
-=== How is our test pyramid looking?
+=== How Is Our Test Pyramid Looking?
 
 Let's see what this move to using a service layer, with its own service-layer tests,
 does to our test pyramid:
@@ -633,7 +633,7 @@ a healthy-looking test pyramid.
 
 
 
-=== Should domain layer tests move to the service layer?
+=== Should Domain Layer Tests Move To The Service Layer?
 
 We could take this a step further. Since we can test the our software against
 the service layer, we don't really need tests for the domain model any more.
@@ -706,7 +706,7 @@ we won't have any tests that directly interact with "private" methods or
 attributes on our model objects, which leaves us more free to refactor them.
 
 
-=== On deciding what kind of tests to write
+=== On Deciding What Kind Of Tests To Write
 
 You might be asking yourself "should I rewrite all my unit tests, then? Is it
 wrong to write tests against the domain model?" To answer the question, it's
@@ -764,7 +764,7 @@ implementation.
 // layer
 
 
-==== Low and High Gear
+==== Low And High Gear
 
 Most of the time, when we are adding a new feature, or fixing a bug, we don't
 need to make extensive changes to the domain model. In these cases, we prefer
@@ -807,7 +807,7 @@ hazard, we again drop down to a low gear until we can pick up speed again.
 ******************************************************************************
 
 
-=== Fully Decoupling the service layer tests from the domain
+=== Fully Decoupling The Service Layer Tests From The Domain
 
 We still have some direct dependencies on the domain in our service-layer
 tests, because we use domain objects to set up our test data and to invoke
@@ -869,7 +869,7 @@ But our tests still depend on the domain, because we still manually instantiate
 model works, we'll have to change a bunch of tests.
 
 
-==== Mitigation: keep all domain dependencies in fixture functions
+==== Mitigation: Keep All Domain Dependencies In Fixture Functions
 
 We could at least abstract that out to a helper function or a fixture
 in our tests.  Here's one way you could do that, adding a factory
@@ -904,7 +904,7 @@ At least that would move all of our tests' dependencies on the domain
 into one place.
 
 
-==== Adding a missing service
+==== Adding A Missing Service
 
 We could go one step further though.  If we had a service to add stock,
 then we could use that, and make our service-layer tests fully expressed
@@ -988,7 +988,7 @@ This is a really nice place to be in.  Our service-layer tests only depend on
 the services layer itself, leaving us completely free to refactor the model as
 we see fit.
 
-=== Carrying the improvement through to the E2E tests
+=== Carrying The Improvement Through To The E2E Tests
 
 In the same way that adding `add_batch` helped decouple our services-layer
 tests from the model, adding an API endpoint to add a batch would remove
@@ -1175,4 +1175,3 @@ layer is tightly coupled to a `session` object.  In the next chapter, we'll
 introduce one more pattern that works closely with _Repository_ and _Service
 Layer_, the _Unit of Work_ pattern, and everything will be absolutely lovely.
 You'll see!
-

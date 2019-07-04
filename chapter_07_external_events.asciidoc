@@ -1,5 +1,5 @@
 [[chapter_07_external_events]]
-== Event-Driven Architecture (using events to integrate microservices)
+== Event-driven Architecture (using Events To Integrate Microservices)
 ////
 TODO: 
 It would be cool to see the event flow in An internal event to express de-allocation as a diagram. Perhaps even an abstracted wall of sticky-notes?
@@ -17,7 +17,7 @@ to encompass the way that we handle incoming and outgoing messages from the
 system.
 
 
-=== Using a Redis pubsub channel for integration
+=== Using A Redis Pubsub Channel For Integration
 
 At MADE.com we use https://eventstore.org/[Eventstore] to convey messages
 between systems, but a lightweight solution based on Redis pubsub channels
@@ -79,7 +79,7 @@ essentially:
     look out for the expected reallocation.
 
 
-==== Redis is another thin adapter around our service layer
+==== Redis Is Another Thin Adapter Around Our Service Layer
 
 
 [[redis_pubsub_first_cut]]
@@ -122,7 +122,7 @@ def handle_change_batch_quantity(m):  #<2>
 So we'll need a new service called `change_batch_quantity`.
     
 
-=== Test-driving a new service at the service layer
+=== Test-driving A New Service At The Service Layer
 
 Following the lessons learned in <<chapter_03_service_layer>>,
 we can operate in "high gear," and write our unit tests at the highest
@@ -173,7 +173,7 @@ look like:
     and we expect to reallocated it to a new batch
 
 
-==== An internal event to express de-allocation
+==== An Internal Event To Express De-allocation
 
 A batch might have dozens of orders allocated to it. Similarly to the "out of
 stock" email, rather than doing deallocation and re-allocation in-line in the
@@ -341,7 +341,7 @@ TODO: should we have `Batch.change_purchased_quantity`?  But how to
 //TODO: we changed from Batch.deallocate to Batch.deallocate_one,
 // need do delete/amend some unit tests
 
-=== New handlers for allocated and deallocated events
+=== New Handlers For Allocated And Deallocated Events
 
 Here's what the events will look like:
 
@@ -414,7 +414,7 @@ def publish(channel, event):
 ====
 
 
-==== But handlers do now need a UoW
+==== But Handlers Do Now Need A Uow
 
 Our event handlers do now need a UoW.  We make a small modification
 to _unit_of_work.py_:
@@ -444,7 +444,7 @@ feel a little messy, however.
 
 
 
-=== Services can become event handlers
+=== Services Can Become Event Handlers
 
 Let's take a look at our services and message handlers side-by-side:
 
@@ -680,7 +680,7 @@ TODO: talk about the fact that we've implemented quite a complicated use case
     show a hacky version for comparison?
 
 
-=== What have we achieved?
+=== What Have We Achieved?
 
 * events are simple dataclasses that define the data structures for inputs,
   outputs, and internal messages within our system.  this is quite powerful
@@ -701,4 +701,3 @@ We've added bit of complexity to our architecture, but hopefully you can
 see how we've now made it very easy to plug in almost any new requirement
 from the business, whether it's a new use case, a new integration with
 one of our internal systems, or an integration with external systems.
-

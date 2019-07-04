@@ -16,7 +16,7 @@ root" in OO parlance, is a pattern that can help us to keep things tidy.  Let's
 take a look.
 
 
-=== Defaults and config
+=== Defaults And Config
 
 Where do we declare our defaults?  _config.py_ is one place, but we also do
 some in, eg, _unit_of_work.py_, which declares the "default" database session
@@ -40,7 +40,7 @@ dependencies are, and we haven't even spoken about cross-cutting concerns
 like logging.
 
 
-=== Other setup code: initialisation
+=== Other Setup Code: Initialisation
 
 Defaults are maybe feeling a bit messy, but so are some other aspects of the
 initial setup or "bootsrapping" of our application; `orm.start_mappers()` for
@@ -69,7 +69,7 @@ Let's bring all this stuff together into a single "bootstrap script" and see
 if we end up in a better position.
 
 
-=== Bootstrap script
+=== Bootstrap Script
 
 Here's what a bootstrap script could look like:
 
@@ -96,7 +96,7 @@ def bootstrap(
 * it gives us back the core of our app, the messagebus
 
 
-=== Using bootstrap in our entrypoints
+=== Using Bootstrap In Our Entrypoints
 
 In our application's entrypoints, we just call `bootstrap.bootstrap()`
 to get a messagebus, rather than configuring a UoW and the rest of it.
@@ -157,7 +157,7 @@ def test_allocations_view(sqlite_bus):
 TODO: bootstrapper as class instead?
 
 
-=== Dependency diagrams
+=== Dependency Diagrams
 
 
 In chapter 9 it's a real mess.
@@ -184,4 +184,3 @@ Now we have what our esteemed tech reviewer David Seddon would call a "rocky roa
 flow in one direction.
 
 TODO: alternative fix by making an abstract redis thingie?  
-

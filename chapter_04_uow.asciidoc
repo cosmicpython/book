@@ -1,5 +1,5 @@
 [[chapter_04_uow]]
-== Unit of Work pattern
+== Unit Of Work Pattern
 
 In this chapter we'll introduce a final piece of the puzzle that really pulls
 the _Repository_ and _Service layer_ patterns together, the _Unit of Work_
@@ -40,7 +40,7 @@ the end, some different handling for error and success cases?  Something like
 
 A context manager.
 
-=== Test-driving a UoW with integration tests
+=== Test-driving A Uow With Integration Tests
 
 Here's a test for a new "Unit of Work" (or UoW, which we pronounce, you-wow).
 It's a context manager that allows us to start a transaction, retrieve and get
@@ -98,7 +98,7 @@ def test_uow_can_retrieve_a_batch_and_allocate_to_it(session_factory):
 <3> And we call `commit()` on it when we're done.
 
 
-=== Unit of Work and its context manager
+=== Unit Of Work And Its Context Manager
 
 In our tests we've implicitly defined an interface for what a unit
 of work needs to do, let's make that explicit by using an abstract
@@ -153,7 +153,7 @@ class AbstractUnitOfWork(abc.ABC):
     is needed because different subclasses will want to initialise repositories
     in slightly different ways, this just gives us a single place to do that.
 
-==== The Real Unit of Work uses SqlAlchemy Sessions
+==== The Real Unit Of Work Uses Sqlalchemy Sessions
 
 [[unit_of_work]]
 .the real SQLAlchemy unit of work (src/allocation/unit_of_work.py)
@@ -193,7 +193,7 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 
 
 
-=== Fake Unit of Work for testing:
+=== Fake Unit Of Work For Testing:
 
 Here's how we use a fake unit of work in our service layer tests
 
@@ -262,7 +262,7 @@ I think of "Don't mock what you don't own" as referring specifically to "mock ve
 https://github.com/python-leap/book/issues/44
 ////
 
-=== Using the UoW in the service layer
+=== Using The Uow In The Service Layer
 
 And here's what our new service layer looks like:
 
@@ -300,7 +300,7 @@ def allocate(
     on an _abstract_ unit of work.
 
 
-=== Explicit tests for commit/rollback behaviour
+=== Explicit Tests For Commit/rollback Behaviour
 
 To convince ourselves that the commit/rollback behaviour works, we wrote
 a couple of tests:
@@ -344,7 +344,7 @@ TIP: We haven't shown it here, but it can be worth testing some of the more
     class makes that easy!
 
 
-=== Explicit vs implicit commits
+=== Explicit Vs Implicit Commits
 
 A brief digression on different ways of implementing the UoW pattern.
 
@@ -418,13 +418,13 @@ next time?  But you should experiment and figure out your own preferences here.
 // hard, presumably.
 
 
-=== Examples: Using UoW to group multiple operations into an atomic unit
+=== Examples: Using Uow To Group Multiple Operations Into An Atomic Unit
 
 Here's a few examples showing the unit of work pattern in use.  You can
 see how it leads to simple reasoning about what blocks of code happen
 together:
 
-==== Example 1: reallocate
+==== Example 1: Reallocate
 
 Supposing we want to be able to deallocate and then reallocate orders?
 
@@ -450,7 +450,7 @@ def reallocate(line: OrderLine, uow: AbstractUnitOfWork) -> str:
     the `deallocate()`, either.
 
 
-==== Example 2: change batch quantity
+==== Example 2: Change Batch Quantity
 
 Our shipping company gives us a call to say that one of the container doors
 opened and half our sofas have fallen into the Indian Ocean.  oops!
@@ -477,7 +477,7 @@ def change_batch_quantity(batchref: str, new_qty: int, uow: AbstractUnitOfWork):
     at any stage, we probably want to commit none of the changes.
 
 
-=== Tidying up the integration tests
+=== Tidying Up The Integration Tests
 
 We now have three sets of tests all essentially pointing at the database,
 _test_orm.py_, _test_repository.py_ and _test_uow.py_.  Should we throw any
