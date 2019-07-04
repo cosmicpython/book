@@ -1,5 +1,5 @@
 [[chapter_05_aggregate]]
-== Aggregates and consistency boundaries
+== Aggregates And Consistency Boundaries
 
 What's the point of a domain model anyway? What's the fundamental problem
 we're trying to addresss?
@@ -54,7 +54,7 @@ don't break the invariants.
 If we're unable to meet our invariants, we might choose to raise an error rather
 than complete the operation.
 
-=== Invariants and Concurrency
+=== Invariants And Concurrency
 
 In a single threaded single user application it's easy for us to maintain the
 invariants of our system. We can just allocate stock, one line at a time, and
@@ -76,7 +76,7 @@ order lines, we can't hold a lock over the whole `batches` table for
 every single one.
 
 
-=== Choosing the right Aggregate
+=== Choosing The Right Aggregate
 
 [quote, Eric Evans, DDD blue book]
 ____
@@ -94,9 +94,9 @@ purpose of data changes.
 ____
 
 Even if it weren't for the data integrity concerns, as a model gets more complex
-and grows more different _Entity_ and _Value Objects_, all of which start pointing
+and grows more different _entity_ and _value objects_, all of which start pointing
 to each other, it can be hard to keep track of who can modify what.  Especially
-when we have _Collections_ in the model like we do (our batches are a collection),
+when we have _collections_ in the model like we do (our batches are a collection),
 it's a good idea to nominate some entities to be the single entrypoint for
 modifying their related objects.  It makes the system conceptually simpler
 and easy to reason about if you nominate some objects to be in charge of consistency
@@ -243,7 +243,7 @@ do them for you by magic!
 
 ******************************************************************************
 
-=== Version numbers
+=== Version Numbers
 
 We've got our new aggregate and we're using it in all the right places, the remaining
 question is:  how will we actually enforce our data integrity rules?  We don't want
@@ -315,7 +315,7 @@ TODO: more discussion of version number -- actual numebr doesn't matter,
     we're just setting _something_ so the db complains, could use uids,
     also discuss similarity with eventsourcing version numbers.
 
-=== Testing for our data integrity rules
+=== Testing For Our Data Integrity Rules
 
 Now to actually make sure we can get the behaviour we want: if we have two
 concurrent attempts to do allocation against the same `Product`, one of them
@@ -414,7 +414,7 @@ def try_to_allocate(orderid, sku, exceptions):
 ====
 
 
-==== Enforcing concurrency rules by using database transaction isolation levels
+==== Enforcing Concurrency Rules By Using Database Transaction Isolation Levels
 
 To get the test to pass as it is, we can set the transaction isolation level
 on our session:
@@ -436,7 +436,7 @@ understanding https://www.postgresql.org/docs/9.6/transaction-iso.html[the
 documentation].
 
 
-==== SELECT FOR UPDATE can also help
+==== SELECT FOR UPDATE Can Also Help
 
 An alternative to using the `SERIALIZABLE` isolation level is to use
 https://www.postgresql.org/docs/9.6/explicit-locking.html[SELECT FOR UPDATE],

@@ -2,24 +2,24 @@
 [preface]
 == Preface
 
-=== Who are we and why are we writing this book?
+=== Who Are We And Why Are We Writing This Book?
 
-Hi, I'm Harry.  At the end of my last book,
+At the end of Harry's last book,
 http://www.obeythetestinggoat.com/pages/book.html[Test-Driven Development with Python],
-I found myself asking a bunch of questions about architecture -- what's the
+he found himself asking a bunch of questions about architecture -- what's the
 best way of structuring your application so that it's easy to test?  More
 specifically, so that your core business logic is covered by unit tests, and so
-that we minimise the number of integration and end-to-end tests we need?  I
+that we minimise the number of integration and end-to-end tests we need?  He
 made vague references to "Hexagonal Architecture" and "Ports and Adapters" and
-"Functional Core, Imperative Shell", but these weren't things I understood or
-had done in practice.
+"Functional Core, Imperative Shell," but if he was honest, he'd have to admit
+that these weren't things he really understood or had done in practice.
 
-And then I was lucky enough to run into Bob, who has the answers
-to all these questions.
+And then he was lucky enough to run into Bob, who has the answers to all these
+questions.  
 
-Hi, I'm Bob. I ended up a software architect because nobody else on my team was
-doing it. I turned out to be pretty bad at it, but I was lucky enough to run
-into Ian, who taught me new ways of writing and thinking about code.
+Bob ended up a software architect because nobody else on his team was
+doing it. He turned out to be pretty bad at it, but was lucky enough to run
+into Ian, who taught him new ways of writing and thinking about code.
 
 We both work for MADE.com - a European e-commerce company who sell furniture
 online - where we apply the techniques in this book to build distributed systems
@@ -55,17 +55,20 @@ of problems that the C# and Java world have been working on for years.
 Startups become real businesses, web apps and scripted automations are becoming
 (whisper it) enterprise software.
 
-In the Python world, we often quote the Zen of Python:  "there should be
-one--preferably on only one--obvious way to do it".  Unfortunately, as project
-complexity grows, the most obvious way of doing things isn't always the way
-that helps you manage complexity and evolving requirements.
+In the Python world, we often quote the Zen of Python:footnote:[`python -c "import this"`]
+"there should be one--and preferably only one--obvious way to do it."
+Unfortunately, as project size grows, the most obvious way of doing things
+isn't always the way that helps you manage complexity and evolving
+requirements.
 
 None of the techniques and patterns we're going to discuss in this book are
 new, but they are mostly new to the Python world.  And this book won't be
 a replacement for the classics in the field like 
-https://domainlanguage.com/ddd/[Evans' Domain-Driven Design]
+https://domainlanguage.com/ddd/[Eric Evans' _Domain-Driven Design_]
 or
-https://www.martinfowler.com/books/eaa.html[Fowler's Patterns of Enterprise Application Architecture] (both of which we'll often refer to and encourage you to go and read).
+https://www.martinfowler.com/books/eaa.html[Martin Fowler's _Patterns of
+Enterprise Application Architecture_] (both of which we often refer to and
+encourage you to go and read).
 
 But all the classic code examples in the literature do tend to be written in
 Java or pass:[C++]/#, and if you're a Python person and haven't used either of those
@@ -73,32 +76,32 @@ languages in a long time (or indeed ever), it can make them quite trying.
 There's a reason the latest edition of that other classic text, https://martinfowler.com/books/refactoring.html[Refactoring] is in JavaScript.
 
 So we hope this book will make for a lightweight introduction to some
-of the key architectural patterns that support Domain-Driven Design
+of the key architectural patterns that support domain-driven design
 (DDD) and event-driven microservices, that it will serve as a reference
 for implementing them in a Pythonic way, and that it will serve as a
 first step for those who want to do further research  in this field.
 
 
-=== Who might be reading this book
+=== Who Should Read This Book
 
-Here are a few things we're assuming about you, dear reader.
+Here are a few things we assume about you, dear reader.
 
-We're assuming you've been close to some reasonably complex Python applications.
+We assume you've been close to some reasonably complex Python applications.
 
-We're assuming you've seen some of the pain that comes with trying to manage
+We assume you've seen some of the pain that comes with trying to manage
 that complexity
 
-We're not assuming you already know anything about DDD, or any of the
+We do _not_ assume that you already know anything about DDD, or any of the
 classic application architecture patterns.
 
-We're going to be structuring our explorations of architectural patterns
-by using an example app, building it up chapter by chapter.  We use TDD at
+We structure our explorations of architectural patterns around an example app,
+building it up chapter by chapter.  We use Test-Driven Development (TDD) at
 work, so we tend to show listings of tests first, followed by implementation.
 If you're not used to working test-first, that may be a little strange at
-first, but we hope you'll soon get used to seeing code "being used", i.e. from
+first, but we hope you'll soon get used to seeing code "being used," i.e. from
 the outside, before you see how it's built on the inside.
 
-We will be using some specific Python (3) frameworks and technologies, like
+We use some specific Python (version 3) frameworks and technologies, like
 Flask, SQLAlchemy, and Pytest, as well as Docker and Redis.  If you're already
 familiar with them, that won't hurt, but we don't think it's required.  One of
 our main aims with this book is to build an architecture where specific
@@ -106,50 +109,52 @@ technology choices become minor implementation details.
 
 
 
-=== Overview
+=== A Brief Overview Of What You'll Learn
 
 ==== Part 1: Dependency Inversion and Domain modelling
 
-Chapter 1: Domain modelling and DDD::
+Chapter 1: Domain Modelling and DDD::
     At some level, everyone has learned the lesson that complex business
     problems need to be reflected in code, in the form of a model of the domain.
     But why does it always seem to be so hard to do it, without getting tangled
     up with infrastructure concerns, with our web frameworks,or whatever else?
-    In this chapter we give a broad overview of Domain Modelling and DDD, and
+    In this chapter we give a broad overview of _domain modelling_ and DDD, and
     show how to get started with a model that has no external dependencies, and
     fast unit tests.
 
-Chapter 2-4: Repository, Service Layer and Unit of Work patterns::
+Chapter 2, 3 & 4: Repository, Service Layer and Unit of Work Patterns::
     In these 3 chapters we present 3 closely related and mutually reinforcing
     patterns that support our ambition to keep the model free of extraneous
     dependencies.  We build a layer of abstraction around persistent storage,
-    and we build a service layer to define the entrypoints to our system, to
+    and we build a _service layer_ to define the entrypoints to our system, and
     capture the primary use cases. We show how this layer makes it easy to
     build very thin entrypoints to our system, be it a Flask API or a CLI.
 
-Chapter 5: Aggregate pattern::
+Chapter 5: Aggregate Pattern::
     A brief return to the world of DDD, where we discuss how to choose the
-    right _Aggregate_, and how this choice relates to questions of data
+    right _aggregate_, and how this choice relates to questions of data
     integrity
+
 
 ==== Part 2: Event-Driven Architecture
 
-Chapters 6-8: Event-Driven Architecture::
+Chapters 6, 7 & 8: Event-Driven Architecture::
     We introduce three more mutually-reinforcing patterns, starting with 
-    the concept of _Domain Events_, a vehicle for capturing the idea that some
-    interactions with a system are triggers for others.  We use  a _Message
-    Bus_ to allow actions to trigger events, and call appropriate _Handlers_.
+    the concept of _domain events_, a vehicle for capturing the idea that some
+    interactions with a system are triggers for others.  We use  a _message
+    bus_ to allow actions to trigger events, and call appropriate _handlers_.
     We move on to discuss how events can be used as a pattern for integration
     between services, in a microservices architecture. Finally we add the
-    distinction between _Commands_ and events.  Our application is now
+    distinction between _commands_ and _events_.  Our application is now
     fundamentally a message-processing system.
 
 Chapter 9: CQRS::
-    An example of Command-Query Responsibility Segregation, with and without
+    An example of _command-query responsibility segregation_, with and without
     events.
 
-Chapter 10 Dependency injection::
-    tidy up the explicit vs implicit dependencies.  talk about DI vs mocks.
+Chapter 10 Dependency Injection::
+    We tidy up our explicit and implicit dependencies, and implement a very
+    simple dependency injection framework.
 
 
 // TODO (DS): (General thoughts) There's nothing in the book about how to
@@ -190,7 +195,7 @@ Here's three different ways you might code along with the book:
   work to get things working for the specifics of your project, but on the other
   hand you're likely to learn the most
 
-* For lower effort, in each chapter we'll outline an "exercise for the reader",
+* For lower effort, in each chapter we'll outline an "exercise for the reader,"
   and point you to a Github location where you can download some partially-finished
   code for the chapter with a few missing parts to write yourself.
 

@@ -15,7 +15,7 @@ TIP: If you haven't already, it's worth reading <<appendix_abstractions>>
     before continuing with this chapter.
 
 
-=== Implicit vs explicit dependencies
+=== Implicit Vs Explicit Dependencies
 
 Our main handler functions declare an explicit dependency on the unit
 of work:
@@ -83,7 +83,7 @@ def test_rolls_back_uncommitted_work_by_default(sqlite_session_factory):
 
 
 
-=== Explicit dependencies are totally weird an java-ey tho
+=== Explicit Dependencies Are Totally Weird An Java-ey Tho
 
 If you're used to the way things normally happen in Python, you'll be thinking
 all this is a bit weird.  The standard way to do things is to declare our
@@ -142,7 +142,7 @@ choosing to monkeypatch `email.send_mail`, we are tied to doing `import email`,
 and if we ever want to do `from email import send_mail`, a trivial refactor,
 we'd have to change all our mocks.
 
-So it's a trade-off.  Yes declaring explicit dependencies is "unnecessary",
+So it's a trade-off.  Yes declaring explicit dependencies is "unnecessary,"
 strictly speaking, and using them would make our application code marginally
 more complex.  But in return, we'd get tests that are easier to write and
 manage.
@@ -176,7 +176,7 @@ Since we've now made the messagebus into the core of our application, it's the
 ideal place to manage these dependencies.
 
 
-=== MessageBus does DI
+=== Messagebus Does DI
 
 Here's one way to do it:
 
@@ -253,7 +253,7 @@ What else changes in the bus?
     the event we want to call:
 
 
-==== Depenency injection with minimal magic
+==== Depenency Injection With Minimal Magic
 
 Here's the core of our dependency injection approach then.  As you'll see
 there's not much to it:
@@ -285,7 +285,7 @@ functions and event handlers and other entrypoints, our dependencies would be
 all over the place.
 
 
-==== The messagebus takes ownership of adding new events to its queue
+==== The Messagebus Takes Ownership Of Adding New Events To Its Queue
 
 We've seen that the messagebus now has responsibility for collecting
 any new events raised by a handler, and adding them to the end of the queue.
@@ -316,7 +316,7 @@ class AbstractUnitOfWork(abc.ABC):
 ====
 
 
-=== Initialising DI in our app entrypoints
+=== Initialising DI In Our App Entrypoints
 
 In our flask app, we can just initialise the messagebus inline with
 the rest of our app config and setup, passing it in the actual
@@ -375,7 +375,7 @@ def handle_change_batch_quantity(m, bus: messagebus.MessageBus):
     (we'll look at fixing that in <<appendix_bootstrap>>.
 
 
-=== Initialising DI in our tests
+=== Initialising DI In Our Tests
 
 
 
@@ -407,4 +407,3 @@ class TestAddBatch:
 
 
 TODO: show option of custom fakes for email etc instead of mocks
-

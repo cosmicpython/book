@@ -1,11 +1,11 @@
 [[part1_prologue]]
 [preface]
-== Prologue: Why do our designs go wrong?
+== Introduction: Why Do Our Designs Go Wrong?
 
-What comes to mind when you hear the word "chaos"? Perhaps you think of a noisy
+What comes to mind when you hear the word _chaos?_ Perhaps you think of a noisy
 stock exchange, or your kitchen in the morning - everything confused and
-jumbled. When you think of the word "order" perhaps you think of an empty room,
-serene and calm. For scientists, though, chaos is characterised by homogeneity,
+jumbled. When you think of the word _order_ perhaps you think of an empty room,
+serene and calm. For scientists, though, chaos is characterized by homogeneity,
 and order by complexity.
 
 For example, a well-tended garden is a highly ordered system. Gardeners define
@@ -26,18 +26,18 @@ software systems are characterised by a sameness of function: API handlers that
 have domain knowledge, and send emails and perform logging; "business logic"
 classes that perform no calculations but do perform IO; and everything coupled
 to everything else so that changing any part of the system becomes fraught with
-danger. This is so common that software engineers have their own word for
+danger. This is so common that software engineers have their own term for
 chaos: The Big Ball of Mud anti-pattern.
 
-Big ball of mud is the natural state of software in the same way that wilderness
-bucket is the natural state of your garden. It takes energy and direction to
+Big ball of mud is the natural state of software in the same way that wildness
+is the natural state of your garden. It takes energy and direction to
 prevent the collapse. Fortunately, the techniques to avoid creating a big ball
 of mud aren't complex.
 
 === Encapsulation
 
-The term "encapsulation" covers two closely related ideas, simplifying
-behaviour and hiding data. When we encapsulate behaviour, we take a complex
+The term _encapsulation_ covers two closely related ideas: simplifying
+behaviour, and hiding data. When we encapsulate behaviour, we take a complex
 algorithm and place it behind a simpler abstraction. Consider the following two
 snippets of Python code, <<urllib_example>> and <<requests_example>>:
 
@@ -82,13 +82,14 @@ for r in results:
 ----
 ====
 
-Both of these code listings do the same thing: they submit form encoded values
-to a URL in order to use a search engine API, but the second is simpler to read
+Both of these code listings do the same thing: they submit form-encoded values
+to a URL in order to use a search engine API. But the second is simpler to read
 and understand because it operates at a higher level of abstraction. We can
 take this one step further still by identifying the role the code is playing
 and making it explicit.
 
 image::images/galaxybrainmeme.jpg["Galaxybrain meme",width="200px",float="right"]
+//TODO fix alignment and/or make 3 images.
 
 [[ddg_example]]
 .Do a search with the duckduckgo module
@@ -150,13 +151,13 @@ For example most people are familiar with the three layered architecture:
 
 TODO: replace with non-ascii diagram?
 
-This is perhaps the most common pattern for building business software. In this
-model we have user-interface components, which could be a web page, or an API,
-or a command line; these user-interface components communicate with a business
-logic layer that contains our business rules and our workflows; and finally we
-have a data layer that's responsible for storing and retrieving data. For the
-rest of this book, we're going to be systematically turning this model inside
-out by obeying one simple principle.
+Layered architecture is perhaps the most common pattern for building business
+software. In this model we have user-interface components, which could be a web
+page, or an API, or a command line; these user-interface components communicate
+with a business logic layer that contains our business rules and our workflows;
+and finally we have a data layer that's responsible for storing and retrieving
+data. For the rest of this book, we're going to be systematically turning this
+model inside out by obeying one simple principle.
 
 === The Dependency Inversion Principle
 
@@ -168,7 +169,8 @@ https://github.com/python-leap/book/issues/49
 ////
 
 You might be familiar with the dependency inversion principle already, because
-it's the D in the SOLID mnemonic. Formally, the DIP says:
+it's the D in the https://en.wikipedia.org/wiki/SOLID[SOLID] mnemonic.
+Formally, the DIP says:
 
 1.  High-level modules should not depend on low-level modules. Both should
     depend on abstractions.
@@ -178,15 +180,15 @@ it's the D in the SOLID mnemonic. Formally, the DIP says:
 
 But what does this mean? Let's take it bit by bit.
 
-"High level modules" are the code that your organisation really cares about.
+_High level modules_ are the code that your organisation really cares about.
 Perhaps you work for a pharmaceutical company, and your high-level modules deal
 with patients and trials. Perhaps you work for a bank, and your high level
 modules manage trades and exchanges. The high-level modules of a software
 system are the functions, classes, and packages that deal with our real world
 concepts.
 
-By contrast, "low-level modules" are the code that your organisation doesn't
-care about. It's unlikely that your HR department get excited about file
+By contrast, _low-level modules_ are the code that your organisation doesn't
+care about. It's unlikely that your HR department gets excited about file
 systems, or network sockets. It's not often that you can discuss SMTP, or HTTP,
 or AMQP with your finance team. For our non-technical stakeholders, these
 low-level concepts aren't interesting or relevant. All they care about is
@@ -194,17 +196,17 @@ whether the high-level concepts work correctly. If payroll runs on time, your
 business is unlikely to care whether that's a cron job or a transient function
 running on Kubernetes.
 
-We already know what abstractions are: they're simplified interfaces that
+And we've mentioned _abstractions_ already: they're simplified interfaces that
 encapsulate some role, in the way that our duckduckgo module encapsulated a
 search engine's API.
 
 So the first part of the DIP says that our business code shouldn't depend on
-technical details, instead they should both use abstractions.
+technical details; instead they should both use abstractions.
 
 The second part is even more mysterious. "Abstractions should not depend on
 details" seems clear enough, but "Details should depend on abstractions" is
 hard to imagine. How can we have an abstraction that doesn't depend on the
-details it's abstracting? We'll come to that shortly, but before we can turn
+details it's abstracting?  We'll come to that shortly, but before we can turn
 our three-layered architecture inside out, we need to talk more about that
 middle layer, the business logic.
 
@@ -212,9 +214,9 @@ One of the most common reasons that our designs go wrong is that business
 logic becomes spread out throughout the layers of our application, hard to
 identify, understand and change.
 
-Over the next few chapters, we'll discuss some application architecture patterns
-that allow us to keep our business layer, the domain model, free of dependencies
-and easy to maintain.
+The next few chapters discuss some application architecture patterns that allow
+us to keep our business layer, the domain model, free of dependencies and easy
+to maintain.
 
 //TODO: bob to review these last two paras.
 

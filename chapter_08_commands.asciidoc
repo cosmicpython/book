@@ -1,5 +1,5 @@
 [[chapter_08_commands]]
-== Commands and Command Handler
+== Commands And Command Handler
 
 In the previous chapter we talked about using event messages as a way of
 integrating systems. This starts to turn our application into a message
@@ -14,7 +14,7 @@ This might have felt counter-intuitive. After all, the batch _hasn't_ been
 created yet, that's why we called the API. We're going to fix that conceptual
 wart by introducing _commands_.
 
-== Commands and Events ==
+== Commands And Events ==
 
 Like events, commands are a type of message - instructions sent by one part of
 a system to another. Like events, we usually represent commands with dumb data
@@ -24,15 +24,15 @@ The differences between them, though, are important.
 
 Commands are sent by one actor to another specific actor. When I post a form
 to an API handler, I am sending a command. We name commands with imperative
-tense verb phrases like "allocate stock", or "delay shipment".
+tense verb phrases like "allocate stock," or "delay shipment."
 
 Commands capture _intent_. They express our wish for the system to do something.
 As a result, when they fail, the sender needs to receive error information.
 
 Events are broadcast by an actor to all interested listeners. When we pubish the
 `batch_quantity_changed` we don't know who's going to pick it up. We name events
-with past-tense verb phrases like "order allocated to stock", or
-"shipment delayed".
+with past-tense verb phrases like "order allocated to stock," or
+"shipment delayed."
 
 We often use events to spread the knowledge about successful commands.
 
