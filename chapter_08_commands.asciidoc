@@ -24,15 +24,15 @@ The differences between them, though, are important.
 
 Commands are sent by one actor to another specific actor. When I post a form
 to an API handler, I am sending a command. We name commands with imperative
-tense verb phrases like "allocate stock", or "delay shipment".
+tense verb phrases like "allocate stock," or "delay shipment."
 
 Commands capture _intent_. They express our wish for the system to do something.
 As a result, when they fail, the sender needs to receive error information.
 
 Events are broadcast by an actor to all interested listeners. When we pubish the
 `batch_quantity_changed` we don't know who's going to pick it up. We name events
-with past-tense verb phrases like "order allocated to stock", or
-"shipment delayed".
+with past-tense verb phrases like "order allocated to stock," or
+"shipment delayed."
 
 We often use events to spread the knowledge about successful commands.
 

@@ -213,7 +213,7 @@ def test_when_a_file_has_been_renamed_in_the_source():
 ====
 
 Wowsers, that's a lot of setup for two very simple cases! The problem is that
-our domain logic, "figure out the difference between two directories", is tightly
+our domain logic, "figure out the difference between two directories," is tightly
 coupled to the IO code. We can't run our difference algorithm without calling
 the pathlib, shutil, and hashlib modules.
 
@@ -244,7 +244,7 @@ What could we do to abstract out the filesystem in each case?
 For (1) and (2), we've already intuitively started using an abstraction, a
 dictionary of hashes to paths, and you may already have been thinking, "why not
 use build up a dictionary for the destination folder as well as the source,
-then we just compare two dicts".  That seems like a very nice way to abstract
+then we just compare two dicts?"  That seems like a very nice way to abstract
 the current state of the filesystem.
 
     source_files = {'hash1': 'path1', 'hash2': 'path2'}
@@ -306,7 +306,7 @@ Let's see them in turn.
 
 ==== Option 1 - Functional Core, Imperative Shell. Ish.
 
-Let's call this the "Harry Way".  FCIS is probably a bit of an aspirational
+Let's call this the "Harry Way."  FCIS is probably a bit of an aspirational
 name, in fact the point is not to have a pure-functional solution in the 
 sense of not-using-classes, but more in the sense of having no (or minimal)
 side-effects.  The aim is to split out a core of business logic with minimal or
@@ -359,7 +359,7 @@ def determine_actions(src_hashes, dst_hashes, src_folder, dst_folder):  #<2>
 <1> The code to build up the dictionary of paths and hashes is now trivially
     easy to write.
 
-<2> The core of our "business logic", which says, given these two sets of
+<2> The core of our "business logic," which says, given these two sets of
     hashes and filenames, what should we copy/move/delete?  takes simple
     data structures and returns simple data structures
 
@@ -396,7 +396,7 @@ changes - from the low-level details of IO, we can easily test the core of our c
 
 ==== Dependency Injection
 
-Let's call this the "Bob way", and it's about making dependencies explicit and
+Let's call this the "Bob way," and it's about making dependencies explicit and
 modifiable:
 
 [[di_version]]
@@ -481,7 +481,7 @@ See <<chapter_10_dependency_injection>> for more exploration of making our
 dependency injection more explict and centralised.
 ******************************************************************************
 
-=== Wrap-up: "Depend on Abstractions".
+=== Wrap-up: "Depend on Abstractions."
 
 We'll see this idea come up again and again in the book: we can make our
 systems easier to test and maintain by simplifying the interface between our

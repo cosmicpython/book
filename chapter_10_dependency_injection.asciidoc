@@ -142,7 +142,7 @@ choosing to monkeypatch `email.send_mail`, we are tied to doing `import email`,
 and if we ever want to do `from email import send_mail`, a trivial refactor,
 we'd have to change all our mocks.
 
-So it's a trade-off.  Yes declaring explicit dependencies is "unnecessary",
+So it's a trade-off.  Yes declaring explicit dependencies is "unnecessary,"
 strictly speaking, and using them would make our application code marginally
 more complex.  But in return, we'd get tests that are easier to write and
 manage.

@@ -103,14 +103,14 @@ separate (which is a good thing), and to have each layer depend only on the one
 below...
 
 But we want our domain model to have __no dependencies whatsoever__footnote:[
-I suppose we mean, "no external dependencies".  Standard library dependencies are
+I suppose we mean, "no external dependencies."  Standard libray dependencies are
 fine, depending on an ORM or a web framework is not].
 We don't want infrastructure concerns bleeding over into our domain model and
 slowing down our unit tests or our ability to make changes.
 
 Instead, as discussed in the prologue, we'll think of our model as being on the
-"inside", and dependencies flowing inwards to it;  what people sometimes call
-"onion architecture".
+"inside," and dependencies flowing inwards to it;  what people sometimes call
+"onion architecture."
 
 [[onion_architecture]]
 .Onion Architecture
@@ -150,7 +150,7 @@ not depend on low-level ones (the infrastructure).footnote:[Mark Seeman has
 https://blog.ploeh.dk/2013/12/03/layers-onions-ports-adapters-its-all-the-same/[an excellent blog post]
 on the topic, which we recommend.]
 
-We'll get into some of the nitty-gritty around "depending on abstractions",
+We'll get into some of the nitty-gritty around "depending on abstractions,"
 and whether there is a Pythonic equivalent of interfaces, later in the book.
 *******************************************************************************
 
@@ -238,7 +238,7 @@ The point is the same -- our model classes inherit directly from ORM
 classes, so our model depends on the ORM.  We want it to be the other
 way around.
 
-Django doesn't provide an equivalent for SQLAlchemy's "classical mapper",
+Django doesn't provide an equivalent for SQLAlchemy's "classical mapper,"
 but see <<appendix_django>> for some examples of how you apply dependency
 inversion and the Repository Pattern to Django.
 
@@ -338,7 +338,7 @@ def test_orderline_mapper_can_save_lines(session):
 <1> If you've not used pytest, the `session` argument to this test needs
     explaining.  You don't need to worry about the details of pytest or its
     fixtures for the purposes of this book, but the short explanation is that
-    you can define common dependencies for your tests as "fixtures", and
+    you can define common dependencies for your tests as "fixtures," and
     pytest will inject them to the tests that need them by looking at their
     function arguments.  In this case, it's a SQLAlchemy database session.
 
@@ -503,7 +503,7 @@ of nothing.
 ____
 
 Whenever we introduce an architectural pattern in this book, we'll always be
-trying to ask: "what do we get for this?  And what does it cost us?".
+trying to ask: "what do we get for this?  And what does it cost us?."
 
 
 Usually at the very least we'll be introducing an extra layer of abstraction,
@@ -558,7 +558,7 @@ TODO: not sure if this diagram is helping.
 
 
 As always, we start with a test. This would probably be classified as an
-"integration test", since we're checking that our code (the repository) is
+"integration test," since we're checking that our code (the repository) is
 correctly integrated with the database;  hence, the tests tend to mix
 raw SQL with calls and assertions on our own code.
 
@@ -705,7 +705,7 @@ def allocate_endpoint():
 .Exercise for the Reader
 ******************************************************************************
 We bumped into a friend at a DDD conference the other day who said "I haven't
-used an ORM in 10 years".  Repository pattern and an ORM both act as abstractions
+used an ORM in 10 years."  Repository pattern and an ORM both act as abstractions
 in front of raw SQL, so using one behind the other isn't really necessary.  Why
 not have a go at implementing our repository without using the ORM?
 

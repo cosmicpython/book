@@ -35,7 +35,7 @@ No-one is interested in getting into a long terminology debate about what
 counts as an E2E test vs a functional test vs an acceptance test vs an
 integration test vs unit tests.  Different projects need different combinations
 of tests, and we've seen perfectly successful projects just split things into
-"fast tests" and "slow tests".
+"fast tests" and "slow tests."
 
 For now we want to write one or maybe two tests that are going to exercise
 a "real" API endpoint (using HTTP) and talk to a real database. Let's call
@@ -290,8 +290,8 @@ web API endpoint (you'd need them if you were building a CLI for example, see
 <<appendix_csvs>>), and they're not really things that need to be tested by
 end-to-end tests.
 
-It often makes sense to split out a "service layer", sometimes called
-"orchestration layer" or "use case layer".
+It often makes sense to split out a "service layer," sometimes called
+"orchestration layer" or "use case layer."
 
 Do you remember the `FakeRepository` that we prepared in the last chapter?
 
@@ -484,8 +484,8 @@ and we've used the type hint to say that we depend on ``AbstractRepository``foot
 Is this Pythonic?  Depending on who you ask, both abstract base classes and
 type hints are hideous abominations, and serve only to add useless, unreadable
 cruft to your code; beloved only by people who wish that Python was Haskell,
-which it will never be.  "beautiful is better than ugly", "simple is better
-than complex", and "readability counts"...
+which it will never be.  "beautiful is better than ugly," "simple is better
+than complex," and "readability counts..."
 Or, perhaps they make explicit something that would otherwise be implicit
 ("explicit is better than implicit").  For the purposes of this book, we've
 decided this argument carries the day. What you decide to do in your own
@@ -709,7 +709,7 @@ attributes on our model objects, which leaves us more free to refactor them.
 === On deciding what kind of tests to write
 
 You might be asking yourself "should I rewrite all my unit tests, then? Is it
-wrong to write tests against the domain model?". To answer the question, it's
+wrong to write tests against the domain model?" To answer the question, it's
 important to understand the trade-off between coupling and design feedback.
 
 .The test spectrum
@@ -727,7 +727,7 @@ important to understand the trade-off between coupling and design feedback.
 
 //TODO: stick a non-ascii diagram here.
 
-Extreme Programming (XP) exhorts us to "listen to the code". When we're writing
+Extreme Programming (XP) exhorts us to "listen to the code." When we're writing
 tests, we might find that the code is hard to use, or notice a code smell. This
 is a trigger for us to refactor, and reconsider our design.
 
@@ -1097,7 +1097,7 @@ https://github.com/python-leap/code/tree/chapter_03_service_layer_exercise
 Adding the service layer has really bought us quite a lot:
 
 * Our flask API endpoints become very thin and easy to write:  their
-  only responsibility is doing "web stuff", things like parsing JSON
+  only responsibility is doing "web stuff," things like parsing JSON
   and producing the right HTTP codes for happy or unhappy cases.
 
 * We've defined a clear API for our domain, a set of use cases or

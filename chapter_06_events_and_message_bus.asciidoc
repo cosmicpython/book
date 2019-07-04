@@ -159,11 +159,11 @@ case is allocation. Our endpoint, service function, and domain methods are all
 called `allocate`, not `allocate_and_send_mail_if_out_of_stock`.
 
 NOTE: Rule of thumb: if you can't describe what your class does without using
-    words like "then" or "and", you might be violating SRP.
+    words like "then" or "and," you might be violating SRP.
 
 This email sending thing is unwelcome *goop* messing up the nice clean flow
 of our system. What we'd like is to keep our domain model focused on the rule
-"You can't allocate more stuff than is actually available". 
+"You can't allocate more stuff than is actually available." 
 
 The domain model's job is to know that we're out of stock, but the
 responsibility of sending an alert belongs elsewhere. We should be able to turn
@@ -232,7 +232,7 @@ exceptions for control-of-flow. It's like a classic design smell.
 
 Events are part of our domain.  We could store them in _model.py_, but we
 may as well keep them in their own file.  (this might be a good time to
-consider refactoring out a directory called "domain", so we have _domain/model.py_
+consider refactoring out a directory called "domain," so we have _domain/model.py_
 and _domain/events.py_).
 
 [[events_dot_py]]

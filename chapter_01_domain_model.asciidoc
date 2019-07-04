@@ -10,7 +10,7 @@ sidebar below for more on DDD).
 
 === What is a domain model?
 
-The "domain" is a fancy way of saying "the problem you're trying to solve". We
+The "domain" is a fancy way of saying "the problem you're trying to solve." We
 currently work for an online retailer of furniture. Depending on which system
 I'm talking about, the domain might be purchasing and procurement, or product
 design, or logistics and delivery. Most programmers spend their days trying to
@@ -74,13 +74,13 @@ to figure out, from first principles, how to navigate home.
 In your first few days, you might just push buttons randomly, but soon you'd
 learn which buttons did what, so that you could give one another instructions.
 "Press the red button near the flashing doo-hickey and then throw that big
-lever over by the radar gizmo", you might say.
+lever over by the radar gizmo," you might say.
 
 Within a couple of weeks, you'd become more precise as you adopted words to
 describe the ship's functions: "increase oxygen levels in cargo bay three"
-or "turn on the little thrusters". After a few months you'd have adopted
-language for entire complex processes: "Start landing sequence", or "prepare
-for warp". This process would happen quite naturally, without any formal effort
+or "turn on the little thrusters." After a few months you'd have adopted
+language for entire complex processes: "Start landing sequence," or "prepare
+for warp." This process would happen quite naturally, without any formal effort
 to build a shared glossary.
 
 So it is in the mundane world of business. The terminology used by business
@@ -156,7 +156,7 @@ so that the examples are easier to talk about.
 Here are some notes we might have taken while having a conversation with our
 domain experts about allocation.
 
-* A _product_ is identified by a _sku_, pronounced "skew", which is short for
+* A _product_ is identified by a _sku_, pronounced "skew," which is short for
   "Stock Keeping Unit."
 
 * _Customers_ place _orders_. An order is identified by an _order reference_,
@@ -555,7 +555,7 @@ class OrderLine:
 Introduced in Python 3.7, Dataclasses are a neat way to represent value objects;
 if you're on Python 2, you could use named tuples instead. Either technique
 will give you _value equality_ which is the fancy way of saying "two lines with
-the same orderid, sku and qty are equal".
+the same orderid, sku and qty are equal."
 
 
 [[more_value_objects]]
@@ -637,9 +637,9 @@ reference.
 We use the term _entity_ to describe a domain object that has long-lived
 identity. On the previous page we introduced a _Name_ class as a value object.
 If we take the name "Harry Percival" and change one letter, we have the new
-Name object "Barry Percival".
+Name object "Barry Percival."
 
-It should be clear that "Harry Percival" is not equal to "Barry Percival".
+It should be clear that "Harry Percival" is not equal to "Barry Percival."
 
 
 [[test_equality]]
