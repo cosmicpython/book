@@ -2,10 +2,10 @@
 [preface]
 == Introduction: Why Do Our Designs Go Wrong?
 
-What comes to mind when you hear the word "chaos?" Perhaps you think of a noisy
+What comes to mind when you hear the word _chaos?_ Perhaps you think of a noisy
 stock exchange, or your kitchen in the morning - everything confused and
-jumbled. When you think of the word "order" perhaps you think of an empty room,
-serene and calm. For scientists, though, chaos is characterised by homogeneity,
+jumbled. When you think of the word _order_ perhaps you think of an empty room,
+serene and calm. For scientists, though, chaos is characterized by homogeneity,
 and order by complexity.
 
 For example, a well-tended garden is a highly ordered system. Gardeners define
@@ -26,18 +26,18 @@ software systems are characterised by a sameness of function: API handlers that
 have domain knowledge, and send emails and perform logging; "business logic"
 classes that perform no calculations but do perform IO; and everything coupled
 to everything else so that changing any part of the system becomes fraught with
-danger. This is so common that software engineers have their own word for
+danger. This is so common that software engineers have their own term for
 chaos: The Big Ball of Mud anti-pattern.
 
-Big ball of mud is the natural state of software in the same way that wilderness
-bucket is the natural state of your garden. It takes energy and direction to
+Big ball of mud is the natural state of software in the same way that wildness
+is the natural state of your garden. It takes energy and direction to
 prevent the collapse. Fortunately, the techniques to avoid creating a big ball
 of mud aren't complex.
 
 === Encapsulation
 
-The term "encapsulation" covers two closely related ideas, simplifying
-behaviour and hiding data. When we encapsulate behaviour, we take a complex
+The term _encapsulation_ covers two closely related ideas: simplifying
+behaviour, and hiding data. When we encapsulate behaviour, we take a complex
 algorithm and place it behind a simpler abstraction. Consider the following two
 snippets of Python code, <<urllib_example>> and <<requests_example>>:
 
@@ -82,13 +82,14 @@ for r in results:
 ----
 ====
 
-Both of these code listings do the same thing: they submit form encoded values
-to a URL in order to use a search engine API, but the second is simpler to read
+Both of these code listings do the same thing: they submit form-encoded values
+to a URL in order to use a search engine API. But the second is simpler to read
 and understand because it operates at a higher level of abstraction. We can
 take this one step further still by identifying the role the code is playing
 and making it explicit.
 
 image::images/galaxybrainmeme.jpg["Galaxybrain meme",width="200px",float="right"]
+//TODO fix alignment and/or make 3 images.
 
 [[ddg_example]]
 .Do a search with the duckduckgo module
