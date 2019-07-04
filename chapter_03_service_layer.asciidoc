@@ -1089,15 +1089,15 @@ Adding the service layer has really bought us quite a lot:
   tests.
 
 
-[[service_layer_diagram]]
-.Diagram of the service layer
+[[service_layer_diagram_abstract]]
+.Dependencies of the service layer
 ====
 [role="skip"]
 [source,text]
 ----
 Abstract dependencies:
         +-----------------------------+
-        |      Any client, eg tests   |----\
+        |          Any client         |----\
         +-----------------------------+    |
                        |                   |
                        V                   |
@@ -1109,6 +1109,25 @@ Abstract dependencies:
 +------------------+     +-----------------------+
 |   Domain Model   |     | (Abstract) Repository |
 +------------------+     +-----------------------+
+
+
+
+Tests' dependencies:
+
+        +-----------------------------+
+        |           Tests             |----\
+        +-----------------------------+    |
+                       |                   |
+                       V                   |
+        +-----------------------------+    |
+        |         Service Layer       |    |
+        +-----------------------------+    |
+           |                     |         |
+           V                     V         V
++------------------+     +-----------------------+
+|   Domain Model   |     |    FakeRepository     |
++------------------+     |      (in-memory)      |
+                         +-----------------------+
 
 
 Runtime dependencies:
@@ -1137,7 +1156,6 @@ Runtime dependencies:
            |       Database         |
            +------------------------+
 
-TODO: not sure if this diagram is helping.
 ----
 ====
 
