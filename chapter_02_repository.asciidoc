@@ -479,7 +479,10 @@ WARNING: We're using abstract base classes in this book for didactic reasons:
     we hope they help explain what the interface of the repository abstraction
     is.  In real life, we've often found ourselves deleting ABCs from our
     production code, because Python makes it too easy to ignore them, and
-    they end up unmaintained and, at worst, misleading. Use with caution.
+    they end up unmaintained and, at worst, misleading.
+    In practice we tend to rely on Python's duck-typing to enable abstractions.
+    To a Pythonista, a repository is _any_ object that has `add(thing)` and
+    get`(id)` methods.
 
 <1> Python tip: `@abc.abstractmethod` is one of the only things that makes
     ABCs actually "work" in Python.   Python will refuse to let you instantiate
@@ -494,6 +497,7 @@ NOTE: To really reap the benefits of ABCs (such as they may be) you'll want to
     be running some helpers like `pylint` and `mypy`.
 
 ==== What Is The Trade-off?
+
 
 [quote, Rich Hickey]
 ____

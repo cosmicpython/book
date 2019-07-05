@@ -43,9 +43,10 @@ architecture patterns that we cover in this book, like _entity_, _aggregate_
 and _value objects_ (see <<chapter_04_uow>>), and _repository pattern_ (in
 <<chapter_02,the next chapter>>) all come from the DDD tradition.
 
-In a nutshell, the central conceit of DDD is that the most important thing
-about software is that it provides a model of the business.  If we get that
-model right, then our software delivers value and makes new things possible.
+In a nutshell, DDD says that the most important thing about software is that it
+provides a useful model of some problem.  If we get that model right, then our
+software delivers value and makes new things possible.
+
 If we get it wrong, it becomes an obstacle to be worked around.  In this book
 we can show the basics of building a domain model, and building an architecture
 around it that leaves the model as free as possible from external constraints,
@@ -92,13 +93,15 @@ complex ideas and processes are boiled down to a single word or phrase.
 
 When we hear our business stakeholders using unfamiliar words, or using terms
 in a specific way, we should listen to understand the deeper meaning and encode
-the hard-won experience into our software.
+their hard-won experience into our software.
 
 We're going to use a real-world domain model throughout this book, specifically
 a model from our current employment. Made.com is a successful furniture
-retailer. When you buy a sofa or a coffee table, we have to figure out how best
-to get your goods to your home.
+retailer. We source our furniture from manufacturers all over the world and
+sell it across Europe.
 
+When you buy a sofa or a coffee table, we have to figure out how best
+to get your goods from Poland or China or Vietnam, and into your living room.
 
 
 At a high level, we have separate systems that are responsible for buying
@@ -390,11 +393,11 @@ class Batch:
         self._purchased_quantity = qty
         self._allocations = set()  # type: Set[OrderLine]
 
-    def allocate(self, line: OrderLine) -> None:
+    def allocate(self, line: OrderLine):
         if self.can_allocate(line):
             self._allocations.add(line)
 
-    def deallocate(self, line: OrderLine) -> None:
+    def deallocate(self, line: OrderLine):
         if line in self._allocations:
             self._allocations.remove(line)
 
@@ -411,11 +414,6 @@ class Batch:
 ----
 ====
 
-
-//TODO: (DS)  self._allocations: Set[OrderLine] = set()
-// yuck yuck yuck.
-
-//TODO: get rid of those -> Nones while we're at it.  yuck
 
 
 [[model_diagram]]
