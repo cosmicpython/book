@@ -299,8 +299,6 @@ This gives us all the benefits of SQLAlchemy, including the ability to use
 `alembic` for migrations, and the ability to transparently query using our
 domain classes, as we'll see.
 
-// TODO: mention hack: `@dataclass(frozen=True)` -> `dataclass(unsafe_hash=True)`
-
 When you're first trying to build your ORM config, it can be useful to write
 some tests for it, as in <<orm_tests>>:
 

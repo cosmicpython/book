@@ -731,6 +731,9 @@ on the attribute(s), like `.reference`, that define identity over time.
 //TODO (DS) Getting hash values right for these kinds of objects is quite
 //important (e.g. if you're using them in dictionaries or sets). I reckon it
 //might be worth spending more time on this.
+// (HP): if we get into this, it links into the hack in next chapter required
+// by sqlalchemy, `@dataclass(frozen=True)` -> `dataclass(unsafe_hash=True)`
+
 
 
 === Not Everything Has To Be An Object: A Domain Service Function
