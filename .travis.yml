@@ -1,17 +1,13 @@
 dist: xenial
 language: python
 python: 3.7
-
 install:
 - gem install asciidoctor coderay
 - pip3 install -r requirements.txt
-
 script:
 - make html update-code test
-
 git:
   submodules: false
-
 before_install:
 - sudo apt-get install -y tree python-pygments
 - openssl aes-256-cbc -K $encrypted_182558d6ac87_key -iv $encrypted_182558d6ac87_iv
@@ -20,3 +16,6 @@ before_install:
 - chmod 600 travis-deploy-key
 - ssh-add travis-deploy-key
 - git submodule update --init --recursive
+env:
+  global:
+    secure: uLh1CRgPhDmtjy1C7vg1At6YbFHewjL1pGnjMScIow7DljK8Ht2+QUIT5uoBDpLk2VloEIsQge5shGAYx7T+I2oDBsU7UT4TAY6YOe1DedXuX8TI4Biw7eVCZKphLh6DUiKpb8CGdAWihkiQ42vqhVbrrmY0RrYAjcKXADfMUSNSu1NDGuOnHEz0zN2H2bzCnaGYlZmmM963mFeLESMNhvTFBFbPvGh8NWq1JMTVo6VCjUb3CJPTmb6fAbReJMFCvrsa31mFLEsOBmkm1a/9olfgMht9UAeFUdva1LmQcbNHLzTCMDPek7UgGrxlKiKyIDhoGtzfghhsf07tw+aBdLU1nnKkTlCwFR+wnFGuBNP5zOmGwDAgkw3Zg/By6iUu87zzGNC3bREu3mUzrVzzQ/lF14EMyn0Aa6Z1MOtEU3DQzKry2HqW6on0UGChvql3etNTx+XKZIMgwaATnZ3KwEI2AD0Dbj7KB++l/LSCJ2N0kaJl5jRRI9y8TaswXhF2UKNLcdZ4D9nv7698+ozfSjh51F3H+iHGSusZTi+2/DZ2VaDwcMlhMYlb5koGV2cXhZtUkIcmykX7bAQZCxdY3+XRuUf4mo699g+vuKJwyDbyNtWEsdKiwRv98BADT9HiDvcPVFHmixjBSsrgRcnOVCEndgHRgYkVi9MrwDySLa4=
