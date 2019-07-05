@@ -74,7 +74,10 @@ be of interest to outline the moving parts.
 <4> Tests live in their own folder, with subfolders to distinguish different test
     types, and allow you to run them separately.  We can keep shared fixtures
     (_conftest.py_) in the main tests folder, and nest more specific ones if we
-    wish. This is also the place to keep _pytest.ini_
+    wish. This is also the place to keep _pytest.ini_.
+
+TIP:  The https://docs.pytest.org/en/latest/goodpractices.html#choosing-a-test-layout-import-rules[pytest docs]
+    are really good on test layout and importability.
 
 Let's look at a few of these in more detail.
 
