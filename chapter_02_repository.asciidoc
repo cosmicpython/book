@@ -1,19 +1,6 @@
 [[chapter_02_repository]]
 == Repository Pattern
 
-////
-TODO (EJ)
-I would find having an object or class diagram (or maybe ER diagram) upfront helpful to keep the classes, objects, and tables straight in my mind.
-
-https://github.com/python-leap/book/issues/42
-
-
------
-
-Maybe we do this just before we do the SQL Alchemy mapping? I think people find
-it helpful to have a map of where they're going, rather than a map of where
-they've just been.
-////
 
 In the previous chapter we built a simple domain model that can allocate orders
 to batches of stock. It's easy for us to write tests against this code because
@@ -156,7 +143,38 @@ and whether there is a Pythonic equivalent of interfaces, later in the book.
 *******************************************************************************
 
 
-==== The "normal" ORM Way: Model Depends On ORM.
+=== Reminder: our Model
+
+Let's remind ourselves of our domain model:  An allocation is the concept
+of linking an `OrderLine` to a `Batch`.  We're storing the allocations as
+a collection on our `Batch` object:
+
+[[model_diagram]]
+.Our Model
+====
+[source,text]
+[role="skip"]
+----
++=====================+
+| Batch               |
++---------------------+
+| reference           |
+| sku                 |
+| _purchased_quantity |       +=============+
+| allocations -------------->>| OrderLine   |
++---------------------+       +-------------+
+                              | order_id    |
+                              | sku         |
+                              | qty         |
+                              +-------------+
+
+----
+====
+
+Let's see how we might translate this to a relational database.
+
+
+==== The "Normal" ORM Way: Model Depends On ORM.
 
 In 2019 it's unlikely that your team are hand-rolling their own SQL queries.
 Instead, you're almost certainly using some kind of framework to generate
