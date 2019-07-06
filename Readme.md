@@ -26,7 +26,7 @@ In the meantime, pull requests, typofixes, and more substantial feedback + sugge
 | [Chapter 7: Event-Driven Architecture](chapter_07_external_events.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_07_external_events)](https://travis-ci.org/python-leap/code) |
 | [Chapter 8: Commands](chapter_08_commands.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_08_commands)](https://travis-ci.org/python-leap/code) |
 | [Chapter 9: CQRS](chapter_09_cqrs.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_09_cqrs)](https://travis-ci.org/python-leap/code) |
-| [Chapter 10: Configuration Root and Dependency Injection](chapter_10_dependency_injection.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_10_dependency_injection)](https://travis-ci.org/python-leap/code) |
+| [Chapter 10: Dependency Injection](chapter_10_dependency_injection.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_10_dependency_injection)](https://travis-ci.org/python-leap/code) |
 | [Appendix A: Abstractions](appendix_abstractions.asciidoc) | |
 | [Appendix B: Project Structure](appendix_project_structure.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=appendix_project_structure)](https://travis-ci.org/python-leap/code) |
 | [Appendix C: A major infrastructure change, made easy](appendix_csvs.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=appendix_csvs)](https://travis-ci.org/python-leap/code) |
