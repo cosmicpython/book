@@ -366,10 +366,6 @@ only a small additional step to implement an additional abstraction called the
 repository pattern, which will be easier to write tests against, and will
 provide a simple, common interface for faking out later in tests.
 
-// TODO (DS): Not sure how valuable this bit about getting the orm directly is.
-// Perhaps it would make more sense to start with the abstraction (repository)
-// and then show how to use sqlalchemy to plug in the implementation.
-
 But we've already achieved our objective of inverting the traditional
 dependency: the domain model stays "pure" and free from infrastructure
 concerns.  We could throw away SQLAlchemy and use a different ORM, or a totally
