@@ -368,21 +368,62 @@ class FakeSession():
 ----
 ====
 
-////
-TODO:
-
-Sidebar on fakes, stubs, spies?
-Sidebar on London vs Chicago testing?
-
-Good inspiration here: https://softwareengineering.stackexchange.com/questions/123627/what-are-the-london-and-chicago-schools-of-tdd
-More feedback on this in https://github.com/python-leap/book/issues/43
-
-////
-
 (The fake session is only a temporary solution.  We'll get rid of it and make
 things even nicer in the next chapter, <<chapter_04_uow>>)
 
-The fake `.commit()` also lets us migrate a third test from the E2E layer:
+.Mocks vs Fakes; Classic Style vs London School TDD
+*******************************************************************************
+Couldn't we have used a mock (from `unittest.mock`) instead of building our
+own `FakeSession`, or instead of `FakeRepository`?  What's the difference
+between a fake and a mock anyway?
+
+We tend to find that building our own fakes is an excellent way of exercising
+design pressure against our abstractions.  If our abstractions are nice and
+simple, then they should be easy to fake.
+
+In fact in the case of `FakeRepository`, because our fake has actual behaviour,
+using a magic mock from `unittest.mock` wouldn't really help.
+
+In the case of `FakeSession`, the `session` object isn't one of our own
+abstractions, so the argument doesn't apply;  in fact, a `unittest.mock` mock
+would have been just fine, but out of habit we avoided using one;  in any case,
+we'll be getting rid of it in the next chapter.
+
+In general we try and avoid using mocks, and the associated `mock.patch`;
+whenever we find ourselves reaching for them, we often see it as an indication
+that something is missing from our design.  You'll see another example of that
+in <<chapter_06_events_and_message_bus>> when we mock out an email-sending
+module, but eventually we replace it with an explicit bit of dependency injection.
+That's discussed in <<chapter_10_dependency_injection>>.
+
+Regarding the definition of fakes vs mocks, the short but simplistic answer is:
+
+* Mocks are used to verify _how_ something gets used;  they have methods
+  like `assert_called_once_with()`.  They're associated with London-school
+  TDD.
+
+* Fakes are working implementations of the thing they're replacing, but
+  they're only designed for use in tests; they wouldn't work "in real life",
+  like our in-memory repository. But you can use them to make assertions about
+  the end state of a system, rather than the behaviours along the way, so
+  they're associated with classic-style TDD.
+
+(We're slightly conflating mocks with spies and fakes with stubs here, and you
+can read more detailed definitions in Martin Fowler's essay on the subject
+called https://martinfowler.com/articles/mocksArentStubs.html[Mocks aren't Stubs])
+
+What about London-school vs classic-style TDD?  You can read more about those
+two in Martin Fowler's article just cited, as well as https://softwareengineering.stackexchange.com/questions/123627/what-are-the-london-and-chicago-schools-of-tdd[on stackoverflow],
+but in this book we're pretty firmly in the classicist camp.  We like to
+build our tests around state, both in setup and assertions, and we like
+to work at the highest level of abstraction possible rather than doing
+checks on the behaviour of intermediary collaborators.
+
+Read more on this shortly, in the <<kinds_of_tests>> section.
+
+*******************************************************************************
+
+The fake `.commit()` lets us migrate a third test from the E2E layer:
 
 
 [[second_services_test]]
@@ -680,6 +721,7 @@ we won't have any tests that directly interact with "private" methods or
 attributes on our model objects, which leaves us more free to refactor them.
 
 
+[[kinds_of_tests]]
 === On Deciding What Kind Of Tests To Write
 
 You might be asking yourself "should I rewrite all my unit tests, then? Is it
@@ -754,7 +796,7 @@ get better feedback and executable documentation of our intent.
 
 The metaphor we use is that of shifting gears. When starting off a journey, the
 bicycle needs to be in a low gear so that it can overcome inertia. Once we're off
-and running, we can go faster and more efficiently by changing into a high gear
+and running, we can go faster and more efficiently by changing into a high gear;
 but if we suddenly encounter a steep hill, or we're forced to slow down by a
 hazard, we again drop down to a low gear until we can pick up speed again.
 

@@ -742,8 +742,9 @@ Here's one of the biggest benefits of _repository pattern_.
 [source,python]
 ----
 class FakeRepository(AbstractRepository):
+
     def __init__(self, batches):
-        self._batches = batches
+        self._batches = set(batches)
 
     def add(self, batch):
         self._batches.add(batch)
@@ -771,19 +772,26 @@ fake_repo = FakeRepository([batch1, batch2, batch3])
 ----
 ====
 
-NOTE: At this point we'd like to encourage you to go and read
-    <<appendix_abstractions>>, where we talk a bit more about
-    how to choose abstractions, and how they can help us to
-    break up our code into manageable chunks.
+You'll see this fake in action in the next chapter.
+
+TIP: Building fakes for your abstractions is an excellent way to get design
+    feedback: if it's hard to fake, then the abstraction is probably too
+    complicated.
+
+
+At this point we'd like to encourage you to go and read
+<<appendix_abstractions>>, where we talk a bit more about how to choose
+abstractions, and how they can help us to break up our code into manageable,
+testable chunks.
 
 TODO: move abstractions appendix into main body of book as a proper chapter
 
-How do we actually instantiate these repositories, fake or real?
+Now, how do we actually instantiate these repositories, fake or real?
 What will our flask app actually look like?  Find out in the next
 exciting instalment...
 
 
-.Repository pattern: recap
+.Repository Pattern: Recap
 *****************************************************************
 Apply Dependency Inversion to your ORM::
     Our domain model should be free of infrastructure concerns,
