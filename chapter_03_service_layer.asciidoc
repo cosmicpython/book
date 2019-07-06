@@ -481,8 +481,7 @@ This is what people mean when they say "depend on abstractions".
 // "1. High-level modules should not depend on low-level modules. Both should depend on abstractions"
 // "2. Abstractions should not depend upon details. Details should depend upon abstractions"
 
-
-//TODO diagram?
+See the diagram at the end of the chapter, <<service_layer_diagram_abstract>>.
 
 *******************************************************************************
 
@@ -583,6 +582,7 @@ def test_unhappy_path_returns_400_and_error_message():
 We've successfully split our tests into two broad categories: tests about web
 stuff, which we implement end-to-end; and tests about orchestration stuff, which
 we can test against the service layer in memory.
+
 
 === How Is Our Test Pyramid Looking?
 
