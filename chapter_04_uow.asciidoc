@@ -231,6 +231,7 @@ def test_allocate_returns_allocation():
     assert result == 'b1'
 ----
 ====
+
 ////
 TODO:
 This is another good opportunity to drive home the idea of roles and collaborations. UOW and Repository are collaborators.
@@ -247,7 +248,7 @@ https://github.com/python-leap/book/issues/44
     code that we wrote, rather than 3rd party code.  Some
     people say https://github.com/testdouble/contributing-tests/wiki/Don%27t-mock-what-you-don%27t-own["don't mock what you don't own"].
 
-<3> and in our tests, we can instantiate a UoW and pass it to
+<3> And in our tests, we can instantiate a UoW and pass it to
     our service layer, instead of a repository and a session,
     which is considerably less cumbersome.
 
