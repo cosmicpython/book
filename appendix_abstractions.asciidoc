@@ -2,9 +2,6 @@
 [appendix]
 == Coupling and Abstractions ==
 
-NOTE: chapter under construction.  need to find a place for it in the flow of
-    the book.  maybe after chapter 2?
-
 A key theme in this book, hidden among the fancy patterns, is that we can use
 simple abstractions to hide messy details. When we're writing code for fun, or
 in a kata, we get to play with ideas freely, hammering things out and
@@ -426,7 +423,7 @@ def synchronise_dirs(reader, apply_func, source_root, dest_root):  #<1>
 ----
 ====
 
-//TODO: test this listing
+//NICE-TO-HAVE: test this listing
 
 <1> Our top-level function now exposes two new dependencies, a `reader` and an `apply_func`
 <2> We invoke the `reader` to produce our dict-abstraction of the filesystems
@@ -466,8 +463,9 @@ The advantage of this approach is that your tests act on the exact same function
 that's used by your production code.  The disadvantage is that DI usually demands
 a bit more work on the part of the reader to understand what's going on.
 
-TODO: discuss the fact that our implementation is full of bugs and now we
-    can easily test for them.
+In either case, we can now work on fixing all the bugs in our implementation;
+enumerating tests for all the edge cases is now much easier.
+
 
 .So which do we use in this book? FCIS or DI?
 ******************************************************************************
@@ -491,12 +489,10 @@ a few heuristics and questions to ask yourself:
 
 * Can I choose a familiar Python datastructure to represent the state of the
   messy system, and try to imagine a single function that can return that
-  state.
+  state?
 * Where can I draw a line between my systems, where can I carve out a seam, to
   stick that abstraction in?
-* What are the dependencies and what is the core business logic anyway?
+* What are the dependencies and what is the core "business" logic?
 
 Practice makes less-imperfect!
-
-//TODO: let's work on this wrap-up.
 
