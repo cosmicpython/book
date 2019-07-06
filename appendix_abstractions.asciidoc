@@ -429,6 +429,12 @@ def synchronise_dirs(reader, apply_func, source_root, dest_root):  #<1>
 <2> We invoke the `reader` to produce our dict-abstraction of the filesystems
 <3> And we invoke the `apply_func` using our action-abstraction for the actions we want to apply.
 
+TIP: Notice that, although we're using dependency injection, there was no need
+    to define an abstract base class or any kind of explicit interface.  In the
+    book we often show ABCs because we hope they help to understand what the
+    abstraction is, but they're not necessary.  Python's dynamic nature means
+    we can always rely on duck typing.
+
 
 [[bob_tests]]
 .Tests using DI
