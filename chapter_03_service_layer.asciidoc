@@ -389,9 +389,9 @@ abstractions, so the argument doesn't apply;  in fact, a `unittest.mock` mock
 would have been just fine, but out of habit we avoided using one;  in any case,
 we'll be getting rid of it in the next chapter.
 
-In general we try and avoid using mocks, and the associated `mock.patch`;
-whenever we find ourselves reaching for them, we often see it as an indication
-that something is missing from our design.  You'll see another example of that
+In general we try and avoid using mocks, and the associated `mock.patch`.
+Whenever we find ourselves reaching for them, we often see it as an indication
+that something is missing from our design.  You'll see a good example of that
 in <<chapter_06_events_and_message_bus>> when we mock out an email-sending
 module, but eventually we replace it with an explicit bit of dependency injection.
 That's discussed in <<chapter_10_dependency_injection>>.
@@ -409,7 +409,7 @@ Regarding the definition of fakes vs mocks, the short but simplistic answer is:
   they're associated with classic-style TDD.
 
 (We're slightly conflating mocks with spies and fakes with stubs here, and you
-can read more detailed definitions in Martin Fowler's essay on the subject
+can read the long answer in Martin Fowler's classic essay on the subject
 called https://martinfowler.com/articles/mocksArentStubs.html[Mocks aren't Stubs])
 
 What about London-school vs classic-style TDD?  You can read more about those
@@ -417,9 +417,12 @@ two in Martin Fowler's article just cited, as well as https://softwareengineerin
 but in this book we're pretty firmly in the classicist camp.  We like to
 build our tests around state, both in setup and assertions, and we like
 to work at the highest level of abstraction possible rather than doing
-checks on the behaviour of intermediary collaborators.
+checks on the behaviour of intermediary collaborators.footnote:[
+Which is not to say that we think the London School people are wrong. There
+are some insanely smart people that work that way.  It's just not what we're
+used to].
 
-Read more on this shortly, in the <<kinds_of_tests>> section.
+Read more on this shortly, in the <<kinds_of_tests,"high gear vs low gear">> section.
 
 *******************************************************************************
 
