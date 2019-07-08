@@ -459,7 +459,7 @@ ideal world, we only modify our model objects one at a time, and delete is
 usally handled as a soft-delete, ie `batch.cancel()`. Finally, update is
 taken care of by the unit of work, as we'll see in <<chapter_04_uow>>.].
 We stick rigidly to using these methods for data access in our domain and our
-_service layer_. This self-imposed simplicity stops us from coupling our domain
+Service Layer. This self-imposed simplicity stops us from coupling our domain
 model to the database.
 
 Here's what an abstract base class for our repository would look like:

@@ -126,7 +126,7 @@ Chapter 2, 3 & 4: Repository, Service Layer and Unit of Work Patterns::
     In these 3 chapters we present 3 closely related and mutually reinforcing
     patterns that support our ambition to keep the model free of extraneous
     dependencies.  We build a layer of abstraction around persistent storage,
-    and we build a _service layer_ to define the entrypoints to our system, and
+    and we build a Service Layer to define the entrypoints to our system, and
     capture the primary use cases. We show how this layer makes it easy to
     build very thin entrypoints to our system, be it a Flask API or a CLI.
 

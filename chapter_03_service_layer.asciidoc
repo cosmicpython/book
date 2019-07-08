@@ -15,7 +15,7 @@ plan:
   an end-to-end test and some quick and dirty SQL to prepare test
   data.
 
-* Refactor out a _service layer_ to serve as an abstraction to
+* Refactor out a Service Layer to serve as an abstraction to
   capture the use case, and sit between Flask and our Domain Model.
   Build some service-layer tests and show how they can use the
   `FakeRepository`.
