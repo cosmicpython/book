@@ -40,7 +40,7 @@ Jacobson and Grady Booch; the term has been around since the mid-1980s.]
 and it's been a hugely successful movement in transforming the way people
 design software by focusing on the core business domain.  Many of the
 architecture patterns that we cover in this book, like Entity, Aggregate
-and _value objects_ (see <<chapter_04_uow>>), and _repository pattern_ (in
+and Value Objects (see <<chapter_04_uow>>), and _repository pattern_ (in
 <<chapter_02,the next chapter>>) all come from the DDD tradition.
 
 In a nutshell, DDD says that the most important thing about software is that it
@@ -536,12 +536,12 @@ _line_ does not. (Even if we add the order reference to the `OrderLine` class,
 it's not something that uniquely identifies the line itself).
 
 Whenever we have a business concept that has some data but no identity, we
-often choose to represent it using a _value object_. A value object is any
+often choose to represent it using a Value Object. A Value Object is any
 domain object that is uniquely identified by the data it holds.
 
 
 [[orderline_value_object]]
-.OrderLine is a value object.
+.OrderLine is a Value Object.
 ====
 [source,python]
 [role="skip"]
@@ -561,7 +561,7 @@ the same orderid, sku and qty are equal."
 
 
 [[more_value_objects]]
-.More examples of value objects
+.More examples of Value Objects
 ====
 [source,python]
 [role="skip"]
@@ -588,17 +588,17 @@ def test_equality():
 ----
 ====
 
-These value objects match our real-world intuitions about how their values work.
+These Value Objects match our real-world intuitions about how their values work.
 It doesn't matter _which_ $10 note we're talking about, because they all have
 the same value. Likewise two names are equal if both the first and last name
 match, and two lines are equivalent if they have the same customer order, product code and
-quantity. We can still have complex behaviour on a value object, though. In
+quantity. We can still have complex behaviour on a Value Object, though. In
 fact, it's common to support operations on values, for example mathematical
 operators.
 
 
 [[value_object_maths]]
-.Maths with value objects.
+.Maths with Value Objects.
 ====
 [source,python]
 [role="skip"]
@@ -632,12 +632,12 @@ def multiplying_two_money_values_is_an_error():
 
 An order line is uniquely identified by its orderid, sku and quantity; if we
 change one of those values, we now have a new line. That's the definition of a
-value object: any object that is only identified by its data, and doesn't have a
+Value Object: any object that is only identified by its data, and doesn't have a
 long-lived identity. What about a batch though? That _is_ identified by a
 reference.
 
 We use the term Entity to describe a domain object that has long-lived
-identity. On the previous page we introduced a `Name` class as a value object.
+identity. On the previous page we introduced a `Name` class as a Value Object.
 If we take the name "Harry Percival" and change one letter, we have the new
 Name object "Barry Percival."
 
@@ -717,12 +717,12 @@ class Batch:
 Python's `__eq__` magic method defines the behaviour of the class for the
 `==` operator.
 
-For both entity and value objects it's also worth thinking through how
+For both Entity and Value Objects it's also worth thinking through how
 `__hash__` will work.  It's the magic method Python uses to control the
 behaviour of objects when you add them to sets or use them as dict keys;
 more info https://docs.python.org/3/glossary.html#term-hashable[in the Python docs].
 
-For value objects, the hash should be based on all the value attributes.
+For Value Objects, the hash should be based on all the value attributes.
 For entities, the hash should either be `None`, or it should be based
 on the attribute(s), like `.reference`, that define identity over time.
 
@@ -745,13 +745,13 @@ ____
 Sometimes, it just isn't a Thing.
 ____
 
-Evans discusses the idea of "domain services"footnote:[Domain services are
+Evans discusses the idea of Domain Servicesfootnote:[Domain services are
 not the same thing as the services from the
 <<chapter_03_service_layer,service layer>>, although they are
-often closely related.  A domain service represents a business concept or
+often closely related.  A Domain Service represents a business concept or
 process, whereas a service-layer service represents a use case for your
 application.  Often the service layer will call a domain service.]
-operations that don't have a natural home in an entity or value object.  A
+operations that don't have a natural home in an Entity or Value Object.  A
 thing that allocates an order line, given a set of batches, sounds a lot like a
 function, and we can take advantage of the fact that Python is a multi-paradigm
 language and just make it a function.
@@ -760,7 +760,7 @@ Let's see how we might test-drive such a function:
 
 
 [[test_allocate]]
-.Testing our domain service (test_allocate.py)
+.Testing our Domain Service (test_allocate.py)
 ====
 [source,python]
 ----
@@ -802,7 +802,7 @@ And our service might look like this:
 
 
 [[domain_service]]
-.A standalone function for our domain service (model.py)
+.A standalone function for our Domain Service (model.py)
 ====
 [source,python]
 [role="non-head"]
@@ -871,7 +871,7 @@ def test_raises_out_of_stock_exception_if_cannot_allocate():
 
 We won't bore you too much with the implementation, but the main thing
 to note is that we take care in naming our exceptions in the ubiquitous
-language, just like we do our entities, value objects and services.
+language, just like we do our Entities, Value Objects and Services.
 
 [[out_of_stock]]
 .Raising a domain exception (model.py)
@@ -891,7 +891,7 @@ def allocate(line: OrderLine, batches: List[Batch]) -> str:
 ----
 ====
 
-That'll probably do for now! We have a domain service which we can use for our
+That'll probably do for now! We have a Domain Service which we can use for our
 first use case.   But first we'll need a database.
 
 
@@ -902,13 +902,13 @@ Domain modelling::
     the most likely to change, and the place where you deliver the
     most value to the business.  Make it easy to understand and modify
 
-Distinguish entities from value objects::
-    A "value object" is defined by its attributes.  It's usually best
+Distinguish Entities from Value Objects::
+    A Value Object is defined by its attributes.  It's usually best
     implemented as an immutable type.  If you change an attribute on
-    a value object, it represents a different object.  In contrast,
+    a Value Object, it represents a different object.  In contrast,
     an Entity has attributes that may vary over time, and still be the
     same entity. It's important to define what _does_ uniquely identify
-    an entity (usually some sort of name or reference field).
+    an Entity (usually some sort of name or reference field).
 
 Not everything has to be an object::
     Python is a multi-paradigm language, so let the "verbs" in your
