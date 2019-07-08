@@ -15,7 +15,7 @@ plan:
   an end-to-end test and some quick and dirty SQL to prepare test
   data.
 
-* Refactor out a Service Layer to serve as an abstraction to
+* Refactor out a _Service Layer_ to serve as an abstraction to
   capture the use case, and sit between Flask and our Domain Model.
   Build some service-layer tests and show how they can use the
   `FakeRepository`.
@@ -290,8 +290,8 @@ web API endpoint (you'd need them if you were building a CLI for example, see
 <<appendix_csvs>>), and they're not really things that need to be tested by
 end-to-end tests.
 
-It often makes sense to split out a "service layer," sometimes called
-"orchestration layer" or "use case layer."
+It often makes sense to split out a _Service Layer_, sometimes called
+_orchestration layer_ or _use case layer_.
 
 Do you remember the `FakeRepository` that we prepared in the last chapter?
 
@@ -635,7 +635,7 @@ we can test against the service layer in memory.
 
 === How Is Our Test Pyramid Looking?
 
-Let's see what this move to using a service layer, with its own service-layer tests,
+Let's see what this move to using a Service Layer, with its own service-layer tests,
 does to our test pyramid:
 
 [[test_pyramid]]

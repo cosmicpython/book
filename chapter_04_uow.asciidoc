@@ -2,13 +2,12 @@
 == Unit Of Work Pattern
 
 In this chapter we'll introduce a final piece of the puzzle that really pulls
-the _repository_ and Service Layer patterns together, the _unit of work_
-pattern.
+the Repository and Service Layer patterns together, the _Unit of Work_ pattern.
 
 //TODO: Big Lebowski illustration
 
 
-A repository is an abstraction over the idea of persistent storage. A Unit of
+A Repository is an abstraction over the idea of persistent storage. A Unit of
 Work is an abstraction over the idea of atomic operation.
 
 The unit of work will give us access to our repository(-ies), and then keep
@@ -40,9 +39,10 @@ the end, some different handling for error and success cases?  Something like
 
 A context manager.
 
+
 === Test-driving A Uow With Integration Tests
 
-Here's a test for a new _Unit of Work_ (or UoW, which we pronounce "you-wow").
+Here's a test for a new `UnitofWork` (or UoW, which we pronounce "you-wow").
 It's a context manager that allows us to start a transaction, retrieve and get
 things from repos, and commit:
 

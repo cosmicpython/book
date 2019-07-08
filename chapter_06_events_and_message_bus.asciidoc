@@ -177,7 +177,7 @@ on the database by using a UnitOfWork.
 
 === All Aboard The Message Bus!
 
-The pattern we're going to introduce here is _domain events_ and the _message bus_.
+The patterns we're going to introduce here are _Domain Events_ and the _Message Bus_.
 
 First, rather than being concerned about emails, our model will be in charge of
 recording "events"--facts about things that have happened. We'll use a Message

@@ -632,11 +632,11 @@ def multiplying_two_money_values_is_an_error():
 
 An order line is uniquely identified by its orderid, sku and quantity; if we
 change one of those values, we now have a new line. That's the definition of a
-Value Object: any object that is only identified by its data, and doesn't have a
+_Value Object_: any object that is only identified by its data, and doesn't have a
 long-lived identity. What about a batch though? That _is_ identified by a
 reference.
 
-We use the term Entity to describe a domain object that has long-lived
+We use the term _Entity_ to describe a domain object that has long-lived
 identity. On the previous page we introduced a `Name` class as a Value Object.
 If we take the name "Harry Percival" and change one letter, we have the new
 Name object "Barry Percival."
