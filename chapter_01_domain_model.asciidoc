@@ -39,7 +39,7 @@ too late, and OO-enthusiasts will tell you to look further back to Ivar
 Jacobson and Grady Booch; the term has been around since the mid-1980s.]
 and it's been a hugely successful movement in transforming the way people
 design software by focusing on the core business domain.  Many of the
-architecture patterns that we cover in this book, like _entity_, Aggregate
+architecture patterns that we cover in this book, like Entity, Aggregate
 and _value objects_ (see <<chapter_04_uow>>), and _repository pattern_ (in
 <<chapter_02,the next chapter>>) all come from the DDD tradition.
 
@@ -636,7 +636,7 @@ value object: any object that is only identified by its data, and doesn't have a
 long-lived identity. What about a batch though? That _is_ identified by a
 reference.
 
-We use the term _entity_ to describe a domain object that has long-lived
+We use the term Entity to describe a domain object that has long-lived
 identity. On the previous page we introduced a `Name` class as a value object.
 If we take the name "Harry Percival" and change one letter, we have the new
 Name object "Barry Percival."

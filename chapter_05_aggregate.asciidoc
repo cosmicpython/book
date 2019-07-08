@@ -94,7 +94,7 @@ purpose of data changes.
 ____
 
 Even if it weren't for the data integrity concerns, as a model gets more complex
-and grows more different _entity_ and _value objects_, all of which start pointing
+and grows more different Entity and _value objects_, all of which start pointing
 to each other, it can be hard to keep track of who can modify what.  Especially
 when we have _collections_ in the model like we do (our batches are a collection),
 it's a good idea to nominate some entities to be the single entrypoint for
