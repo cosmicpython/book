@@ -18,6 +18,18 @@ is.
 * strangler pattern.  can start with just an HTTP proxy
 * what are peloton doing?
 
+=== What do you want to achieve?
+
+What's the problem with a monolith?  there's no domain model because
+everything is trying to be all things to all people
+
+--> you need to carve out bounded contexts and probably microservices
+
+Is it that all the logic is hard to find because it's mixed between all the
+layers?
+
+
+
 === A django story
 
 * introducing a service layer first
