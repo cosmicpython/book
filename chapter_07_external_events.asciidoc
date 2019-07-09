@@ -1,11 +1,5 @@
 [[chapter_07_external_events]]
 == Event-driven Architecture (using Events To Integrate Microservices)
-////
-TODO: 
-It would be cool to see the event flow in An internal event to express de-allocation as a diagram. Perhaps even an abstracted wall of sticky-notes?
-
-https://github.com/python-leap/book/issues/37
-////
 
 We've got a microservice with a web api, but what about other ways of talking
 to other systems?  how does it know if, say, a shipment is delayed or the
@@ -17,11 +11,45 @@ to encompass the way that we handle incoming and outgoing messages from the
 system.
 
 
+=== An external event triggers internal invents
+
+We learn about the need to change batch quantities when they're already
+in the system.  Perhaps someone made a mistake on the number in the manifest,
+or perhaps some sofas fell off a truck. Following a conversation with the
+business,footnote:[https://en.wikipedia.org/wiki/Event_storming[Event storming]
+is a common technique], we model the situation as follows:
+
+
+[[id_here]]
+.batch quantity changed means deallocate and reallocate
+====
+[source,text]
+[role="skip"]
+----
++----------+    /----\      +------------+        +------------+
+| batch    |--> |RULE| -->  | Deallocate | ---->  | Reallocate |
+| quantity |    \----/      +------------+        +------------+
+| changed  |                 | Deallocate | ---->  | Reallocate |
++----------+                 +------------+-+      +------------+-+
+                               | Deallocate | ---->  | Reallocate |
+                               +------------+        +------------+
+----
+====
+
+An event we'll called _batch quantity changed_ should lead
+us to change the quantity on the batch, yes, but also to
+apply a rule: if the new quantity drops to less than the
+total already allocated, we need to _deallocate_  those
+orders from that batch.  Then, we want to _reallocate_ them
+to other batches.
+
+
 === Using A Redis Pubsub Channel For Integration
 
 At MADE.com we use https://eventstore.org/[Eventstore] to convey messages
 between systems, but a lightweight solution based on Redis pubsub channels
 can work just fine, and are probably more familiar.
+
 
 Here's how we might start with an end-to-end test.  We can use our existing
 API to create batches, and then we'll test both inbound and outbound messages:
@@ -63,8 +91,6 @@ def test_change_batch_quantity_leading_to_reallocation():
     wait_for_assertion(check_messages)
 ----
 ====
-
-//TODO: use ignore_subscribe_messages in subscribe_to_allocated_events
 
 Because this is an end-to-end test and our publish/subscribe model is
 asynchronous, there's a bit of boilerplate to manage waiting, but
@@ -120,7 +146,7 @@ def handle_change_batch_quantity(m):  #<2>
 
 
 So we'll need a new service called `change_batch_quantity`.
-    
+
 
 === Test-driving A New Service At The Service Layer
 
