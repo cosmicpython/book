@@ -293,8 +293,7 @@ class SqlAlchemyRepository(AbstractRepository):
 ----
 ====
 
-and on our fakerepository too (you can get a feeling for the maintenance burden
-of our fakes here.  it's not much work, but it is work.)
+And on our fakerepository too:
 
 [[fakerepo_get_by_batchref]]
 .Updating the fake repo too (tests/unit/test_services.py)
@@ -315,6 +314,13 @@ class FakeRepository(repository.AbstractRepository):
         ), None)
 ----
 ====
+
+You may be starting to worry that maintaining these fakes is going to be
+a maintenance burden.  There's no doubt that it is work, but in our experience
+it's not a lot of work.  Once your project is up and running, the interface
+for your repository and UoW abstractions really don't change much.  And if
+you're using ABC's, they'll help remind you when things get out of sync.
+
 
 TODO: discuss finder methods on repository.
 
