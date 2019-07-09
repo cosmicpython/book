@@ -106,11 +106,16 @@ to get your goods from Poland or China or Vietnam, and into your living room.
 At a high level, we have separate systems that are responsible for buying
 stock, selling stock to customers, and shipping goods to customers. There's a
 system in the middle that needs to coordinate the process by allocating stock
-to a customer's orders. footnote:[e.j. Maybe describe how 
-MADE operates from the viewpoint of other stakeholders (e.g., a customer ordering furniture, 
-an accountant tracking credits and debits, a customer service representative, or
-the warehouse that actually has to store the stock) 
-before diving into the Stock Allocation Service.  It will help home the value of DDD and domain modeling. ]
+to a customer's orders.
+
+////
+TODO (EJ)
+. Maybe describe how MADE operates from the viewpoint of other stakeholders
+(e.g., a customer ordering furniture, an accountant tracking credits and
+debits, a customer service representative, or the warehouse that actually has
+to store the stock) before diving into the Stock Allocation Service.  It will
+help home the value of DDD and domain modeling.
+////
 
 For the purposes of this book, we're imagining a situation where the business
 decides to implement an exciting new way of allocating stock.  Until now, the
@@ -126,9 +131,15 @@ can save money by keeping lower inventory in the domestic warehouse.
 
 But allocating orders is no longer a trivial matter of decrementing a single
 quantity in the warehouse system.  We need a more complex allocation mechanism.
-Time for some domain modelling.  footnote:[e.j. I find myself using collboration diagrams most frequently for these kinds of things. A sequence diagram here would be good too, but they are a little bit cumbersome to draw.  More https://www.codemag.com/Article/0205051/UML-Collaboration-Diagrams[info]. ]
+Time for some domain modelling.
+////
+TODO (EJ):   I find myself using collboration diagrams most frequently for
+these kinds of things. A sequence diagram here would be good too, but they are
+a little bit cumbersome to draw.  More
+https://www.codemag.com/Article/0205051/UML-Collaboration-Diagrams[info]. ]
+////
 
-.A sort-of context diagram for the allocation service. 
+.A sort-of context diagram for the allocation service.
 ====
 [source,text]
 [role="skip"]
@@ -156,7 +167,9 @@ Orders                          +------------+         Shipments, Stock
 Understanding the domain model takes time, and patience, and post-it notes. We
 have an initial conversation with our business experts and we agree on a glossary
 and some rules for the first minimal version of the domain model. Wherever
-possible, we ask for concrete examples to illustrate each rule. footnote:[e.j. Might want to have a sidebar here on an alternative modeling approach using eventstorming.]
+possible, we ask for concrete examples to illustrate each rule.
+
+// TODO (EJ) Might want to have a sidebar here on an alternative modeling approach using eventstorming
 
 We make sure to express those rules in the business jargon (the _"ubiquitous
 language"_ in DDD terminology). We choose memorable identifiers for our objects
@@ -336,9 +349,13 @@ def test_cannot_allocate_if_skus_do_not_match():
     line = OrderLine("order-123", 'sku2', 10)
     assert batch.can_allocate(line) is False
 
-#####################################
-# e.j. Small style suggestion:  
-# If you create locals with descriptive variable names, 
+----
+====
+
+////
+
+TODO: # e.j. Small style suggestion:
+# If you create locals with descriptive variable names,
 # it might be easier to grok, like this:
 
 small_batch = Batch("batch-001", "table_sku", 20, eta=date.today())
@@ -351,9 +368,8 @@ def test_can_allocation_if_available_greater_than_required():
     assert big_batch.can_allocate(small_order)
 # And so on ...
 #####################################
+////
 
-----
-====
 
 There's nothing too unexpected here. We've refactored our test suite so that we
 don't keep repeating the same lines of code to create a batch and a line for
@@ -432,14 +448,17 @@ class Batch:
     def can_allocate(self, line: OrderLine) -> bool:
         return self.sku == line.sku and self.available_quantity >= line.qty
 
-###########
+----
+====
+
+////
+TODO (EJ)
 # e.j. I find the fact that allocate and deallocate can fail silently
 #      disconcerting, because it could hide bugs.
 # e.j. The allocated_quantity, avaliable_quantity, and can_allocate properties/methods
 #      might here would be a good opportunities to sidebar on encapsulation, information hiding and abstraction.
 #      I am unsure what audience you are targeting.
-----
-====
+////
 
 
 
@@ -742,8 +761,10 @@ class Batch:
 ====
 
 Python's `__eq__` magic method defines the behaviour of the class for the
-`==` operator. footnote:[e.j. The difference between "is" and "__eq__" might be
-a tripping point for some people.]
+`==` operator.
+
+// TODO (EJ) The difference between "is" and "__eq__" might be a tripping point
+// for some people.]
 
 For both Entity and Value Objects it's also worth thinking through how
 `__hash__` will work.  It's the magic method Python uses to control the
@@ -871,9 +892,11 @@ class Batch:
 ----
 ====
 
-That's lovely. footnote:[e.j. I usually prefer to use the "key" parameter
-to sorted for things like this.  Then it's easier to implement more 
-complex and arbitrary behaviors like "earliest, then smallest batch preferred".]
+That's lovely.
+
+// TODO (EJ) I usually prefer to use the "key" parameter to sorted for things
+// like this.  Then it's easier to implement more complex and arbitrary
+// behaviors like "earliest, then smallest batch preferred".
 
 
 ==== Exceptions Can Express Domain Concepts Too
