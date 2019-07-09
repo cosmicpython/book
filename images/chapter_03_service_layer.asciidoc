@@ -1,26 +1,18 @@
 
-[[test_spectrum_diagram]]
-.The test spectrum
-====
-[source,text]
-[role="skip"]
-----
+[ditaa, test_spectrum_diagram]
+....
 | Low feedback                                                  High feedback |
 | Low barrier to change                                 High barrier to change|
 | High system coverage                                       Focused coverage |
+|                                                                             |
 | <---------                                                     ---------->  |
 | API tests                  service-layer tests                 domain tests |
-----
-====
+....
 
 
 
-[[service_layer_diagram_abstract]]
-.Dependencies of the service layer
-====
-[role="skip"]
-[source,text]
-----
+[ditaa, service_layer_diagram_abstract]
+....
 Abstract dependencies:
         +-----------------------------+
         |          Any client         |----\
@@ -81,7 +73,4 @@ Runtime dependencies:
            +------------------------+
            |       Database         |
            +------------------------+
-
-----
-====
-
+....

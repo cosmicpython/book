@@ -738,19 +738,7 @@ important to understand the trade-off between coupling and design feedback.
 
 [[test_spectrum_diagram]]
 .The test spectrum
-====
-[source,text]
-[role="skip"]
-----
-| Low feedback                                                  High feedback |
-| Low barrier to change                                 High barrier to change|
-| High system coverage                                       Focused coverage |
-| <---------                                                     ---------->  |
-| API tests                  service-layer tests                 domain tests |
-----
-====
-
-//TODO: stick a non-ascii diagram here.
+image::images/test_spectrum_diagram.png[]
 
 Extreme Programming (XP) exhorts us to "listen to the code." When we're writing
 tests, we might find that the code is hard to use, or notice a code smell. This
@@ -1135,73 +1123,9 @@ Adding the service layer has really bought us quite a lot:
 
 [[service_layer_diagram_abstract]]
 .Dependencies of the service layer
-====
-[role="skip"]
-[source,text]
-----
-Abstract dependencies:
-        +-----------------------------+
-        |          Any client         |----\
-        +-----------------------------+    |
-                       |                   |
-                       V                   |
-        +-----------------------------+    |
-        |         Service Layer       |    |
-        +-----------------------------+    |
-           |                     |         |
-           V                     V         V
-+------------------+     +-----------------------+
-|   Domain Model   |     | (Abstract) Repository |
-+------------------+     +-----------------------+
+image::images/service_layer_diagram_abstract.png[]
 
-
-
-Tests' dependencies:
-
-        +-----------------------------+
-        |           Tests             |----\
-        +-----------------------------+    |
-                       |                   |
-                       V                   |
-        +-----------------------------+    |
-        |         Service Layer       |    |
-        +-----------------------------+    |
-           |                     |         |
-           V                     V         V
-+------------------+     +-----------------------+
-|   Domain Model   |     |    FakeRepository     |
-+------------------+     |      (in-memory)      |
-                         +-----------------------+
-
-
-Runtime dependencies:
-
-       +--------------------------------+
-       | Flask API (Presentation layer) |----\
-       +--------------------------------+    |
-                       |                     |
-                       V                     |
-        +-----------------------------+      |
-        |         Service Layer       |      |
-        +-----------------------------+      |
-           |                     |           |
-           V                     V           V
-+------------------+     +-----------------------+
-|   Domain Model   |     | SqlAlchemy Repository |
-+------------------+     +-----------------------+
-              ^                |
-              |                V
-           +----------------------+
-           |          ORM         |
-           +----------------------+
-                       |
-                       V
-           +------------------------+
-           |       Database         |
-           +------------------------+
-
-----
-====
+//TODO: split out into 3 diagrams
 
 //TODO (DS): Good wrap up. I'd really like to see a table or something that
 //sums up what belongs in each layer so far. And a diagram!
