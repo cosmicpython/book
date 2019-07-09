@@ -13,3 +13,14 @@ OK, but how do I get there from here?
 In either case, you'll need to figure out what the correct
 https://martinfowler.com/bliki/BoundedContext.html[Bounded Context]
 is.
+
+////
+TODO (DS)
+Missing pieces
+
+    What's still worth doing, even in half measures? E.g. is it worth having a service layer even if the domain is still coupled to persistence? Repositories without CQRS?
+    What size of systems are these helpful within? For example, do they work in the context of a monolith?
+    How should use cases interact across a larger system? For example, is it a problem for a use case to call another use case?
+    Is it a smell for a use case to interact with multiple repositories, and if so, why?
+    How do read-only, but business logic heavy things fit into all this? Use cases or not? (This relates to what these patterns might look like if we didn't bother with CQRS.)
+////
