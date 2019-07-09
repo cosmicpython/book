@@ -125,31 +125,12 @@ problem. In a layered architecture, we divide our code into discrete categories
 or roles and we introduce rules about which categories of code can call each
 other.
 
-For example most people are familiar with the three layered architecture:
+For example most people are familiar with the three layered architecture (see <<layered_architecture1>>):
 
 [[layered_architecture1]]
 .Layered Architecture
-====
-[role="skip"]
-[source,text]
-----
-+------------------------------------------------------------+
-|                  Presentation Layer                        |
-+------------------------------------------------------------+
-                          |
-                          V
-+------------------------------------------------------------+
-|                   Business Logic                           |
-+------------------------------------------------------------+
-                          |
-                          V
-+------------------------------------------------------------+
-|                    Database Layer                          |
-+------------------------------------------------------------+
-----
-====
+image::images/layered_architecture.png[]
 
-TODO: replace with non-ascii diagram?
 
 Layered architecture is perhaps the most common pattern for building business
 software. In this model we have user-interface components, which could be a web

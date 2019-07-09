@@ -44,11 +44,13 @@ Below is just instructions for me and bob really.
 
 * asciidoctor
 * Pygments (for syntax higlighting)
+* asciidoctor-diagram (to render images from the text sources in [`./images`](./images))
 
 ```sh
 gem install asciidoctor
 python2 -m pip install --user pygments
 gem install pygments.rb
+gem install asciidoctor-diagram
 ```
 
 

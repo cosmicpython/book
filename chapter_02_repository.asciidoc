@@ -60,30 +60,14 @@ database.
 === Applying The Dependency Inversion Principle To The Database
 
 As mentioned in <<part1_prologue>>, the "layered architecture" is a common
-approach to structuring a system that has a UI, some logic, and a database:
+approach to structuring a system that has a UI, some logic, and a database (see
+<<layered_architecture2>>).
 
 
 [[layered_architecture2]]
 .Layered Architecture
-====
-[role="skip"]
-[source,text]
-----
-+-------------------------------------------------+
-|              Presentation Layer                 |
-+-------------------------------------------------+
-                      |
-                      V
-+-------------------------------------------------+
-|               Business Logic                    |
-+-------------------------------------------------+
-                      |
-                      V
-+-------------------------------------------------+
-|                Database Layer                   |
-+-------------------------------------------------+
-----
-====
+image::images/layered_architecture.png[]
+
 
 Django's Model-View-Template structure is closely related, as is
 Model-View-Controller (MVC). In any case, the aim is to keep the layers
@@ -98,29 +82,11 @@ slowing down our unit tests or our ability to make changes.
 
 Instead, as discussed in the prologue, we'll think of our model as being on the
 "inside," and dependencies flowing inwards to it;  what people sometimes call
-"onion architecture."
+"onion architecture" (see <<onion_architecture>>.)
 
 [[onion_architecture]]
 .Onion Architecture
-====
-[role="skip"]
-[source,text]
-----
-+------------------------+
-|   Presentation Layer   |
-+------------------------+
-           |
-           V
-   +---------------------------------------------------+
-   |                   Domain model                    |
-   +---------------------------------------------------+
-                                        ^
-                                        |
-                               +-------------------+
-                               |   Database Layer  |
-                               +-------------------+
-----
-====
+image::images/onion_architecture.png[]
 
 .Is this Ports and Adapters?
 *******************************************************************************
@@ -151,25 +117,7 @@ a collection on our `Batch` object:
 
 [[model_diagram_reminder]]
 .Our Model
-====
-[source,text]
-[role="skip"]
-----
-+=====================+
-| Batch               |
-+---------------------+
-| reference           |
-| sku                 |
-| _purchased_quantity |       +=============+
-| allocations -------------->>| OrderLine   |
-+---------------------+       +-------------+
-                              | order_id    |
-                              | sku         |
-                              | qty         |
-                              +-------------+
-
-----
-====
+image::images/model_diagram.png[]
 
 Let's see how we might translate this to a relational database.
 
@@ -541,32 +489,9 @@ worlds, they're likely to recognise it.
 
 [[repository_pattern_diagram]]
 .Repository pattern
-====
-[role="skip"]
-[source,text]
-----
-        +-----------------------------+
-        |      Presentation Layer     |
-        +-----------------------------+
-           |                      |
-           V                      |
-+------------------+              |
-|   Domain Model   |              |
-+------------------+              |
-     ^           ^                |
-     |           |                V
-     |        +----------------------+
-     |        |      Repository      |
-     |        +----------------------+
-     |                      |
-     |                      V
-   +------------------------------+
-   |        Database Layer        |
-   +------------------------------+
+image::images/repository_pattern_diagram.png[]
 
 TODO: not sure if this diagram is helping.
-----
-====
 
 
 As always, we start with a test. This would probably be classified as an
