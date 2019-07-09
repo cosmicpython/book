@@ -1,17 +1,10 @@
-
-[[batch_changed_events_flow_diagram]]
-.batch quantity changed means deallocate and reallocate
-====
-[source,text]
-[role="skip"]
-----
+[ditaa, batch_changed_events_flow_diagram]
+....
 +----------+    /----\      +------------+        +------------+
 | batch    |--> |RULE| -->  | Deallocate | ---->  | Reallocate |
-| quantity |    \----/      +------------+-+      +------------+
+| quantity |    \----/      +------------+-+      +------------+-+
 | changed  |                  | Deallocate | ---->  | Reallocate |
 +----------+                  +------------+-+      +------------+-+
                                 | Deallocate | ---->  | Reallocate |
                                 +------------+        +------------+
-----
-====
-
+....
