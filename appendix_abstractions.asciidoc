@@ -25,37 +25,11 @@ details.
 
 [[coupling_illustration1]]
 .Lots of coupling
-====
-[source,text]
-[role="skip"]
-----
-+--------+     +--------+
-|        |<--->|        |
-|        |<--->|        |
-| System |<--->| System |
-|   A    |<--->|   B    |
-|        |<--->|        |
-|        |<--->|        |
-+--------+     +--------+
-----
-====
+image::images/coupling_illustration1.png[]
 
 [[coupling_illustration2]]
 .Less coupling
-====
-[source,text]
-[role="skip"]
-----
-+--------+     +--------+     +--------+
-|        |<--->|        |     |        |
-|        |<--->|        |     |        |
-| System |<--->|  Abs-  |     | System |
-|   A    |<--->|traction|<--->|   B    |
-|        |<--->|        |     |        |
-|        |<--->|        |     |        |
-+--------+     +--------+     +--------+
-----
-====
+image::images/coupling_illustration2.png[]
 
 
 In both diagrams above, we have a pair of subsystems, with the one dependent on

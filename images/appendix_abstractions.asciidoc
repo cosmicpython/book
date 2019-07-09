@@ -1,9 +1,5 @@
-[[coupling_illustration1]]
-.Lots of coupling
-====
-[source,text]
-[role="skip"]
-----
+[ditaa,coupling_illustration1]
+....
 +--------+     +--------+
 |        |<--->|        |
 |        |<--->|        |
@@ -12,15 +8,10 @@
 |        |<--->|        |
 |        |<--->|        |
 +--------+     +--------+
-----
-====
+....
 
-[[coupling_illustration2]]
-.Less coupling
-====
-[source,text]
-[role="skip"]
-----
+[ditaa,coupling_illustration2]
+....
 +--------+     +--------+     +--------+
 |        |<--->|        |     |        |
 |        |<--->|        |     |        |
@@ -29,6 +20,5 @@
 |        |<--->|        |     |        |
 |        |<--->|        |     |        |
 +--------+     +--------+     +--------+
-----
-====
+....
 
