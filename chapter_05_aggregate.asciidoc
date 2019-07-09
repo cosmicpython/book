@@ -149,6 +149,40 @@ class Product:
 //      an error for __has__. or sumfink.
 
 
+.Aggregates, Bounded Contexts and Microservices
+*******************************************************************************
+One of the most important contributions from Evans and the DDD community
+is the concept of
+https://martinfowler.com/bliki/BoundedContext.html[_Bounded Contexts_].
+
+In essence, this was a reaction against attempts to capture entire businesses
+into a single model. The word "customer" means different things to people
+in sales, customer services, logistics, support, and so on.  Attributes
+needed in one context are irrelevant in another; more perniciously, concepts
+with the same name can have entirely different meanings in different contexts.
+Rather than trying to build a single model (or class, or database) to capture
+all the use cases, better to have several different models, draw boundaries
+around each context, and handle the translation between different contexts
+explicitly.
+
+This concept translates very well to the world of microservices, where each
+microservice is free to have its own concept of "customer", and rules for
+translating that to and from other microservices it integrates with.
+
+Whether or not you've got a microservices architecture, a key consideration
+in choosing your aggregates is also choosing the bounded context that they
+will operate in.  By restricting the context, you can keep your number of
+aggregates low and their size manageable.
+
+Once again we find ourselves forced to say that we can't give this issue
+the treatment it deserves here, and we can only encourage you to read up on it
+elsewhere.
+
+//TODO more links or suggestions on where to read about bounded context?
+
+*******************************************************************************
+
+
 === 1 Aggregate = 1 Repository
 
 Once you define certain entities to be Aggregates, we need to apply the
