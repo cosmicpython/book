@@ -1,6 +1,8 @@
 [[chapter_03_service_layer]]
 == Our First Use Case: Flask API And Service Layer.
 
+Back to our allocations project!
+
 Like any good agile team, we're hustling to try and get an MVP out and
 in front of the users to start gathering feedback.  We have the core
 of our domain model and the domain service we need to allocate orders,
@@ -10,7 +12,7 @@ Let's try and plug all the moving parts together as quickly as we
 can, and then refactor towards a cleaner architecture.  Here's our
 plan:
 
-* Use flask to put an API endpoint in front of our `allocate` domain service.
+* Use Flask to put an API endpoint in front of our `allocate` domain service.
   Wire up the database session and our repository.  Test it with
   an end-to-end test and some quick and dirty SQL to prepare test
   data.
