@@ -14,6 +14,40 @@ In either case, you'll need to figure out what the correct
 https://martinfowler.com/bliki/BoundedContext.html[Bounded Context]
 is.
 
+* fork the repo and delete stuff that's not in your bounded context
+* strangler pattern.  can start with just an HTTP proxy
+* what are peloton doing?
+
+=== A django story
+
+* introducing a service layer first
+    - define use cases
+    - messagebus can come later
+    - push all the logic down into the models
+
+* once we have rich django models
+    - migrate them one by one to POPO classes
+    - add repository to translate
+    - => now we can refactor the model (semi/more) independently from the DB
+
+* and we can keep going and add UoW and a messagebus
+    - now we have the event-driven / command handler pattern
+    - almost any business requirement can be decomposed sensibly
+
+see <<appendix_django>>
+
+
+
+=== an event-driven approach to go microservices via strangler pattern
+
+* get your system to produce events
+* consume them in your new service. we now have a separate db and bounded context
+* the new system produces
+    - either the same events the old one did (and we can switch those old parts off)
+    - or new ones, and we switch over the downstream things progressively
+
+
+
 ////
 TODO (DS)
 Missing pieces
