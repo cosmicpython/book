@@ -1,0 +1,29 @@
+[[repository_pattern_diagram]]
+.Repository pattern
+====
+[role="skip"]
+[source,text]
+----
+        +-----------------------------+
+        |      Presentation Layer     |
+        +-----------------------------+
+           |                      |
+           V                      |
++------------------+              |
+|   Domain Model   |              |
++------------------+              |
+     ^           ^                |
+     |           |                V
+     |        +----------------------+
+     |        |      Repository      |
+     |        +----------------------+
+     |                      |
+     |                      V
+   +------------------------------+
+   |        Database Layer        |
+   +------------------------------+
+
+TODO: not sure if this diagram is helping.
+----
+====
+

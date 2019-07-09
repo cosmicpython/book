@@ -1,0 +1,87 @@
+
+[[test_spectrum_diagram]]
+.The test spectrum
+====
+[source,text]
+[role="skip"]
+----
+| Low feedback                                                  High feedback |
+| Low barrier to change                                 High barrier to change|
+| High system coverage                                       Focused coverage |
+| <---------                                                     ---------->  |
+| API tests                  service-layer tests                 domain tests |
+----
+====
+
+
+
+[[service_layer_diagram_abstract]]
+.Dependencies of the service layer
+====
+[role="skip"]
+[source,text]
+----
+Abstract dependencies:
+        +-----------------------------+
+        |          Any client         |----\
+        +-----------------------------+    |
+                       |                   |
+                       V                   |
+        +-----------------------------+    |
+        |         Service Layer       |    |
+        +-----------------------------+    |
+           |                     |         |
+           V                     V         V
++------------------+     +-----------------------+
+|   Domain Model   |     | (Abstract) Repository |
++------------------+     +-----------------------+
+
+
+
+Tests' dependencies:
+
+        +-----------------------------+
+        |           Tests             |----\
+        +-----------------------------+    |
+                       |                   |
+                       V                   |
+        +-----------------------------+    |
+        |         Service Layer       |    |
+        +-----------------------------+    |
+           |                     |         |
+           V                     V         V
++------------------+     +-----------------------+
+|   Domain Model   |     |    FakeRepository     |
++------------------+     |      (in-memory)      |
+                         +-----------------------+
+
+
+Runtime dependencies:
+
+       +--------------------------------+
+       | Flask API (Presentation layer) |----\
+       +--------------------------------+    |
+                       |                     |
+                       V                     |
+        +-----------------------------+      |
+        |         Service Layer       |      |
+        +-----------------------------+      |
+           |                     |           |
+           V                     V           V
++------------------+     +-----------------------+
+|   Domain Model   |     | SqlAlchemy Repository |
++------------------+     +-----------------------+
+              ^                |
+              |                V
+           +----------------------+
+           |          ORM         |
+           +----------------------+
+                       |
+                       V
+           +------------------------+
+           |       Database         |
+           +------------------------+
+
+----
+====
+
