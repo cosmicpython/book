@@ -1,9 +1,22 @@
-[[repository_pattern_diagram]]
-.Repository pattern
-====
-[role="skip"]
-[source,text]
-----
+[ditaa, onion_architecture]
+....
++------------------------+
+|   Presentation Layer   |
++------------------------+
+           |
+           V
+   +---------------------------------------------------+
+   |                   Domain model                    |
+   +---------------------------------------------------+
+                                        ^
+                                        |
+                               +-------------------+
+                               |   Database Layer  |
+                               +-------------------+
+....
+
+[ditaa, repository_pattern_diagram]
+....
         +-----------------------------+
         |      Presentation Layer     |
         +-----------------------------+
@@ -22,8 +35,5 @@
    +------------------------------+
    |        Database Layer        |
    +------------------------------+
-
-TODO: not sure if this diagram is helping.
-----
-====
+....
 
