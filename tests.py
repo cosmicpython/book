@@ -27,15 +27,20 @@ def test_master_has_all_chapters_in_its_history(master_log, chapter):
         return
     assert f'{chapter})' in master_log
 
-
-@pytest.mark.parametrize('chapter', CHAPTERS)
-def test_each_chapter_follows_the_last(chapter):
+def previous_chapter(chapter):
     chapter_no = CHAPTERS.index(chapter)
     if chapter_no == 0:
-        return
+        return None
     previous = CHAPTERS[chapter_no - 1]
     if previous in BRANCHES:
         previous = CHAPTERS[chapter_no - 2]
+    return previous
+
+@pytest.mark.parametrize('chapter', CHAPTERS)
+def test_each_chapter_follows_the_last(chapter):
+    previous = previous_chapter(chapter)
+    if previous is None:
+        return
     assert f'{previous})' in git_log(chapter), f'{chapter} did not follow {previous}'
 
 
@@ -51,6 +56,10 @@ def check_listing(listing, chapter):
     elif 'non-head' in listing.classes:
         actual_contents = file_contents_for_tag(
             listing.filename, chapter, listing.tag,
+        )
+    elif 'existing' in listing.classes:
+        actual_contents = file_contents_for_previous_chapter(
+            listing.filename, chapter,
         )
 
     else:
@@ -131,6 +140,10 @@ def file_contents_for_branch(filename, chapter_name):
         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         check=True
     ).stdout.decode()
+
+def file_contents_for_previous_chapter(filename, chapter_name):
+    previous = previous_chapter(chapter_name)
+    return file_contents_for_branch(filename, previous)
 
 def file_contents_for_tag(filename, chapter_name, tag):
     output = subprocess.run(

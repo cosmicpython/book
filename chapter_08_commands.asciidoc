@@ -1,0 +1,188 @@
+[[chapter_08_commands]]
+== Commands And Command Handler
+
+In the previous chapter we talked about using event messages as a way of
+integrating systems. This starts to turn our application into a message
+processing machine.
+
+TODO: DIAGRAM: Message processor
+
+To achieve that, we converted all our use-case functions to event-handlers.
+When the API receives a POST to create a new batch, it builds a new BatchCreated
+event and handles it as though it came from an external system.
+This might have felt counter-intuitive. After all, the batch _hasn't_ been
+created yet, that's why we called the API. We're going to fix that conceptual
+wart by introducing _commands_.
+
+== Commands And Events ==
+
+Like events, commands are a type of message - instructions sent by one part of
+a system to another. Like events, we usually represent commands with dumb data
+structures and we can handle them in much the same way.
+
+The differences between them, though, are important.
+
+Commands are sent by one actor to another specific actor. When I post a form
+to an API handler, I am sending a command. We name commands with imperative
+tense verb phrases like "allocate stock," or "delay shipment."
+
+Commands capture _intent_. They express our wish for the system to do something.
+As a result, when they fail, the sender needs to receive error information.
+
+Events are broadcast by an actor to all interested listeners. When we pubish the
+`batch_quantity_changed` we don't know who's going to pick it up. We name events
+with past-tense verb phrases like "order allocated to stock," or
+"shipment delayed."
+
+We often use events to spread the knowledge about successful commands.
+
+Events capture _facts_ about things that happened in the past. Since we don't
+know who's handling an event, senders should not care whether the receivers
+succeeded or failed.
+
+| Type | Event | Command |
+| Named | Past-Tense | Imperative Tense |
+| Error Handling | Fail independently | Fail noisily |
+| Sent to | All listeners | One recipient |
+
+// TODO: Diagram of user "buy stock" -> "stock purchased"
+                         "create batch" -> "batch created"
+
+
+What kinds of commands do we have in our system right now? 
+
+[[commands_dot_py]]
+.Pulling out some commands (src/allocation/commands.py)
+====
+[source,python]
+----
+class Command:
+    pass
+
+
+@dataclass
+class Allocate(Command):
+    orderid: str
+    sku: str
+    qty: int
+
+
+@dataclass
+class CreateBatch(Command):
+    ref: str
+    sku: str
+    qty: int
+    eta: Optional[date] = None
+
+
+@dataclass
+class ChangeBatchQuantity(Command):
+    ref: str
+    qty: int
+----
+====
+
+Each of the use-cases that we discussed earlier in the book is really a command,
+an instruction for the system to try and do a thing. To unify the two halves of
+the domain, we're going to make a simple change: instead of directly invoking
+our use case functions, like we did before, we're going to take these
+commands, and we're going to put them on the message bus. As a result, our
+message bus changes somewhat.
+
+[[new_messagebus]]
+.Messagebus handles events and commands differently (src/allocation/messagebus.py)
+====
+[source,python]
+----
+Message = Union[commands.Command, events.Event]
+
+
+def handle(message_queue: List[Message], uow: unit_of_work.AbstractUnitOfWork):  #<1>
+    while message_queue:
+        m = message_queue.pop(0)
+        if isinstance(m, events.Event):
+            handle_event(m, uow)
+        elif isinstance(m, commands.Command):
+            handle_command(m, uow)
+        else:
+            raise Exception(f'{m} was not an Event or Command')
+
+
+def handle_event(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):  #<2>
+    for handler in EVENT_HANDLERS[type(event)]:
+        try:
+            print('handling event', event, 'with handler', handler, flush=True)
+            handler(event, uow=uow)
+        except:  #<2>
+            print(f'Exception handling event {event}\n:{traceback.format_exc()}')
+            continue
+
+
+def handle_command(command, uow: unit_of_work.AbstractUnitOfWork):  #<3>
+    print('handling command', command, flush=True)
+    try:
+        handler = COMMAND_HANDLERS[type(command)]
+        return handler(command, uow=uow)
+    except Exception as e:
+        print(f'Exception handling command {command}: {e}')
+        raise e  #<3>
+
+
+EVENT_HANDLERS = {
+    events.Allocated: [handlers.publish_allocated_event],
+    events.Deallocated: [handlers.allocate],
+    events.OutOfStock: [handlers.send_out_of_stock_notification],
+}  # type: Dict[Type[events.Event], List[Callable]]  #<2>
+
+COMMAND_HANDLERS = {
+    commands.Allocate: handlers.allocate,
+    commands.CreateBatch: handlers.add_batch,
+    commands.ChangeBatchQuantity: handlers.change_batch_quantity,
+}  # type: Dict[Type[commands.Command], Callable]  #<3>
+----
+====
+
+
+<1> It still has a main `handle()` entrypoint, that takes a list of messages,
+    that may be commands or events.
+
+<2> We dispatch to a function for handling events.  It can delegate to multiple
+    handlers per event, and it catches and logs any errors, but does not let them
+    interrupt message processing.
+
+<3> The command handler expects just one handler per command.  If any errors
+    are raised, they fail hard and will bubble up.
+
+
+//TODO: consider using a dispatcher thingie from functools?
+
+Why does `handle_command` have a `return`, but `handle_events` doesn't, I hear
+you ask?  It's so that we can return the batchref from the API.  
+
+
+[[flask_uses_command]]
+.Flask gets a response from the command handler (src/allocation/flask_app.py)
+====
+[source,python]
+----
+@app.route("/allocate", methods=['POST'])
+def allocate_endpoint():
+    try:
+        command = commands.Allocate(
+            request.json['orderid'], request.json['sku'], request.json['qty'],
+        )
+        uow = unit_of_work.SqlAlchemyUnitOfWork()
+        batchref = messagebus.handle_command(command, uow)
+    except exceptions.InvalidSku as e:
+        return jsonify({'message': str(e)}), 400
+
+    return jsonify({'batchref': batchref}), 201
+----
+====
+
+
+That's a bit ugly.  In the next chapter, we'll look at a way of separating out command
+handling from read requests.
+
+
+TODO: discussion, can events raise commands?

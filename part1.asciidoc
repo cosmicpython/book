@@ -1,11 +1,11 @@
 [[part1]]
 [part]
-== Part 1: Building an Architecture to Support Domain modelling.
+== Part 1: Building an Architecture to Support Domain Modelling
 
 
 [quote, Cyrille Martraire, DDD EU 2017]
 ____
-Most developers have never seen a Domain Model, only a Data Model.
+Most developers have never seen a domain model, only a data model.
 ____
 
 Most developers that we talk to about architecture have a nagging sense that
@@ -16,27 +16,27 @@ but they've no idea how to fix it.
 
 We've found that many developers, when asked to design a new system, will
 immediately start to build a database schema, with the object model treated
-as a afterthought. This is where it all starts to go wrong. Instead, behaviour
-should come first, and drive our storage requirements.
+as an afterthought. This is where it all starts to go wrong. Instead, _behaviour
+should come first, and drive our storage requirements._
 
-After all, our customers don't care about the data model. They care about the
-what the system *does*, otherwise they'd just use a spreadsheet.
+After all, our customers don't care about the data model. They care about what
+the system *does*, otherwise they'd just use a spreadsheet.
 
 In this first part we'll look at how to build a rich object model through TDD
-(in <<chapter_01_domain_model,Chapter 1>>), and then how to keep that model
-decoupled from technical concerns. We'll see how to build persistence-agnostic
-code and how to create stable APIs around our domain so that we can refactor
-aggressively.
+(in <<chapter_01_domain_model,Chapter 1>>), and then we'll see how to keep that
+model decoupled from technical concerns. We'll see how to build
+persistence-agnostic code and how to create stable APIs around our domain so
+that we can refactor aggressively.
 
 To do that, we'll look at four key design patterns:
 
 * The <<chapter_02_repository,repository pattern>>, an abstraction over the
-  idea of persistent storage,
+  idea of persistent storage
 
 * A <<chapter_03_service_layer,service layer>> that clearly defines where our
-  use-cases begin and end,
+  use-cases begin and end
 
-* The <<chapter_04_uow,unit-of-work pattern>> to provide atomic operations,
+* The <<chapter_04_uow,unit-of-work pattern>> to provide atomic operations
 
 * And the <<chapter_05_aggregate,Aggregate pattern>> to enforce the integrity
   of our data.
@@ -46,11 +46,12 @@ but don't worry if none of it makes any sense yet!  We'll introduce each
 box one by one.
 
 [[part1_diag]]
+.A component diagram for our app at the end of Part 1
 image::diagrams/Chapter1Components.png[]
 
 //TODO: inline this diagram's source using asciidoc-diagram?
 
-Several of the appendices are further explorations of the content from Part 1.
+Several of the appendices are further explorations of the content from Part 1:
 
 * Each pattern usually involves an abstraction. <<appendix_abstractions>> takes a
   step back and uses a simple example to show how and why we choose abstractions

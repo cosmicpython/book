@@ -1,9 +1,9 @@
 [[appendix_csvs]]
 [appendix]
-== Swapping out the infrastructure: do everything with CSVs
+== Swapping Out The Infrastructure: Do Everything With CSVs
 
 This appendix is intended as a little illustration of the benefits of the
-_Repository_, _Unit of Work_ and _Service Layer_ patterns. It's intended to
+_repository_, _unit of work_ and Service Layer patterns. It's intended to
 follow on from <<chapter_04_uow>>.
 
 Just as we finish building out our Flask API and getting it ready for release,
@@ -51,7 +51,7 @@ def test_cli_app_reads_csvs_with_batches_and_orders_and_outputs_allocations(
     with open(expected_output_csv) as f:
         rows = list(csv.reader(f))
     assert rows == [
-        ['orderid', 'sku', 'qty', 'batchid'],
+        ['orderid', 'sku', 'qty', 'batchref'],
         [order_ref, sku1, '3', batch1],
         [order_ref, sku2, '12', batch2],
     ]
@@ -108,13 +108,13 @@ def main(folder):
     with orders_path.open() as inf, allocations_path.open('w') as outf:
         reader = csv.DictReader(inf)
         writer = csv.writer(outf)
-        writer.writerow(['orderid', 'sku', 'batchid'])
+        writer.writerow(['orderid', 'sku', 'batchref'])
         for row in reader:
             orderid, sku = row['orderid'], row['sku']
             qty = int(row['qty'])
             line = model.OrderLine(orderid, sku, qty)
-            batchid = model.allocate(line, batches)
-            writer.writerow([line.orderid, line.sku, batchid])
+            batchref = model.allocate(line, batches)
+            writer.writerow([line.orderid, line.sku, batchref])
 
 
 
@@ -149,7 +149,7 @@ def test_cli_app_also_reads_existing_allocations_and_can_append_to_them(
         [batch2, sku, 10, '2011-01-02'],
     ])
     make_csv('allocations.csv', [
-        ['orderid', 'sku', 'qty', 'batchid'],
+        ['orderid', 'sku', 'qty', 'batchref'],
         [old_order, sku, 10, batch1],
     ])
     orders_csv = make_csv('orders.csv', [
@@ -163,7 +163,7 @@ def test_cli_app_also_reads_existing_allocations_and_can_append_to_them(
     with open(expected_output_csv) as f:
         rows = list(csv.reader(f))
     assert rows == [
-        ['orderid', 'sku', 'qty', 'batchid'],
+        ['orderid', 'sku', 'qty', 'batchref'],
         [old_order, sku, '10', batch1],
         [new_order, sku, '7', batch2],
     ]
@@ -174,15 +174,15 @@ def test_cli_app_also_reads_existing_allocations_and_can_append_to_them(
 And we could keep hacking about and adding extra lines to that `load_batches` function,
 and some sort of way of tracking and saving new allocations... 
 
-But we already have a model for doing that!  It's called our Repository and our Unit
-of Work.
+But we already have a model for doing that!  It's called our _repository_ and our _unit
+of work_.
 
 All we need to do ("all we need to do") is reimplement those same abstractions, but
 with CSVs underlying them, instead of a database.  And as you'll see, it's
 actually quite straightforward.
 
 
-=== Implementing a Repository and Unit of Work for CSVs
+=== Implementing A Repository And Unit Of Work For CSVs
 
 
 Here's what a CSV-based repository could look like.  It abstracts away all the
@@ -193,7 +193,7 @@ collection of domain objects.
 
 
 [[csv_repository]]
-.A Repository that uses CSV as its storage mechanism (src/allocation/csv_uow.py)
+.A repository that uses CSV as its storage mechanism (src/allocation/csv_uow.py)
 ====
 [source,python]
 ----
@@ -229,10 +229,10 @@ class CsvRepository(repository.AbstractRepository):
         with self._allocations_path.open() as f:
             reader = csv.DictReader(f)
             for row in reader:
-                batchid, orderid, sku = row['batchid'], row['orderid'], row['sku']
+                batchref, orderid, sku = row['batchref'], row['orderid'], row['sku']
                 qty = int(row['qty'])
                 line = model.OrderLine(orderid, sku, qty)
-                batch = self._batches[batchid]
+                batch = self._batches[batchref]
                 batch._allocations.add(line)
 
     def list(self):
@@ -258,7 +258,7 @@ class CsvUnitOfWork(unit_of_work.AbstractUnitOfWork):
     def commit(self):
         with self.batches._allocations_path.open('w') as f:
             writer = csv.writer(f)
-            writer.writerow(['orderid', 'sku', 'qty', 'batchid'])
+            writer.writerow(['orderid', 'sku', 'qty', 'batchref'])
             for batch in self.batches.list():
                 for line in batch._allocations:
                     writer.writerow(
@@ -299,4 +299,3 @@ Ta-da!   NOW ARE Y'ALL IMPRESSED OR WHAT?
 
 much love,
 Bob and Harry.
-

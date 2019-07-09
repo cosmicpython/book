@@ -1,0 +1,186 @@
+[[appendix_bootstrap]]
+== Bootstrap (aka Configuration Root)
+
+NOTE: placeholder chapter, under construction
+
+Congratulations on reading an appendix! Not everyone does.  And yet we
+hide so much good stuff in here...
+
+OK at the end of <<chapter_10_dependency_injection>> we'd left a slightly
+ugly thing -- there's a circular dependency between _flask_app.py_ and
+_redis_pubsub.py_.  Also we had some duplication of boilerplate setup/init
+code in those two entrypoints, which felt a bit rough.
+
+Explicitly defining a single "entrypoint" or bootstrap script or "configuration
+root" in OO parlance, is a pattern that can help us to keep things tidy.  Let's
+take a look.
+
+
+=== Defaults And Config
+
+Where do we declare our defaults?  _config.py_ is one place, but we also do
+some in, eg, _unit_of_work.py_, which declares the "default" database session
+manager. maybe that's not too bad...
+
+[[default_session_factory]]
+.Default config declared next to uow (src/allocation/unit_of_work.py)
+====
+[source,python]
+[role="existing"]
+----
+DEFAULT_SESSION_FACTORY = sessionmaker(bind=create_engine(
+    config.get_postgres_uri(),
+    isolation_level="SERIALIZABLE",
+))
+----
+====
+
+There is some other config spread around though, like what our "normal"
+dependencies are, and we haven't even spoken about cross-cutting concerns
+like logging.
+
+
+=== Other Setup Code: Initialisation
+
+Defaults are maybe feeling a bit messy, but so are some other aspects of the
+initial setup or "bootsrapping" of our application; `orm.start_mappers()` for
+example. We call it in various places in our tests, and at twice in our "real"
+application...
+
+
+[[flask_calls_start_mappers]]
+.Flask calls start_mappers (src/allocation/flask_app.py)
+====
+[source,python]
+[role="existing"]
+----
+app = Flask(__name__)
+orm.start_mappers()
+bus = messagebus.MessageBus(
+...
+
+@app.route("/add_batch", methods=['POST'])
+def add_batch():
+----
+====
+
+
+Let's bring all this stuff together into a single "bootstrap script" and see
+if we end up in a better position.
+
+
+=== Bootstrap Script
+
+Here's what a bootstrap script could look like:
+
+[[bootstrap_v1]]
+.A bootstrap function (src/allocation/bootstrap.py)
+====
+[source,python]
+----
+def bootstrap(
+        start_orm=orm.start_mappers,
+        session_factory=DEFAULT_SESSION_FACTORY,
+        send_mail=email.send,
+        publish=redis_pubsub.publish,
+):
+    start_orm()
+    uow = unit_of_work.SqlAlchemyUnitOfWork(session_factory=session_factory)
+    bus = messagebus.MessageBus(uow=uow, send_mail=send_mail, publish=publish)
+    return bus
+----
+====
+
+* it declares default dependencies but allows you to override them
+* it does the "init" stuff that we need to get our app going in one place
+* it gives us back the core of our app, the messagebus
+
+
+=== Using Bootstrap In Our Entrypoints
+
+In our application's entrypoints, we just call `bootstrap.bootstrap()`
+to get a messagebus, rather than configuring a UoW and the rest of it.
+
+[[flask_calls_bootstrap]]
+.Flask calls bootstrap (src/allocation/flask_app.py)
+====
+[source,python]
+----
+app = Flask(__name__)
+bus = bootstrap.bootstrap()
+
+
+@app.route("/add_batch", methods=['POST'])
+def add_batch():
+    ...
+    bus.handle([command])
+    return 'OK', 201
+----
+====
+
+
+And in tests, we can use our `bootstrap.bootstrap()` with overridden defaults
+to get a custom messagebus:
+
+
+[[custom_bootstrap]]
+.Overriding bootstrap defaults (tests/integration/test_views.py)
+====
+[source,python]
+----
+@pytest.fixture
+def sqlite_bus(in_memory_sqlite_db):
+    yield bootstrap.bootstrap(
+        session_factory=sessionmaker(bind=in_memory_sqlite_db),
+        send_mail=mock.Mock(),
+        publish=mock.Mock(),
+    )
+    clear_mappers()
+
+
+def test_allocations_view(sqlite_bus):
+    sqlite_bus.handle([
+        commands.CreateBatch('b1', 'sku1', 50, None),
+        commands.CreateBatch('b2', 'sku2', 50, date.today()),
+        commands.Allocate('o1', 'sku1', 20),
+        commands.Allocate('o1', 'sku2', 20),
+    ])
+
+    assert views.allocations('o1', sqlite_bus.uow) == [
+        {'sku': 'sku1', 'batchref': 'b1'},
+        {'sku': 'sku2', 'batchref': 'b2'},
+    ]
+----
+====
+
+
+TODO: bootstrapper as class instead?
+
+
+=== Dependency Diagrams
+
+
+In chapter 9 it's a real mess.
+
+image::images/chapter_09_dependency_graph.png["Dependency graph for chapter 9 (it's a mess)"]
+
+By chapter 10, when we introduce DI, things are much better
+
+image::images/chapter_10_dependency_graph.png["Dependency graph for chapter 10 (it's better)"]
+
+Does the bootstrap script help? Kinda.
+
+image::images/appendix_bootstrap_dependency_graph_1.png["Dependency graph with bootstrap script"]
+
+
+Well kindo not actually.  that redis circular dependency is still there and looking
+ugly.
+
+One fix is to split the "pub" from the "sub":
+
+image::images/appendix_bootstrap_dependency_graph_2.png["Dependency graph with bootstrap script and no circular deps"]
+
+Now we have what our esteemed tech reviewer David Seddon would call a "rocky road architecture": all the dependencies
+flow in one direction.
+
+TODO: alternative fix by making an abstract redis thingie?  

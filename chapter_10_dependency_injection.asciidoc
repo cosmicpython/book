@@ -1,0 +1,409 @@
+[[chapter_10_dependency_injection]]
+== Dependency Injection (and Mocks)
+
+NOTE: placeholder chapter, under construction
+
+Depending on your particular brain type, you may have a slight feeling of
+unease at the back of your mind at this point.  Let's bring it out into the
+open. We've currently shown two different ways of managing dependencies, and
+testing them.
+
+For our database dependency, we've built a careful framework of explicit
+dependencies and easy options for overriding them in tests:
+
+TIP: If you haven't already, it's worth reading <<appendix_abstractions>>
+    before continuing with this chapter.
+
+
+=== Implicit Vs Explicit Dependencies
+
+Our main handler functions declare an explicit dependency on the unit
+of work:
+
+[[existing_handler]]
+.Our handlers have an explicit dependency on the UoW (src/allocation/handlers.py)
+====
+[source,python]
+[role="existing"]
+----
+def allocate(
+        event: commands.Allocate, uow: unit_of_work.AbstractUnitOfWork
+):
+----
+====
+
+And that makes it easy to swap in a fake unit of work in our
+service-layer tests
+
+[[existing_services_test]]
+.Service layer tests against a fake uow: (tests/unit/test_services.py)
+====
+[source,python]
+[role="skip"]
+----
+    uow = FakeUnitOfWork()
+    messagebus.handle([...], uow)
+----
+====
+
+
+The UoW itself declares an explicit dependency on the session factory:
+
+
+[[existing_uow]]
+.The UoW depends on a session factory (src/allocation/unit_of_work.py)
+====
+[source,python]
+[role="existing"]
+----
+class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
+
+    def __init__(self, session_factory=DEFAULT_SESSION_FACTORY):
+        self.session = session_factory()  # type: Session
+        ...
+----
+====
+
+We take advantage of it in our integration tests to be able to use sqlite
+instead of Postgres, sometimes
+
+[[existing_integration_test]]
+.Integration tests against a different DB (tests/integration/test_uow.py)
+====
+[source,python]
+[role="existing"]
+----
+def test_rolls_back_uncommitted_work_by_default(sqlite_session_factory):
+    uow = unit_of_work.SqlAlchemyUnitOfWork(sqlite_session_factory)  #<1>
+----
+====
+
+<1> Integration tests swap out the default postgres session_factory for a sqlite one.
+
+
+
+
+=== Explicit Dependencies Are Totally Weird An Java-ey Tho
+
+If you're used to the way things normally happen in Python, you'll be thinking
+all this is a bit weird.  The standard way to do things is to declare our
+depenency "implicitly" by simply importing it, and then if we ever need to
+change it for tests, we can monkeypatch, as is Right and True in dynamic
+languages:
+
+
+[[normal_implicit_dependency]]
+.Email-sending as a normal import-based dependency (src/allocation/handlers.py)
+====
+[source,python]
+[role="existing"]
+----
+from allocation import commands, events, email, exceptions, model, redis_pubsub  #<1>
+...
+
+def send_out_of_stock_notification(
+        event: events.OutOfStock, uow: unit_of_work.AbstractUnitOfWork,
+):
+    email.send(  #<2>
+        'stock@made.com',
+        f'Out of stock for {event.sku}',
+    )
+----
+====
+
+<1> hardcoded import
+<2> calls specific email sender directly.
+
+
+Why pollute our application code with unnecessary arguments just for the
+sake of our tests? `mock.patch` makes monkeypatching nice and easy:
+
+
+[[mocking_is_easy]]
+.mock dot patch, thank you Michael Foord (tests/unit/test_handlers.py)
+====
+[source,python]
+[role="existing"]
+----
+    with mock.patch('allocation.email.send') as mock_send_mail:
+        ...
+----
+====
+
+The trouble is that we've made it look easy because our toy example doesn't
+send real emails (`email.send_mail` just does a `print`), but in real life
+you'd end up having to call `mock.patch` for _every single test_ that might
+cause an out-of-stock notification. If you've worked on codebases with lots of
+mocks used to prevent unwanted side-effects, you'll know how annoying that
+mocky boilerplate gets.
+
+And, you'll know that mocks tightly couple us to the implementation.  By
+choosing to monkeypatch `email.send_mail`, we are tied to doing `import email`,
+and if we ever want to do `from email import send_mail`, a trivial refactor,
+we'd have to change all our mocks.
+
+So it's a trade-off.  Yes declaring explicit dependencies is "unnecessary,"
+strictly speaking, and using them would make our application code marginally
+more complex.  But in return, we'd get tests that are easier to write and
+manage.
+
+On top of which, declaring an explicit dependency is an implementation of
+the DIP -- rather than having an (implicit) dependency on a specific detail,
+we have an (explicit) dependency on an abstraction:
+
+
+[[handler_with_explicit_depenency]]
+.The explicit dependency is more abstract (src/allocation/handlers.py)
+====
+[source,python]
+----
+def send_out_of_stock_notification(
+        event: events.OutOfStock, send_mail: Callable,
+):
+    send_mail(
+        'stock@made.com',
+        f'Out of stock for {event.sku}',
+    )
+----
+====
+
+
+But if we do declare these dependencies explicitly, who will inject them and how?
+So far, we've only really been dealing with passing the UoW around.  What about
+all these other things?
+
+Since we've now made the messagebus into the core of our application, it's the
+ideal place to manage these dependencies.
+
+
+=== Messagebus Does DI
+
+Here's one way to do it:
+
+
+[[messagebus_as_class]]
+.MessageBus as a class (src/allocation/messagebus.py)
+====
+[source,python]
+----
+class MessageBus:  #<1>
+
+    def __init__(
+            self,
+            uow: unit_of_work.AbstractUnitOfWork,  #<2>
+            send_mail: Callable,  #<2>
+            publish: Callable,  #<2>
+    ):
+        self.uow = uow
+        self.dependencies = dict(uow=uow, send_mail=send_mail, publish=publish)  #<3>
+
+    def handle(self, message_queue: List[Message]):
+        while message_queue:
+            m = message_queue.pop(0)
+            print('handling message', m, flush=True)
+            if isinstance(m, events.Event):
+                self.handle_event(m)
+            elif isinstance(m, commands.Command):
+                self.handle_command(m)
+            else:
+                raise Exception(f'{m} was not an Event or Command')
+            message_queue.extend(self.uow.collect_events())  #<4>
+----
+====
+
+<1> The messagebus becomes a class...
+<2> ...which asks for all our dependencies in one place
+<3> and stores them into a dict
+<4> We also make a small change to the relationship between bus and UoW -- the bus
+    asks the UoW for new events after it's finished running each handler,
+    and adds them to its own queue (details to follow)
+
+What else changes in the bus? 
+
+
+[[messagebus_handlers_change]]
+.Event and Command handler logic stays the same (src/allocation/messagebus.py)
+====
+[source,python]
+----
+    def handle_event(self, event: events.Event):  #<1>
+        for handler in EVENT_HANDLERS[type(event)]:
+            try:
+                print('handling event', event, 'with handler', handler, flush=True)
+                self.call_handler_with_dependencies(handler, event)  #<2>
+            except:
+                print(f'Exception handling event {event}\n:{traceback.format_exc()}')
+                continue
+
+    def handle_command(self, command: commands.Command):  #<1>
+        print('handling command', command, flush=True)
+        try:
+            handler = COMMAND_HANDLERS[type(command)]
+            return self.call_handler_with_dependencies(handler, command)  #<2>
+        except Exception as e:
+            print(f'Exception handling command {command}: {e}')
+            raise e
+----
+====
+
+<1> `handle_event` and `handle_command` are substantially the same, but instead
+    of calling handlers directly and only passing in the UoW, they call a new method:
+
+<2> `self.call_handler_with_dependencies()`, which takes the handler function and
+    the event we want to call:
+
+
+==== Depenency Injection With Minimal Magic
+
+Here's the core of our dependency injection approach then.  As you'll see
+there's not much to it:
+
+[[messagebus_does_DI]]
+.Dependency injection in 3 lines of code (src/allocation/messagebus.py)
+====
+[source,python]
+----
+    def call_handler_with_dependencies(self, handler: Callable, message: Message):
+        params = inspect.signature(handler).parameters  #<1>
+        deps = {
+            name: dependency for name, dependency in self.dependencies.items()  #<2>
+            if name in params
+        }
+        return handler(message, **deps)  #<3>
+----
+====
+
+<1> We inspect our command/event handler's arguments
+<2> We match them by name to our dependencies
+<3> And we inject them in as kwargs when we actually call the handler
+
+//TODO: rename deps to kwargs?
+
+Note this is simple approach is only really possible because we've made the
+messagebus into the core of our app -- if we still had a mixture of service
+functions and event handlers and other entrypoints, our dependencies would be
+all over the place.
+
+
+==== The Messagebus Takes Ownership Of Adding New Events To Its Queue
+
+We've seen that the messagebus now has responsibility for collecting
+any new events raised by a handler, and adding them to the end of the queue.
+Consequently, in the Uow, we no longer raise events on commit, instead we offer
+a way of retrieving them:
+
+[[uow_collects_events]]
+.UoW just collects events rather than putting them on the bus (src/allocation/unit_of_work.py)
+====
+[source,python]
+----
+class AbstractUnitOfWork(abc.ABC):
+    ...
+
+    def commit(self):
+        self._commit()
+
+
+    @abc.abstractmethod
+    def _commit(self):
+        ...
+
+    def collect_events(self):
+        for product in self.products.seen:
+            while product.events:
+                yield product.events.pop(0)
+----
+====
+
+
+=== Initialising DI In Our App Entrypoints
+
+In our flask app, we can just initialise the messagebus inline with
+the rest of our app config and setup, passing it in the actual
+dependencies we want to use:
+
+[[flask_initialises_bus]]
+.Flask initialises a bus with the production dependencies (src/allocation/flask_app.py)
+====
+[source,python]
+----
+from allocation import (
+    commands, email, exceptions, messagebus, orm, redis_pubsub, unit_of_work,
+    views,
+)
+
+app = Flask(__name__)
+orm.start_mappers()
+bus = messagebus.MessageBus(
+    uow=unit_of_work.SqlAlchemyUnitOfWork(),
+    send_mail=email.send,
+    publish=redis_pubsub.publish
+)
+----
+====
+
+
+
+[[redis_initialises_bus]]
+.So does redis (src/allocation/redis_pubsub.py)
+====
+[source,python]
+----
+def get_bus():  #<1>
+    return messagebus.MessageBus(
+        uow=unit_of_work.SqlAlchemyUnitOfWork(),
+        send_mail=email.send,
+        publish=publish
+    )
+
+
+def main():
+    pubsub = r.pubsub(ignore_subscribe_messages=True)
+    pubsub.subscribe('change_batch_quantity')
+    bus = get_bus()  #<1>
+
+    for m in pubsub.listen():
+        handle_change_batch_quantity(m, bus)
+
+
+def handle_change_batch_quantity(m, bus: messagebus.MessageBus):
+----
+====
+
+<1> In the redis case we can't do the initalisation at import-time,
+    because we have a circular dependency between flask and redis
+    (we'll look at fixing that in <<appendix_bootstrap>>.
+
+
+=== Initialising DI In Our Tests
+
+
+
+[[totally_reimplement_bootstrap]]
+.Handler tests just do their own bootstrap (tests/unit/test_handlers.py)
+====
+[source,python]
+----
+class FakeBus(messagebus.MessageBus):
+    def __init__(self):
+        super().__init__(
+            uow=FakeUnitOfWork(),
+            send_mail=mock.Mock(),
+            publish=mock.Mock(),
+        )
+
+...
+
+class TestAddBatch:
+
+    @staticmethod
+    def test_for_new_product():
+        bus = FakeBus()
+        bus.handle([commands.CreateBatch('b1', 'sku1', 100, None)])
+        assert bus.uow.products.get('sku1') is not None
+        assert bus.uow.committed
+----
+====
+
+
+TODO: show option of custom fakes for email etc instead of mocks

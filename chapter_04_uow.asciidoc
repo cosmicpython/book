@@ -1,14 +1,13 @@
 [[chapter_04_uow]]
-== Unit of Work pattern
+== Unit Of Work Pattern
 
 In this chapter we'll introduce a final piece of the puzzle that really pulls
-the _Repository_ and _Service layer_ patterns together, the _Unit of Work_
-pattern.
+the Repository and Service Layer patterns together, the _Unit of Work_ pattern.
 
 //TODO: Big Lebowski illustration
 
 
-A repository is an abstraction over the idea of persistent storage. A Unit of
+A Repository is an abstraction over the idea of persistent storage. A Unit of
 Work is an abstraction over the idea of atomic operation.
 
 The unit of work will give us access to our repository(-ies), and then keep
@@ -40,9 +39,10 @@ the end, some different handling for error and success cases?  Something like
 
 A context manager.
 
-=== Test-driving a UoW with integration tests
 
-Here's a test for a new "Unit of Work" (or UoW, which we pronounce, you-wow).
+=== Test-driving A Uow With Integration Tests
+
+Here's a test for a new `UnitofWork` (or UoW, which we pronounce "you-wow").
 It's a context manager that allows us to start a transaction, retrieve and get
 things from repos, and commit:
 
@@ -59,17 +59,17 @@ def insert_batch(session, ref, sku, qty, eta):
         dict(ref=ref, sku=sku, qty=qty, eta=eta)
     )
 
-def get_allocated_batch_id(session, orderid, sku):
+def get_allocated_batch_ref(session, orderid, sku):
     [[orderlineid]] = session.execute(
         'SELECT id FROM order_lines WHERE orderid=:orderid AND sku=:sku',
         dict(orderid=orderid, sku=sku)
     )
-    [[batchid]] = session.execute(
+    [[batchref]] = session.execute(
         'SELECT b.reference FROM allocations JOIN batches AS b ON batch_id = b.id'
         ' WHERE orderline_id=:orderlineid',
         dict(orderlineid=orderlineid)
     )
-    return batchid
+    return batchref
 
 
 def test_uow_can_retrieve_a_batch_and_allocate_to_it(session_factory):
@@ -84,8 +84,8 @@ def test_uow_can_retrieve_a_batch_and_allocate_to_it(session_factory):
         batch.allocate(line)
         uow.commit()  #<3>
 
-    batchid = get_allocated_batch_id(session, 'o1', 'sku1')
-    assert batchid == 'batch1'
+    batchref = get_allocated_batch_ref(session, 'o1', 'sku1')
+    assert batchref == 'batch1'
 ----
 ====
 
@@ -98,7 +98,7 @@ def test_uow_can_retrieve_a_batch_and_allocate_to_it(session_factory):
 <3> And we call `commit()` on it when we're done.
 
 
-=== Unit of Work and its context manager
+=== Unit Of Work And Its Context Manager
 
 In our tests we've implicitly defined an interface for what a unit
 of work needs to do, let's make that explicit by using an abstract
@@ -153,7 +153,7 @@ class AbstractUnitOfWork(abc.ABC):
     is needed because different subclasses will want to initialise repositories
     in slightly different ways, this just gives us a single place to do that.
 
-==== The Real Unit of Work uses SqlAlchemy Sessions
+==== The Real Unit Of Work Uses Sqlalchemy Sessions
 
 [[unit_of_work]]
 .the real SQLAlchemy unit of work (src/allocation/unit_of_work.py)
@@ -193,7 +193,7 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 
 
 
-=== Fake Unit of Work for testing:
+=== Fake Unit Of Work For Testing:
 
 Here's how we use a fake unit of work in our service layer tests
 
@@ -232,6 +232,13 @@ def test_allocate_returns_allocation():
 ----
 ====
 
+////
+TODO:
+This is another good opportunity to drive home the idea of roles and collaborations. UOW and Repository are collaborators.
+
+https://github.com/python-leap/book/issues/44
+////
+
 <1> `FakeUnitOfWork` and `FakeRepository` are tightly coupled,
     just like the real unit of work and repository classes
 
@@ -241,12 +248,22 @@ def test_allocate_returns_allocation():
     code that we wrote, rather than 3rd party code.  Some
     people say https://github.com/testdouble/contributing-tests/wiki/Don%27t-mock-what-you-don%27t-own["don't mock what you don't own"].
 
-<3> and in our tests, we can instantiate a UoW and pass it to
+<3> And in our tests, we can instantiate a UoW and pass it to
     our service layer, instead of a repository and a session,
     which is considerably less cumbersome.
 
+////
+TODO:
 
-=== Using the UoW in the service layer
+https://github.com/python-leap/book/blame/master/chapter_04_uow.asciidoc#L238
+Maybe "Only mock your immediate neighbors" is more applicable?
+
+I think of "Don't mock what you don't own" as referring specifically to "mock verification" (e.g. assert mock_session.commit.assert_called_once()), with the reason for this advice being that you cannot change those interfaces. So the mock has no value in providing feedback to your design.
+
+https://github.com/python-leap/book/issues/44
+////
+
+=== Using The Uow In The Service Layer
 
 And here's what our new service layer looks like:
 
@@ -274,9 +291,9 @@ def allocate(
         batches = uow.batches.list()  #<2>
         if not is_valid_sku(line.sku, batches):
             raise InvalidSku(f'Invalid sku {line.sku}')
-        batch = model.allocate(line, batches)
+        batchref = model.allocate(line, batches)
         uow.commit()
-    return batch
+    return batchref
 ----
 ====
 
@@ -284,7 +301,7 @@ def allocate(
     on an _abstract_ unit of work.
 
 
-=== Explicit tests for commit/rollback behaviour
+=== Explicit Tests For Commit/rollback Behaviour
 
 To convince ourselves that the commit/rollback behaviour works, we wrote
 a couple of tests:
@@ -321,14 +338,14 @@ def test_rolls_back_on_error(session_factory):
 ====
 
 TIP: We haven't shown it here, but it can be worth testing some of the more
-    "obcure" database behaviour, like transactions, against the "real"
+    "obscure" database behaviour, like transactions, against the "real"
     database, ie the same engine.  For now we're getting away with using
     SQLite instead of Postgres, but in <<chapter_05_aggregate>> we'll switch
     some of the tests to using the real DB.  It's convenient that our UoW
     class makes that easy!
 
 
-=== Explicit vs implicit commits
+=== Explicit Vs Implicit Commits
 
 A brief digression on different ways of implementing the UoW pattern.
 
@@ -385,7 +402,7 @@ easier to reason about because there's only one code path that leads to changes
 in the system: total success and an explicit commit. Any other code path, any
 exception, any early exit from the uow's scope, leads to a safe state.
 
-Similarly, we prefer "always-rollback" to "only-rollback-on-error",  because
+Similarly, we prefer "always-rollback" to "only-rollback-on-error,"  because
 the former feels easier to understand;  rollback rolls back to the last commit,
 so either the user did one, or we blow their changes away.  Harsh but simple.
 
@@ -402,13 +419,13 @@ next time?  But you should experiment and figure out your own preferences here.
 // hard, presumably.
 
 
-=== Examples: Using UoW to group multiple operations into an atomic unit
+=== Examples: Using Uow To Group Multiple Operations Into An Atomic Unit
 
 Here's a few examples showing the unit of work pattern in use.  You can
 see how it leads to simple reasoning about what blocks of code happen
 together:
 
-==== Example 1: reallocate
+==== Example 1: Reallocate
 
 Supposing we want to be able to deallocate and then reallocate orders?
 
@@ -434,11 +451,10 @@ def reallocate(line: OrderLine, uow: AbstractUnitOfWork) -> str:
     the `deallocate()`, either.
 
 
-==== Example 2: change batch quantity
+==== Example 2: Change Batch Quantity
 
 Our shipping company gives us a call to say that one of the container doors
 opened and half our sofas have fallen into the Indian Ocean.  oops!
-
 
 
 [[change_batch_quantity]]
@@ -447,13 +463,13 @@ opened and half our sofas have fallen into the Indian Ocean.  oops!
 [source,python]
 [role="skip"]
 ----
-def change_batch_quantity(batch: Batch, new_qty: int, uow: AbstractUnitOfWork):
+def change_batch_quantity(batchref: str, new_qty: int, uow: AbstractUnitOfWork):
     with uow:
-        product = uow.products.get(sku=batch.sku)
+        batch = uow.batches.get(reference=batchref)
         batch.change_purchased_quantity(new_qty)
         while batch.available_quantity < 0:
             line = batch.deallocate_one()  #<1>
-            product.allocate(line)  #<1>
+        model.allocate(line)
         uow.commit()
 ----
 ====
@@ -462,7 +478,7 @@ def change_batch_quantity(batch: Batch, new_qty: int, uow: AbstractUnitOfWork):
     at any stage, we probably want to commit none of the changes.
 
 
-=== Tidying up the integration tests
+=== Tidying Up The Integration Tests
 
 We now have three sets of tests all essentially pointing at the database,
 _test_orm.py_, _test_repository.py_ and _test_uow.py_.  Should we throw any
@@ -499,6 +515,26 @@ possible level of abstraction (just as we did for the unit tests).
 TODO: expand on this a bit?
 
 
+.Exercise for the Reader
+******************************************************************************
+For this chapter, probably the best thing to do is try to implement a
+UoW from scratch.  You could either follow the model we have quite closely,
+or perhaps experiment with separating the UoW (whose responsibilities are
+`commit()`, `rollback()` and providing the `.batches` repository) from the
+context manager, whose job is to initialise things, and then do the commit
+or rollback on exit.  If you feel like going all-functional rather than
+messing about with all these classes, you could use `@contextmanager` from
+`contextlib`.
+
+https://github.com/python-leap/code/tree/chapter_04_uow_exercise
+
+We've stripped out both the actual UoW and the fakes, as well as paring back
+the abstract UoW.  Why not send us a link to your repo if you come up with
+something you're particularly proud of?
+
+******************************************************************************
+
+
 === Wrap-up
 
 Hopefully we've convinced you that the unit of work is a useful pattern, and
@@ -509,18 +545,18 @@ This pattern is so useful, in fact, that SQLAlchemy already uses a unit-of-work
 in the shape of the Session object. The Session object in SqlAlchemy is the way
 that your application loads data from the database.
 
-Every time you load a new Entity from the db, the Session begins to _track_
-changes to the Entity, and when the Session is _flushed_, all your changes are
+Every time you load a new entity from the db, the Session begins to _track_
+changes to the entity, and when the Session is _flushed_, all your changes are
 persisted together.
 
 Why do we go to the effort of abstracting away the SQLAlchemy session if it
 already implements the pattern we want?
 
 For one thing, the Session API is rich and supports operations that we don't
-want or need in our domain. Our UnitOfWork simplifies the Session to its
+want or need in our domain. Our `UnitOfWork` simplifies the Session to its
 essential core: it can be started, committed, or thrown away.
 
-For another, we're using the UnitOfWork to access our _Repository_ objects.
+For another, we're using the `UnitOfWork` to access our `Repository` objects.
 This is a neat bit of developer usability that we couldn't do with a plain
 SQLAlchemy Session.
 
@@ -540,15 +576,15 @@ SQLAlchemy's own recommendations:
 // the uow into a uow plus a uowm.
 
 
-.Unit of Work pattern: wrap-up
+.Unit of Work Pattern: Wrap-up
 *****************************************************************
-Unit of Work is an abstraction around data integrity::
+_Unit of work_ is an abstraction around data integrity::
     It helps to enforce the consistency of our domain model, and improves
     performance, by letting us perform a single _flush_ operation at the
     end of an operation.
 
-It works closely with repository and service layer::
-    The Unit of Work pattern completes our abstractions over data-access by
+It works closely with _repository_ and Service Layer::
+    The unit of work pattern completes our abstractions over data-access by
     representing atomic updates.
     Each of our service-layer use-cases runs in a single unit of work which
     succeeds or fails as a block.
@@ -559,8 +595,8 @@ This is a lovely case for a context manager::
     which means the system is safe by default.
 
 SqlAlchemy already implements this pattern::
-    We introduce a simpler abstraction over the SQLAlchemy Session object in
-    order to "narrow" the interface between the ORM and our code. This helps
+    We introduce an even simpler abstraction over the SQLAlchemy Session object
+    in order to "narrow" the interface between the ORM and our code. This helps
     to keep us loosely coupled.
 
 *****************************************************************

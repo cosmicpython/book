@@ -1,21 +1,54 @@
 [[chapter_07_external_events]]
-== Event-Driven Architecture (using events to integrate microservices)
+== Event-driven Architecture (using Events To Integrate Microservices)
 
 We've got a microservice with a web api, but what about other ways of talking
 to other systems?  how does it know if, say, a shipment is delayed or the
 quantity is amended?  how does it communicate to our warehouse system to say
 that an order has been allocated and needs to be sent to a customer?
 
-In this chapter we'd like to show how the events metaphor can be stretched
+In this chapter we'd like to show how the events metaphor can be extended
 to encompass the way that we handle incoming and outgoing messages from the
 system.
 
 
-=== Using a Redis pubsub channel for integration
+=== An external event triggers internal invents
+
+We learn about the need to change batch quantities when they're already
+in the system.  Perhaps someone made a mistake on the number in the manifest,
+or perhaps some sofas fell off a truck. Following a conversation with the
+business,footnote:[https://en.wikipedia.org/wiki/Event_storming[Event storming]
+is a common technique], we model the situation as follows:
+
+
+[[batch_changed_events_flow_diagram]]
+.batch quantity changed means deallocate and reallocate
+====
+[source,text]
+[role="skip"]
+----
++----------+    /----\      +------------+        +------------+
+| batch    |--> |RULE| -->  | Deallocate | ---->  | Reallocate |
+| quantity |    \----/      +------------+-+      +------------+
+| changed  |                  | Deallocate | ---->  | Reallocate |
++----------+                  +------------+-+      +------------+-+
+                                | Deallocate | ---->  | Reallocate |
+                                +------------+        +------------+
+----
+====
+
+An event we'll called _batch quantity changed_ should lead us to change the
+quantity on the batch, yes, but also to apply a business rule: if the new
+quantity drops to less than the total already allocated, we need to
+_deallocate_  those orders from that batch.  Then, we want to _reallocate_ them
+to other batches.
+
+
+=== Using A Redis Pubsub Channel For Integration
 
 At MADE.com we use https://eventstore.org/[Eventstore] to convey messages
 between systems, but a lightweight solution based on Redis pubsub channels
 can work just fine, and are probably more familiar.
+
 
 Here's how we might start with an end-to-end test.  We can use our existing
 API to create batches, and then we'll test both inbound and outbound messages:
@@ -42,7 +75,7 @@ def test_change_batch_quantity_leading_to_reallocation():
 
     print('sending change batch quantity for', batch1)
     r.publish('change_batch_quantity', json.dumps({  #<1>
-        'batchid': batch1, 'sku': sku, 'qty': 5
+        'batchref': batch1, 'sku': sku, 'qty': 5
     }))
 
     print('waiting for reallocation event')
@@ -52,13 +85,11 @@ def test_change_batch_quantity_leading_to_reallocation():
         print(messages)
         data = json.loads(messages[-1]['data'])
         assert data['orderid'] == orderid
-        assert data['batchid'] == batch2
+        assert data['batchref'] == batch2
 
     wait_for_assertion(check_messages)
 ----
 ====
-
-//TODO: use ignore_subscribe_messages in subscribe_to_allocated_events
 
 Because this is an end-to-end test and our publish/subscribe model is
 asynchronous, there's a bit of boilerplate to manage waiting, but
@@ -73,7 +104,7 @@ essentially:
     look out for the expected reallocation.
 
 
-==== Redis is another thin adapter around our service layer
+==== Redis Is Another Thin Adapter Around Our Service Layer
 
 
 [[redis_pubsub_first_cut]]
@@ -100,7 +131,7 @@ def handle_change_batch_quantity(m):  #<2>
     print('handling', m, flush=True)
     data = json.loads(m['data'])
     services.change_batch_quantity(
-        ref=data['batchid'], qty=data['qty'],
+        ref=data['batchref'], qty=data['qty'],
         uow=unit_of_work.SqlAlchemyUnitOfWork(),
     )
 ----
@@ -114,12 +145,12 @@ def handle_change_batch_quantity(m):  #<2>
 
 
 So we'll need a new service called `change_batch_quantity`.
-    
 
-=== Test-driving a new service at the service layer
+
+=== Test-driving A New Service At The Service Layer
 
 Following the lessons learned in <<chapter_03_service_layer>>,
-we can operate in "high gear", and write our unit tests at the highest
+we can operate in "high gear," and write our unit tests at the highest
 possible level of abstraction, the service layer.  Here's what they might
 look like:
 
@@ -167,7 +198,7 @@ look like:
     and we expect to reallocated it to a new batch
 
 
-==== An internal event to express de-allocation
+==== An Internal Event To Express De-allocation
 
 A batch might have dozens of orders allocated to it. Similarly to the "out of
 stock" email, rather than doing deallocation and re-allocation in-line in the
@@ -206,7 +237,7 @@ def change_batch_quantity(
         uow: unit_of_work.AbstractUnitOfWork
 ):
     with uow:
-        product = uow.products.get_by_batchid(batchid=ref)
+        product = uow.products.get_by_batchref(batchref=ref)
         product.change_batch_quantity(ref=ref, qty=qty)
         uow.commit()
 ----
@@ -216,7 +247,7 @@ def change_batch_quantity(
 
 (along the way we need a new query type on our repository)
 
-[[get_by_batchid]]
+[[get_by_batchref]]
 .A new query type on our repository (src/allocation/repository.py)
 ====
 [source,python]
@@ -227,8 +258,8 @@ class AbstractRepository(abc.ABC):
     def get(self, sku):
         ...
 
-    def get_by_batchid(self, batchid):
-        p = self._get_by_batchid(batchid)
+    def get_by_batchref(self, batchref):
+        p = self._get_by_batchref(batchref)
         if p:
             self.seen.add(p)
         return p
@@ -242,7 +273,7 @@ class AbstractRepository(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def _get_by_batchid(self, batchid):
+    def _get_by_batchref(self, batchref):
         raise NotImplementedError
 
 
@@ -254,18 +285,17 @@ class SqlAlchemyRepository(AbstractRepository):
     def _get(self, sku):
         return self.session.query(model.Product).filter_by(sku=sku).first()
 
-    def _get_by_batchid(self, batchid):
+    def _get_by_batchref(self, batchref):
         return self.session.query(model.Product).join(model.Batch).filter(
-            orm.batches.c.reference == batchid,
+            orm.batches.c.reference == batchref,
         ).first()
 
 ----
 ====
 
-and on our fakerepository too (you can get a feeling for the maintenance burden
-of our fakes here.  it's not much work, but it is work.)
+And on our fakerepository too:
 
-[[fakerepo_get_by_batchid]]
+[[fakerepo_get_by_batchref]]
 .Updating the fake repo too (tests/unit/test_services.py)
 ====
 [source,python]
@@ -277,13 +307,20 @@ class FakeRepository(repository.AbstractRepository):
     def _get(self, sku):
         return next((p for p in self._products if p.sku == sku), None)
 
-    def _get_by_batchid(self, batchid):
+    def _get_by_batchref(self, batchref):
         return next((
             p for p in self._products for b in p.batches
-            if b.reference == batchid
+            if b.reference == batchref
         ), None)
 ----
 ====
+
+You may be starting to worry that maintaining these fakes is going to be
+a maintenance burden.  There's no doubt that it is work, but in our experience
+it's not a lot of work.  Once your project is up and running, the interface
+for your repository and UoW abstractions really don't change much.  And if
+you're using ABC's, they'll help remind you when things get out of sync.
+
 
 TODO: discuss finder methods on repository.
 
@@ -333,9 +370,10 @@ TODO: should we have `Batch.change_purchased_quantity`?  But how to
 
 //TODO: access to underscore variable
 //TODO: we changed from Batch.deallocate to Batch.deallocate_one,
-// need do delete/amend some unit tests
+// needed to delete/amend some unit tests. ok to gloss over?
 
-=== New handlers for allocated and deallocated events
+
+=== New Handlers For Allocated And Deallocated Events
 
 Here's what the events will look like:
 
@@ -349,7 +387,7 @@ class Allocated(Event):
     orderid: str
     sku: str
     qty: int
-    batchid: str
+    batchref: str
 
 @dataclass
 class Deallocated(Event):
@@ -408,10 +446,28 @@ def publish(channel, event):
 ====
 
 
-==== But handlers do now need a UoW
+==== But Handlers Do Now Need A Uow
 
 Our event handlers do now need a UoW.  We make a small modification
-to _unit_of_work.py_:
+to the main `messagebus.handle()` function:
+
+[[handle_takes_uow]]
+.Handle takes a UoW (src/allocation/messagebus.py)
+====
+[source,python]
+[role="non-head"]
+----
+def handle(events_: List[events.Event], uow: unit_of_work.AbstractUnitOfWork):
+    while events_:
+        event = events_.pop(0)
+        for handler in HANDLERS[type(event)]:
+            handler(event, uow=uow)
+----
+====
+
+
+
+And to _unit_of_work.py_:
 
 
 [[uow_passes_self_to_messagebus]]
@@ -429,16 +485,15 @@ class AbstractUnitOfWork(abc.ABC):
 ----
 ====
 
-<1> The UoW passes itself to the messagebus handlers.
+<1> The UoW passes itself to the messagebus.
 
 
-And that will get us to passing tests.  Things are starting to
-feel a little messy, however.
+And that will get us to passing tests.  Things are starting to feel a little
+messy, however.
 
 
 
-
-=== Services can become event handlers
+=== Services Can Become Event Handlers
 
 Let's take a look at our services and message handlers side-by-side:
 
@@ -596,6 +651,13 @@ Now the places in our code where we need to parse external input have a clearly
 defined data structure for making requests into the system, the events, and a
 single entrypoint into the system, the message bus:
 
+////
+TODO:
+By the time we hit Example 17. Flask creates events and puts them on the messagebus. (src/allocation/flask_app.py), it would be nice to have a formal definition of the messagebus.handle function.
+My guess is that it's just a simple loop mapping an event type to a handler using the HANDLERS dictionary, but explicitly stating that would be helpful.
+
+https://github.com/python-leap/book/issues/37
+////
 
 [[flask_with_events]]
 .Flask creates events and puts them on the messagebus. (src/allocation/flask_app.py)
@@ -636,7 +698,7 @@ Redis now looks very similar
 def handle_change_batch_quantity(m):
     print('handling', m, flush=True)
     data = json.loads(m['data'])
-    event = events.BatchQuantityChanged(ref=data['batchid'], qty=data['qty'])
+    event = events.BatchQuantityChanged(ref=data['batchref'], qty=data['qty'])
     messagebus.handle([event], uow=unit_of_work.SqlAlchemyUnitOfWork())
 ----
 ====
@@ -667,7 +729,7 @@ TODO: talk about the fact that we've implemented quite a complicated use case
     show a hacky version for comparison?
 
 
-=== What have we achieved?
+=== What Have We Achieved?
 
 * events are simple dataclasses that define the data structures for inputs,
   outputs, and internal messages within our system.  this is quite powerful
@@ -688,4 +750,3 @@ We've added bit of complexity to our architecture, but hopefully you can
 see how we've now made it very easy to plug in almost any new requirement
 from the business, whether it's a new use case, a new integration with
 one of our internal systems, or an integration with external systems.
-

@@ -9,3 +9,5 @@ update-code:
 	cd code && git fetch
 	./checkout-branches-for-ci.py
 
+count-todos:
+	ls *.asciidoc | xargs grep -c TODO | sed  s/:/\\t/

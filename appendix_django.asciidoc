@@ -1,6 +1,6 @@
 [[appendix_django]]
 [appendix]
-== Repository and Unit of Work patterns with Django
+== Repository And Unit Of Work Patterns With Django
 
 Supposing you wanted to use Django instead of SQLAlchemy and Flask, how
 might things look?
@@ -48,7 +48,7 @@ package next to our main allocation code:
 ====
 
 
-=== Repository pattern with Django
+=== Repository Pattern With Django
 
 I used a plugin called
 https://github.com/pytest-dev/pytest-django[pytest-django] to help with test
@@ -139,7 +139,7 @@ You can see that the implementation relies on the Django models having
 some custom methods for translating to and from our domain model.
 
 
-==== Custom methods on Django ORM classes to translate to/from our domain model
+==== Custom Methods On Django ORM Classes To Translate To/from Our Domain Model
 
 NOTE: As in <<chapter_02_repository>>, we use dependency inversion.
     The ORM (Django) depends on the model, and not the other way around
@@ -203,7 +203,7 @@ class OrderLine(models.Model):
 
 
 
-=== Unit of Work pattern with Django
+=== Unit Of Work Pattern With Django
 
 
 The tests don't change too much
@@ -216,7 +216,7 @@ The tests don't change too much
 def insert_batch(ref, sku, qty, eta):  #<1>
     django_models.Batch.objects.create(reference=ref, sku=sku, qty=qty, eta=eta)
 
-def get_allocated_batch_id(orderid, sku):  #<1>
+def get_allocated_batch_ref(orderid, sku):  #<1>
     return django_models.Allocation.objects.get(
         line__orderid=orderid, line__sku=sku
     ).batch.reference
@@ -233,8 +233,8 @@ def test_uow_can_retrieve_a_batch_and_allocate_to_it():
         batch.allocate(line)
         uow.commit()
 
-    batchid = get_allocated_batch_id('o1', 'sku1')
-    assert batchid == 'batch1'
+    batchref = get_allocated_batch_ref('o1', 'sku1')
+    assert batchref == 'batch1'
 
 
 @pytest.mark.django_db(transaction=True)  #<2>
@@ -304,7 +304,7 @@ class DjangoUnitOfWork(AbstractUnitOfWork):
 TODO: maybe `.seen()` should live on the uow not the repo
 
 
-=== API: Django views are adapters
+=== API: Django Views Are Adapters
 
 The Django _views.py_ file ends up being almost identical to the 
 old _flask_app.py_, because our architecture means it's a very
@@ -335,7 +335,7 @@ def add_batch(request):
 def allocate(request):
     data = json.loads(request.body)
     try:
-        batchid = services.allocate(
+        batchref = services.allocate(
             data['orderid'],
             data['sku'],
             data['qty'],
@@ -344,12 +344,12 @@ def allocate(request):
     except (model.OutOfStock, services.InvalidSku) as e:
         return JsonResponse({'message': str(e)}, status=400)
 
-    return JsonResponse({'batchid': batchid}, status=201)
+    return JsonResponse({'batchref': batchref}, status=201)
 ----
 ====
 
 
-=== Conclusions: would you bother?
+=== Conclusions: Would You Bother?
 
 OK it works but it does feel like more effort than Flask/SQLAlchemy.  Why is
 that, and when might you still choose Django?
@@ -371,4 +371,3 @@ So why might you still do it?
   and business logic from the ORM...)
   
 // TODO: Expand on this wrap-up?
-

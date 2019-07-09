@@ -1,5 +1,5 @@
 [[chapter_03_service_layer]]
-== Our first use case:  Flask API and service layer.
+== Our First Use Case: Flask API And Service Layer.
 
 Like any good agile team, we're hustling to try and get an MVP out and
 in front of the users to start gathering feedback.  We have the core
@@ -18,7 +18,7 @@ plan:
 * Refactor out a _Service Layer_ to serve as an abstraction to
   capture the use case, and sit between Flask and our Domain Model.
   Build some service-layer tests and show how they can use the
-  FakeRepository.
+  `FakeRepository`.
 
 * Experiment with different types of parameters for our service layer
   functions; show that using primitive data types allows the service-layer's
@@ -29,13 +29,13 @@ plan:
   storage layer to set up test data.
 
 
-=== A first end-to-end (E2E) test
+=== A First End-to-end (E2E) Test
 
 No-one is interested in getting into a long terminology debate about what
 counts as an E2E test vs a functional test vs an acceptance test vs an
 integration test vs unit tests.  Different projects need different combinations
 of tests, and we've seen perfectly successful projects just split things into
-"fast tests" and "slow tests".
+"fast tests" and "slow tests."
 
 For now we want to write one or maybe two tests that are going to exercise
 a "real" API endpoint (using HTTP) and talk to a real database. Let's call
@@ -69,7 +69,7 @@ def test_api_returns_allocation(add_stock):
     url = config.get_api_url()  #<2>
     r = requests.post(f'{url}/allocate', json=data)  #<3>
     assert r.status_code == 201
-    assert r.json()['batchid'] == batch2
+    assert r.json()['batchref'] == batch2
 ----
 ====
 
@@ -88,7 +88,7 @@ also talking to a postgres database.  If you want to see how we did
 it, check out <<appendix_project_structure>>.
 
 
-=== The straightforward implementation
+=== The Straightforward Implementation
 
 Implementing things in the most obvious way, you might get something like this:
 
@@ -123,9 +123,9 @@ def allocate_endpoint():
         request.json['qty'],
     )
 
-    batchid = model.allocate(line, batches)
+    batchref = model.allocate(line, batches)
 
-    return jsonify({'batchid': batchid}), 201
+    return jsonify({'batchref': batchref}), 201
 ----
 ====
 
@@ -156,12 +156,14 @@ def test_allocations_are_persisted(add_stock):
     line1 = {'orderid': order1, 'sku': sku, 'qty': 10}
     line2 = {'orderid': order2, 'sku': sku, 'qty': 10}
     url = config.get_api_url()
+
     r = requests.post(f'{url}/allocate', json=line1)
     assert r.status_code == 201
-    assert r.json()['batchid'] == batch1
+    assert r.json()['batchref'] == batch1
+
     r = requests.post(f'{url}/allocate', json=line2)
     assert r.status_code == 201
-    assert r.json()['batchid'] == batch2
+    assert r.json()['batchref'] == batch2
 ----
 ====
 
@@ -169,7 +171,7 @@ Not quite so lovely, but that will force us to get a commit in.
 
 
 
-=== Error conditions that require database checks
+=== Error Conditions That Require Database Checks
 
 If we keep going like this though, things are going to get uglier and uglier.
 
@@ -180,6 +182,30 @@ more of a sanity-check that we should implement at the database layer, before
 we even invoke the domain service.
 
 Now we're looking at two more end-to-end tests:
+
+////
+TODO:
+
+https://github.com/python-leap/book/blame/master/chapter_03_service_layer.asciidoc#L192
+For the id generation, fluent helpers will make the code flow read a bit easier.
+
+def random_sku(id_=None):
+    return random_ref(''.join(['s', str(id_)]))
+
+def random_order(id_=None):
+    return random_ref(''.join(['o', str(id_)]))
+
+def random_batch(id_=None):
+    return random_ref(''.join(['b', str(id_)]))
+
+@pytest.mark.usefixtures('restart_api')
+def test_something():
+    sku, order = random_sku(), random_order()
+    sku1, order1 = random_sku(1), random_order(1)
+    # etc., etc.
+
+https://github.com/python-leap/book/issues/43
+////
 
 [[test_error_cases]]
 .Yet more tests at the e2e layer...  (test_api.py)
@@ -240,12 +266,12 @@ def allocate_endpoint():
         return jsonify({'message': f'Invalid sku {line.sku}'}), 400
 
     try:
-        batchid = model.allocate(line, batches)
+        batchref = model.allocate(line, batches)
     except model.OutOfStock as e:
         return jsonify({'message': str(e)}), 400
 
     session.commit()
-    return jsonify({'batchid': batchid}), 201
+    return jsonify({'batchref': batchref}), 201
 ----
 ====
 
@@ -254,7 +280,7 @@ E2E tests is starting to get out of control, and soon we'll end up with an
 inverted test pyramid (or "ice cream cone model" as Bob likes to call it).
 
 
-=== Introducing a service layer, and using FakeRepository to unit test it
+=== Introducing A Service Layer, And Using Fakerepository To Unit Test It
 
 If we look at what our Flask app is doing, there's quite a lot of what we
 might call "orchestration" -- fetching stuff out of our repository, validating
@@ -264,8 +290,8 @@ web API endpoint (you'd need them if you were building a CLI for example, see
 <<appendix_csvs>>), and they're not really things that need to be tested by
 end-to-end tests.
 
-It often makes sense to split out a "service layer", sometimes called
-"orchestration layer" or "use case layer".
+It often makes sense to split out a _Service Layer_, sometimes called
+_orchestration layer_ or _use case layer_.
 
 Do you remember the `FakeRepository` that we prepared in the last chapter?
 
@@ -314,10 +340,8 @@ def test_error_for_invalid_sku():
     batch = model.Batch('b1', 'actualsku', 100, eta=None)
     repo = FakeRepository([batch])  #<1>
 
-    with pytest.raises(services.InvalidSku) as ex:
+    with pytest.raises(services.InvalidSku, match='Invalid sku nonexistentsku'):
         services.allocate(line, repo, FakeSession())  #<2><3>
-
-    assert 'Invalid sku nonexistentsku' in str(ex)
 ----
 ====
 
@@ -347,7 +371,67 @@ class FakeSession():
 (The fake session is only a temporary solution.  We'll get rid of it and make
 things even nicer in the next chapter, <<chapter_04_uow>>)
 
-The fake `.commit()` also lets us migrate a third test from the E2E layer:
+.Mocks vs Fakes; Classic Style vs London School TDD
+*******************************************************************************
+Couldn't we have used a mock (from `unittest.mock`) instead of building our
+own `FakeSession`, or instead of `FakeRepository`?  What's the difference
+between a fake and a mock anyway?
+
+We tend to find that building our own fakes is an excellent way of exercising
+design pressure against our abstractions.  If our abstractions are nice and
+simple, then they should be easy to fake.
+
+In fact in the case of `FakeRepository`, because our fake has actual behaviour,
+using a magic mock from `unittest.mock` wouldn't really help.
+
+In the case of `FakeSession`, the `session` object isn't one of our own
+abstractions, so the argument doesn't apply;  in fact, a `unittest.mock` mock
+would have been just fine, but out of habit we avoided using one;  in any case,
+we'll be getting rid of it in the next chapter.
+
+In general we try and avoid using mocks, and the associated `mock.patch`.
+Whenever we find ourselves reaching for them, we often see it as an indication
+that something is missing from our design.  You'll see a good example of that
+in <<chapter_06_events_and_message_bus>> when we mock out an email-sending
+module, but eventually we replace it with an explicit bit of dependency injection.
+That's discussed in <<chapter_10_dependency_injection>>.
+
+Regarding the definition of fakes vs mocks, the short but simplistic answer is:
+
+* Mocks are used to verify _how_ something gets used;  they have methods
+  like `assert_called_once_with()`.  They're associated with London-school
+  TDD.
+
+* Fakes are working implementations of the thing they're replacing, but
+  they're only designed for use in tests; they wouldn't work "in real life",
+  like our in-memory repository. But you can use them to make assertions about
+  the end state of a system, rather than the behaviours along the way, so
+  they're associated with classic-style TDD.
+
+(We're slightly conflating mocks with spies and fakes with stubs here, and you
+can read the long, correct answer in Martin Fowler's classic essay on the subject
+called https://martinfowler.com/articles/mocksArentStubs.html[Mocks aren't Stubs])
+
+(It also probably doesn't help that the `MagicMock` objects provided by
+`unittest.mock` aren't, strictly speaking, mocks, they're spies if anything.
+But they're also often used as stubs or dummies.  There, promise we're done with
+the test double terminology nitpicks now.)
+
+What about London-school vs classic-style TDD?  You can read more about those
+two in Martin Fowler's article just cited, as well as https://softwareengineering.stackexchange.com/questions/123627/what-are-the-london-and-chicago-schools-of-tdd[on stackoverflow],
+but in this book we're pretty firmly in the classicist camp.  We like to
+build our tests around state, both in setup and assertions, and we like
+to work at the highest level of abstraction possible rather than doing
+checks on the behaviour of intermediary collaborators.footnote:[
+Which is not to say that we think the London School people are wrong. There
+are some insanely smart people that work that way.  It's just not what we're
+used to].
+
+Read more on this shortly, in the <<kinds_of_tests,"high gear vs low gear">> section.
+
+*******************************************************************************
+
+The fake `.commit()` lets us migrate a third test from the E2E layer:
 
 
 [[second_services_test]]
@@ -368,7 +452,7 @@ def test_commits():
 ====
 
 
-==== A typical service function
+==== A Typical Service Function
 
 We'll get to a service function that looks something like <<service_function>>:
 
@@ -389,9 +473,9 @@ def allocate(line: OrderLine, repo: AbstractRepository, session) -> str:
     batches = repo.list()  #<1>
     if not is_valid_sku(line.sku, batches):  #<2>
         raise InvalidSku(f'Invalid sku {line.sku}')
-    batch = model.allocate(line, batches)  #<3>
+    batchref = model.allocate(line, batches)  #<3>
     session.commit()  #<4>
-    return batch
+    return batchref
 ----
 ====
 
@@ -430,8 +514,8 @@ and we've used the type hint to say that we depend on ``AbstractRepository``foot
 Is this Pythonic?  Depending on who you ask, both abstract base classes and
 type hints are hideous abominations, and serve only to add useless, unreadable
 cruft to your code; beloved only by people who wish that Python was Haskell,
-which it will never be.  "beautiful is better than ugly", "simple is better
-than complex", and "readability counts"...
+which it will never be.  "beautiful is better than ugly," "simple is better
+than complex," and "readability counts..."
 Or, perhaps they make explicit something that would otherwise be implicit
 ("explicit is better than implicit").  For the purposes of this book, we've
 decided this argument carries the day. What you decide to do in your own
@@ -449,8 +533,7 @@ using the local filesystem for testing, or switching to MongoDB instead of SQL.]
 // "1. High-level modules should not depend on low-level modules. Both should depend on abstractions"
 // "2. Abstractions should not depend upon details. Details should depend upon abstractions"
 
-
-//TODO diagram?
+See the diagram at the end of the chapter, <<service_layer_diagram_abstract>>.
 
 *******************************************************************************
 
@@ -475,11 +558,11 @@ def allocate_endpoint():
         request.json['qty'],  #<2>
     )
     try:
-        batchid = services.allocate(line, repo, session)  #<2>
+        batchref = services.allocate(line, repo, session)  #<2>
     except (model.OutOfStock, services.InvalidSku) as e:
         return jsonify({'message': str(e)}), 400  <3>
 
-    return jsonify({'batchid': batchid}), 201  <3>
+    return jsonify({'batchref': batchref}), 201  <3>
 ----
 ====
 
@@ -533,7 +616,7 @@ def test_happy_path_returns_201_and_allocated_batch(add_stock):
     url = config.get_api_url()
     r = requests.post(f'{url}/allocate', json=data)
     assert r.status_code == 201
-    assert r.json()['batchid'] == batch2
+    assert r.json()['batchref'] == batch2
 
 
 @pytest.mark.usefixtures('restart_api')
@@ -552,9 +635,10 @@ We've successfully split our tests into two broad categories: tests about web
 stuff, which we implement end-to-end; and tests about orchestration stuff, which
 we can test against the service layer in memory.
 
-=== How is our test pyramid looking?
 
-Let's see what this move to using a service layer, with its own service-layer tests,
+=== How Is Our Test Pyramid Looking?
+
+Let's see what this move to using a Service Layer, with its own service-layer tests,
 does to our test pyramid:
 
 [[test_pyramid]]
@@ -575,28 +659,27 @@ test_api.py:4
 ----
 ====
 
-//TODO: test listing this too?
+//NICE-TO-HAVE: test listing this too?
 
 Not bad!  15 unit tests, 8 integration tests, and just 2 end-to-end tests.  That's
 a healthy-looking test pyramid.
 
 
 
-=== Should domain layer tests move to the service layer?
-
-//TODO consider splitting this out to its own chapter
+=== Should Domain Layer Tests Move To The Service Layer?
 
 We could take this a step further. Since we can test the our software against
 the service layer, we don't really need tests for the domain model any more.
 Instead, we could rewrite all of the domain-level tests from chapter one in
 terms of the service layer.
 
+
 .Rewriting a domain test at the service layer (test_services.py)
 ====
 [source,python]
 [role="skip"]
 ----
-# model-layer test:
+# domain-layer test:
 def test_prefers_warehouse_batches_to_shipments():
     warehouse_batch = Batch('wh-batch', 'sku1', 100, eta=None)
     shipment_batch = Batch('sh-batch', 'sku1', 100, eta=tomorrow)
@@ -607,7 +690,7 @@ def test_prefers_warehouse_batches_to_shipments():
     assert warehouse_batch.available_quantity == 90
     assert shipment_batch.available_quantity == 100
 
-# domain-layer test:
+# service-layer test:
 def test_prefers_warehouse_batches_to_shipments():
     warehouse_batch = Batch('wh-batch', 'sku1', 100, eta=None)
     shipment_batch = Batch('sh-batch', 'sku1', 100, eta=tomorrow)
@@ -651,10 +734,11 @@ we won't have any tests that directly interact with "private" methods or
 attributes on our model objects, which leaves us more free to refactor them.
 
 
-=== On deciding what kind of tests to write
+[[kinds_of_tests]]
+=== On Deciding What Kind Of Tests To Write
 
 You might be asking yourself "should I rewrite all my unit tests, then? Is it
-wrong to write tests against the domain model?". To answer the question, it's
+wrong to write tests against the domain model?" To answer the question, it's
 important to understand the trade-off between coupling and design feedback.
 
 .The test spectrum
@@ -672,7 +756,7 @@ important to understand the trade-off between coupling and design feedback.
 
 //TODO: stick a non-ascii diagram here.
 
-Extreme Programming (XP) exhorts us to "listen to the code". When we're writing
+Extreme Programming (XP) exhorts us to "listen to the code." When we're writing
 tests, we might find that the code is hard to use, or notice a code smell. This
 is a trigger for us to refactor, and reconsider our design.
 
@@ -703,14 +787,14 @@ or delete these tests, because they are tightly coupled to a particular
 implementation. footnote:[e.j. an example that is overmocked would be good here
 if you decide to add one.]
 
-// TODO (SG) - maybe we could do with a/some concrete examples here?  Eg an 
+// TODO (SG) - maybe we could do with a/some concrete examples here?  Eg an
 // example where a unit test would break but a service-layer test wouldn't?
 // and maybe make the analogy of "you should only write tests against public
 // methods of your classes, and the service layer is just another more-public
 // layer
 
 
-==== Low and High Gear
+==== Low And High Gear
 
 Most of the time, when we are adding a new feature, or fixing a bug, we don't
 need to make extensive changes to the domain model. In these cases, we prefer
@@ -726,7 +810,7 @@ get better feedback and executable documentation of our intent.
 
 The metaphor we use is that of shifting gears. When starting off a journey, the
 bicycle needs to be in a low gear so that it can overcome inertia. Once we're off
-and running, we can go faster and more efficiently by changing into a high gear
+and running, we can go faster and more efficiently by changing into a high gear;
 but if we suddenly encounter a steep hill, or we're forced to slow down by a
 hazard, we again drop down to a low gear until we can pick up speed again.
 
@@ -737,10 +821,9 @@ hazard, we again drop down to a low gear until we can pick up speed again.
 
 * Write one end-to-end test per featurefootnote:[what about happy path and
   unhappy path? We say, error-handling is a feature, so yes you need one E2E
-  test for error handling, but maybe not one per feature]
-  to demonstrate that the feature exists
-  and is working. This might be written against an HTTP api. These tests cover
-  an entire feature at a time.
+  test for error handling, but probably not one unhappy-path test per feature]
+  to demonstrate that the feature exists and is working. This might be written
+  against an HTTP api. These tests cover an entire feature at a time.
 
 * Write the bulk of the tests for your system against the service layer. This
   offers a good trade-off between coverage, run-time, and efficiency. These
@@ -754,7 +837,7 @@ hazard, we again drop down to a low gear until we can pick up speed again.
 ******************************************************************************
 
 
-=== Fully Decoupling the service layer tests from the domain
+=== Fully Decoupling The Service Layer Tests From The Domain
 
 We still have some direct dependencies on the domain in our service-layer
 tests, because we use domain objects to set up our test data and to invoke
@@ -816,7 +899,7 @@ But our tests still depend on the domain, because we still manually instantiate
 model works, we'll have to change a bunch of tests.
 
 
-==== Mitigation: keep all domain dependencies in fixture functions
+==== Mitigation: Keep All Domain Dependencies In Fixture Functions
 
 We could at least abstract that out to a helper function or a fixture
 in our tests.  Here's one way you could do that, adding a factory
@@ -851,7 +934,7 @@ At least that would move all of our tests' dependencies on the domain
 into one place.
 
 
-==== Adding a missing service
+==== Adding A Missing Service
 
 We could go one step further though.  If we had a service to add stock,
 then we could use that, and make our service-layer tests fully expressed
@@ -902,9 +985,9 @@ NOTE: Should you write a new service just because it would help remove
 TIP: In general, if you find yourself needing to do domain-layer stuff directly
     in your service-layer tests, it may be an indication that your service
     layer is incomplete.
-    
 
-That now allows us to rewrite _all_ of our service-layer tests purely 
+
+That now allows us to rewrite _all_ of our service-layer tests purely
 in terms of the services themselves, using only primitives, and without
 any dependencies on the model.
 
@@ -925,10 +1008,8 @@ def test_allocate_errors_for_invalid_sku():
     repo, session = FakeRepository([]), FakeSession()
     services.add_batch('b1', 'actualsku', 100, None, repo, session)
 
-    with pytest.raises(services.InvalidSku) as ex:
+    with pytest.raises(services.InvalidSku, match='Invalid sku nonexistentsku'):
         services.allocate('o1', 'nonexistentsku', 10, repo, FakeSession())
-
-    assert 'Invalid sku nonexistentsku' in str(ex)
 ----
 ====
 
@@ -937,7 +1018,7 @@ This is a really nice place to be in.  Our service-layer tests only depend on
 the services layer itself, leaving us completely free to refactor the model as
 we see fit.
 
-=== Carrying the improvement through to the E2E tests
+=== Carrying The Improvement Through To The E2E Tests
 
 In the same way that adding `add_batch` helped decouple our services-layer
 tests from the model, adding an API endpoint to add a batch would remove
@@ -968,6 +1049,11 @@ def add_batch():
 ----
 ====
 
+NOTE: Are you thinking to yourself `POST` to `/add_batch`?? That's not
+    very RESTful!  You're quite right.  We're being happily sloppy, but
+    if you'd like to make it all more RESTey, maybe a POST to `/batches`,
+    then knock yourself out!  Because Flask is a thin adapter, it'll be
+    easy.  See the next sidebar.
 
 And our hardcoded SQL queries from _conftest.py_ get replaced with some
 API calls, meaning the API tests have no dependencies other than the API,
@@ -1003,16 +1089,30 @@ def test_happy_path_returns_201_and_allocated_batch():
     url = config.get_api_url()
     r = requests.post(f'{url}/allocate', json=data)
     assert r.status_code == 201
-    assert r.json()['batchid'] == batch2
+    assert r.json()['batchref'] == batch2
 ----
 ====
 
-//TODO: (DS) I notice that we don't have the concept of a product that needs to
-// be added (it's implicit in the batch presumably). It would be good to get a
-// sense of how much this is because this is a simplified example and how much
-// it's a design principle. It is possible that the explanations of the first
-// few chapters would be better served by a simpler example. (E.g just have a
-// model of product, amount available and order placing). 
+
+.Exercise for the Reader
+******************************************************************************
+We've now got services for `add_batch` and `allocate`, why not build out
+a service for `deallocate`?  We've added an E2E test and a few stub
+service-layer tests for you to get started here:
+
+https://github.com/python-leap/code/tree/chapter_03_service_layer_exercise
+
+If that's not enough, continue into the E2E tests and _flask_app.py_, and
+refactor the Flask adapter to be more RESTful.  Notice how doing so doesn't
+require any change to our service layer or domain layer!
+
+TIP: If you decide you want to build a read-only endpoint for retrieving allocation
+    info, just do the simplest thing that can possibly work (TM), which is
+    `repo.get()` right in the flask handler.  We'll talk more about reads vs
+    writes in <<chapter_09_cqrs>>.
+
+******************************************************************************
+
 
 === Wrap-up
 
@@ -1020,17 +1120,17 @@ def test_happy_path_returns_201_and_allocated_batch():
 Adding the service layer has really bought us quite a lot:
 
 * Our flask API endpoints become very thin and easy to write:  their
-  only responsibility is doing "web stuff", things like parsing JSON
+  only responsibility is doing "web stuff," things like parsing JSON
   and producing the right HTTP codes for happy or unhappy cases.
 
 * We've defined a clear API for our domain, a set of use cases or
   entrypoints that can be used by any adapter without needing to know anything
   about our domain model classes--whether that's an API, a CLI (see
   <<appendix_csvs>>), or the tests! They're an adapter for our domain too.
-    
+
 * We can write tests in "high gear" using the service layer, leaving us
   free to refactor the domain model in any way we see fit.  As long as
-  we can still deliver the same use cases, we can experiment with new 
+  we can still deliver the same use cases, we can experiment with new
   designs without needing to rewrite a load of tests.
 
 * And our "test pyramid" is looking good -- the bulk of our tests
@@ -1038,12 +1138,81 @@ Adding the service layer has really bought us quite a lot:
   tests.
 
 
+[[service_layer_diagram_abstract]]
+.Dependencies of the service layer
+====
+[role="skip"]
+[source,text]
+----
+Abstract dependencies:
+        +-----------------------------+
+        |          Any client         |----\
+        +-----------------------------+    |
+                       |                   |
+                       V                   |
+        +-----------------------------+    |
+        |         Service Layer       |    |
+        +-----------------------------+    |
+           |                     |         |
+           V                     V         V
++------------------+     +-----------------------+
+|   Domain Model   |     | (Abstract) Repository |
++------------------+     +-----------------------+
+
+
+
+Tests' dependencies:
+
+        +-----------------------------+
+        |           Tests             |----\
+        +-----------------------------+    |
+                       |                   |
+                       V                   |
+        +-----------------------------+    |
+        |         Service Layer       |    |
+        +-----------------------------+    |
+           |                     |         |
+           V                     V         V
++------------------+     +-----------------------+
+|   Domain Model   |     |    FakeRepository     |
++------------------+     |      (in-memory)      |
+                         +-----------------------+
+
+
+Runtime dependencies:
+
+       +--------------------------------+
+       | Flask API (Presentation layer) |----\
+       +--------------------------------+    |
+                       |                     |
+                       V                     |
+        +-----------------------------+      |
+        |         Service Layer       |      |
+        +-----------------------------+      |
+           |                     |           |
+           V                     V           V
++------------------+     +-----------------------+
+|   Domain Model   |     | SqlAlchemy Repository |
++------------------+     +-----------------------+
+              ^                |
+              |                V
+           +----------------------+
+           |          ORM         |
+           +----------------------+
+                       |
+                       V
+           +------------------------+
+           |       Database         |
+           +------------------------+
+
+----
+====
+
 //TODO (DS): Good wrap up. I'd really like to see a table or something that
-//sums up what belongs in each layer so far. And a diagram! 
-  
+//sums up what belongs in each layer so far. And a diagram!
+
 There's still a bit of awkwardness we'd like to get rid of. The service
 layer is tightly coupled to a `session` object.  In the next chapter, we'll
-introduce one more pattern that works closely with _Repository_ and _Service
-Layer_, the _Unit of Work_ pattern, and everything will be absolutely lovely.
+introduce one more pattern that works closely with _repository_ and _service
+layer_, the _unit of work_ pattern, and everything will be absolutely lovely.
 You'll see!
-

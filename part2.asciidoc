@@ -13,18 +13,18 @@ much more to design how its modules communicate rather than what their internal
 properties and behaviors should be. 
 ____
 
-It's all very well being able to write *one* domain model to manage a single bit
-of business process, but what happens when we need to write *many* models? In
+It's all very well being able to write _one_ domain model to manage a single bit
+of business process, but what happens when we need to write _many_ models? In
 the real world, our applications sit within an organisation and need to exchange
 information with other parts of the system.
 
-Faced with this rquirement, many teams reach for microservices via HTTP APIs
+Faced with this requirement, many teams reach for microservices via HTTP APIs
 but if they're not careful, they'll end up producing the most chaotic mess of
 all: the distributed big ball of mud.
 
-Fortunately, the cosmic bower bird is here to show how the techniques from part
+Fortunately, the cosmic bowerbird is here to show how the techniques from part
 one can be extended to distributed systems.
-
+//TODO: are we gonna go for it on the cosmic bowerbird front?
 
 In part two, we'll zoom out to look at how we can compose a system from many
 small components that interact through message passing. 
@@ -33,16 +33,19 @@ We'll see how our service layer and unit of work allow us to reconfigure our app
 to run as an asynchronous message processor, and how event driven systems help
 us to decouple aggregates and applications from one another.
 
-[[part2_context_diag]]
+* TODO: part2_context_diag
 
 We'll look at the following patterns and techniques:
 
-* Domain events
+Domain events::
   Trigger workflows that cross consistency boundaries.
-* Message bus
+
+Message bus::
   Provide a unified way of invoking use-cases from any endpoint.
-* CQRS
+
+CQRS::
   Improve performance and scalability by separating reads and writes.
 
-Plus we'll introduce a Dependency Injection framework that uses type hints, just
+Plus we'll introduce a dependency injection framework that uses type hints, just
 to annoy Harry.
+//TODO: but we don't, currently.

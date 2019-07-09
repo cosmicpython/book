@@ -1,22 +1,29 @@
 [[chapter_06_events_and_message_bus]]
-== Events and the Message Bus
+== Events And The Message Bus
 
-//TODO: Eventual cosistency between aggregates?
+So far we've spent a lot of time and energy on a simple problem that we could
+easily have solved with Django. You might be asking if the increased testability
+and expressiveness are *really* worth all the effort.
 
-Another new requirement:  when allocation fails, someone should be emailed.
-But we don't want to have email-sending code be a potential cause of
-bugs/failures in our core model/state changes.  We introduce events and
-a message bus as a pattern for kicking off related work after a use case is
-complete.
+In practice, though, we find that it's not the obvious features that make a mess
+of our codebases: it's the goop around the edge. It's reporting, and permissions
+and workflows that touch a zillion objects.
 
+Let's see how our architecture holds up once we need to plug in some of the
+mundane stuff that makes up so much of our systems.
 
+Another day, another new requirement:  when we can't allocate an order because
+we're out of stock, we should alert the buying team. They'll go and fix the
+problem by buying more stock, and all will be well.
 
-=== Avoiding making a mess.
+For a first version, our product owner says we can just send the alert by email.
 
-==== First, avoid making a mess of of our web controllers
+=== Avoiding Making A Mess.
+
+==== First, Avoid Making A Mess Of Of Our Web Controllers
 
 When we have a new requirement like this, that's not _really_ to do with the
-core domain, it's all to easy to start dumping these things into our web
+core domain, it's all too easy to start dumping these things into our web
 controllers:
 
 
@@ -34,7 +41,7 @@ def allocate_endpoint():
         request.json['qty'],
     )
     try:
-        batchid = services.allocate(line, unit_of_work.start)
+        batchref = services.allocate(line, unit_of_work.start)
     except (model.OutOfStock, services.InvalidSku) as e:
         send_mail(
             'out of stock', 
@@ -43,12 +50,15 @@ def allocate_endpoint():
         )
         return jsonify({'message': str(e)}), 400
 
-    return jsonify({'batchid': batchid}), 201
+    return jsonify({'batchref': batchref}), 201
 ----
 ====
 
-So let's try and avoid that.  We can start by writing a test at the service layer:
+As a one-off hack, this might be okay, but it's easy to see how we can quickly
+end up in a mess by patching things in this way. Sending emails isn't the job of
+our HTTP layer, and we'd like to be able to unit test this new feature.
 
+Let's start with a unit test written against our service layer.
 
 [[mocky_test_for_send_email]]
 .A Mocky test at the service layer (tests/unit/test_services.py)
@@ -78,10 +88,10 @@ def test_sends_email_on_out_of_stock_error():
 
 NOTE: If you find yourself using `unittest.mock` to test external dependencies
     at the service layer, it may be a code smell.  See
-    <<chapter_08_bootstrap>>.
+    <<chapter_10_dependency_injection>>.
 
 
-==== ... And let's not make a mess of our model either
+==== ... And Let's Not Make A Mess Of Our Model Either
 
 Assuming we don't want to put this code into our web controllers, because
 we want them to be as thin as possible, we may look at putting it right at
@@ -109,7 +119,7 @@ But that's even worse!  We don't want our model to have any dependencies on
 infrastructure concerns like `email.send_mail`.
 
 
-==== Or the service layer!
+==== Or The Service Layer!
 
 In the service layer it's a little better, but it's still not lovely:
 
@@ -129,9 +139,9 @@ def allocate(
         if product is None:
             raise exceptions.InvalidSku(f'Invalid sku {line.sku}')
         try:
-            batch = product.allocate(line)
+            batchref = product.allocate(line)
             uow.commit()
-            return batch
+            return batchref
         except exceptions.OutOfStock:
             email.send_mail('stock@made.com', f'Out of stock for {line.sku}')
             raise
@@ -142,33 +152,39 @@ Catching an exception and re-raising it?  I mean, it could be worse, but it's
 definitely making us unhappy.
 
 
-===  Single Responsibility Principle
+=== Single Responsibility Principle
 
 Really this is a violation of the Single Responsibility Principle.  Our use
-case is allocation, our endpoint, service function and domain methods are all
+case is allocation. Our endpoint, service function, and domain methods are all
 called `allocate`, not `allocate_and_send_mail_if_out_of_stock`.
 
-What we'd like is to keep our domain working in the language of the domain.
-We might want to signal that allocation has happened, but the responsibility
-of actually invoking some email-sending code in response to that fact belongs
-elsewhere.  It's something we want to be able to switch on and off, or change
-the implementation of (changing email services, switching to SMS notifications)
-without needing to change our model.
+NOTE: Rule of thumb: if you can't describe what your class does without using
+    words like "then" or "and," you might be violating SRP.
 
-We'd also like to keep the service layer free of implementation concerns,
-in the same way as the service layer doesn't depend on a specific database,
-it just uses the `UnitOfWork` abstraction.
+This email sending thing is unwelcome *goop* messing up the nice clean flow
+of our system. What we'd like is to keep our domain model focused on the rule
+"You can't allocate more stuff than is actually available." 
+
+The domain model's job is to know that we're out of stock, but the
+responsibility of sending an alert belongs elsewhere. We should be able to turn
+this feature on or off, or to switch to SMS notifications instead, without
+needing to change the rules of our domain model.
+
+We'd also like to keep the service layer free of implementation details. We
+want to apply the Dependency Inversion Principle to notifications, so that our
+service layer depends on an abstraction, in the same way as we avoid depending
+on the database by using a UnitOfWork.
+
+=== All Aboard The Message Bus!
+
+The patterns we're going to introduce here are _Domain Events_ and the _Message Bus_.
+
+First, rather than being concerned about emails, our model will be in charge of
+recording "events"--facts about things that have happened. We'll use a Message
+Bus to respond to events, and invoke some new operation.
 
 
-=== All aboard the Message Bus!
-
-The pattern we're going to introduce here is _Domain Events_ and the _Message Bus_.
-
-First, rather than being concerned about emails, our domain is in charge of
-recording "events"--facts about things that have happened:
-
-
-==== The model records events
+==== The Model Records Events
 
 [[domain_event]]
 .The model records a domain event (src/allocation/model.py)
@@ -208,12 +224,15 @@ TIP: Exceptions and Events don't mix.  If you're implementing domain
     As we'll see later when we handle events in the unit of work, it's
     confusing to have to reason about events and exceptions together.
 
+TODO: This ^^^ is true, but I think the real problem is that you shouldn't use
+exceptions for control-of-flow. It's like a classic design smell.
 
-==== Events are simple dataclasses
+
+==== Events Are Simple Dataclasses
 
 Events are part of our domain.  We could store them in _model.py_, but we
 may as well keep them in their own file.  (this might be a good time to
-consider refactoring out a directory called "domain", so we have _domain/model.py_
+consider refactoring out a directory called "domain," so we have _domain/model.py_
 and _domain/events.py_).
 
 [[events_dot_py]]
@@ -237,11 +256,11 @@ class OutOfStock(Event):  #<2>
     class that can store common behaviour.  It's also useful for type
     hints in our message bus, as we'll see shortly.
 
-<2> `dataclasses` are great for Domain events too.
+<2> `dataclasses` are great for domain events too.
 
 
 
-==== The message bus maps events to handlers
+==== The Message Bus Maps Events To Handlers
 
 A message bus essentially says: when I see this event, I should
 invoke the following handlers.  Here's a minimal implementation:
@@ -275,7 +294,7 @@ HANDLERS = {
 //TODO: maybe handle should just take one event?
 
 
-==== In a first cut, the service layer puts events on the message bus
+==== In A First Cut, The Service Layer Puts Events On The Message Bus
 
 And now we need something to catch events from the model and pass
 them to the message bus.  The service layer might be one place to do
@@ -297,9 +316,9 @@ def allocate(
         if product is None:
             raise exceptions.InvalidSku(f'Invalid sku {line.sku}')
         try:  #<1>
-            batch = product.allocate(line)
+            batchref = product.allocate(line)
             uow.commit()
-            return batch
+            return batchref
         finally:  #<1>
             messagebus.handle(product.events)  #<2>
 ----
@@ -317,14 +336,22 @@ but we can do better.
 TODO: discussion, service layer can/could raise events directly too.
 
 
-=== The Unit of Work can pass events to the Message Bus
+=== The Unit Of Work Can Pass Events To The Message Bus
 
 The UoW already has a `try/finally`, and it knows about all the aggregates
 currently in play because it provides access to the _Repository_.  So it's
 a good place to spot events and pass them to the message bus:
 
+////
+TODO
+In Example 9. The UoW meets the Message Bus (src/allocation/unit_of_work.py), I got stuck trying to figure out where the seen attribute had come from.
+It might be helpful to add a line explicitly introducing it before Example 9.
+Once I read on to Example 10 everything cleared up immediately.
+
+https://github.com/python-leap/book/issues/35
+////
 [[uow_with_messagebus]]
-.The UoW meets the Message Bus (src/allocation/unit_of_work.py)
+.The UoW meets the message bus (src/allocation/unit_of_work.py)
 ====
 [source,python]
 ----
@@ -430,9 +457,9 @@ def allocate(
         product = uow.products.get(sku=line.sku)
         if product is None:
             raise exceptions.InvalidSku(f'Invalid sku {line.sku}')
-        batch = product.allocate(line)
+        batchref = product.allocate(line)
         uow.commit()
-        return batch
+        return batchref
 ----
 ====
 
@@ -440,7 +467,13 @@ def allocate(
 We do also have to remember to change the fakes in the service layer and make them
 call `super()` in the right places, and implement underscorey methods, but the
 changes are minimal:
-
+////
+TODO
+In Example 12 we have to go back and update our FakeRepository object.
+In a large project with many contributors, it feels to me that keeping these fakes in sync with the real objects might become an issue.
+Do you guys have any strategies for dealing with that?
+https://github.com/python-leap/book/issues/35
+////
 [[services_tests_ugly_fake_messagebus]]
 .Service-layer fakes need tweaking. (tests/unit/test_services.py)
 ====
@@ -470,7 +503,7 @@ class FakeUnitOfWork(unit_of_work.AbstractUnitOfWork):
 ====
 
 
-=== Unit Testing with a fake message bus
+=== Unit Testing With A Fake Message Bus
 
 TODO: discuss replacing @mock test with `FakeMessageBus`
 
@@ -483,7 +516,7 @@ TODO - wrap up for domain events chapter
 
 
 
-.Recap: Domain events and the Message Bus
+.Recap: Domain Events and the Message Bus
 *****************************************************************
 Events can help with SRP::
     bla

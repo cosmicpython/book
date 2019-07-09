@@ -1,17 +1,13 @@
 dist: xenial
 language: python
 python: 3.7
-
 install:
 - gem install asciidoctor coderay
 - pip3 install -r requirements.txt
-
 script:
 - make html update-code test
-
 git:
   submodules: false
-
 before_install:
 - sudo apt-get install -y tree python-pygments
 - openssl aes-256-cbc -K $encrypted_182558d6ac87_key -iv $encrypted_182558d6ac87_iv

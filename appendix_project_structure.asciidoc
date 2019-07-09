@@ -1,6 +1,6 @@
 [[appendix_project_structure]]
 [appendix]
-== A template project structure
+== A Template Project Structure
 
 Around <<chapter_03_service_layer>> we moved from just having
 everything in one folder to a more structured tree, and we thought it might
@@ -20,6 +20,7 @@ be of interest to outline the moving parts.
 ├── license.txt
 ├── Makefile  <2>
 ├── mypy.ini
+├── README.md
 ├── requirements.txt
 ├── src  <3>
 │   ├── allocation
@@ -48,16 +49,15 @@ be of interest to outline the moving parts.
 <1> Our _docker-compose.yml_ and our _Dockerfile_ are the main bits of configuration
     for the containers that run our app, and can also run the tests (for CI).  A
     more complex project might have several Dockerfiles, although we've found that
-    minimising the number of images is usually a good ideafootnote:[It often
-    seems like a good idea to split out different images for app and test, say
-    or for async processing containers vs ones with web dependencies, because
-    then you can tell yourself each container will only install the
-    dependencies itneeds. Why install pytest on your prod webapp containers?
-    But in our experience that actually gains you very little, whilst costing a
-    lot in build times and complexityl Single image ftw.].
+    minimising the number of images is usually a good idea.footnote:[Splitting
+    out images for prod and test is sometimes a good idea, but we've tended
+    to find that going further and trying to split out different images for
+    different types of application code (eg web api vs pubsub client) usually
+    ends up being more trouble than it's worth; the cost in terms of complexity
+    and longer rebuild/CI times is too high. YMMV.]
 
 <2> A _Makefile_ provides the entrypoint for all the typical commands a developer
-    (or a CI server) might want to run during their normal worfklow.  `make
+    (or a CI server) might want to run during their normal workflow.  `make
     build`, `make test`, and so on.  This is optional, you could just use
     `docker-compose` and `pytest` directly, but if nothing else it's nice to
     have all the "common commands" in a list somewhere, and unlike
@@ -73,7 +73,10 @@ be of interest to outline the moving parts.
 <4> Tests live in their own folder, with subfolders to distinguish different test
     types, and allow you to run them separately.  We can keep shared fixtures
     (_conftest.py_) in the main tests folder, and nest more specific ones if we
-    wish. This is also the place to keep _pytest.ini_
+    wish. This is also the place to keep _pytest.ini_.
+
+TIP:  The https://docs.pytest.org/en/latest/goodpractices.html#choosing-a-test-layout-import-rules[pytest docs]
+    are really good on test layout and importability.
 
 Let's look at a few of these in more detail.
 
@@ -85,7 +88,7 @@ TODO: add more subfolders/structure inside our main source tree?
 
 
 
-=== env vars, 12-factor, and config, inside and outside containers.
+=== Env Vars, 12-factor, And Config, Inside And Outside Containers.
 
 The basic problem we're trying to solve here is that we need different
 config settings for:
@@ -105,6 +108,22 @@ but concretely, how do we implement it in our code and our containers?
 
 
 === Config.py
+////
+TODO:
+Ed:
+
+Would you consider this a singleton?
+
+I have some past negative experiences with this style of configuration, because it can be easily abused. The env var mitigates against that, and I suppose this varies from codebase to codebase.
+
+Bob:
+Not strictly. It's possible to create more than one of them, but it's unlikely that I'd do so outside of unit tests. I more or less think of these config classes as part of my composition root. They tend only to be used by the entry point to the application.
+
+Ed:
+"Entry point to the application" is key, I think. The anti-pattern I've seen is where the config just gets imported anywhere, and anything remotely related to configuration gets put in there.
+
+https://github.com/python-leap/book/issues/52
+////
 
 Whenever our application code needs access to some config, it's going to
 get it from a file called _config.py__. <<config_dot_py>> shows a couple of
@@ -142,7 +161,7 @@ def get_api_url():
     setup that "just works" (as much as possible).].
 
 
-=== docker-compose and containers config
+=== Docker-compose And Containers Config
 
 We use a lightweight docker container orchestration tool called docker-compose.
 It's main configuration is via a YAML file (sigh), <<docker_compose>>:
@@ -224,7 +243,7 @@ NOTE: Inside docker, other containers are available through hostnames named afte
     port defined in the `ports` section.
 
 
-=== Installing your source as a package
+=== Installing Your Source As A Package
 
 All our application code (everything except tests really) lives inside an
 _src_ folder, as in <<src_folder_tree>>:
@@ -345,7 +364,3 @@ config and so on.
 
 We've not needed to make tests pip-installable, but if you have difficulties with
 import paths, you might find it helps.
-
-
-TODO: _.env_ and _.dockerignore_?
-
