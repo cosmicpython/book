@@ -364,7 +364,8 @@ TODO: should we have `Batch.change_purchased_quantity`?  But how to
 
 //TODO: access to underscore variable
 //TODO: we changed from Batch.deallocate to Batch.deallocate_one,
-// need do delete/amend some unit tests
+// needed to delete/amend some unit tests. ok to gloss over?
+
 
 === New Handlers For Allocated And Deallocated Events
 
@@ -442,7 +443,25 @@ def publish(channel, event):
 ==== But Handlers Do Now Need A Uow
 
 Our event handlers do now need a UoW.  We make a small modification
-to _unit_of_work.py_:
+to the main `messagebus.handle()` function:
+
+[[handle_takes_uow]]
+.Handle takes a UoW (src/allocation/messagebus.py)
+====
+[source,python]
+[role="non-head"]
+----
+def handle(events_: List[events.Event], uow: unit_of_work.AbstractUnitOfWork):
+    while events_:
+        event = events_.pop(0)
+        for handler in HANDLERS[type(event)]:
+            handler(event, uow=uow)
+----
+====
+
+
+
+And to _unit_of_work.py_:
 
 
 [[uow_passes_self_to_messagebus]]
@@ -460,12 +479,11 @@ class AbstractUnitOfWork(abc.ABC):
 ----
 ====
 
-<1> The UoW passes itself to the messagebus handlers.
+<1> The UoW passes itself to the messagebus.
 
 
-And that will get us to passing tests.  Things are starting to
-feel a little messy, however.
-
+And that will get us to passing tests.  Things are starting to feel a little
+messy, however.
 
 
 
