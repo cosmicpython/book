@@ -28,19 +28,18 @@ is a common technique], we model the situation as follows:
 ----
 +----------+    /----\      +------------+        +------------+
 | batch    |--> |RULE| -->  | Deallocate | ---->  | Reallocate |
-| quantity |    \----/      +------------+        +------------+
-| changed  |                 | Deallocate | ---->  | Reallocate |
-+----------+                 +------------+-+      +------------+-+
-                               | Deallocate | ---->  | Reallocate |
-                               +------------+        +------------+
+| quantity |    \----/      +------------+-+      +------------+
+| changed  |                  | Deallocate | ---->  | Reallocate |
++----------+                  +------------+-+      +------------+-+
+                                | Deallocate | ---->  | Reallocate |
+                                +------------+        +------------+
 ----
 ====
 
-An event we'll called _batch quantity changed_ should lead
-us to change the quantity on the batch, yes, but also to
-apply a rule: if the new quantity drops to less than the
-total already allocated, we need to _deallocate_  those
-orders from that batch.  Then, we want to _reallocate_ them
+An event we'll called _batch quantity changed_ should lead us to change the
+quantity on the batch, yes, but also to apply a business rule: if the new
+quantity drops to less than the total already allocated, we need to
+_deallocate_  those orders from that batch.  Then, we want to _reallocate_ them
 to other batches.
 
 
