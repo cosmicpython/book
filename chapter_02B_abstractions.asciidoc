@@ -1,6 +1,10 @@
 [[chapter_02B_abstractions]]
-[appendix]
-== Coupling and Abstractions ==
+== A Brief Interlude: On Coupling and Abstractions
+
+Allow us a brief digression on the subject of abstractions, dear reader.
+We've talked about _abstractions_ quite a lot.  The repository is an
+abstraction over permanent storage for example.  But what makes a good
+abstraction?  What do we want from them?
 
 A key theme in this book, hidden among the fancy patterns, is that we can use
 simple abstractions to hide messy details. When we're writing code for fun, or
@@ -19,8 +23,9 @@ all. This is the problem with the ball of mud pattern: as the application grows,
 the coupling increases superlinearly until we are no longer able to effectively
 change our systems.
 
-We can reduce the degree of coupling within a system by abstracting away the
-details.
+We can reduce the degree of coupling within a system
+(<<coupling_illustration1>>) by abstracting away the details
+(<<coupling_illustration2>>):
 
 
 [[coupling_illustration1]]
@@ -32,7 +37,7 @@ image::images/coupling_illustration1.png[]
 image::images/coupling_illustration2.png[]
 
 
-In both diagrams above, we have a pair of subsystems, with the one dependent on
+In both diagrams, we have a pair of subsystems, with the one dependent on
 the other. In the first diagram, there is a high degree of coupling between the
 two because of reasons. If we need to change system B, there's a good
 chance that the change will ripple through to system A.
@@ -365,7 +370,7 @@ Our tests now act directly on the `determine_actions()` function:
 Because we've disentangled the logic of our program - the code for identifying
 changes - from the low-level details of IO, we can easily test the core of our code.
 
-==== Dependency Injection
+==== Option 2: Dependency Injection
 
 Let's call this the "Bob way," and it's about making dependencies explicit and
 modifiable:
@@ -475,4 +480,6 @@ a few heuristics and questions to ask yourself:
 * What are the dependencies and what is the core "business" logic?
 
 Practice makes less-imperfect!
+
+And now back to our regular programming...
 
