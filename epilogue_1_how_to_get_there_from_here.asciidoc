@@ -70,3 +70,14 @@ Missing pieces
     Is it a smell for a use case to interact with multiple repositories, and if so, why?
     How do read-only, but business logic heavy things fit into all this? Use cases or not? (This relates to what these patterns might look like if we didn't bother with CQRS.)
 ////
+
+=== Footguns
+
+This is a part 2 thing really, but basically, don't sally forth and implement
+your own event-driven microservices architecture without reading lots, lots
+more on the subject.
+
+https://martinfowler.com/books/eip.hgirl rubytml[Enterprise Integration Patterns] by
+(as always) Martin Fowler is a pretty good start.
+
+//TODO: add some footgun examples.
