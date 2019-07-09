@@ -11,9 +11,8 @@
 
 
 
-[ditaa, service_layer_diagram_abstract]
+[ditaa, service_layer_diagram_abstract_dependencies]
 ....
-Abstract dependencies:
         +-----------------------------+
         |          Any client         |----\
         +-----------------------------+    |
@@ -27,11 +26,12 @@ Abstract dependencies:
 +------------------+     +-----------------------+
 |   Domain Model   |     | (Abstract) Repository |
 +------------------+     +-----------------------+
+....
 
 
 
-Tests' dependencies:
-
+[ditaa, service_layer_diagram_test_dependencies]
+....
         +-----------------------------+
         |           Tests             |----\
         +-----------------------------+    |
@@ -46,10 +46,11 @@ Tests' dependencies:
 |   Domain Model   |     |    FakeRepository     |
 +------------------+     |      (in-memory)      |
                          +-----------------------+
+....
 
 
-Runtime dependencies:
-
+[ditaa, service_layer_diagram_runtime_dependencies]
+....
        +--------------------------------+
        | Flask API (Presentation layer) |----\
        +--------------------------------+    |

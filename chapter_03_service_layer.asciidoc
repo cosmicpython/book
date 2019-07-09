@@ -1121,17 +1121,33 @@ Adding the service layer has really bought us quite a lot:
   tests.
 
 
-[[service_layer_diagram_abstract]]
-.Dependencies of the service layer
-image::images/service_layer_diagram_abstract.png[]
+<<service_layer_diagram_abstract_dependencies>> shows the abstract
+dependencies of our service layer:
 
-//TODO: split out into 3 diagrams
+[[service_layer_diagram_abstract_dependencies]]
+.Abstract Dependencies of the service layer
+image::images/service_layer_diagram_abstract_dependencies.png[]
+
+When we run the tests, we implement the abstract dependencies using
+`FakeRepository`, as in <<service_layer_diagram_test_dependencies>>:
+
+[[service_layer_diagram_test_dependencies]]
+.Dependencies when running tests
+image::images/service_layer_diagram_test_dependencies.png[]
+
+And when we actually run our app, we swap in the "real" dependency,
+<<service_layer_diagram_runtime_dependencies>>:
+
+[[service_layer_diagram_runtime_dependencies]]
+.Dependencies at runtime
+image::images/service_layer_diagram_runtime_dependencies.png[]
+
 
 //TODO (DS): Good wrap up. I'd really like to see a table or something that
-//sums up what belongs in each layer so far. And a diagram!
+//sums up what belongs in each layer so far.
 
-There's still a bit of awkwardness we'd like to get rid of. The service
-layer is tightly coupled to a `session` object.  In the next chapter, we'll
-introduce one more pattern that works closely with _repository_ and _service
-layer_, the _unit of work_ pattern, and everything will be absolutely lovely.
-You'll see!
+Wonderful. But there's still a bit of awkwardness we'd like to get rid of. The
+service layer is tightly coupled to a `session` object.  In the next chapter,
+we'll introduce one more pattern that works closely with _repository_ and
+_service layer_, the _unit of work_ pattern, and everything will be absolutely
+lovely. You'll see!
