@@ -27,7 +27,7 @@ If we were writing a hotel booking system, we might have the constraint that no
 two bookings can exist for the same hotel room on the same night. This supports
 the invariant that no room is double booked.
 
-Of course, sometimes we might need to temporarily *bend* the rules. Perhaps we
+Of course, sometimes we might need to temporarily _bend_ the rules. Perhaps we
 need to shuffle the rooms around due to a VIP booking. While we're moving people
 around, we might be double booked, but our domain model should ensure that we
 end up in a final consistent state, where the invariants are met.
@@ -35,14 +35,13 @@ end up in a final consistent state, where the invariants are met.
 Let's look at a concrete example:
 
 [quote, Us, This book]
-----
-
+____
 * I can't allocate to a batch if the available quantity is less than the
   quantity of the order line.
-  Example: I have a batch of 1 BLUE-CUSHION, and an order line for 2
-  BLUE-CUSHION. I should not be able to allocate the line to the batch.
-
-----
++
+.Example:
+** I have a batch of 1 BLUE-CUSHION, and an order line for 2
+____
 
 This is a business rule that implements a constraint. The constraint is that we
 can't allocate more stock than is available to a batch. The invariant is that
@@ -51,7 +50,7 @@ Every time we update the state of the system, our code needs to ensure that we
 don't break the invariants.
 
 // TODO: Maybe this ought to be a sidebar? It's an important point but sits awkwardly
-If we're unable to meet our invariants, we might choose to raise an error rather
+If we're unable to meet our invariants, we can then choose to raise an error rather
 than complete the operation.
 
 === Invariants And Concurrency
@@ -74,6 +73,8 @@ of allocating lines against all available batches may not scale.  If we've
 got tens of thousands of orders per hour, and hundreds of thousands of
 order lines, we can't hold a lock over the whole `batches` table for
 every single one.
+
+We'll return to the topic of concurrency after we've defined our aggregate.
 
 
 === Choosing The Right Aggregate
@@ -102,11 +103,15 @@ modifying their related objects.  It makes the system conceptually simpler
 and easy to reason about if you nominate some objects to be in charge of consistency
 for the others.
 
+TIP: Just like we sometimes use `_leading_underscores` to mark methods or functions
+    as "private", you can think of aggregates as being the "public" classes of our
+    model, and the rest of the Entities and Value Objects are "private".
+
 Some sort of `Order` object might suggest itself, but that's more about order lines,
 and we're more concerned about something that provides some sort of conceptual unity
 for collections of batches.
 
-When we allocate an order line, we're actually only interested in all the batches
+When we allocate an order line, we're actually only interested in batches
 that have the same SKU as the order line.  Some sort of concept of `GlobalSkuStock`
 or perhaps just simply `Product` -- after all, that was the first concept we
 came across in our exploration of the domain language back in <<chapter_01_domain_model>>.
@@ -142,6 +147,16 @@ class Product:
 <2> It hold a reference to a collection of `batches` for that sku
 <3> And finally, we can move the `allocate()` domain service to
     being a method on `Product`.  
+
+NOTE: This `Product` might not look like what you'd expect a `Product`
+    model to look like.  No price, no description, no dimensions...
+    Our allocation service doesn't care about any of those things.
+    This is the power of microservices and bounded contexts, the concept
+    of Product in one app can be very different from another.footnote:[Well, either
+    that, or it's just a bad name.  but `SKUStock` would be so _awkward_!]
+
+//TODO: AA prompted the note above, he said "Product" was a confusing name at first.
+// maybe we should just go for something like `ProductStock`, or just `Stock`?
 
 //TODO: talk about magic methods on aggregates maybe?  ie, a non-aggregate entity
 //      might have a __hash__ so that we can put it into a set, but because you
