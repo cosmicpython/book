@@ -505,7 +505,8 @@ it's not something that uniquely identifies the line itself).
 
 Whenever we have a business concept that has some data but no identity, we
 often choose to represent it using a Value Object. A Value Object is any
-domain object that is uniquely identified by the data it holds.
+domain object that is uniquely identified by the data it holds; we usually
+make them immutable.
 
 
 [[orderline_value_object]]
@@ -523,7 +524,7 @@ class OrderLine:
 ====
 
 Introduced in Python 3.7, `Dataclasses` are a neat way to represent value objects;
-if you're on Python 2, you could use named tuples instead. Either technique
+if you're on Python 2, you could use `namedtuples` instead. Either technique
 will give you _value equality_ which is the fancy way of saying "two lines with
 the same orderid, sku and qty are equal."
 
