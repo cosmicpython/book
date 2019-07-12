@@ -631,7 +631,10 @@ And now our flask endpoint might look something like <<api_endpoint_with_repo>>:
 @flask.route.gubbins
 def allocate_endpoint():
     batches = SqlAlchemyRepository.list()
-    lines = [OrderLine(l['orderid'], l['sku'], l['qty']) for l in lines]
+    lines = [
+        OrderLine(l['orderid'], l['sku'], l['qty'])
+         for l in request.params...
+    ]
     allocate(lines, batches)
     session.commit()
     return 201
