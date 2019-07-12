@@ -6,6 +6,30 @@
 // chapter numbering for it in atlas/pdf.  when we go to prod
 // we should find a better solution.
 
+// (ej) Looks like some of the intro and concluding text still need updating
+// for the move, but I think this is a good candidate for Chapter 1. 
+//
+// If you closed out this chapter with some of the content from the Domain Modeling chapter,
+// it could serve as a gentle intro to Ch2 Domain Modeling.
+//
+//  Hypothetically, a flow that makes sense to me is:
+//  Ch1: Abstractions (or maybe Complexity?)
+//  - What are the causes of complexity in software? (changing requirements,
+//      turnover in teams, conway's law, evolving technologies etc., etc.)
+//  - BBOM
+//  - How do we manage complexity? -> By organizing code into abstractions and modules.
+//  - Content on the filesystem examples, fcis, di, etc. as examples of different styles of abstraction
+//  - How do you know what makes a "good" abstraction, or a "good" module decomposition?
+//  - Discussion of coupling and cohesion, sep-of-concerns, information hiding principle. (Information
+//    hiding pinciple suggests that modules/abstractions should be designed 
+//    to *hide/encapsulate the things that are most likely to change.*)
+//  - 3-layer architecture as a form of information hiding and abstraction.
+//  - DDD and domain modeling as a way of choosing abstractions.
+//
+//  Ch 2. Domain modeling
+//  - Jump straight into DDD patterns and product/warehouse modeling.
+//
+
 Allow us a brief digression on the subject of abstractions, dear reader.
 We've talked about _abstractions_ quite a lot.  The repository is an
 abstraction over permanent storage for example.  But what makes a good
@@ -27,6 +51,10 @@ our code, sometimes to the point where we feel unable to make some changes at
 all. This is the problem with the ball of mud pattern: as the application grows,
 the coupling increases superlinearly until we are no longer able to effectively
 change our systems.
+
+// (ej) I'm reading the preceding two paragraphs as essentially describing coupling vs. cohesion,
+//      where "local" coupling implies high cohesion, "global coupling" implies low cohesion. 
+//      using those terms specifically will let readers google for more info.
 
 We can reduce the degree of coupling within a system
 (<<coupling_illustration1>>) by abstracting away the details
@@ -51,6 +79,22 @@ In the second, though, we have reduced the degree of coupling by inserting a
 new, simpler, abstraction. This abstraction serves to protect us from change by
 hiding away the complex details of whatever system B does.
 
+// (ej)  
+//       I'm a bit of a stickler on semantics of diagrams, but I'm not
+//       sure how to interpret the pictures, as they're too abstract.
+// 
+//       In ASCII form, these are: 
+//       - A <-> B
+//       - A <-> Abstraction <-> B
+//
+//        The double-ended arrow to me implies circular dependency, which means A and B are still
+//        coupled in the above diagrams.
+//
+//       For A and B to be decoupled, the pictures I see in my mind are one of these dependency relationships:
+//       - A -> Abstraction -> B
+//       - A <- Abstraction <- B
+//       - A -> Abstraction <- B
+//       - A <- Abstraction -> B
 
 === Abstracting State Aids Testability
 
@@ -198,6 +242,12 @@ our domain logic, "figure out the difference between two directories," is tightl
 coupled to the IO code. We can't run our difference algorithm without calling
 the pathlib, shutil, and hashlib modules.
 
+// (ej) 
+//     As a motivating "what-if", at this point you could ask the following thought experiments:
+//       1) What if you wanted to re-use the same code so this also works synchronizing remote servers?  
+//       2) What if you wanted to add a "dry-run" feature?
+//       What extra complexity would these scenarios create?
+
 Our high-level code is coupled to low-level details, and it's making life hard.
 As the scenarios we consider get more complex, our tests will get more unwieldy.
 We can definitely refactor these tests (some of the cleanup could go into pytest
@@ -293,6 +343,13 @@ sense of not-using-classes, but more in the sense of having no (or minimal)
 side-effects.  The aim is to split out a core of business logic with minimal or
 no dependencies, and test that separately from the rest of our system.
 
+// (ej) 
+// Referring to the "Coupling" diagram comment previously, the snippet below
+// would look like:
+//
+// determine_actions <- sync -> read_paths_and_hashes
+//
+
 [[three_parts]]
 .Split our code into three  (sync.py)
 ====
@@ -318,7 +375,6 @@ def read_paths_and_hashes(root):  #<1>
             hashes[hash_file(Path(folder) / fn)] = fn
     return hashes
 
-
 def determine_actions(src_hashes, dst_hashes, src_folder, dst_folder):  #<2>
     for sha, filename in src_hashes.items():
         if sha not in dst_hashes:
@@ -334,6 +390,59 @@ def determine_actions(src_hashes, dst_hashes, src_folder, dst_folder):  #<2>
     for sha, filename in dst_hashes.items():
         if sha not in src_hashes:
             yield 'delete', dst_folder / filename
+
+//
+// (ej) 
+//   #ej.1 Calling out the sections that are "shell" and "core" will give the terms some visual impact.
+//   #ej.2 I played around with refactoring this a bit, and stunbled across something interesting.
+//
+//          Source + dest are only necessary if you actually want to mutate the filesystem. You could push 
+//          the responsibility for forming the absolute paths out to the "shell".
+//     
+//          That then raises the question of whether this function is just detecting
+//          changes in filesystem state, or determining the actions that should
+//          be performed.  The flags could just as easily be {"file created", "file moved",
+//          "file deleted"} instead of {"copy", "move", "delete"}.
+//
+//          IRL this would be unnecessary hair splitting, but for the purposes of this chapter,
+//          maybe it will be useful for discussing modeling + abstractions, and foreshadowing
+//          some of the event stuff in later chapters.  I am unsure if it will fit into the flow
+//          of this text.
+//
+
+def ej_sync(source, dest):
+    # Imperative shell, input  # ej.1
+    source_hashes = read_paths_and_hashes(source)
+    dest_hashes = read_paths_and_hashes(dest)
+
+    # Functional core
+    actions = ej_determine_actions(source_hashes, dest_hashes)
+
+    # Imperative shell, output
+    for action, *paths in actions: 
+        if action == 'copy':
+            shutil.copyfile(Path(source)/path[0], Path(dest)/path[1])
+        if action == 'move':
+            shutil.move(Path(dest)/path[0], Path(dest)/path[1])
+        if action == 'delete':
+    ...
+
+
+def ej_determine_actions(src_hashes, dst_hashes):  # ej.2
+    for sha, filename in src_hashes.items():
+        if sha not in dst_hashes:
+            sourcepath = filename
+            destpath = filename
+            yield 'copy', sourcepath, destpath
+
+        elif dst_hashes[sha] != filename:
+            olddestpath = dst_hashes[sha]
+            newdestpath =  filename
+            yield 'move', olddestpath, newdestpath
+
+    for sha, filename in dst_hashes.items():
+        if sha not in src_hashes:
+            yield 'delete', filename
 ----
 ====
 
@@ -380,6 +489,12 @@ changes - from the low-level details of IO, we can easily test the core of our c
 Let's call this the "Bob way," and it's about making dependencies explicit and
 modifiable:
 
+//
+// (ej) Referring back to the "coupling" diagram comment, the snippet below would look like:
+//
+// apply_func <- synchronize_dirs -> reader
+//
+
 [[di_version]]
 .Explicit dependencies (sync.py)
 ====
@@ -404,6 +519,34 @@ def synchronise_dirs(reader, apply_func, src_folder, dst_folder):  #<1>
     for sha, filename in dst_hashes.items():
         if sha not in src_hashes:
             apply_func('DELETE', dst_folder / filename)  #<3>
+
+//
+// (e.j) 
+//       Played around with this a bit, and I think introducing an explicit filesystem abstraction 
+//       helps contrast the DI vs FCIS styles more strongly. 
+//
+//       It also make the duck-typing comment more relevant, and could be used to introduce
+//       the idea of roles and encapsulation.
+// 
+
+def ej_synchronise_dirs(reader, filesystem, source_root, dest_root): 
+    source_hashes = reader(source_root)  
+    dest_hashes = reader(dest_root) 
+
+    for sha, filename in src_hashes.items():
+        if sha not in dst_hashes:
+            sourcepath = source_root / filename
+            destpath = dest_root / filename
+            filesystem.copy(destpath, sourcepath)
+
+        elif dst_hashes[sha] != filename:
+            olddestpath = dest_root / dst_hashes[sha]
+            newdestpath = dest_root / filename
+            filesystem.move(oldestpath, newdestpath)
+
+    for sha, filename in dst_hashes.items():
+        if sha not in src_hashes:
+            filesystem.del(dest_root/filename)
 ----
 ====
 
@@ -426,13 +569,32 @@ TIP: Notice that, although we're using dependency injection, there was no need
 [source,python]
 [role="skip"]
 ----
+//
+// ej. Modified this a bit to also introduce the filesystem abstraction.
+//
+class FakeFilesystem(object):
+    def __init__(self, actions):
+        self._actions = actions or [] 
+
+    def copy(self, src, dest):
+        self._actions.append(('COPY', src, dest))
+
+    def move(self, src, dest):
+        self._actions.append(('MOVE', src, dest))
+
+    def delete(self, dest):
+        self._actions.append(('DELETE', src, dest))
+    
+
+
 def test_when_a_file_exists_in_the_source_but_not_the_destination():
     source = {"sha1": "my-file" }
     dest = {}
-    actions = []
+    actions = [] # Using the shunt pattern here.
+    fs = FakeFilesystem(actions)
 
     reader = {"/source": source, "/dest": dest}
-    synchronise_dirs(reader.pop, actions.append, "/source", "/dest")
+    synchronise_dirs(reader.pop, fs, "/source", "/dest")
 
     assert actions == [("COPY", "/source/my-file", "/dest/my-file")]
 
@@ -441,9 +603,10 @@ def test_when_a_file_has_been_renamed_in_the_source():
     source = {"sha1": "renamed-file" }
     dest = {"sha1": "original-file" }
     actions = []
+    fs = FakeFilesystem(actions)
 
     reader = {"/source": source, "/dest": dest}
-    synchronise_dirs(reader.pop, actions.append, "/source", "/dest")
+    synchronise_dirs(reader.pop, fs, "/source", "/dest")
 
     assert actions == [("MOVE", "/dest/original-file", "/dest/renamed-file")]
 ----
