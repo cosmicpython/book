@@ -165,29 +165,28 @@ domain experts about allocation.
   order line to a batch, we will send stock from that specific batch to the
   customer's delivery address.
 
-* When I allocate 1 unit of stock to a batch, the _available quantity_ is
+* When we allocate 1 unit of stock to a batch, the _available quantity_ is
   reduced.
 +
 .Example:
-** I have a batch of 20 SMALL-TABLE, and I allocate an order line for 2
+** We have a batch of 20 SMALL-TABLE, and we allocate an order line for 2
    SMALL-TABLE.
 ** The batch should have 18 SMALL-TABLE remaining.
-//TODO: CC asked us to change the "Is" to "we"s our "you"s here.
 
-* I can't allocate to a batch if the available quantity is less than the
+* We can't allocate to a batch if the available quantity is less than the
   quantity of the order line.
 +
 .Example:
-** I have a batch of 1 BLUE-CUSHION, and an order line for 2
+** We have a batch of 1 BLUE-CUSHION, and an order line for 2
    BLUE-CUSHION.
-** I should not be able to allocate the line to the batch.
+** We should not be able to allocate the line to the batch.
 
-* I can't allocate the same line twice.
+* We can't allocate the same line twice.
 +
 .Example:
-** I have a batch of 10 BLUE-VASE, and I allocate an order line for 2
+** We have a batch of 10 BLUE-VASE, and we allocate an order line for 2
    BLUE-VASE.
-** If I allocate the order line again to the same batch, the batch
+** If we allocate the order line again to the same batch, the batch
    should still have an available quantity of 8.
 
 * Batches have an _ETA_ if they are currently shipping, or they may be in
