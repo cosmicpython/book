@@ -29,7 +29,7 @@ to everything else so that changing any part of the system becomes fraught with
 danger. This is so common that software engineers have their own term for
 chaos: The Big Ball of Mud anti-pattern.
 
-Big ball of mud is the natural state of software in the same way that wildness
+Big ball of mud is the natural state of software in the same way that wilderness
 is the natural state of your garden. It takes energy and direction to
 prevent the collapse. Fortunately, the techniques to avoid creating a big ball
 of mud aren't complex.
@@ -37,10 +37,24 @@ of mud aren't complex.
 === Encapsulation
 
 The term _encapsulation_ covers two closely related ideas: simplifying
-behaviour, and hiding data. When we encapsulate behaviour, we take a complex
-algorithm and place it behind a simpler abstraction. Consider the following two
-snippets of Python code, <<urllib_example>> and <<requests_example>>:
+behaviour, and hiding data. In this book, when we say "encapsulation" we're
+using the first sense. We encapsulate behaviour by identifying a task that needs
+to be done in our code, and giving that task to a well defined object or function.
 
+Formally we call these tasks _responsibilities_ or _behaviours_ and an object that
+is responsible for a behaviour is said to have a _role_ in the system.
+
+NOTE: We didn't invent this approach, it comes from Responsibility-Driven Design
+    - an OO philosophy from the late Eighties. If you want to read more about it
+    you should check out the book _Object Design: Roles, Responsibilities, and
+    Collaborations_, by Rebecca Wirfs-Brock and Alan McKean (Addison-Wesley 2003)
+
+This is a behaviour-driven approach. Instead of building classes around the
+data in our system, we're going to build classes around the processes that need
+to happen.
+
+Take a look at the following two snippets of Python code, <<urllib_example>> and
+<<requests_example>>:
 
 [[urllib_example]]
 .Do a search with urllib
@@ -105,8 +119,6 @@ for r in duckduckgo.query('Sausages').results:
 
 Encapsulating the behaviour by identifying roles is a powerful tool for making
 our code more expressive, more testable, and easier to maintain.
-
-When we encapsulate data, we reduce the scope where variables are available.
 
 
 === Layering
