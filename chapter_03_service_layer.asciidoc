@@ -496,6 +496,13 @@ That last step is a little unsatisfactory at the moment, our services
 layer is tightly coupled to our database layer, but we'll improve on
 that in the next chapter.
 
+NOTE: Responsibility-Driven Design has a whole taxonomy of object roles and
+talks about object _stereotypes_. A stereotype describes the kind of role that
+an object plays in a system. Our use-case functions are _co-ordinators_ and
+our flask endpoint is an _interfacer_. Notice that "handles http requests" and
+"runs the allocation process" are _responsibilities_. Can you identify the
+collaborators of our use-cases?
+
 
 ."We depend on abstractions"
 *******************************************************************************

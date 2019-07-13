@@ -75,7 +75,7 @@ separate (which is a good thing), and to have each layer depend only on the one
 below...
 
 But we want our domain model to have __no dependencies whatsoever__footnote:[
-I suppose we mean, "no external dependencies."  Standard libray dependencies are
+I suppose we mean, "no stateful dependencies."  Depending on a helper library is
 fine, depending on an ORM or a web framework is not].
 We don't want infrastructure concerns bleeding over into our domain model and
 slowing down our unit tests or our ability to make changes.
@@ -397,6 +397,11 @@ Even though our objects are in memory, we need to put them _somewhere_ so we can
 find them again. Our in memory data would let us add new objects, just like a
 list or a set, and since the objects are in memory we never need to call a
 "Save" method, we just fetch the object we care about, and modify it in memory.
+
+NOTE: The repository is an excellent example of an object with a named
+_reponsibility_: it holds objects in persistent state and lets us get access to
+them. _Repository_ is a _role_ in our system, and we can plug different objects
+into that role.
 
 ==== The Repository In The Abstract
 

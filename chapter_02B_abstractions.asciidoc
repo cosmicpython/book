@@ -17,7 +17,7 @@ in a kata, we get to play with ideas freely, hammering things out and
 refactoring aggressively. In a large-scale system, though, we become constrained
 by the decisions made elsewhere in the system.
 
-When I'm unable to change component A for fear of breaking component B, we say
+When we're unable to change component A for fear of breaking component B, we say
 that the components have become coupled. Locally, coupling is a good thing: it's
 a sign that our code is working together, each component supporting the others,
 fitting in place like the gears of a watch.
@@ -221,6 +221,10 @@ Reading through the code, there are really three distinct things happening.
 
 What could we do to abstract out the filesystem in each case?
 
+NOTE: In this chapter we're refactoring some gnarly code into a more testable
+structure by identifying the separate tasks that need to be done and giving
+each task to a clearly defined actor. This is the responsibility-driven approach
+we mentioned in the prologue.
 
 For (1) and (2), we've already intuitively started using an abstraction, a
 dictionary of hashes to paths, and you may already have been thinking, "why not
