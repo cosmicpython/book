@@ -41,6 +41,8 @@ behaviour, and hiding data. In this book, when we say "encapsulation" we're
 using the first sense. We encapsulate behaviour by identifying a task that needs
 to be done in our code, and giving that task to a well defined object or function.
 
+////
+TODO: (EJ)
 Formally we call these tasks _responsibilities_ or _behaviours_ and an object that
 is responsible for a behaviour is said to have a _role_ in the system.
 
@@ -52,6 +54,7 @@ NOTE: We didn't invent this approach, it comes from Responsibility-Driven Design
 This is a behaviour-driven approach. Instead of building classes around the
 data in our system, we're going to build classes around the processes that need
 to happen.
+////
 
 Take a look at the following two snippets of Python code, <<urllib_example>> and
 <<requests_example>>:
@@ -119,7 +122,12 @@ for r in duckduckgo.query('Sausages').results:
 
 Encapsulating the behaviour by identifying roles is a powerful tool for making
 our code more expressive, more testable, and easier to maintain.
+// TODO (EJ) Responsibility" might be the better term here. Here's http://www.wirfs-brock.com/Design.html[the origin of roles in OOP. ]]
 
+// TODO: (EJ) FWIW some people (and me) consider encapsulation, information
+// hiding, and abstraction as
+// https://stackoverflow.com/questions/24626/abstraction-vs-information-hiding-vs-encapsulation[three separate but related principles.]
+// So some of the language around "encapsulation" here reads a bit awkwardly to me.]
 
 === Layering
 
@@ -129,6 +137,18 @@ and functions. When one function or object refers to another, we say that the
 one *depends on* the other. These dependencies form a kind of network, a graph,
 where the nodes are functions and classes, and the edges are the calls betwen
 them.
+
+////
+TODO (EJ) See also http://misko.hevery.com/2008/08/21/where-have-all-the-singletons-gone/[this blog post],
+and Ch. 11 of "Clean Code." This description of *depends on* seems too narrow
+to me, as you can have multiple kinds of dependencies besides the call graph
+that lead to BBOM. A function can call another function without having an
+explicit reference to its definition, and import statements are another kind of
+dependency graph that don't involve calls. Maybe just sidestep the issue of
+what the edges are by saying something like, "When one function, object or
+module uses another, we say that one *depends on* the other. These *depends on*
+relationships form a kind of network or graph."
+////
 
 In a big ball of mud, the dependencies are out of control. Changing one node of
 the graph becomes difficult because it has the potential to affect many other
@@ -192,6 +212,8 @@ running on Kubernetes.
 And we've mentioned _abstractions_ already: they're simplified interfaces that
 encapsulate some role, in the way that our duckduckgo module encapsulated a
 search engine's API.
+// TODO (EJ) 'encapsulates some role' sounds a bit funny to me, 'abstracts a
+// responsibility' feels like it makes more sense.
 
 So the first part of the DIP says that our business code shouldn't depend on
 technical details; instead they should both use abstractions.
@@ -202,6 +224,10 @@ hard to imagine. How can we have an abstraction that doesn't depend on the
 details it's abstracting?  We'll come to that shortly, but before we can turn
 our three-layered architecture inside out, we need to talk more about that
 middle layer, the business logic.
+// TODO (EJ):  footnote:[e.j. I frequently find the phrase "depends on" to be
+// confusing especially when trying to explain this.  "knows about the presence
+// or absence of" is a very helpful substitute.  There is a very old Parnas
+// paper where this comes from, but I cannot recall which one.]
 
 One of the most common reasons that our designs go wrong is that business
 logic becomes spread out throughout the layers of our application, hard to

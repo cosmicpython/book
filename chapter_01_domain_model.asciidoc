@@ -108,6 +108,15 @@ stock, selling stock to customers, and shipping goods to customers. There's a
 system in the middle that needs to coordinate the process by allocating stock
 to a customer's orders.
 
+////
+TODO (EJ)
+. Maybe describe how MADE operates from the viewpoint of other stakeholders
+(e.g., a customer ordering furniture, an accountant tracking credits and
+debits, a customer service representative, or the warehouse that actually has
+to store the stock) before diving into the Stock Allocation Service.  It will
+help home the value of DDD and domain modeling.
+////
+
 For the purposes of this book, we're imagining a situation where the business
 decides to implement an exciting new way of allocating stock.  Until now, the
 business has been presenting stock and lead times based on what is physically
@@ -123,6 +132,12 @@ can save money by keeping lower inventory in the domestic warehouse.
 But allocating orders is no longer a trivial matter of decrementing a single
 quantity in the warehouse system.  We need a more complex allocation mechanism.
 Time for some domain modelling.
+////
+TODO (EJ):   I find myself using collboration diagrams most frequently for
+these kinds of things. A sequence diagram here would be good too, but they are
+a little bit cumbersome to draw.  More
+https://www.codemag.com/Article/0205051/UML-Collaboration-Diagrams[info]. ]
+////
 
 [[allocation_context_diagram]]
 .A sort-of context diagram for the allocation service.
@@ -139,6 +154,8 @@ Understanding the domain model takes time, and patience, and post-it notes. We
 have an initial conversation with our business experts and we agree on a glossary
 and some rules for the first minimal version of the domain model. Wherever
 possible, we ask for concrete examples to illustrate each rule.
+
+// TODO (EJ) Might want to have a sidebar here on an alternative modeling approach using eventstorming
 
 We make sure to express those rules in the business jargon (the _"ubiquitous
 language"_ in DDD terminology). We choose memorable identifiers for our objects
@@ -316,8 +333,28 @@ def test_cannot_allocate_if_skus_do_not_match():
     batch = Batch("batch-001", 'sku1', 100, eta=None)
     line = OrderLine("order-123", 'sku2', 10)
     assert batch.can_allocate(line) is False
+
 ----
 ====
+
+////
+
+TODO: # e.j. Small style suggestion:
+# If you create locals with descriptive variable names,
+# it might be easier to grok, like this:
+
+small_batch = Batch("batch-001", "table_sku", 20, eta=date.today())
+big_batch = Batch("batch-002", "table_sku", 2, eta=date.today())
+small_order = OrderLine("order-123", "table_sku", 2)
+big_order = OrderLine("order-456", "table_sku", 20)
+foo_order = OrderLine("order-789", "foo_sku", 1)
+
+def test_can_allocation_if_available_greater_than_required():
+    assert big_batch.can_allocate(small_order)
+# And so on ...
+#####################################
+////
+
 
 There's nothing too unexpected here. We've refactored our test suite so that we
 don't keep repeating the same lines of code to create a batch and a line for
@@ -395,8 +432,18 @@ class Batch:
 
     def can_allocate(self, line: OrderLine) -> bool:
         return self.sku == line.sku and self.available_quantity >= line.qty
+
 ----
 ====
+
+////
+TODO (EJ)
+# e.j. I find the fact that allocate and deallocate can fail silently
+#      disconcerting, because it could hide bugs.
+# e.j. The allocated_quantity, avaliable_quantity, and can_allocate properties/methods
+#      might here would be a good opportunities to sidebar on encapsulation, information hiding and abstraction.
+#      I am unsure what audience you are targeting.
+////
 
 <<model_diagram>> shows the model in diagram form.
 
@@ -685,6 +732,9 @@ class Batch:
 Python's `__eq__` magic method defines the behaviour of the class for the
 `==` operator.
 
+// TODO (EJ) The difference between "is" and "__eq__" might be a tripping point
+// for some people.]
+
 For both Entity and Value Objects it's also worth thinking through how
 `__hash__` will work.  It's the magic method Python uses to control the
 behaviour of objects when you add them to sets or use them as dict keys;
@@ -812,6 +862,10 @@ class Batch:
 ====
 
 That's lovely.
+
+// TODO (EJ) I usually prefer to use the "key" parameter to sorted for things
+// like this.  Then it's easier to implement more complex and arbitrary
+// behaviors like "earliest, then smallest batch preferred".
 
 
 ==== Exceptions Can Express Domain Concepts Too
