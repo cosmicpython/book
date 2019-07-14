@@ -477,8 +477,8 @@ class EmailNotifications(Notifications):
 
 we change the dependency in the messagebus:
 
-[[id_here]]
-.Listing title
+[[notifications_in_bus]]
+.Notifications in messagebus (src/allocation/messagebus.py)
 ====
 [source,python]
 ----
@@ -498,7 +498,7 @@ class MessageBus:
 We work through and define a fake version for unit testing:
 
 
-[[id_here]]
+[[fake_notifications]]
 .fake notifications (tests/unit/fakes.py)
 ====
 [source,python]
@@ -525,8 +525,8 @@ class FakeBus(messagebus.MessageBus):
 
 we can use it in our tests:
 
-[[id_here]]
-.Listing title
+[[test_with_fake_notifs]]
+.Tests change slightly (test/unit/tests_handlers.py)
 ====
 [source,python]
 ----
@@ -551,8 +551,8 @@ real-ish email server for our docker dev environment.
 
 
 
-[[id_here]]
-.Listing title
+[[integration_test_email]]
+.Integration test for email (tests/integration/test_email.py)
 ====
 [source,python]
 ----
