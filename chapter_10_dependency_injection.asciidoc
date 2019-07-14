@@ -87,7 +87,7 @@ def test_rolls_back_uncommitted_work_by_default(sqlite_session_factory):
 
 If you're used to the way things normally happen in Python, you'll be thinking
 all this is a bit weird.  The standard way to do things is to declare our
-depenency "implicitly" by simply importing it, and then if we ever need to
+dependency "implicitly" by simply importing it, and then if we ever need to
 change it for tests, we can monkeypatch, as is Right and True in dynamic
 languages:
 
@@ -152,7 +152,7 @@ the DIP -- rather than having an (implicit) dependency on a specific detail,
 we have an (explicit) dependency on an abstraction:
 
 
-[[handler_with_explicit_depenency]]
+[[handler_with_explicit_dependency]]
 .The explicit dependency is more abstract (src/allocation/handlers.py)
 ====
 [source,python]
@@ -253,7 +253,7 @@ What else changes in the bus?
     the event we want to call:
 
 
-==== Depenency Injection With Minimal Magic
+==== Dependency Injection With Minimal Magic
 
 Here's the core of our dependency injection approach then.  As you'll see
 there's not much to it:
