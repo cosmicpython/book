@@ -116,22 +116,8 @@ our code more expressive, more testable, and easier to maintain.
 
 Encapsulation helps us by hiding details and protecting the consistency of our
 data, but we also need to pay attention to the interactions between our objects
-and functions. When one function or object refers to another, we say that the
-one *depends on* the other. These dependencies form a kind of network, a graph,
-where the nodes are functions and classes, and the edges are the calls betwen
-them.
-
-////
-TODO (EJ) See also http://misko.hevery.com/2008/08/21/where-have-all-the-singletons-gone/[this blog post],
-and Ch. 11 of "Clean Code." This description of *depends on* seems too narrow
-to me, as you can have multiple kinds of dependencies besides the call graph
-that lead to BBOM. A function can call another function without having an
-explicit reference to its definition, and import statements are another kind of
-dependency graph that don't involve calls. Maybe just sidestep the issue of
-what the edges are by saying something like, "When one function, object or
-module uses another, we say that one *depends on* the other. These *depends on*
-relationships form a kind of network or graph."
-////
+and functions. When one function, module or object uses another, we say that the
+one _depends on_ the other. These dependencies form a kind of network or graph.
 
 In a big ball of mud, the dependencies are out of control. Changing one node of
 the graph becomes difficult because it has the potential to affect many other
