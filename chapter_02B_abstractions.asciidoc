@@ -222,9 +222,9 @@ Reading through the code, there are really three distinct things happening.
 What could we do to abstract out the filesystem in each case?
 
 NOTE: In this chapter we're refactoring some gnarly code into a more testable
-structure by identifying the separate tasks that need to be done and giving
-each task to a clearly defined actor. This is the responsibility-driven approach
-we mentioned in the prologue.
+    structure by identifying the separate tasks that need to be done and giving
+    each task to a clearly defined actor, along similar lines to the `duckduckgo`
+    example from the prologue.
 
 For (1) and (2), we've already intuitively started using an abstraction, a
 dictionary of hashes to paths, and you may already have been thinking, "why not

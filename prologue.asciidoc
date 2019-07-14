@@ -38,23 +38,9 @@ of mud aren't complex.
 
 The term _encapsulation_ covers two closely related ideas: simplifying
 behaviour, and hiding data. In this book, when we say "encapsulation" we're
-using the first sense. We encapsulate behaviour by identifying a task that needs
-to be done in our code, and giving that task to a well defined object or function.
-
-////
-TODO: (EJ)
-Formally we call these tasks _responsibilities_ or _behaviours_ and an object that
-is responsible for a behaviour is said to have a _role_ in the system.
-
-NOTE: We didn't invent this approach, it comes from Responsibility-Driven Design
-    - an OO philosophy from the late Eighties. If you want to read more about it
-    you should check out the book _Object Design: Roles, Responsibilities, and
-    Collaborations_, by Rebecca Wirfs-Brock and Alan McKean (Addison-Wesley 2003)
-
-This is a behaviour-driven approach. Instead of building classes around the
-data in our system, we're going to build classes around the processes that need
-to happen.
-////
+using the first sense. We encapsulate behaviour by identifying a task
+that needs to be done in our code, and giving that task to a well defined
+object or function.
 
 Take a look at the following two snippets of Python code, <<urllib_example>> and
 <<requests_example>>:
@@ -101,9 +87,11 @@ for r in results:
 
 Both of these code listings do the same thing: they submit form-encoded values
 to a URL in order to use a search engine API. But the second is simpler to read
-and understand because it operates at a higher level of abstraction. We can
-take this one step further still by identifying the role the code is playing
-and making it explicit.
+and understand because it operates at a higher level of abstraction.
+
+We can take this one step further still by identifying the role the code is
+playing and making it explicit.footnote:[See
+http://www.wirfs-brock.com/Design.html[Responsibility-driven design]]
 
 image::images/galaxybrainmeme.jpg["Galaxybrain meme",width="200px",float="right"]
 //TODO fix alignment and/or make 3 images.
@@ -120,9 +108,8 @@ for r in duckduckgo.query('Sausages').results:
 ====
 
 
-Encapsulating the behaviour by identifying roles is a powerful tool for making
+Encapsulating behaviour using abstractions is a powerful tool for making
 our code more expressive, more testable, and easier to maintain.
-// TODO (EJ) Responsibility" might be the better term here. Here's http://www.wirfs-brock.com/Design.html[the origin of roles in OOP. ]]
 
 // TODO: (EJ) FWIW some people (and me) consider encapsulation, information
 // hiding, and abstraction as

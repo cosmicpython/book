@@ -398,11 +398,6 @@ find them again. Our in memory data would let us add new objects, just like a
 list or a set, and since the objects are in memory we never need to call a
 "Save" method, we just fetch the object we care about, and modify it in memory.
 
-NOTE: The repository is an excellent example of an object with a named
-_reponsibility_: it holds objects in persistent state and lets us get access to
-them. _Repository_ is a _role_ in our system, and we can plug different objects
-into that role.
-
 ==== The Repository In The Abstract
 
 The simplest repository has just two methods: `add` to put a new item in the
