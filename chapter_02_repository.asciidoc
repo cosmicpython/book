@@ -60,30 +60,14 @@ database.
 === Applying The Dependency Inversion Principle To The Database
 
 As mentioned in <<part1_prologue>>, the "layered architecture" is a common
-approach to structuring a system that has a UI, some logic, and a database:
+approach to structuring a system that has a UI, some logic, and a database (see
+<<layered_architecture2>>).
 
 
 [[layered_architecture2]]
 .Layered Architecture
-====
-[role="skip"]
-[source,text]
-----
-+-------------------------------------------------+
-|              Presentation Layer                 |
-+-------------------------------------------------+
-                      |
-                      V
-+-------------------------------------------------+
-|               Business Logic                    |
-+-------------------------------------------------+
-                      |
-                      V
-+-------------------------------------------------+
-|                Database Layer                   |
-+-------------------------------------------------+
-----
-====
+image::images/layered_architecture.png[]
+
 
 Django's Model-View-Template structure is closely related, as is
 Model-View-Controller (MVC). In any case, the aim is to keep the layers
@@ -91,36 +75,18 @@ separate (which is a good thing), and to have each layer depend only on the one
 below...
 
 But we want our domain model to have __no dependencies whatsoever__footnote:[
-I suppose we mean, "no external dependencies."  Standard libray dependencies are
+I suppose we mean, "no stateful dependencies."  Depending on a helper library is
 fine, depending on an ORM or a web framework is not].
 We don't want infrastructure concerns bleeding over into our domain model and
 slowing down our unit tests or our ability to make changes.
 
 Instead, as discussed in the prologue, we'll think of our model as being on the
 "inside," and dependencies flowing inwards to it;  what people sometimes call
-"onion architecture."
+"onion architecture" (see <<onion_architecture>>.)
 
 [[onion_architecture]]
 .Onion Architecture
-====
-[role="skip"]
-[source,text]
-----
-+------------------------+
-|   Presentation Layer   |
-+------------------------+
-           |
-           V
-   +---------------------------------------------------+
-   |                   Domain model                    |
-   +---------------------------------------------------+
-                                        ^
-                                        |
-                               +-------------------+
-                               |   Database Layer  |
-                               +-------------------+
-----
-====
+image::images/onion_architecture.png[]
 
 .Is this Ports and Adapters?
 *******************************************************************************
@@ -151,25 +117,7 @@ a collection on our `Batch` object:
 
 [[model_diagram_reminder]]
 .Our Model
-====
-[source,text]
-[role="skip"]
-----
-+=====================+
-| Batch               |
-+---------------------+
-| reference           |
-| sku                 |
-| _purchased_quantity |       +=============+
-| allocations -------------->>| OrderLine   |
-+---------------------+       +-------------+
-                              | order_id    |
-                              | sku         |
-                              | qty         |
-                              +-------------+
-
-----
-====
+image::images/model_diagram.png[]
 
 Let's see how we might translate this to a relational database.
 
@@ -433,11 +381,11 @@ like?
 ----
 import all_my_data
 
-def create_a_batch(self):
+def create_a_batch():
     batch = Batch(...)
     all_my_data.batches.add(batch)
 
-def modify_a_batch(self, batch_id, new_quantity):
+def modify_a_batch(batch_id, new_quantity):
     batch = all_my_data.batches.get(batch_id)
     batch.change_initial_quantity(new_quantity)
 
@@ -449,6 +397,11 @@ Even though our objects are in memory, we need to put them _somewhere_ so we can
 find them again. Our in memory data would let us add new objects, just like a
 list or a set, and since the objects are in memory we never need to call a
 "Save" method, we just fetch the object we care about, and modify it in memory.
+
+NOTE: The repository is an excellent example of an object with a named
+_reponsibility_: it holds objects in persistent state and lets us get access to
+them. _Repository_ is a _role_ in our system, and we can plug different objects
+into that role.
 
 ==== The Repository In The Abstract
 
@@ -489,7 +442,7 @@ WARNING: We're using abstract base classes in this book for didactic reasons:
     they end up unmaintained and, at worst, misleading.
     In practice we tend to rely on Python's duck-typing to enable abstractions.
     To a Pythonista, a repository is _any_ object that has `add(thing)` and
-    get`(id)` methods.
+    `get(id)` methods.
 
 <1> Python tip: `@abc.abstractmethod` is one of the only things that makes
     ABCs actually "work" in Python.   Python will refuse to let you instantiate
@@ -541,32 +494,9 @@ worlds, they're likely to recognise it.
 
 [[repository_pattern_diagram]]
 .Repository pattern
-====
-[role="skip"]
-[source,text]
-----
-        +-----------------------------+
-        |      Presentation Layer     |
-        +-----------------------------+
-           |                      |
-           V                      |
-+------------------+              |
-|   Domain Model   |              |
-+------------------+              |
-     ^           ^                |
-     |           |                V
-     |        +----------------------+
-     |        |      Repository      |
-     |        +----------------------+
-     |                      |
-     |                      V
-   +------------------------------+
-   |        Database Layer        |
-   +------------------------------+
+image::images/repository_pattern_diagram.png[]
 
 TODO: not sure if this diagram is helping.
-----
-====
 
 
 As always, we start with a test. This would probably be classified as an
@@ -706,7 +636,10 @@ And now our flask endpoint might look something like <<api_endpoint_with_repo>>:
 @flask.route.gubbins
 def allocate_endpoint():
     batches = SqlAlchemyRepository.list()
-    lines = [OrderLine(l['orderid'], l['sku'], l['qty']) for l in lines]
+    lines = [
+        OrderLine(l['orderid'], l['sku'], l['qty'])
+         for l in request.params...
+    ]
     allocate(lines, batches)
     session.commit()
     return 201
@@ -779,16 +712,12 @@ TIP: Building fakes for your abstractions is an excellent way to get design
     complicated.
 
 
-At this point we'd like to encourage you to go and read
-<<appendix_abstractions>>, where we talk a bit more about how to choose
-abstractions, and how they can help us to break up our code into manageable,
-testable chunks.
+You'll be wondering, how do we actually instantiate these repositories, fake or
+real? What will our flask app actually look like?  We'll find out in the next
+exciting instalment!
 
-TODO: move abstractions appendix into main body of book as a proper chapter
+But first, a word from our sponsors.
 
-Now, how do we actually instantiate these repositories, fake or real?
-What will our flask app actually look like?  Find out in the next
-exciting instalment...
 
 
 .Repository Pattern: Recap

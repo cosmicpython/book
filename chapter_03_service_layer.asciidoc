@@ -1,6 +1,8 @@
 [[chapter_03_service_layer]]
 == Our First Use Case: Flask API And Service Layer.
 
+Back to our allocations project!
+
 Like any good agile team, we're hustling to try and get an MVP out and
 in front of the users to start gathering feedback.  We have the core
 of our domain model and the domain service we need to allocate orders,
@@ -10,7 +12,7 @@ Let's try and plug all the moving parts together as quickly as we
 can, and then refactor towards a cleaner architecture.  Here's our
 plan:
 
-* Use flask to put an API endpoint in front of our `allocate` domain service.
+* Use Flask to put an API endpoint in front of our `allocate` domain service.
   Wire up the database session and our repository.  Test it with
   an end-to-end test and some quick and dirty SQL to prepare test
   data.
@@ -494,6 +496,13 @@ That last step is a little unsatisfactory at the moment, our services
 layer is tightly coupled to our database layer, but we'll improve on
 that in the next chapter.
 
+NOTE: Responsibility-Driven Design has a whole taxonomy of object roles and
+talks about object _stereotypes_. A stereotype describes the kind of role that
+an object plays in a system. Our use-case functions are _co-ordinators_ and
+our flask endpoint is an _interfacer_. Notice that "handles http requests" and
+"runs the allocation process" are _responsibilities_. Can you identify the
+collaborators of our use-cases?
+
 
 ."We depend on abstractions"
 *******************************************************************************
@@ -749,20 +758,9 @@ You might be asking yourself "should I rewrite all my unit tests, then? Is it
 wrong to write tests against the domain model?" To answer the question, it's
 important to understand the trade-off between coupling and design feedback.
 
+[[test_spectrum_diagram]]
 .The test spectrum
-====
-[source,text]
-[role="skip"]
-----
-| Low feedback                                                  High feedback |
-| Low barrier to change                                 High barrier to change|
-| High system coverage                                       Focused coverage |
-| <---------                                                     ---------->  |
-| API tests                  service-layer tests                 domain tests |
-----
-====
-
-//TODO: stick a non-ascii diagram here.
+image::images/test_spectrum_diagram.png[]
 
 Extreme Programming (XP) exhorts us to "listen to the code." When we're writing
 tests, we might find that the code is hard to use, or notice a code smell. This
@@ -1148,81 +1146,33 @@ Adding the service layer has really bought us quite a lot:
   tests.
 
 
-[[service_layer_diagram_abstract]]
-.Dependencies of the service layer
-====
-[role="skip"]
-[source,text]
-----
-Abstract dependencies:
-        +-----------------------------+
-        |          Any client         |----\
-        +-----------------------------+    |
-                       |                   |
-                       V                   |
-        +-----------------------------+    |
-        |         Service Layer       |    |
-        +-----------------------------+    |
-           |                     |         |
-           V                     V         V
-+------------------+     +-----------------------+
-|   Domain Model   |     | (Abstract) Repository |
-+------------------+     +-----------------------+
+<<service_layer_diagram_abstract_dependencies>> shows the abstract
+dependencies of our service layer:
 
+[[service_layer_diagram_abstract_dependencies]]
+.Abstract Dependencies of the service layer
+image::images/service_layer_diagram_abstract_dependencies.png[]
 
+When we run the tests, we implement the abstract dependencies using
+`FakeRepository`, as in <<service_layer_diagram_test_dependencies>>:
 
-Tests' dependencies:
+[[service_layer_diagram_test_dependencies]]
+.Dependencies when running tests
+image::images/service_layer_diagram_test_dependencies.png[]
 
-        +-----------------------------+
-        |           Tests             |----\
-        +-----------------------------+    |
-                       |                   |
-                       V                   |
-        +-----------------------------+    |
-        |         Service Layer       |    |
-        +-----------------------------+    |
-           |                     |         |
-           V                     V         V
-+------------------+     +-----------------------+
-|   Domain Model   |     |    FakeRepository     |
-+------------------+     |      (in-memory)      |
-                         +-----------------------+
+And when we actually run our app, we swap in the "real" dependency,
+<<service_layer_diagram_runtime_dependencies>>:
 
+[[service_layer_diagram_runtime_dependencies]]
+.Dependencies at runtime
+image::images/service_layer_diagram_runtime_dependencies.png[]
 
-Runtime dependencies:
-
-       +--------------------------------+
-       | Flask API (Presentation layer) |----\
-       +--------------------------------+    |
-                       |                     |
-                       V                     |
-        +-----------------------------+      |
-        |         Service Layer       |      |
-        +-----------------------------+      |
-           |                     |           |
-           V                     V           V
-+------------------+     +-----------------------+
-|   Domain Model   |     | SqlAlchemy Repository |
-+------------------+     +-----------------------+
-              ^                |
-              |                V
-           +----------------------+
-           |          ORM         |
-           +----------------------+
-                       |
-                       V
-           +------------------------+
-           |       Database         |
-           +------------------------+
-
-----
-====
 
 //TODO (DS): Good wrap up. I'd really like to see a table or something that
-//sums up what belongs in each layer so far. And a diagram!
+//sums up what belongs in each layer so far.
 
-There's still a bit of awkwardness we'd like to get rid of. The service
-layer is tightly coupled to a `session` object.  In the next chapter, we'll
-introduce one more pattern that works closely with _repository_ and _service
-layer_, the _unit of work_ pattern, and everything will be absolutely lovely.
-You'll see!
+Wonderful. But there's still a bit of awkwardness we'd like to get rid of. The
+service layer is tightly coupled to a `session` object.  In the next chapter,
+we'll introduce one more pattern that works closely with _repository_ and
+_service layer_, the _unit of work_ pattern, and everything will be absolutely
+lovely. You'll see!

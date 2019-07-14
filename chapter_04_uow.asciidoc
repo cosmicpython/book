@@ -24,6 +24,11 @@ For now, that translates straight into a database transaction, but by giving
 ourselves our own abstraction, we can make it mean more things, as we'll see
 when we get to <<chapter_06_events_and_message_bus>>.
 
+NOTE: Responsibility-driven design would describe the unit of work and the
+repository as _collaborators_. Clusters of objects that _collaborate_ in their
+roles are described as _object neighborhoods_ which is, in our professional
+opinion, totally adorable.
+
 
 In the last chapter, the service layer was tightly coupled to the SQLAlchemy
 session object, so we'll fix that.
@@ -251,6 +256,8 @@ https://github.com/python-leap/book/issues/44
 <3> And in our tests, we can instantiate a UoW and pass it to
     our service layer, instead of a repository and a session,
     which is considerably less cumbersome.
+
+
 
 ////
 TODO:

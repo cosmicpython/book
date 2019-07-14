@@ -1,0 +1,10 @@
+[ditaa, batch_changed_events_flow_diagram]
+....
++----------+    /----\      +------------+        +------------+
+| batch    |--> |RULE| -->  | Deallocate | ---->  | Reallocate |
+| quantity |    \----/      +------------+-+      +------------+-+
+| changed  |                  | Deallocate | ---->  | Reallocate |
++----------+                  +------------+-+      +------------+-+
+                                | Deallocate | ---->  | Reallocate |
+                                +------------+        +------------+
+....

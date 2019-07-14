@@ -22,5 +22,5 @@ BRANCHES = {
 }
 
 STANDALONE = [
-    'appendix_abstractions',
+    'chapter_02B_abstractions',
 ]

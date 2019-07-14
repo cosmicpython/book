@@ -1,6 +1,15 @@
-[[appendix_abstractions]]
-[appendix]
-== Coupling and Abstractions ==
+[preface]
+[[chapter_02B_abstractions]]
+== A Brief Interlude: On Coupling and Abstractions
+
+// this chapter is marked as a preface as a hack to disable
+// chapter numbering for it in atlas/pdf.  when we go to prod
+// we should find a better solution.
+
+Allow us a brief digression on the subject of abstractions, dear reader.
+We've talked about _abstractions_ quite a lot.  The repository is an
+abstraction over permanent storage for example.  But what makes a good
+abstraction?  What do we want from them?
 
 A key theme in this book, hidden among the fancy patterns, is that we can use
 simple abstractions to hide messy details. When we're writing code for fun, or
@@ -8,7 +17,7 @@ in a kata, we get to play with ideas freely, hammering things out and
 refactoring aggressively. In a large-scale system, though, we become constrained
 by the decisions made elsewhere in the system.
 
-When I'm unable to change component A for fear of breaking component B, we say
+When we're unable to change component A for fear of breaking component B, we say
 that the components have become coupled. Locally, coupling is a good thing: it's
 a sign that our code is working together, each component supporting the others,
 fitting in place like the gears of a watch.
@@ -19,46 +28,21 @@ all. This is the problem with the ball of mud pattern: as the application grows,
 the coupling increases superlinearly until we are no longer able to effectively
 change our systems.
 
-We can reduce the degree of coupling within a system by abstracting away the
-details.
+We can reduce the degree of coupling within a system
+(<<coupling_illustration1>>) by abstracting away the details
+(<<coupling_illustration2>>):
 
 
 [[coupling_illustration1]]
 .Lots of coupling
-====
-[source,text]
-[role="skip"]
-----
-+--------+     +--------+
-|        |<--->|        |
-|        |<--->|        |
-| System |<--->| System |
-|   A    |<--->|   B    |
-|        |<--->|        |
-|        |<--->|        |
-+--------+     +--------+
-----
-====
+image::images/coupling_illustration1.png[]
 
 [[coupling_illustration2]]
 .Less coupling
-====
-[source,text]
-[role="skip"]
-----
-+--------+     +--------+     +--------+
-|        |<--->|        |     |        |
-|        |<--->|        |     |        |
-| System |<--->|  Abs-  |     | System |
-|   A    |<--->|traction|<--->|   B    |
-|        |<--->|        |     |        |
-|        |<--->|        |     |        |
-+--------+     +--------+     +--------+
-----
-====
+image::images/coupling_illustration2.png[]
 
 
-In both diagrams above, we have a pair of subsystems, with the one dependent on
+In both diagrams, we have a pair of subsystems, with the one dependent on
 the other. In the first diagram, there is a high degree of coupling between the
 two because of reasons. If we need to change system B, there's a good
 chance that the change will ripple through to system A.
@@ -237,6 +221,10 @@ Reading through the code, there are really three distinct things happening.
 
 What could we do to abstract out the filesystem in each case?
 
+NOTE: In this chapter we're refactoring some gnarly code into a more testable
+structure by identifying the separate tasks that need to be done and giving
+each task to a clearly defined actor. This is the responsibility-driven approach
+we mentioned in the prologue.
 
 For (1) and (2), we've already intuitively started using an abstraction, a
 dictionary of hashes to paths, and you may already have been thinking, "why not
@@ -360,7 +348,7 @@ def determine_actions(src_hashes, dst_hashes, src_folder, dst_folder):  #<2>
     hashes and filenames, what should we copy/move/delete?  takes simple
     data structures and returns simple data structures
 
-<3> And our top-level module now contains almost now logic whatseover
+<3> And our top-level module now contains almost no logic whatseover
 
 
 Our tests now act directly on the `determine_actions()` function:
@@ -391,7 +379,7 @@ Our tests now act directly on the `determine_actions()` function:
 Because we've disentangled the logic of our program - the code for identifying
 changes - from the low-level details of IO, we can easily test the core of our code.
 
-==== Dependency Injection
+==== Option 2: Dependency Injection
 
 Let's call this the "Bob way," and it's about making dependencies explicit and
 modifiable:
@@ -402,24 +390,24 @@ modifiable:
 [source,python]
 [role="skip"]
 ----
-def synchronise_dirs(reader, apply_func, source_root, dest_root):  #<1>
-    source_hashes = reader(source_root)  #<2>
-    dest_hashes = reader(dest_root)  #<2>
+def synchronise_dirs(reader, apply_func, src_folder, dst_folder):  #<1>
+    src_hashes = reader(src_folder)  #<2>
+    dst_hashes = reader(dst_folder)  #<2>
 
     for sha, filename in src_hashes.items():
         if sha not in dst_hashes:
             sourcepath = src_folder / filename
             destpath = dst_folder / filename
-            apply_func('copy', sourcepath, destpath)  #<3>
+            apply_func('COPY', sourcepath, destpath)  #<3>
 
         elif dst_hashes[sha] != filename:
             olddestpath = dst_folder / dst_hashes[sha]
             newdestpath = dst_folder / filename
-            apply_func('move', olddestpath, newdestpath)  #<3>
+            apply_func('MOVE', olddestpath, newdestpath)  #<3>
 
     for sha, filename in dst_hashes.items():
         if sha not in src_hashes:
-            apply_func('delete', dst_folder / filename)  #<3>
+            apply_func('DELETE', dst_folder / filename)  #<3>
 ----
 ====
 
@@ -447,10 +435,10 @@ def test_when_a_file_exists_in_the_source_but_not_the_destination():
     dest = {}
     actions = []
 
-    reader = [source, dest]
+    reader = {"/source": source, "/dest": dest}
     synchronise_dirs(reader.pop, actions.append, "/source", "/dest")
 
-    assert actions = [("COPY", "/source/my-file", "/dest/my-file")]
+    assert actions == [("COPY", "/source/my-file", "/dest/my-file")]
 
 
 def test_when_a_file_has_been_renamed_in_the_source():
@@ -458,10 +446,10 @@ def test_when_a_file_has_been_renamed_in_the_source():
     dest = {"sha1": "original-file" }
     actions = []
 
-    reader = [source, dest]
+    reader = {"/source": source, "/dest": dest}
     synchronise_dirs(reader.pop, actions.append, "/source", "/dest")
 
-    assert actions = [("MOVE", "/dest/original-file", "/dest/renamed-file")]
+    assert actions == [("MOVE", "/dest/original-file", "/dest/renamed-file")]
 ----
 ====
 
@@ -502,3 +490,4 @@ a few heuristics and questions to ask yourself:
 
 Practice makes less-imperfect!
 
+And now back to our regular programming...

@@ -18,6 +18,7 @@ In the meantime, pull requests, typofixes, and more substantial feedback + sugge
 | [Prologue: Why do our designs go wrong?](prologue.asciidoc)| |
 | [Chapter 1: Domain Model](chapter_01_domain_model.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_01_domain_model)](https://travis-ci.org/python-leap/code) |
 | [Chapter 2: Repository](chapter_02_repository.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_02_repository)](https://travis-ci.org/python-leap/code) |
+| [Interlude: Abstractions](chapter_02B_abstractions.asciidoc) | |
 | [Chapter 3: Service Layer (and Flask API)](chapter_03_service_layer.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_03_service_layer)](https://travis-ci.org/python-leap/code) |
 | [Chapter 4: Unit of Work](chapter_04_uow.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_04_uow)](https://travis-ci.org/python-leap/code) |
 | [Chapter 5: Aggregates](chapter_05_aggregate.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_05_aggregate)](https://travis-ci.org/python-leap/code) |
@@ -28,8 +29,6 @@ In the meantime, pull requests, typofixes, and more substantial feedback + sugge
 | [Chapter 9: CQRS](chapter_09_cqrs.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_09_cqrs)](https://travis-ci.org/python-leap/code) |
 | [Chapter 10: Dependency Injection](chapter_10_dependency_injection.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_10_dependency_injection)](https://travis-ci.org/python-leap/code) |
 | [Epilogue 1: How do I get there from here?](epilogue_1_how_to_get_there_from_here.asciidoc) | |
-| [Epilogue 2: Footguns!](epilogue_2_footguns.asciidoc) | |
-| [Appendix A: Abstractions](appendix_abstractions.asciidoc) | |
 | [Appendix B: Project Structure](appendix_project_structure.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=appendix_project_structure)](https://travis-ci.org/python-leap/code) |
 | [Appendix C: A major infrastructure change, made easy](appendix_csvs.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=appendix_csvs)](https://travis-ci.org/python-leap/code) |
 | [Appendix D: Django](appendix_django.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=appendix_django)](https://travis-ci.org/python-leap/code) |
@@ -44,11 +43,13 @@ Below is just instructions for me and bob really.
 
 * asciidoctor
 * Pygments (for syntax higlighting)
+* asciidoctor-diagram (to render images from the text sources in [`./images`](./images))
 
 ```sh
 gem install asciidoctor
 python2 -m pip install --user pygments
 gem install pygments.rb
+gem install asciidoctor-diagram
 ```
 
 

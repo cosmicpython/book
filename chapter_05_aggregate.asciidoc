@@ -11,7 +11,7 @@ familiar but offer .
 In fact, an enormous number of business processes do operate by manually sending
 spreadsheets back and forward over e-mail. This "csv over smtp" architecture has
 low initial complexity but tends not to scale very well because it's difficult
-to apply logic.
+to apply logic and maintain consistency.
 
 // TODO: better examples.
 Who is allowed to view this particular field? Who's allowed to update it? What
@@ -23,47 +23,58 @@ to enforce these constraints in order to maintain the _invariants_ of the
 system. The invariants are the things that have to be true whenever we finish
 an operation.
 
+
+=== Invariants, Constraints and Consistency
+
 If we were writing a hotel booking system, we might have the constraint that no
 two bookings can exist for the same hotel room on the same night. This supports
 the invariant that no room is double booked.
 
-Of course, sometimes we might need to temporarily *bend* the rules. Perhaps we
+Of course, sometimes we might need to temporarily _bend_ the rules. Perhaps we
 need to shuffle the rooms around due to a VIP booking. While we're moving people
-around, we might be double booked, but our domain model should ensure that we
-end up in a final consistent state, where the invariants are met.
+around, we might be double booked, but our domain model should ensure that, when
+we're finished, we end up in a final consistent state, where the invariants are
+met.  Either that, or we raise an error and refuse to complete the operation.
 
-Let's look at a concrete example:
+Let's look at a couple of concrete examples from our business requirements
 
-[quote, Us, This book]
-----
+[quote, the business]
+____
+* An order line can only be allocated to one batch at a time.
+____
 
+This is a business rule that implements a constraint. The constraint is that an
+order line is allocated to either zero or one batches, but never more than one.
+We need to make sure that our code never accidentally calls `Batch.allocate()`
+on two different batches for the same line, and currently, there's nothing
+there to explicitly stop us doing that.  By nominating an aggregate to be
+"in charge of" all batches, we'll have a single place where we can enforce
+this constraint.
+
+
+==== Invariants And Concurrency
+
+Let's look at another one of our business rules:
+
+[quote, the business]
+____
 * I can't allocate to a batch if the available quantity is less than the
   quantity of the order line.
-  Example: I have a batch of 1 BLUE-CUSHION, and an order line for 2
-  BLUE-CUSHION. I should not be able to allocate the line to the batch.
+____
 
-----
+Here the constraint is that we can't allocate more stock than is available to a
+batch. The invariant is that we never oversell stock by allocating two
+customers to the same physical cushion. Every time we update the state of the
+system, our code needs to ensure that we don't break the invariants.
 
-This is a business rule that implements a constraint. The constraint is that we
-can't allocate more stock than is available to a batch. The invariant is that
-we never oversell stock by allocating two customers to the same physical cushion.
-Every time we update the state of the system, our code needs to ensure that we
-don't break the invariants.
-
-// TODO: Maybe this ought to be a sidebar? It's an important point but sits awkwardly
-If we're unable to meet our invariants, we might choose to raise an error rather
-than complete the operation.
-
-=== Invariants And Concurrency
-
-In a single threaded single user application it's easy for us to maintain the
-invariants of our system. We can just allocate stock, one line at a time, and
-raise an error if there's no stock available.
+In a single threaded single user application it's easy for us to maintain this
+invariant. We can just allocate stock one line at a time, and raise an error
+if there's no stock available.
 
 This gets much harder when we introduce the idea of concurrency. Suddenly we
-might be allocating stock for multiple order lines simultaneously. We might even
-be allocating order lines, while we're processing changes to the batches
-themselves.
+might be allocating stock for multiple order lines simultaneously. We might
+even be allocating order lines at the same time as processing changes to the
+batches themselves.
 
 We usually solve this problem by applying locks to our database tables. This
 prevents two operations happening simultaneously on the same row or same
@@ -74,6 +85,15 @@ of allocating lines against all available batches may not scale.  If we've
 got tens of thousands of orders per hour, and hundreds of thousands of
 order lines, we can't hold a lock over the whole `batches` table for
 every single one.
+
+In the rest of this chapter, we'll first discuss choosing an aggregate
+and demonstrate its usefulness for managing invariants at the conceptual level,
+as the single entrypoint in our code for modifying batches and allocations. In
+that role, it's defending us from programmer error.
+
+Then we'll return to the topic of concurrency and discuss how the aggregate can
+enforce invariants at a lower level.  In that role, it'll be defending us
+against concurrency / data integrity bugs.
 
 
 === Choosing The Right Aggregate
@@ -102,11 +122,15 @@ modifying their related objects.  It makes the system conceptually simpler
 and easy to reason about if you nominate some objects to be in charge of consistency
 for the others.
 
+TIP: Just like we sometimes use `_leading_underscores` to mark methods or functions
+    as "private", you can think of aggregates as being the "public" classes of our
+    model, and the rest of the Entities and Value Objects are "private".
+
 Some sort of `Order` object might suggest itself, but that's more about order lines,
 and we're more concerned about something that provides some sort of conceptual unity
 for collections of batches.
 
-When we allocate an order line, we're actually only interested in all the batches
+When we allocate an order line, we're actually only interested in batches
 that have the same SKU as the order line.  Some sort of concept of `GlobalSkuStock`
 or perhaps just simply `Product` -- after all, that was the first concept we
 came across in our exploration of the domain language back in <<chapter_01_domain_model>>.
@@ -143,10 +167,54 @@ class Product:
 <3> And finally, we can move the `allocate()` domain service to
     being a method on `Product`.  
 
+NOTE: This `Product` might not look like what you'd expect a `Product`
+    model to look like.  No price, no description, no dimensions...
+    Our allocation service doesn't care about any of those things.
+    This is the power of microservices and bounded contexts, the concept
+    of Product in one app can be very different from another.footnote:[Well, either
+    that, or it's just a bad name.  but `SKUStock` would be so _awkward_!]
+
+//TODO: AA prompted the note above, he said "Product" was a confusing name at first.
+// maybe we should just go for something like `ProductStock`, or just `Stock`?
+
 //TODO: talk about magic methods on aggregates maybe?  ie, a non-aggregate entity
 //      might have a __hash__ so that we can put it into a set, but because you
 //      are never supposed to have a collection of aggregates, they could return
 //      an error for __has__. or sumfink.
+
+
+.Aggregates, Bounded Contexts and Microservices
+*******************************************************************************
+One of the most important contributions from Evans and the DDD community
+is the concept of
+https://martinfowler.com/bliki/BoundedContext.html[_Bounded Contexts_].
+
+In essence, this was a reaction against attempts to capture entire businesses
+into a single model. The word "customer" means different things to people
+in sales, customer services, logistics, support, and so on.  Attributes
+needed in one context are irrelevant in another; more perniciously, concepts
+with the same name can have entirely different meanings in different contexts.
+Rather than trying to build a single model (or class, or database) to capture
+all the use cases, better to have several different models, draw boundaries
+around each context, and handle the translation between different contexts
+explicitly.
+
+This concept translates very well to the world of microservices, where each
+microservice is free to have its own concept of "customer", and rules for
+translating that to and from other microservices it integrates with.
+
+Whether or not you've got a microservices architecture, a key consideration
+in choosing your aggregates is also choosing the bounded context that they
+will operate in.  By restricting the context, you can keep your number of
+aggregates low and their size manageable.
+
+Once again we find ourselves forced to say that we can't give this issue
+the treatment it deserves here, and we can only encourage you to read up on it
+elsewhere.
+
+//TODO more links or suggestions on where to read about bounded context?
+
+*******************************************************************************
 
 
 === 1 Aggregate = 1 Repository

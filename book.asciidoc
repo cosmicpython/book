@@ -17,6 +17,13 @@ include::prologue.asciidoc[]
 include::part1.asciidoc[]
 include::chapter_01_domain_model.asciidoc[]
 include::chapter_02_repository.asciidoc[]
+
+:sectnums!:
+
+include::chapter_02B_abstractions.asciidoc[]
+
+:sectnums:
+
 include::chapter_03_service_layer.asciidoc[]
 include::chapter_04_uow.asciidoc[]
 include::chapter_05_aggregate.asciidoc[]
@@ -24,9 +31,10 @@ include::chapter_05_aggregate.asciidoc[]
 include::part2.asciidoc[]
 include::chapter_06_events_and_message_bus.asciidoc[]
 include::chapter_07_external_events.asciidoc[]
+include::chapter_08_commands.asciidoc[]
+include::chapter_09_cqrs.asciidoc[]
 include::chapter_10_dependency_injection.asciidoc[]
 
-include::appendix_abstractions.asciidoc[]
 include::appendix_project_structure.asciidoc[]
 include::appendix_csvs.asciidoc[]
 include::appendix_django.asciidoc[]

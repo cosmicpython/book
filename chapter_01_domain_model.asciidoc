@@ -139,23 +139,9 @@ a little bit cumbersome to draw.  More
 https://www.codemag.com/Article/0205051/UML-Collaboration-Diagrams[info]. ]
 ////
 
+[[allocation_context_diagram]]
 .A sort-of context diagram for the allocation service.
-====
-[source,text]
-[role="skip"]
-----
-Orders                          +------------+         Shipments, Stock
- OrderLines(product/qty) -----> | Allocation | ------>  Batches(product/qty/eta)
- OrderLines(product/qty) -----> |  Service   | ------>  Batches(product/qty/eta)
- ...                      sent  |            |  looks   ...
-                           to   +------------+   up
-                                      |
-                                      | outputs
-                                      V
-                               "An allocation"
-                               orderline->batch.
-----
-====
+image::images/allocation_context_diagram.png[]
 
 //TODO: Better diagram for allocation? context diag?"
 
@@ -196,29 +182,28 @@ domain experts about allocation.
   order line to a batch, we will send stock from that specific batch to the
   customer's delivery address.
 
-* When I allocate 1 unit of stock to a batch, the _available quantity_ is
+* When we allocate 1 unit of stock to a batch, the _available quantity_ is
   reduced.
 +
 .Example:
-** I have a batch of 20 SMALL-TABLE, and I allocate an order line for 2
+** We have a batch of 20 SMALL-TABLE, and we allocate an order line for 2
    SMALL-TABLE.
 ** The batch should have 18 SMALL-TABLE remaining.
-//TODO: CC asked us to change the "Is" to "we"s our "you"s here.
 
-* I can't allocate to a batch if the available quantity is less than the
+* We can't allocate to a batch if the available quantity is less than the
   quantity of the order line.
 +
 .Example:
-** I have a batch of 1 BLUE-CUSHION, and an order line for 2
+** We have a batch of 1 BLUE-CUSHION, and an order line for 2
    BLUE-CUSHION.
-** I should not be able to allocate the line to the batch.
+** We should not be able to allocate the line to the batch.
 
-* I can't allocate the same line twice.
+* We can't allocate the same line twice.
 +
 .Example:
-** I have a batch of 10 BLUE-VASE, and I allocate an order line for 2
+** We have a batch of 10 BLUE-VASE, and we allocate an order line for 2
    BLUE-VASE.
-** If I allocate the order line again to the same batch, the batch
+** If we allocate the order line again to the same batch, the batch
    should still have an available quantity of 8.
 
 * Batches have an _ETA_ if they are currently shipping, or they may be in
@@ -460,29 +445,12 @@ TODO (EJ)
 #      I am unsure what audience you are targeting.
 ////
 
+<<model_diagram>> shows the model in diagram form.
 
 
 [[model_diagram]]
 .Our Model
-====
-[source,text]
-[role="skip"]
-----
-+=====================+
-| Batch               |
-+---------------------+
-| reference           |
-| sku                 |
-| _purchased_quantity |       +=============+
-| allocations -------------->>| OrderLine   |
-+---------------------+       +-------------+
-                              | order_id    |
-                              | sku         |
-                              | qty         |
-                              +-------------+
-
-----
-====
+image::images/model_diagram.png[]
 
 Now we're getting somewhere! A batch now keeps track of a set of allocated
 OrderLine objects. When we allocate, if we have enough available quantity, we
@@ -583,7 +551,8 @@ it's not something that uniquely identifies the line itself).
 
 Whenever we have a business concept that has some data but no identity, we
 often choose to represent it using a Value Object. A Value Object is any
-domain object that is uniquely identified by the data it holds.
+domain object that is uniquely identified by the data it holds; we usually
+make them immutable.
 
 
 [[orderline_value_object]]
@@ -601,7 +570,7 @@ class OrderLine:
 ====
 
 Introduced in Python 3.7, `Dataclasses` are a neat way to represent value objects;
-if you're on Python 2, you could use named tuples instead. Either technique
+if you're on Python 2, you could use `namedtuples` instead. Either technique
 will give you _value equality_ which is the fancy way of saying "two lines with
 the same orderid, sku and qty are equal."
 
