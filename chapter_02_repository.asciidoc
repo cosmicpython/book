@@ -381,11 +381,11 @@ like?
 ----
 import all_my_data
 
-def create_a_batch(self):
+def create_a_batch():
     batch = Batch(...)
     all_my_data.batches.add(batch)
 
-def modify_a_batch(self, batch_id, new_quantity):
+def modify_a_batch(batch_id, new_quantity):
     batch = all_my_data.batches.get(batch_id)
     batch.change_initial_quantity(new_quantity)
 
@@ -442,7 +442,7 @@ WARNING: We're using abstract base classes in this book for didactic reasons:
     they end up unmaintained and, at worst, misleading.
     In practice we tend to rely on Python's duck-typing to enable abstractions.
     To a Pythonista, a repository is _any_ object that has `add(thing)` and
-    get`(id)` methods.
+    `get(id)` methods.
 
 <1> Python tip: `@abc.abstractmethod` is one of the only things that makes
     ABCs actually "work" in Python.   Python will refuse to let you instantiate
