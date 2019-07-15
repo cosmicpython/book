@@ -45,6 +45,11 @@ object or function.
 Take a look at the following two snippets of Python code, <<urllib_example>> and
 <<requests_example>>:
 
+
+[cols="6,.^1", frame="none", grid="none"]
+|===
+
+a| 
 [[urllib_example]]
 .Do a search with urllib
 ====
@@ -66,8 +71,9 @@ for r in results:
 ----
 ====
 
+a| image::images/galaxybrainmeme1.jpg["Galaxybrain meme",width="200px",float="right"]
 
-
+a| 
 [[requests_example]]
 .Do a search with requests
 ====
@@ -85,6 +91,9 @@ for r in results:
 ----
 ====
 
+a| image::images/galaxybrainmeme2.jpg["Galaxybrain meme",width="200px",float="right"]
+|===
+
 Both of these code listings do the same thing: they submit form-encoded values
 to a URL in order to use a search engine API. But the second is simpler to read
 and understand because it operates at a higher level of abstraction.
@@ -93,9 +102,10 @@ We can take this one step further still by identifying and naming the task we
 want the code to perform for us, and use an even higher-level abstraction to make
 it explicit:
 
-image::images/galaxybrainmeme.jpg["Galaxybrain meme",width="200px",float="right"]
-//TODO fix alignment and/or make 3 images.
+[cols="6,.^1", frame="none", grid="none"]
+|===
 
+a| 
 [[ddg_example]]
 .Do a search with the duckduckgo module
 ====
@@ -107,6 +117,8 @@ for r in duckduckgo.query('Sausages').results:
 ----
 ====
 
+a| image::images/galaxybrainmeme3.jpg["Galaxybrain meme",width="200px",float="right"]
+|===
 
 Encapsulating behaviour using abstractions is a powerful tool for making
 our code more expressive, more testable, and easier to maintain.
