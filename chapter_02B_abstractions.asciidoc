@@ -312,7 +312,7 @@ def sync(source, dest):  #<3>
         if action == 'move':
             shutil.move(*paths)
         if action == 'delete':
-            os.remove(*paths)
+            os.remove(paths[0])
 
 ...
 
