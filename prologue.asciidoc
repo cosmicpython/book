@@ -153,6 +153,28 @@ For example most people are familiar with the three layered architecture (see <<
 .Layered Architecture
 image::images/layered_architecture.png[]
 
+++++
+<!-- IMAGE SOURCE
+[ditaa, layered_architecture]
+....
++------------------------------------------------------------+
+|                  Presentation Layer                        |
++------------------------------------------------------------+
+                          |
+                          V
++------------------------------------------------------------+
+|                   Business Logic                           |
++------------------------------------------------------------+
+                          |
+                          V
++------------------------------------------------------------+
+|                    Database Layer                          |
++------------------------------------------------------------+
+....
+-->
+++++
+
+
 
 Layered architecture is perhaps the most common pattern for building business
 software. In this model we have user-interface components, which could be a web

@@ -12,5 +12,5 @@ update-code:
 count-todos:
 	ls *.asciidoc | xargs grep -c TODO | sed  s/:/\\t/
 
-render-diagrams:
-	asciidoctor -r asciidoctor-diagram -a imagesoutdir=. images/*.asciidoc
+diagrams: html
+	./render-diagrams.py
