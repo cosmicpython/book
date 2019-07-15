@@ -398,6 +398,7 @@ find them again. Our in memory data would let us add new objects, just like a
 list or a set, and since the objects are in memory we never need to call a
 "Save" method, we just fetch the object we care about, and modify it in memory.
 
+
 ==== The Repository In The Abstract
 
 The simplest repository has just two methods: `add` to put a new item in the
