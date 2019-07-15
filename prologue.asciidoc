@@ -167,7 +167,15 @@ model inside out by obeying one simple principle.
 
 ////
 TODO:
-— You can explain DI more easily once you have introduced layers by noting that as we depend downwards, it becomes impossible to use something from a higher layer. To correct this, you need to create an interface in your layer, and have something in the higher layer implement that. The DI is when you provide the concrete dependency when calling the lower layer. Hexagonal architectures with their ‘depend inwards’ model are even clearer here, because for the port layer to do I/O it must depend on the adapter layer above it, which it can’t do, so it creates a DAO abstraction, depends on that, and has that implemented in the adapter layer.
+You can explain DI more easily once you have introduced layers by noting that
+as we depend downwards, it becomes impossible to use something from a higher
+layer. To correct this, you need to create an interface in your layer, and have
+something in the higher layer implement that. The DI is when you provide the
+concrete dependency when calling the lower layer. Hexagonal architectures with
+their ‘depend inwards’ model are even clearer here, because for the port layer
+to do I/O it must depend on the adapter layer above it, which it can’t do, so
+it creates a DAO abstraction, depends on that, and has that implemented in the
+adapter layer.
 
 https://github.com/python-leap/book/issues/49
 ////
@@ -200,34 +208,48 @@ whether the high-level concepts work correctly. If payroll runs on time, your
 business is unlikely to care whether that's a cron job or a transient function
 running on Kubernetes.
 
-And we've mentioned _abstractions_ already: they're simplified interfaces that
-encapsulate some role, in the way that our duckduckgo module encapsulated a
-search engine's API.
+_Depends on_ doesn't mean "imports" or "calls", necessarily, but more a more
+general idea that one module "knows about" or "needs" another module.
 
-TODO: talk about pythonic duck typing, interfaces / abstract classes in OO,
-    and our plan to use ABCs
+And we've mentioned _abstractions_ already: they're simplified interfaces that
+encapsulate some behaviour, in the way that our duckduckgo module encapsulated a
+search engine's API. In a traditional-OO language you might use an abstract base
+class or an interface to define an abstraction.  In Python you can (and we
+sometimes do) use ABCs, but you can also rely on duck typing.  The abstraction
+can just mean, "the public API of the thing you're using"; a function name
+plus some arguments, for example.
+
 
 So the first part of the DIP says that our business code shouldn't depend on
 technical details; instead they should both use abstractions.
 
+
+[quote,David Wheeler]
+____
+All problems in computer science can be solved by adding another level of
+indirection
+____
+
+Why? Broadly, because we want to be able to change them independently of each
+other.  High-level modules should be easy to change in response to business
+need.  Low-level modules (details) are often, in practice, harder to
+change: think about refactoring to change a function name vs defining, testing
+and deploying a database migration to change a column name.  We don't
+want business logic changes to be slowed down because they are closely coupled
+to low-level infrastructure details.  But, similarly, it is important to _be
+able_ to change your infrastructure details when you need to (think about
+sharding a database, for example), without needing to make changes to your
+business layer.  Adding an abstraction in between them (the famous extra
+layer of indirection) allows the two to change (more) independently of each
+other.
+
+
 The second part is even more mysterious. "Abstractions should not depend on
 details" seems clear enough, but "Details should depend on abstractions" is
 hard to imagine. How can we have an abstraction that doesn't depend on the
-details it's abstracting?  We'll come to that shortly, but before we can turn
-our three-layered architecture inside out, we need to talk more about that
-middle layer, the business logic.
-// TODO (EJ):  footnote:[e.j. I frequently find the phrase "depends on" to be
-// confusing especially when trying to explain this.  "knows about the presence
-// or absence of" is a very helpful substitute.  There is a very old Parnas
-// paper where this comes from, but I cannot recall which one.]
-
-TODO: we've explained what, and we'll explain how, but we need to spend a moment
-    on _why_ dependency inversion is a good idea.  broadly, because we want to be
-    able to change them independently of each other.  high-level modules we want
-    to make as easy to change as possible in response to business need.  low-level
-    modules / details are often harder to change (think, database migrations vs
-    changing a function name), but it's also important to _be able_ to change
-    them when you need (eg sharding a database)
+details it's abstracting?  We'll come to that in <<chapter_03_service_layer>>,
+but before we can turn our three-layered architecture inside out, we need to
+talk more about that middle layer, the business logic.
 
 One of the most common reasons that our designs go wrong is that business
 logic becomes spread out throughout the layers of our application, hard to
