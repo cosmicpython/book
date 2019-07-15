@@ -204,6 +204,9 @@ And we've mentioned _abstractions_ already: they're simplified interfaces that
 encapsulate some role, in the way that our duckduckgo module encapsulated a
 search engine's API.
 
+TODO: talk about pythonic duck typing, interfaces / abstract classes in OO,
+    and our plan to use ABCs
+
 So the first part of the DIP says that our business code shouldn't depend on
 technical details; instead they should both use abstractions.
 
@@ -217,6 +220,14 @@ middle layer, the business logic.
 // confusing especially when trying to explain this.  "knows about the presence
 // or absence of" is a very helpful substitute.  There is a very old Parnas
 // paper where this comes from, but I cannot recall which one.]
+
+TODO: we've explained what, and we'll explain how, but we need to spend a moment
+    on _why_ dependency inversion is a good idea.  broadly, because we want to be
+    able to change them independently of each other.  high-level modules we want
+    to make as easy to change as possible in response to business need.  low-level
+    modules / details are often harder to change (think, database migrations vs
+    changing a function name), but it's also important to _be able_ to change
+    them when you need (eg sharding a database)
 
 One of the most common reasons that our designs go wrong is that business
 logic becomes spread out throughout the layers of our application, hard to
