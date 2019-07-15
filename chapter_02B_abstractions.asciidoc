@@ -294,8 +294,8 @@ Let's see them in turn.
 Let's call this the "Harry Way."  FCIS is probably a bit of an aspirational
 name, in fact the point is not to have a pure-functional solution in the 
 sense of not-using-classes, but more in the sense of having no (or minimal)
-side-effects.  The aim is to split out a core of business logic with minimal or
-no dependencies, and test that separately from the rest of our system.
+side-effects.  The aim is to split out a core of business logic with no
+dependencies, and test that separately from the rest of our system.
 
 [[three_parts]]
 .Split our code into three  (sync.py)
@@ -312,6 +312,7 @@ def sync(source, dest):  #<3>
         if action == 'move':
             shutil.move(*paths)
         if action == 'delete':
+            os.remove(*paths)
 
 ...
 
@@ -344,9 +345,9 @@ def determine_actions(src_hashes, dst_hashes, src_folder, dst_folder):  #<2>
 <1> The code to build up the dictionary of paths and hashes is now trivially
     easy to write.
 
-<2> The core of our "business logic," which says, given these two sets of
-    hashes and filenames, what should we copy/move/delete?  takes simple
-    data structures and returns simple data structures
+<2> The core of our "business logic," which says, "given these two sets of
+    hashes and filenames, what should we copy/move/delete?"  takes simple
+    data structures and returns simple data structures.
 
 <3> And our top-level module now contains almost no logic whatseover
 
@@ -413,9 +414,13 @@ def synchronise_dirs(reader, apply_func, src_folder, dst_folder):  #<1>
 
 //NICE-TO-HAVE: test this listing
 
-<1> Our top-level function now exposes two new dependencies, a `reader` and an `apply_func`
+<1> Our top-level function now exposes two new dependencies, a `reader` and an
+    `apply_func`
+
 <2> We invoke the `reader` to produce our dict-abstraction of the filesystems
-<3> And we invoke the `apply_func` using our action-abstraction for the actions we want to apply.
+
+<3> And we invoke the `apply_func` using our action-abstraction for the actions
+    we want to apply.
 
 TIP: Notice that, although we're using dependency injection, there was no need
     to define an abstract base class or any kind of explicit interface.  In the
@@ -470,7 +475,7 @@ use dependency injection to provide that imperative shell with things like
 access to the database, so we can still unit test it.
 
 See <<chapter_10_dependency_injection>> for more exploration of making our
-dependency injection more explict and centralised.
+dependency injection more explicit and centralised.
 ******************************************************************************
 
 === Wrap-up: "Depend on Abstractions."
