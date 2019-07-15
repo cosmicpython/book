@@ -89,8 +89,9 @@ Both of these code listings do the same thing: they submit form-encoded values
 to a URL in order to use a search engine API. But the second is simpler to read
 and understand because it operates at a higher level of abstraction.
 
-We can take this one step further still by identifying the role the code is
-playing and making it explicit.
+We can take this one step further still by identifying and naming the task we
+want the code to perform for us, and use an even higher-level abstraction to make
+it explicit:
 
 image::images/galaxybrainmeme.jpg["Galaxybrain meme",width="200px",float="right"]
 //TODO fix alignment and/or make 3 images.
@@ -107,16 +108,17 @@ for r in duckduckgo.query('Sausages').results:
 ====
 
 
-Encapsulating behaviour using by identifying roles is a powerful tool for making
+Encapsulating behaviour using abstractions is a powerful tool for making
 our code more expressive, more testable, and easier to maintain.
 
 
-NOTE: [http://www.wirfs-brock.com/Design.html[Responsibility-driven design]
-    has some specific definitions for words like "role" and "responsibility"
-    which we're misusing slightly here, but we're inspired by the same general
-    approach, which is to think of objects in terms of behaviours, rather than
-    as collections of data and algorithms.  If you've come across
-    https://en.wikipedia.org/wiki/Class-responsibility-collaboration_card[CRC cards], they're driving at the same thing.
+NOTE: This approach is inspired by the OO practice of
+    http://www.wirfs-brock.com/Design.html[Responsibility-driven design].
+    which would use the words _roles_ and _responsibilities_ rather than "tasks".
+    The main point is to think about code in terms of behaviour, rather than
+    in terms of data or algorithms.  If you've come across
+    https://en.wikipedia.org/wiki/Class-responsibility-collaboration_card[CRC cards],
+    they're driving at the same thing.
 
 
 === Layering
