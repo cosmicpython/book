@@ -497,7 +497,7 @@ layer is tightly coupled to our database layer, but we'll improve on
 that in the next chapter.
 
 
-."We depend on abstractions"
+."Depend On Abstractions"
 *******************************************************************************
 Notice one more thing about our service-layer function:
 
@@ -521,27 +521,21 @@ than complex," and "readability counts..."
 Or, perhaps they make explicit something that would otherwise be implicit
 ("explicit is better than implicit").  For the purposes of this book, we've
 decided this argument carries the day. What you decide to do in your own
-codebase, however, is up to you.  We trust you'll do the right thing.]
+codebase is up to you.]
 This means it'll work both when the tests give it a `FakeRepository`, and
 when the flask app gives it a `SqlAlchemyRepository`.
 
-
-This is what people mean when they say "depend on abstractions".
-
-////
-TODO:
-should we go into full detail?
-"1. High-level modules should not depend on low-level modules. Both should depend on abstractions"
-"2. Abstractions should not depend upon details. Details should depend upon abstractions"
-
-EJ COMMENT:
-I would go ahead into full detail here.  It's a very straightforward example of
-"details depending on abstractions."  The other way to motivate this is by
-posing hypothetical scenarios, like using the local filesystem for testing, or
-switching to MongoDB instead of SQL.
-////
+If you remember the <<dip,Dependency Inversion Principle section from the prologue>>,
+This is what we mean when we says we should "depend on abstractions". Our
+_high-level module_, the service layer, depends on the repository abstraction.
+And the _details_ of the implementation for our specific choice of persistent
+storage also depend on that same abstraction.
 
 See the diagram at the end of the chapter, <<service_layer_diagram_abstract>>.
+
+See also <<appendix_csvs>> where we show a worked example of swapping out the
+_details_ of which persistent storage system to use, while leaving the
+abstractions intact.
 
 *******************************************************************************
 
