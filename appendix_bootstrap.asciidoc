@@ -81,12 +81,14 @@ Here's what a bootstrap script could look like:
 def bootstrap(
         start_orm=orm.start_mappers,
         session_factory=DEFAULT_SESSION_FACTORY,
-        send_mail=email.send,
+        notifications=None,
         publish=redis_pubsub.publish,
 ):
     start_orm()
     uow = unit_of_work.SqlAlchemyUnitOfWork(session_factory=session_factory)
-    bus = messagebus.MessageBus(uow=uow, send_mail=send_mail, publish=publish)
+    if notifications is None:
+        notifications = EmailNotifications(smtp_host=EMAIL_HOST, port=EMAIL_PORT)
+    bus = messagebus.MessageBus(uow=uow, notifications=notifications, publish=publish)
     return bus
 ----
 ====
@@ -132,7 +134,7 @@ to get a custom messagebus:
 def sqlite_bus(in_memory_sqlite_db):
     yield bootstrap.bootstrap(
         session_factory=sessionmaker(bind=in_memory_sqlite_db),
-        send_mail=mock.Mock(),
+        notifications=mock.Mock(),
         publish=mock.Mock(),
     )
     clear_mappers()
@@ -180,7 +182,8 @@ One fix is to split the "pub" from the "sub":
 
 image::images/appendix_bootstrap_dependency_graph_2.png["Dependency graph with bootstrap script and no circular deps"]
 
-Now we have what our esteemed tech reviewer David Seddon would call a "rocky road architecture": all the dependencies
-flow in one direction.
+Now we have what our esteemed tech reviewer David Seddon would call a "rocky
+road architecture": all the dependencies flow in one direction.
 
 TODO: alternative fix by making an abstract redis thingie?  
+
