@@ -90,8 +90,7 @@ to a URL in order to use a search engine API. But the second is simpler to read
 and understand because it operates at a higher level of abstraction.
 
 We can take this one step further still by identifying the role the code is
-playing and making it explicit.footnote:[See
-http://www.wirfs-brock.com/Design.html[Responsibility-driven design]]
+playing and making it explicit.
 
 image::images/galaxybrainmeme.jpg["Galaxybrain meme",width="200px",float="right"]
 //TODO fix alignment and/or make 3 images.
@@ -108,8 +107,15 @@ for r in duckduckgo.query('Sausages').results:
 ====
 
 
-Encapsulating behaviour using abstractions is a powerful tool for making
+Encapsulating behaviour using by identifying roles is a powerful tool for making
 our code more expressive, more testable, and easier to maintain.
+
+
+NOTE: [http://www.wirfs-brock.com/Design.html[Responsibility-driven design]
+    has some specific definitions for words like "role" and "responsibility"
+    which we're misusing slightly here, but we're inspired by the same general
+    approach, which is to think of objects in terms of behaviours, rather than
+    as collections of data and algorithms]
 
 
 === Layering
@@ -181,8 +187,6 @@ running on Kubernetes.
 And we've mentioned _abstractions_ already: they're simplified interfaces that
 encapsulate some role, in the way that our duckduckgo module encapsulated a
 search engine's API.
-// TODO (EJ) 'encapsulates some role' sounds a bit funny to me, 'abstracts a
-// responsibility' feels like it makes more sense.
 
 So the first part of the DIP says that our business code shouldn't depend on
 technical details; instead they should both use abstractions.
