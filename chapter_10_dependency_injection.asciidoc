@@ -87,7 +87,7 @@ def test_rolls_back_uncommitted_work_by_default(sqlite_session_factory):
 
 If you're used to the way things normally happen in Python, you'll be thinking
 all this is a bit weird.  The standard way to do things is to declare our
-depenency "implicitly" by simply importing it, and then if we ever need to
+dependency "implicitly" by simply importing it, and then if we ever need to
 change it for tests, we can monkeypatch, as is Right and True in dynamic
 languages:
 
@@ -152,10 +152,11 @@ the DIP -- rather than having an (implicit) dependency on a specific detail,
 we have an (explicit) dependency on an abstraction:
 
 
-[[handler_with_explicit_depenency]]
+[[handler_with_explicit_dependency]]
 .The explicit dependency is more abstract (src/allocation/handlers.py)
 ====
 [source,python]
+[role="non-head"]
 ----
 def send_out_of_stock_notification(
         event: events.OutOfStock, send_mail: Callable,
@@ -185,6 +186,7 @@ Here's one way to do it:
 .MessageBus as a class (src/allocation/messagebus.py)
 ====
 [source,python]
+[role="non-head"]
 ----
 class MessageBus:  #<1>
 
@@ -253,12 +255,12 @@ What else changes in the bus?
     the event we want to call:
 
 
-==== Depenency Injection With Minimal Magic
+==== Dependency Injection With Minimal Magic
 
 Here's the core of our dependency injection approach then.  As you'll see
 there's not much to it:
 
-[[messagebus_does_DI]]
+[[messagebus_does_DI0]]
 .Dependency injection in 3 lines of code (src/allocation/messagebus.py)
 ====
 [source,python]
@@ -326,6 +328,7 @@ dependencies we want to use:
 .Flask initialises a bus with the production dependencies (src/allocation/flask_app.py)
 ====
 [source,python]
+[role="non-head"]
 ----
 from allocation import (
     commands, email, exceptions, messagebus, orm, redis_pubsub, unit_of_work,
@@ -348,6 +351,7 @@ bus = messagebus.MessageBus(
 .So does redis (src/allocation/redis_pubsub.py)
 ====
 [source,python]
+[role="non-head"]
 ----
 def get_bus():  #<1>
     return messagebus.MessageBus(
@@ -370,7 +374,7 @@ def handle_change_batch_quantity(m, bus: messagebus.MessageBus):
 ----
 ====
 
-<1> In the redis case we can't do the initalisation at import-time,
+<1> In the redis case we can't do the initialisation at import-time,
     because we have a circular dependency between flask and redis
     (we'll look at fixing that in <<appendix_bootstrap>>.
 
@@ -378,11 +382,11 @@ def handle_change_batch_quantity(m, bus: messagebus.MessageBus):
 === Initialising DI In Our Tests
 
 
-
-[[totally_reimplement_bootstrap]]
+[[fakebus]]
 .Handler tests just do their own bootstrap (tests/unit/test_handlers.py)
 ====
 [source,python]
+[role="non-head"]
 ----
 class FakeBus(messagebus.MessageBus):
     def __init__(self):
@@ -406,4 +410,217 @@ class TestAddBatch:
 ====
 
 
-TODO: show option of custom fakes for email etc instead of mocks
+=== Building an adapter "properly": a worked example
+
+We've got two types of dependency:
+
+[[messagebus_does_DI]]
+.Two types of dependency (src/allocation/messagebus.py)
+====
+[source,python]
+[role="non-head"]
+----
+            uow: unit_of_work.AbstractUnitOfWork,  #<1>
+            send_mail: Callable,  #<2>
+            publish: Callable,  #<2>
+----
+====
+
+<1> the UoW has an abstract base class.  This is the heavyweight
+    option for declaring and managing your external dependency.
+    We'd use this for case when the dependency is relatively complex
+
+<2> our email sender and pubsub publisher are just defined
+    as functions.  This works just fine for simple things.
+
+Here are some of the things we find ourselves injecting at work:
+
+* an S3 filesystem client
+* a key/value store client
+* a `requests` session object.
+
+Most of these will have more complex APIs that you can't capture
+as a single function.  Read and write, GET and POST, and so on.
+
+Even though it's simple, let's use `send_mail` as an example to talk
+through how you might define a more complex dependency.
+
+
+==== Define the Abstract and Concrete implementations
+
+We'll imagine a more generic "notifications" API.  Could be
+email, could be SMS, could be slack posts one day.
+
+
+[[notifications_dot_py]]
+.An ABC and a concrete implementation (src/allocation/notifications.py)
+====
+[source,python]
+----
+class Notifications(abc.ABC):
+
+    @abc.abstractmethod
+    def send(self, destination, message):
+        raise NotImplementedError
+
+...
+
+class EmailNotifications(Notifications):
+
+    def __init__(self, smtp_host=DEFAULT_HOST, port=DEFAULT_PORT):
+        self.server = smtplib.SMTP(smtp_host, port=port)
+        self.server.noop()
+
+    def send(self, destination, message):
+        msg = f'Subject: allocation service notification\n{message}'
+        self.server.sendmail(
+            from_addr='allocations@example.com',
+            to_addrs=[destination],
+            msg=msg
+        )
+----
+====
+
+
+we change the dependency in the messagebus:
+
+[[notifications_in_bus]]
+.Notifications in messagebus (src/allocation/messagebus.py)
+====
+[source,python]
+----
+class MessageBus:
+
+    def __init__(
+            self,
+            uow: unit_of_work.AbstractUnitOfWork,
+            notifications: notifications.AbstractNotifications,
+            publish: Callable,
+    ):
+----
+====
+
+
+
+We work through and define a fake version for unit testing:
+
+
+[[fake_notifications]]
+.fake notifications (tests/unit/fakes.py)
+====
+[source,python]
+----
+class FakeNotifications(notifications.Notifications):
+
+    def __init__(self):
+        self.sent = defaultdict(list)  # type: Dict[str, str]
+
+    def send(self, destination, message):
+        self.sent[destination].append(message)
+
+...
+
+class FakeBus(messagebus.MessageBus):
+    def __init__(self):
+        super().__init__(
+            uow=FakeUnitOfWork(),
+            notifications=FakeNotifications(),
+            publish=mock.Mock(),
+        )
+----
+====
+
+we can use it in our tests:
+
+[[test_with_fake_notifs]]
+.Tests change slightly (tests/unit/test_handlers.py)
+====
+[source,python]
+----
+    @staticmethod
+    def test_sends_email_on_out_of_stock_error():
+        bus = FakeBus()
+        bus.handle([
+            commands.CreateBatch('b1', 'sku1', 9, None),
+            commands.Allocate('o1', 'sku1', 10),
+        ])
+        assert bus.dependencies['notifications'].sent['stock@made.com'] == [
+            f'Out of stock for sku1',
+        ]
+
+----
+====
+
+
+Now we test the real thing, usally with an end-to-end or integration
+test.  We've used https://github.com/mailhog/MailHog[MailHog] as a
+real-ish email server for our docker dev environment.
+
+
+
+[[integration_test_email]]
+.Integration test for email (tests/integration/test_email.py)
+====
+[source,python]
+----
+cfg = config.get_email_host_and_port()
+
+@pytest.fixture
+def bus(sqlite_session_factory):
+    return messagebus.MessageBus(
+        uow=unit_of_work.SqlAlchemyUnitOfWork(sqlite_session_factory),
+        notifications=notifications.EmailNotifications(
+            smtp_host=cfg['host'],
+            port=cfg['port'],
+        ),
+        publish=lambda *_, **__: None
+    )
+
+
+def random_sku():
+    return uuid.uuid4().hex[:6]
+
+
+def test_out_of_stock_email(bus):
+    sku = random_sku()
+    bus.handle([
+        commands.CreateBatch('batch1', sku, 9, None),
+        commands.Allocate('order1', sku, 10),
+    ])
+    messages = requests.get(
+        f'http://{cfg["host"]}:{cfg["http_port"]}/api/v2/messages'
+    ).json()
+    message = next(
+        m for m in messages['items']
+        if sku in str(m)
+    )
+    assert message['Raw']['From'] == 'allocations@example.com'
+    assert message['Raw']['To'] == ['stock@made.com']
+    assert f'Out of stock for {sku}' in message['Raw']['Data']
+----
+====
+
+against all the odds this actually worked, pretty much first go!
+
+
+And, erm, that's it really.
+
+1. Define your API using an ABC
+2. Implement the real thing
+3. Build a fake and use it for unit / service-layer / handler tests
+4. Find a less-fake version you can put into your docker environment
+5. Test the less-fake "real" thing
+6. Profit!
+
+
+.Exercise for the Reader 
+******************************************************************************
+NOTE: TODO, under construction
+
+Why not have a go at changing from email to, idk, twilio or slack
+notifications or something?
+
+Oh yeah, step 4 is a bit challenging...
+
+Or, do the same thing for redis.  You'll need to split pub from sub.
+******************************************************************************
