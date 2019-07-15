@@ -1132,6 +1132,7 @@ Adding the service layer has really bought us quite a lot:
   are fast/unit tests, with just the bare minimum of E2E and integration
   tests.
 
+==== The DIP in Action
 
 <<service_layer_diagram_abstract_dependencies>> shows the abstract
 dependencies of our service layer:
@@ -1144,7 +1145,7 @@ When we run the tests, we implement the abstract dependencies using
 `FakeRepository`, as in <<service_layer_diagram_test_dependencies>>:
 
 [[service_layer_diagram_test_dependencies]]
-.Dependencies when running tests
+.Tests provide an implementation of the abstract dependency
 image::images/service_layer_diagram_test_dependencies.png[]
 
 And when we actually run our app, we swap in the "real" dependency,
