@@ -31,7 +31,7 @@ def render_images(chapter_name):
             next_element = parent[next_sibling_pos]
         except IndexError:
             continue
-        if 'd-none' in next_element.classes:
+        if 'image-source' in next_element.classes:
             code = next_element.cssselect('pre')[0].text
             print(code)
             render_image(code, image_id)
