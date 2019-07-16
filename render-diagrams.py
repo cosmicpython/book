@@ -21,6 +21,8 @@ def render_images(chapter_name):
 
     for image_block in parsed_html.cssselect('.imageblock'):
         [img] = image_block.cssselect('img')
+        image_id = img.get('src').replace('images/', '').replace('.png', '')
+        print(image_id)
 
         parent = image_block.getparent()
         next_sibling_pos = parent.index(image_block) + 1
@@ -28,17 +30,19 @@ def render_images(chapter_name):
             next_element = parent[next_sibling_pos]
         except IndexError:
             continue
-        if 'Comment' in str(next_element.tag) and next_element.text.strip().startswith('IMAGE SOURCE'):
+        if 'image-source' in next_element.classes:
             print(next_element.text)
-            image_id = img.get('src').replace('images/', '').replace('.png', '')
-            assert f'[ditaa, {image_id}]' in next_element.text
-            render_image(next_element.text.strip().lstrip('IMAGE SOURCE'))
+            code = next_element.cssselect('pre')[0].text
+            print(code)
+            breakpoint()
+            render_image(code, image_id)
 
-def render_image(source):
+def render_image(source, image_id):
     tf = Path(tempfile.NamedTemporaryFile().name)
-    tf.write_text(source)
+    tf.write_text(f'[ditaa,{image_id}]\n....\n{source}\n....\n')
     cmd = ['asciidoctor', '-r', 'asciidoctor-diagram', '-a', f'imagesoutdir={IMAGES_DIR}', str(tf)]
     print(' '.join(cmd))
     subprocess.run(cmd)
 
-main()
+# main()
+render_images('chapter_02B_abstractions')
