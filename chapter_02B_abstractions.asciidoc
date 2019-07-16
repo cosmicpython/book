@@ -36,9 +36,7 @@ We can reduce the degree of coupling within a system
 [[coupling_illustration1]]
 .Lots of coupling
 image::images/coupling_illustration1.png[]
-[subs="+specialcharacters,+macros,-quotes"]
-++++
-pass:[<section class="image-source" style="display: none"><pre>]
+[role=image-source]
 [ditaa,coupling_illustration1]
 ....
 +--------+      +--------+
@@ -49,16 +47,12 @@ pass:[<section class="image-source" style="display: none"><pre>]
 |        | ---> |        |
 +--------+      +--------+
 ....
-pass:[</pre></section>]
-++++
 
 
 [[coupling_illustration2]]
 .Less coupling
 image::images/coupling_illustration2.png[]
-[subs="specialcharacters,macros"]
-++++
-pass:[<section class="image-source" style="display: none"><pre>]
+[role=image-source]
 [ditaa,coupling_illustration2]
 ....
 +--------+                           +--------+
@@ -69,8 +63,6 @@ pass:[<section class="image-source" style="display: none"><pre>]
 |        | ---> \-------------/      |        |
 +--------+                           +--------+
 ....
-pass:[</pre></section>]
-++++
 
 
 
