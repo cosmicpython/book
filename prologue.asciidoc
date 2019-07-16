@@ -38,24 +38,18 @@ of mud aren't complex.
 
 The term _encapsulation_ covers two closely related ideas: simplifying
 behaviour, and hiding data. In this book, when we say "encapsulation" we're
-using the first sense. We encapsulate behaviour by identifying a task that needs
-to be done in our code, and giving that task to a well defined object or function.
-
-Formally we call these tasks _responsibilities_ or _behaviours_ and an object that
-is responsible for a behaviour is said to have a _role_ in the system.
-
-NOTE: We didn't invent this approach, it comes from Responsibility-Driven Design
-    - an OO philosophy from the late Eighties. If you want to read more about it
-    you should check out the book _Object Design: Roles, Responsibilities, and
-    Collaborations_, by Rebecca Wirfs-Brock and Alan McKean (Addison-Wesley 2003)
-
-This is a behaviour-driven approach. Instead of building classes around the
-data in our system, we're going to build classes around the processes that need
-to happen.
+using the first sense. We encapsulate behaviour by identifying a task
+that needs to be done in our code, and giving that task to a well defined
+object or function.
 
 Take a look at the following two snippets of Python code, <<urllib_example>> and
 <<requests_example>>:
 
+
+[cols="6,.^1", frame="none", grid="none"]
+|===
+
+a| 
 [[urllib_example]]
 .Do a search with urllib
 ====
@@ -77,8 +71,9 @@ for r in results:
 ----
 ====
 
+a| image::images/galaxybrainmeme1.jpg["Galaxybrain meme",width="200px",float="right"]
 
-
+a| 
 [[requests_example]]
 .Do a search with requests
 ====
@@ -96,15 +91,21 @@ for r in results:
 ----
 ====
 
+a| image::images/galaxybrainmeme2.jpg["Galaxybrain meme",width="200px",float="right"]
+|===
+
 Both of these code listings do the same thing: they submit form-encoded values
 to a URL in order to use a search engine API. But the second is simpler to read
-and understand because it operates at a higher level of abstraction. We can
-take this one step further still by identifying the role the code is playing
-and making it explicit.
+and understand because it operates at a higher level of abstraction.
 
-image::images/galaxybrainmeme.jpg["Galaxybrain meme",width="200px",float="right"]
-//TODO fix alignment and/or make 3 images.
+We can take this one step further still by identifying and naming the task we
+want the code to perform for us, and use an even higher-level abstraction to make
+it explicit:
 
+[cols="6,.^1", frame="none", grid="none"]
+|===
+
+a| 
 [[ddg_example]]
 .Do a search with the duckduckgo module
 ====
@@ -116,19 +117,28 @@ for r in duckduckgo.query('Sausages').results:
 ----
 ====
 
+a| image::images/galaxybrainmeme3.jpg["Galaxybrain meme",width="200px",float="right"]
+|===
 
-Encapsulating the behaviour by identifying roles is a powerful tool for making
+Encapsulating behaviour using abstractions is a powerful tool for making
 our code more expressive, more testable, and easier to maintain.
+
+
+NOTE: This approach is inspired by the OO practice of
+    http://www.wirfs-brock.com/Design.html[responsibility-driven design].
+    which would use the words _roles_ and _responsibilities_ rather than "tasks".
+    The main point is to think about code in terms of behaviour, rather than
+    in terms of data or algorithms.  If you've come across
+    https://en.wikipedia.org/wiki/Class-responsibility-collaboration_card[CRC cards],
+    they're driving at the same thing.
 
 
 === Layering
 
 Encapsulation helps us by hiding details and protecting the consistency of our
 data, but we also need to pay attention to the interactions between our objects
-and functions. When one function or object refers to another, we say that the
-one *depends on* the other. These dependencies form a kind of network, a graph,
-where the nodes are functions and classes, and the edges are the calls betwen
-them.
+and functions. When one function, module or object uses another, we say that the
+one _depends on_ the other. These dependencies form a kind of network or graph.
 
 In a big ball of mud, the dependencies are out of control. Changing one node of
 the graph becomes difficult because it has the potential to affect many other
@@ -152,11 +162,20 @@ and finally we have a data layer that's responsible for storing and retrieving
 data. For the rest of this book, we're going to be systematically turning this
 model inside out by obeying one simple principle.
 
+[[dip]]
 === The Dependency Inversion Principle
 
 ////
 TODO:
-— You can explain DI more easily once you have introduced layers by noting that as we depend downwards, it becomes impossible to use something from a higher layer. To correct this, you need to create an interface in your layer, and have something in the higher layer implement that. The DI is when you provide the concrete dependency when calling the lower layer. Hexagonal architectures with their ‘depend inwards’ model are even clearer here, because for the port layer to do I/O it must depend on the adapter layer above it, which it can’t do, so it creates a DAO abstraction, depends on that, and has that implemented in the adapter layer.
+You can explain DI more easily once you have introduced layers by noting that
+as we depend downwards, it becomes impossible to use something from a higher
+layer. To correct this, you need to create an interface in your layer, and have
+something in the higher layer implement that. The DI is when you provide the
+concrete dependency when calling the lower layer. Hexagonal architectures with
+their ‘depend inwards’ model are even clearer here, because for the port layer
+to do I/O it must depend on the adapter layer above it, which it can’t do, so
+it creates a DAO abstraction, depends on that, and has that implemented in the
+adapter layer.
 
 https://github.com/python-leap/book/issues/49
 ////
@@ -189,19 +208,48 @@ whether the high-level concepts work correctly. If payroll runs on time, your
 business is unlikely to care whether that's a cron job or a transient function
 running on Kubernetes.
 
+_Depends on_ doesn't mean "imports" or "calls", necessarily, but more a more
+general idea that one module "knows about" or "needs" another module.
+
 And we've mentioned _abstractions_ already: they're simplified interfaces that
-encapsulate some role, in the way that our duckduckgo module encapsulated a
-search engine's API.
+encapsulate some behaviour, in the way that our duckduckgo module encapsulated a
+search engine's API. In a traditional-OO language you might use an abstract base
+class or an interface to define an abstraction.  In Python you can (and we
+sometimes do) use ABCs, but you can also rely on duck typing.  The abstraction
+can just mean, "the public API of the thing you're using"; a function name
+plus some arguments, for example.
+
 
 So the first part of the DIP says that our business code shouldn't depend on
 technical details; instead they should both use abstractions.
 
+
+[quote,David Wheeler]
+____
+All problems in computer science can be solved by adding another level of
+indirection
+____
+
+Why? Broadly, because we want to be able to change them independently of each
+other.  High-level modules should be easy to change in response to business
+need.  Low-level modules (details) are often, in practice, harder to
+change: think about refactoring to change a function name vs defining, testing
+and deploying a database migration to change a column name.  We don't
+want business logic changes to be slowed down because they are closely coupled
+to low-level infrastructure details.  But, similarly, it is important to _be
+able_ to change your infrastructure details when you need to (think about
+sharding a database, for example), without needing to make changes to your
+business layer.  Adding an abstraction in between them (the famous extra
+layer of indirection) allows the two to change (more) independently of each
+other.
+
+
 The second part is even more mysterious. "Abstractions should not depend on
 details" seems clear enough, but "Details should depend on abstractions" is
 hard to imagine. How can we have an abstraction that doesn't depend on the
-details it's abstracting?  We'll come to that shortly, but before we can turn
-our three-layered architecture inside out, we need to talk more about that
-middle layer, the business logic.
+details it's abstracting?  We'll come to that in <<chapter_03_service_layer>>,
+but before we can turn our three-layered architecture inside out, we need to
+talk more about that middle layer, the business logic.
 
 One of the most common reasons that our designs go wrong is that business
 logic becomes spread out throughout the layers of our application, hard to

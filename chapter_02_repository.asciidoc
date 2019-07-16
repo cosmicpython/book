@@ -381,11 +381,11 @@ like?
 ----
 import all_my_data
 
-def create_a_batch(self):
+def create_a_batch():
     batch = Batch(...)
     all_my_data.batches.add(batch)
 
-def modify_a_batch(self, batch_id, new_quantity):
+def modify_a_batch(batch_id, new_quantity):
     batch = all_my_data.batches.get(batch_id)
     batch.change_initial_quantity(new_quantity)
 
@@ -398,10 +398,6 @@ find them again. Our in memory data would let us add new objects, just like a
 list or a set, and since the objects are in memory we never need to call a
 "Save" method, we just fetch the object we care about, and modify it in memory.
 
-NOTE: The repository is an excellent example of an object with a named
-_reponsibility_: it holds objects in persistent state and lets us get access to
-them. _Repository_ is a _role_ in our system, and we can plug different objects
-into that role.
 
 ==== The Repository In The Abstract
 
@@ -442,7 +438,7 @@ WARNING: We're using abstract base classes in this book for didactic reasons:
     they end up unmaintained and, at worst, misleading.
     In practice we tend to rely on Python's duck-typing to enable abstractions.
     To a Pythonista, a repository is _any_ object that has `add(thing)` and
-    get`(id)` methods.
+    `get(id)` methods.
 
 <1> Python tip: `@abc.abstractmethod` is one of the only things that makes
     ABCs actually "work" in Python.   Python will refuse to let you instantiate

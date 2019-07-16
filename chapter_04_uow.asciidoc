@@ -11,8 +11,13 @@ A Repository is an abstraction over the idea of persistent storage. A Unit of
 Work is an abstraction over the idea of atomic operation.
 
 The unit of work will give us access to our repository(-ies), and then keep
-track of what objects were loaded and what the latest state is. This gives us
-two useful things:
+track of what objects were loaded and what the latest state is.footnote:[
+You may have come across the word _collaborators_, which is what
+responsibility-driven design would use to describe the relationship between
+the unit of work and the repository. In the terminology, clusters of objects
+that collaborate in their roles are called _object neighborhoods_ which
+is, in our professional opinion, totally adorable.]
+This gives us two useful things:
 
 1) It gives us a stable snapshot of the database to work with, so that the
 objects we use aren't changing halfway through an operation.
@@ -23,12 +28,6 @@ goes wrong, we don't end up in an inconsistent state.
 For now, that translates straight into a database transaction, but by giving
 ourselves our own abstraction, we can make it mean more things, as we'll see
 when we get to <<chapter_06_events_and_message_bus>>.
-
-NOTE: Responsibility-driven design would describe the unit of work and the
-repository as _collaborators_. Clusters of objects that _collaborate_ in their
-roles are described as _object neighborhoods_ which is, in our professional
-opinion, totally adorable.
-
 
 In the last chapter, the service layer was tightly coupled to the SQLAlchemy
 session object, so we'll fix that.

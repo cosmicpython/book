@@ -222,9 +222,9 @@ Reading through the code, there are really three distinct things happening.
 What could we do to abstract out the filesystem in each case?
 
 NOTE: In this chapter we're refactoring some gnarly code into a more testable
-structure by identifying the separate tasks that need to be done and giving
-each task to a clearly defined actor. This is the responsibility-driven approach
-we mentioned in the prologue.
+    structure by identifying the separate tasks that need to be done and giving
+    each task to a clearly defined actor, along similar lines to the `duckduckgo`
+    example from the prologue.
 
 For (1) and (2), we've already intuitively started using an abstraction, a
 dictionary of hashes to paths, and you may already have been thinking, "why not
@@ -294,8 +294,8 @@ Let's see them in turn.
 Let's call this the "Harry Way."  FCIS is probably a bit of an aspirational
 name, in fact the point is not to have a pure-functional solution in the 
 sense of not-using-classes, but more in the sense of having no (or minimal)
-side-effects.  The aim is to split out a core of business logic with minimal or
-no dependencies, and test that separately from the rest of our system.
+side-effects.  The aim is to split out a core of business logic with no
+dependencies, and test that separately from the rest of our system.
 
 [[three_parts]]
 .Split our code into three  (sync.py)
@@ -312,6 +312,7 @@ def sync(source, dest):  #<3>
         if action == 'move':
             shutil.move(*paths)
         if action == 'delete':
+            os.remove(paths[0])
 
 ...
 
@@ -344,11 +345,11 @@ def determine_actions(src_hashes, dst_hashes, src_folder, dst_folder):  #<2>
 <1> The code to build up the dictionary of paths and hashes is now trivially
     easy to write.
 
-<2> The core of our "business logic," which says, given these two sets of
-    hashes and filenames, what should we copy/move/delete?  takes simple
-    data structures and returns simple data structures
+<2> The core of our "business logic," which says, "given these two sets of
+    hashes and filenames, what should we copy/move/delete?"  takes simple
+    data structures and returns simple data structures.
 
-<3> And our top-level module now contains almost now logic whatseover
+<3> And our top-level module now contains almost no logic whatseover
 
 
 Our tests now act directly on the `determine_actions()` function:
@@ -391,8 +392,8 @@ modifiable:
 [role="skip"]
 ----
 def synchronise_dirs(reader, apply_func, src_folder, dst_folder):  #<1>
-    source_hashes = reader(src_folder)  #<2>
-    dest_hashes = reader(dst_folder)  #<2>
+    src_hashes = reader(src_folder)  #<2>
+    dst_hashes = reader(dst_folder)  #<2>
 
     for sha, filename in src_hashes.items():
         if sha not in dst_hashes:
@@ -413,9 +414,13 @@ def synchronise_dirs(reader, apply_func, src_folder, dst_folder):  #<1>
 
 //NICE-TO-HAVE: test this listing
 
-<1> Our top-level function now exposes two new dependencies, a `reader` and an `apply_func`
+<1> Our top-level function now exposes two new dependencies, a `reader` and an
+    `apply_func`
+
 <2> We invoke the `reader` to produce our dict-abstraction of the filesystems
-<3> And we invoke the `apply_func` using our action-abstraction for the actions we want to apply.
+
+<3> And we invoke the `apply_func` using our action-abstraction for the actions
+    we want to apply.
 
 TIP: Notice that, although we're using dependency injection, there was no need
     to define an abstract base class or any kind of explicit interface.  In the
@@ -470,7 +475,7 @@ use dependency injection to provide that imperative shell with things like
 access to the database, so we can still unit test it.
 
 See <<chapter_10_dependency_injection>> for more exploration of making our
-dependency injection more explict and centralised.
+dependency injection more explicit and centralised.
 ******************************************************************************
 
 === Wrap-up: "Depend on Abstractions."

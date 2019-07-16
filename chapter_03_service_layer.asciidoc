@@ -496,15 +496,8 @@ That last step is a little unsatisfactory at the moment, our services
 layer is tightly coupled to our database layer, but we'll improve on
 that in the next chapter.
 
-NOTE: Responsibility-Driven Design has a whole taxonomy of object roles and
-talks about object _stereotypes_. A stereotype describes the kind of role that
-an object plays in a system. Our use-case functions are _co-ordinators_ and
-our flask endpoint is an _interfacer_. Notice that "handles http requests" and
-"runs the allocation process" are _responsibilities_. Can you identify the
-collaborators of our use-cases?
 
-
-."We depend on abstractions"
+."Depend On Abstractions"
 *******************************************************************************
 Notice one more thing about our service-layer function:
 
@@ -528,18 +521,21 @@ than complex," and "readability counts..."
 Or, perhaps they make explicit something that would otherwise be implicit
 ("explicit is better than implicit").  For the purposes of this book, we've
 decided this argument carries the day. What you decide to do in your own
-codebase, however, is up to you.  We trust you'll do the right thing.]
+codebase is up to you.]
 This means it'll work both when the tests give it a `FakeRepository`, and
 when the flask app gives it a `SqlAlchemyRepository`.
 
-
-This is what people mean when they say "depend on abstractions".
-
-//TODO: should we go into full detail?
-// "1. High-level modules should not depend on low-level modules. Both should depend on abstractions"
-// "2. Abstractions should not depend upon details. Details should depend upon abstractions"
+If you remember the <<dip,Dependency Inversion Principle section from the prologue>>,
+This is what we mean when we says we should "depend on abstractions". Our
+_high-level module_, the service layer, depends on the repository abstraction.
+And the _details_ of the implementation for our specific choice of persistent
+storage also depend on that same abstraction.
 
 See the diagram at the end of the chapter, <<service_layer_diagram_abstract>>.
+
+See also <<appendix_csvs>> where we show a worked example of swapping out the
+_details_ of which persistent storage system to use, while leaving the
+abstractions intact.
 
 *******************************************************************************
 
@@ -718,6 +714,10 @@ we see teams writing too many tests against their domain model. This causes
 problems when they come to change their codebase, and find that they need to
 update tens or even hundreds of unit tests.
 
+// TODO (EJ)  I think this is one of those things that borders on a war of
+// religion.  Might want to have some sidebar on BDD, and the perils of test
+// coverage metrics.
+
 This makes sense if you stop to think about the purpose of automated tests. We
 use tests to enforce that some property of the system doesn't change while we're
 working. We use tests to check that the API continues to return 200, that the
@@ -778,6 +778,9 @@ code might look.
 When we want to improve the design of the code, though, we will need to replace
 or delete these tests, because they are tightly coupled to a particular
 implementation.
+
+// TODO: (EJ) an example that is overmocked would be good here if you decide to
+// add one.
 
 // TODO (SG) - maybe we could do with a/some concrete examples here?  Eg an
 // example where a unit test would break but a service-layer test wouldn't?
@@ -1129,6 +1132,7 @@ Adding the service layer has really bought us quite a lot:
   are fast/unit tests, with just the bare minimum of E2E and integration
   tests.
 
+==== The DIP in Action
 
 <<service_layer_diagram_abstract_dependencies>> shows the abstract
 dependencies of our service layer:
@@ -1141,7 +1145,7 @@ When we run the tests, we implement the abstract dependencies using
 `FakeRepository`, as in <<service_layer_diagram_test_dependencies>>:
 
 [[service_layer_diagram_test_dependencies]]
-.Dependencies when running tests
+.Tests provide an implementation of the abstract dependency
 image::images/service_layer_diagram_test_dependencies.png[]
 
 And when we actually run our app, we swap in the "real" dependency,
