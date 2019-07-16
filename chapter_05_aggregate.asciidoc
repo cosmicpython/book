@@ -1,6 +1,19 @@
 [[chapter_05_aggregate]]
 == Aggregates And Consistency Boundaries
 
+.In this chapter
+********************************************************************************
+
+* We'll revisit our domain model and talk about invariants and constraints.
+* We'll see how our domain objects can maintain their own internal consistency.
+* We'll show how this consistency model applies to persistent storage.
+* We'll discuss how tight control of consistency boundaries helps us to build
+  high-performing software without compromising maintainability.
+
+  // DIAGRAM GOES HERE
+
+********************************************************************************
+
 What's the point of a domain model anyway? What's the fundamental problem
 we're trying to addresss?
 

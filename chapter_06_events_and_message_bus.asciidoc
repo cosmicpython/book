@@ -1,6 +1,21 @@
 [[chapter_06_events_and_message_bus]]
 == Events And The Message Bus
 
+.In this chapter
+********************************************************************************
+
+* We'll examine the kind of requirement that leads to a _big ball of mud_.
+* We'll see how we can use _domain events_ to separate side-effects from our
+  use-cases.
+* We'll show how to build a simple _message bus_ for triggering behaviour in
+  your codebase.
+* We'll see how our _unit of work_ can be extended to cover multi-step processes.
+
+  // DIAGRAM GOES HERE
+
+********************************************************************************
+
+
 So far we've spent a lot of time and energy on a simple problem that we could
 easily have solved with Django. You might be asking if the increased testability
 and expressiveness are *really* worth all the effort.

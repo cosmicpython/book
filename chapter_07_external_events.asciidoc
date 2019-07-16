@@ -1,6 +1,18 @@
 [[chapter_07_external_events]]
 == Event-driven Architecture (using Events To Integrate Microservices)
 
+.In this chapter
+********************************************************************************
+
+* We'll see how to use events to communicate between multiple micro-services.
+* We'll show how our service-layer lets us easily replace an HTTP API with an
+  asynchronous message bus.
+* We'll start to rebuild our application as a message-processor.
+
+  // DIAGRAM GOES HERE
+
+********************************************************************************
+
 We've got a microservice with a web api, but what about other ways of talking
 to other systems?  how does it know if, say, a shipment is delayed or the
 quantity is amended?  how does it communicate to our warehouse system to say

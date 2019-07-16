@@ -1,6 +1,21 @@
 [[chapter_04_uow]]
 == Unit Of Work Pattern
 
+.In this chapter
+********************************************************************************
+
+* We'll introduce a final piece of the puzzle that ties together the repository
+  and service layer: the _Unit of Work_ pattern.
+* We'll see how to use a context manager as a simplifying abstraction for doing
+  atomic operations.
+* We'll completely decouple the service layer from our data layer.
+
+  // NOTE: I feel like maybe we should waffle a bit more in this chapter? We
+  could talk about guidelines for what to mock?
+  // DIAGRAM GOES HERE
+
+********************************************************************************
+
 In this chapter we'll introduce a final piece of the puzzle that really pulls
 the Repository and Service Layer patterns together, the _Unit of Work_ pattern.
 

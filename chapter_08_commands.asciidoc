@@ -1,6 +1,17 @@
 [[chapter_08_commands]]
 == Commands And Command Handler
 
+.In this chapter
+********************************************************************************
+
+* We'll discuss the difference between _events_ and _commands_.
+* We'll extend our message bus to handle command messages.
+* We'll finish rebuilding our application as a message-processor.
+
+  // DIAGRAM GOES HERE
+
+********************************************************************************
+
 In the previous chapter we talked about using event messages as a way of
 integrating systems. This starts to turn our application into a message
 processing machine.
