@@ -5,7 +5,15 @@ from pathlib import Path
 from lxml import html
 from chapters import CHAPTERS
 
-IMAGES_DIR = Path(__file__).resolve().parent / 'images'
+IMAGES_DIR = Path(__file__).absolute().parent / 'images'
+
+def main():
+    for fn in Path(__file__).absolute().parent.glob('*.html'):
+        chapter_name = fn.name.replace('.html', '')
+        print('Rendering images for', chapter_name)
+        render_images(chapter_name)
+
+
 
 def render_images(chapter_name):
     raw_contents = Path(f'{chapter_name}.html').read_text()
@@ -22,7 +30,7 @@ def render_images(chapter_name):
             continue
         if 'Comment' in str(next_element.tag) and next_element.text.strip().startswith('IMAGE SOURCE'):
             print(next_element.text)
-            image_id = img.get('src').lstrip('images/').rstrip('.png')
+            image_id = img.get('src').replace('images/', '').replace('.png', '')
             assert f'[ditaa, {image_id}]' in next_element.text
             render_image(next_element.text.strip().lstrip('IMAGE SOURCE'))
 
@@ -33,4 +41,4 @@ def render_image(source):
     print(' '.join(cmd))
     subprocess.run(cmd)
 
-render_images('prologue')
+main()
