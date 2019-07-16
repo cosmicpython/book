@@ -3,16 +3,17 @@ import tempfile
 import subprocess
 from pathlib import Path
 from lxml import html
-from chapters import CHAPTERS
 
 IMAGES_DIR = Path(__file__).absolute().parent / 'images'
+
 
 def main():
     for fn in Path(__file__).absolute().parent.glob('*.html'):
         chapter_name = fn.name.replace('.html', '')
+        if chapter_name == 'book':
+            continue
         print('Rendering images for', chapter_name)
         render_images(chapter_name)
-
 
 
 def render_images(chapter_name):
@@ -30,11 +31,9 @@ def render_images(chapter_name):
             next_element = parent[next_sibling_pos]
         except IndexError:
             continue
-        if 'image-source' in next_element.classes:
-            print(next_element.text)
+        if 'd-none' in next_element.classes:
             code = next_element.cssselect('pre')[0].text
             print(code)
-            breakpoint()
             render_image(code, image_id)
 
 def render_image(source, image_id):
@@ -44,5 +43,5 @@ def render_image(source, image_id):
     print(' '.join(cmd))
     subprocess.run(cmd)
 
-# main()
-render_images('chapter_02B_abstractions')
+if __name__ == '__main__':
+    main()
