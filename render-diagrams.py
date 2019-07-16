@@ -23,7 +23,7 @@ def render_images(chapter_name):
     for image_block in parsed_html.cssselect('.imageblock'):
         [img] = image_block.cssselect('img')
         image_id = img.get('src').replace('images/', '').replace('.png', '')
-        print(image_id)
+        print('found inline image', image_id)
 
         parent = image_block.getparent()
         next_sibling_pos = parent.index(image_block) + 1
@@ -33,6 +33,7 @@ def render_images(chapter_name):
             continue
         if 'image-source' in next_element.classes:
             code = next_element.cssselect('pre')[0].text
+            print('found image source')
             print(code)
             render_image(code, image_id)
 
