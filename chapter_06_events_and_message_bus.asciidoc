@@ -83,14 +83,14 @@ Let's start with a unit test written against our service layer.
 ----
 def test_sends_email_on_out_of_stock_error():
     uow = FakeUnitOfWork()
-    services.add_batch('b1', 'sku1', 9, None, uow)
+    services.add_batch("b1", "POPULAR-CURTAINS", 9, None, uow)
 
-    with mock.patch('allocation.email.send_mail') as mock_send_mail:  #<1>
+    with mock.patch("allocation.email.send_mail") as mock_send_mail:  #<1>
         with pytest.raises(exceptions.OutOfStock):
-            services.allocate('o1', 'sku1', 10, uow)
-        assert mock_send_mail.call_args == mock.call(  #<2>
-            'stock@made.com',
-            f'Out of stock for sku1',
+            services.allocate("o1", "POPULAR-CURTAINS", 10, uow)
+        assert mock_send_mail.call_args == mock.call(  #<1>
+            "stock@made.com",
+            f"Out of stock for POPULAR-CURTAINS",
         )
 ----
 ====
@@ -101,9 +101,9 @@ def test_sends_email_on_out_of_stock_error():
     alternative ways of approaching this.
 
 
-NOTE: If you find yourself using `unittest.mock` to test external dependencies
-    at the service layer, it may be a code smell.  See
-    <<chapter_10_dependency_injection>>.
+NOTE: If you find yourself using `mock.patch` to test external dependencies
+    at the service layer, you should be aware that Other Testing Options Are
+    Available (TM).  See <<chapter_10_dependency_injection>>.
 
 
 ==== ... And Let's Not Make A Mess Of Our Model Either
