@@ -237,17 +237,18 @@ class FakeUnitOfWork(unit_of_work.AbstractUnitOfWork):
 
 
 def test_add_batch():
-    uow = FakeUnitOfWork()  #<3>
-    services.add_batch('b1', 'sku1', 100, None, uow)  #<3>
-    assert uow.batches.get('b1') is not None
+    uow = FakeUnitOfWork()
+    services.add_batch("b1", "CRUNCHY-ARMCHAIR", 100, None, uow)
+    assert uow.batches.get("b1") is not None
     assert uow.committed
 
 
 def test_allocate_returns_allocation():
     uow = FakeUnitOfWork()
-    services.add_batch('b1', 'sku1', 100, None, uow)
-    result = services.allocate('o1', 'sku1', 10, uow)
-    assert result == 'b1'
+    services.add_batch("batch1", "COMPLICATED-LAMP", 100, None, uow)
+    result = services.allocate("o1", "COMPLICATED-LAMP", 10, uow)
+    assert result == "batch1"
+...
 ----
 ====
 
