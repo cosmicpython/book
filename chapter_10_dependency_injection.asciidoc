@@ -138,7 +138,7 @@ sake of our tests? `mock.patch` makes monkeypatching nice and easy:
 [source,python]
 [role="existing"]
 ----
-    with mock.patch('allocation.email.send') as mock_send_mail:
+    with mock.patch("allocation.email.send") as mock_send_mail:
         ...
 ----
 ====
@@ -416,8 +416,8 @@ class TestAddBatch:
     @staticmethod
     def test_for_new_product():
         bus = FakeBus()
-        bus.handle([commands.CreateBatch('b1', 'sku1', 100, None)])
-        assert bus.uow.products.get('sku1') is not None
+        bus.handle([commands.CreateBatch("b1", "CRUNCHY-ARMCHAIR", 100, None)])
+        assert bus.uow.products.get("CRUNCHY-ARMCHAIR") is not None
         assert bus.uow.committed
 ----
 ====
@@ -550,17 +550,15 @@ we can use it in our tests:
 ====
 [source,python]
 ----
-    @staticmethod
     def test_sends_email_on_out_of_stock_error():
         bus = FakeBus()
         bus.handle([
-            commands.CreateBatch('b1', 'sku1', 9, None),
-            commands.Allocate('o1', 'sku1', 10),
+            commands.CreateBatch("b1", "POPULAR-CURTAINS", 9, None),
+            commands.Allocate("o1", "POPULAR-CURTAINS", 10),
         ])
         assert bus.dependencies['notifications'].sent['stock@made.com'] == [
-            f'Out of stock for sku1',
+            f"Out of stock for POPULAR-CURTAINS",
         ]
-
 ----
 ====
 

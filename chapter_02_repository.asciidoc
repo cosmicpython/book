@@ -290,25 +290,25 @@ some tests for it, as in <<orm_tests>>:
 def test_orderline_mapper_can_load_lines(session):  #<1>
     session.execute(  #<1>
         'INSERT INTO order_lines (orderid, sku, qty) VALUES '
-        '("order1", "sku1", 12),'
-        '("order1", "sku2", 13),'
-        '("order2", "sku3", 14)'
+        '("order1", "RED-CHAIR", 12),'
+        '("order1", "RED-TABLE", 13),'
+        '("order2", "BLUE-LIPSTICK", 14)'
     )
     expected = [
-        model.OrderLine('order1', 'sku1', 12),
-        model.OrderLine('order1', 'sku2', 13),
-        model.OrderLine('order2', 'sku3', 14),
+        model.OrderLine("order1", "RED-CHAIR", 12),
+        model.OrderLine("order1", "RED-TABLE", 13),
+        model.OrderLine("order2", "BLUE-LIPSTICK", 14),
     ]
     assert session.query(model.OrderLine).all() == expected
 
 
 def test_orderline_mapper_can_save_lines(session):
-    new_line = model.OrderLine('order1', 'sku1', 12)
+    new_line = model.OrderLine("order1", "DECORATIVE-WIDGET", 12)
     session.add(new_line)
     session.commit()
 
     rows = list(session.execute('SELECT orderid, sku, qty FROM "order_lines"'))
-    assert rows == [('order1', 'sku1', 12)]
+    assert rows == [("order1", "DECORATIVE-WIDGET", 12)]
 ----
 ====
 
@@ -523,7 +523,7 @@ TIP: Unlike the ORM tests from earlier, these tests are good candidates for
 [source,python]
 ----
 def test_repository_can_save_a_batch(session):
-    batch = model.Batch('batch1', 'sku1', 100, eta=None)
+    batch = model.Batch("batch1", "RUSTY-SOAPDISH", 100, eta=None)
 
     repo = repository.SqlAlchemyRepository(session)
     repo.add(batch)  #<1>
@@ -532,7 +532,7 @@ def test_repository_can_save_a_batch(session):
     rows = list(session.execute(
         'SELECT reference, sku, _purchased_quantity, eta FROM "batches"'  #<3>
     ))
-    assert rows == [('batch1', 'sku1', 100, None)]
+    assert rows == [("batch1", "RUSTY-SOAPDISH", 100, None)]
 ----
 ====
 
@@ -556,11 +556,11 @@ complex:
 ----
 def insert_order_line(session):
     session.execute(  #<1>
-        'INSERT INTO order_lines (orderid, sku, qty) VALUES ("order1", "sku1", 12)'
+        'INSERT INTO order_lines (orderid, sku, qty) VALUES ("order1", "GENERIC-SOFA", 12)'
     )
     [[orderline_id]] = session.execute(
         'SELECT id FROM order_lines WHERE orderid=:orderid AND sku=:sku',
-        dict(orderid='order1', sku='sku1')
+        dict(orderid="order1", sku="GENERIC-SOFA")
     )
     return orderline_id
 
@@ -569,18 +569,18 @@ def insert_batch(session, batch_id):  #<2>
 
 def test_repository_can_retrieve_a_batch_with_allocations(session):
     orderline_id = insert_order_line(session)
-    batch1_id = insert_batch(session, 'batch1')
-    insert_batch(session, 'batch2')
+    batch1_id = insert_batch(session, "batch1")
+    insert_batch(session, "batch2")
     insert_allocation(session, orderline_id, batch1_id)  #<3>
 
     repo = repository.SqlAlchemyRepository(session)
-    retrieved = repo.get('batch1')
+    retrieved = repo.get("batch1")
 
-    expected = model.Batch('batch1', 'sku1', 100, eta=None)  #<3>
+    expected = model.Batch("batch1", "GENERIC-SOFA", 100, eta=None)  #<3>
     assert retrieved == expected  # Batch.__eq__ only compares reference
     assert retrieved.sku == expected.sku
     assert retrieved._purchased_quantity == expected._purchased_quantity
-    assert retrieved._allocations == {model.OrderLine('order1', 'sku1', 12)}
+    assert retrieved._allocations == {model.OrderLine("order1", "GENERIC-SOFA", 12)}
 ----
 ====
 

@@ -67,43 +67,41 @@ them end-to-end tests because it's one of the most self-explanatory names.
 [source,python]
 [role="non-head"]
 ----
-def random_ref(prefix):
-    return prefix + '-' + uuid.uuid4().hex[:10]
-
 @pytest.mark.usefixtures('restart_api')
 def test_api_returns_allocation(add_stock):
-    sku, othersku = random_ref('s1'), random_ref('s2')
-    batch1, batch2, batch3 = random_ref('b1'), random_ref('b2'), random_ref('b3')
-    add_stock([  #<1>
+    sku, othersku = random_sku(), random_sku('other')  #<1>
+    batch1, batch2, batch3 = random_batchref(1), random_batchref(2), random_batchref(3)
+    add_stock([  #<2>
         (batch1, sku, 100, '2011-01-02'),
         (batch2, sku, 100, '2011-01-01'),
         (batch3, othersku, 100, None),
     ])
-    data = {
-        'orderid': random_ref('o'),
-        'sku': sku,
-        'qty': 3,
-    }
-    url = config.get_api_url()  #<2>
-    r = requests.post(f'{url}/allocate', json=data)  #<3>
+    data = {'orderid': random_orderid(), 'sku': sku, 'qty': 3}
+    url = config.get_api_url()  #<3>
+    r = requests.post(f'{url}/allocate', json=data)
     assert r.status_code == 201
     assert r.json()['batchref'] == batch2
 ----
 ====
 
-<1> `add_stock` is a helper fixture that just hides away the details of
+<1> `random_sku()`, `random_batchref()` etc are little helper functions that
+    add generate some randomised characters using the `uuid` module.  Because
+    we're running against an actual database now, this is one way to prevent
+    different tests and runs from interfering with each other.
+
+<2> `add_stock` is a helper fixture that just hides away the details of
     manually inserting rows into the database using SQL.  We'll find a nicer
     way of doing this later in the chapter.
 
-<2> _config.py_ is a module for getting configuration information.  Again,
+<3> _config.py_ is a module for getting configuration information.  Again,
     this is an unimportant detail, and everyone has different ways of
     solving these problems, but if you're curious, you can find out more
     in <<appendix_project_structure>>.
 
-Everyone solves these problems in different ways, but you're going
-to need some way of spinning up Flask, possibly in a container, and
-also talking to a postgres database.  If you want to see how we did
-it, check out <<appendix_project_structure>>.
+Everyone solves these problems in different ways, but you're going to need some
+way of spinning up Flask, possibly in a container, and also talking to a
+postgres database.  If you want to see how we did it, check out
+<<appendix_project_structure>>.
 
 
 === The Straightforward Implementation
@@ -163,10 +161,11 @@ the batch:
 [source,python]
 [role="non-head"]
 ----
+@pytest.mark.usefixtures('restart_api')
 def test_allocations_are_persisted(add_stock):
-    sku = random_ref('s1')
-    batch1, batch2 = random_ref('b1'), random_ref('b2')
-    order1, order2 = random_ref('o1'), random_ref('o2')
+    sku = random_sku()
+    batch1, batch2 = random_batchref(1), random_batchref(2)
+    order1, order2 = random_orderid(1), random_orderid(2)
     add_stock([
         (batch1, sku, 10, '2011-01-01'),
         (batch2, sku, 10, '2011-01-02'),
@@ -175,10 +174,12 @@ def test_allocations_are_persisted(add_stock):
     line2 = {'orderid': order2, 'sku': sku, 'qty': 10}
     url = config.get_api_url()
 
+    # first order uses up all stock in batch 1
     r = requests.post(f'{url}/allocate', json=line1)
     assert r.status_code == 201
     assert r.json()['batchref'] == batch1
 
+    # second order should go to batch 2
     r = requests.post(f'{url}/allocate', json=line2)
     assert r.status_code == 201
     assert r.json()['batchref'] == batch2
@@ -201,29 +202,6 @@ we even invoke the domain service.
 
 Now we're looking at two more end-to-end tests:
 
-////
-TODO:
-
-https://github.com/python-leap/book/blame/master/chapter_03_service_layer.asciidoc#L192
-For the id generation, fluent helpers will make the code flow read a bit easier.
-
-def random_sku(id_=None):
-    return random_ref(''.join(['s', str(id_)]))
-
-def random_order(id_=None):
-    return random_ref(''.join(['o', str(id_)]))
-
-def random_batch(id_=None):
-    return random_ref(''.join(['b', str(id_)]))
-
-@pytest.mark.usefixtures('restart_api')
-def test_something():
-    sku, order = random_sku(), random_order()
-    sku1, order1 = random_sku(1), random_order(1)
-    # etc., etc.
-
-https://github.com/python-leap/book/issues/43
-////
 
 [[test_error_cases]]
 .Yet more tests at the e2e layer...  (test_api.py)
@@ -232,12 +210,12 @@ https://github.com/python-leap/book/issues/43
 [role="non-head"]
 ----
 @pytest.mark.usefixtures('restart_api')
-def test_400_message_for_out_of_stock(add_stock):
-    sku, batch, order = random_ref('s'), random_ref('b'), random_ref('o')
+def test_400_message_for_out_of_stock(add_stock):  #<1>
+    sku, smalL_batch, large_order = random_sku(), random_batchref(), random_orderid()
     add_stock([
-        (batch, sku, 10, '2011-01-01'),  #<1>
+        (smalL_batch, sku, 10, '2011-01-01'),
     ])
-    data = {'orderid': order, 'sku': sku, 'qty': 20}  #<1>
+    data = {'orderid': large_order, 'sku': sku, 'qty': 20}
     url = config.get_api_url()
     r = requests.post(f'{url}/allocate', json=data)
     assert r.status_code == 400
@@ -245,19 +223,21 @@ def test_400_message_for_out_of_stock(add_stock):
 
 
 @pytest.mark.usefixtures('restart_api')
-def test_400_message_for_invalid_sku():
-    sku, order = random_ref('s'), random_ref('o')
-    data = {'orderid': order, 'sku': sku, 'qty': 20}  #<2>
+def test_400_message_for_invalid_sku():  #<2>
+    unknown_sku, orderid = random_sku(), random_orderid()
+    data = {'orderid': orderid, 'sku': unknown_sku, 'qty': 20}
     url = config.get_api_url()
     r = requests.post(f'{url}/allocate', json=data)
     assert r.status_code == 400
-    assert r.json()['message'] == f'Invalid sku {sku}'
+    assert r.json()['message'] == f'Invalid sku {unknown_sku}'
 ----
 ====
 
 <1> In the first test we're trying to allocate more units than we have in stock
+
 <2> In the second, the sku just doesn't exist (because we never called `add_stock`),
     so it's invalid as far as our app is concerned.
+
 
 And, sure we could implement it in the Flask app too:
 
@@ -345,20 +325,20 @@ nice, fast unit tests:
 [role="non-head"]
 ----
 def test_returns_allocation():
-    line = model.OrderLine('o1', 'sku1', 10)
-    batch = model.Batch('b1', 'sku1', 100, eta=None)
+    line = model.OrderLine("o1", "COMPLICATED-LAMP", 10)
+    batch = model.Batch("b1", "COMPLICATED-LAMP", 100, eta=None)
     repo = FakeRepository([batch])  #<1>
 
     result = services.allocate(line, repo, FakeSession())  #<2><3>
-    assert result == 'b1'
+    assert result == "b1"
 
 
 def test_error_for_invalid_sku():
-    line = model.OrderLine('o1', 'nonexistentsku', 10)
-    batch = model.Batch('b1', 'actualsku', 100, eta=None)
+    line = model.OrderLine("o1", "NONEXISTENTSKU", 10)
+    batch = model.Batch("b1", "AREALSKU", 100, eta=None)
     repo = FakeRepository([batch])  #<1>
 
-    with pytest.raises(services.InvalidSku, match='Invalid sku nonexistentsku'):
+    with pytest.raises(services.InvalidSku, match="Invalid sku NONEXISTENTSKU"):
         services.allocate(line, repo, FakeSession())  #<2><3>
 ----
 ====
@@ -459,8 +439,8 @@ The fake `.commit()` lets us migrate a third test from the E2E layer:
 [role="non-head"]
 ----
 def test_commits():
-    line = model.OrderLine('o1', 'sku1', 10)
-    batch = model.Batch('b1', 'sku1', 100, eta=None)
+    line = model.OrderLine('o1', 'OMINOUS-MIRROR', 10)
+    batch = model.Batch('b1', 'OMINOUS-MIRROR', 100, eta=None)
     repo = FakeRepository([batch])
     session = FakeSession()
 
@@ -608,29 +588,16 @@ the happy path and one for the unhappy path:
 [source,python]
 [role="non-head"]
 ----
-import uuid
-import pytest
-import requests
-
-import config
-
-def random_ref(prefix):
-    return prefix + '-' + uuid.uuid4().hex[:10]
-
 @pytest.mark.usefixtures('restart_api')
 def test_happy_path_returns_201_and_allocated_batch(add_stock):
-    sku, othersku = random_ref('s1'), random_ref('s2')
-    batch1, batch2, batch3 = random_ref('b1'), random_ref('b2'), random_ref('b3')
+    sku, othersku = random_sku(), random_sku('other')
+    batch1, batch2, batch3 = random_batchref(1), random_batchref(2), random_batchref(3)
     add_stock([
         (batch1, sku, 100, '2011-01-02'),
         (batch2, sku, 100, '2011-01-01'),
         (batch3, othersku, 100, None),
     ])
-    data = {
-        'orderid': random_ref('o'),
-        'sku': sku,
-        'qty': 3,
-    }
+    data = {'orderid': random_orderid(), 'sku': sku, 'qty': 3}
     url = config.get_api_url()
     r = requests.post(f'{url}/allocate', json=data)
     assert r.status_code == 201
@@ -639,13 +606,12 @@ def test_happy_path_returns_201_and_allocated_batch(add_stock):
 
 @pytest.mark.usefixtures('restart_api')
 def test_unhappy_path_returns_400_and_error_message():
-    sku, order = random_ref('s'), random_ref('o')
-    data = {'orderid': order, 'sku': sku, 'qty': 20}
+    unknown_sku, orderid = random_sku(), random_orderid()
+    data = {'orderid': orderid, 'sku': unknown_sku, 'qty': 20}
     url = config.get_api_url()
     r = requests.post(f'{url}/allocate', json=data)
     assert r.status_code == 400
-    assert r.json()['message'] == f'Invalid sku {sku}'
-
+    assert r.json()['message'] == f'Invalid sku {unknown_sku}'
 ----
 ====
 
@@ -698,24 +664,25 @@ terms of the service layer.
 [role="skip"]
 ----
 # domain-layer test:
-def test_prefers_warehouse_batches_to_shipments():
-    warehouse_batch = Batch('wh-batch', 'sku1', 100, eta=None)
-    shipment_batch = Batch('sh-batch', 'sku1', 100, eta=tomorrow)
-    line = OrderLine('oref', 'sku1', 10)
+def test_prefers_current_stock_batches_to_shipments():
+    in_stock_batch = Batch("in-stock-batch", "RETRO-CLOCK", 100, eta=None)
+    shipment_batch = Batch("shipment-batch", "RETRO-CLOCK", 100, eta=tomorrow)
+    line = OrderLine("oref", "RETRO-CLOCK", 10)
 
-    allocate(line, [warehouse_batch, shipment_batch])
+    allocate(line, [in_stock_batch, shipment_batch])
 
-    assert warehouse_batch.available_quantity == 90
+    assert in_stock_batch.available_quantity == 90
     assert shipment_batch.available_quantity == 100
+
 
 # service-layer test:
 def test_prefers_warehouse_batches_to_shipments():
-    warehouse_batch = Batch('wh-batch', 'sku1', 100, eta=None)
-    shipment_batch = Batch('sh-batch', 'sku1', 100, eta=tomorrow)
+    in_stock_batch = Batch("in-stock-batch", "RETRO-CLOCK", 100, eta=None)
+    shipment_batch = Batch("shipment-batch", "RETRO-CLOCK", 100, eta=tomorrow)
     repo = FakeRepository([warehouse_batch, shipment_batch])
     session = FakeSession()
 
-    line = OrderLine('oref', 'sku1', 10)
+    line = OrderLine('oref', "RETRO-CLOCK", 10)
 
     services.allocate(line, repo, session)
 
@@ -897,11 +864,11 @@ We rewrite the tests in those terms as well:
 [role="non-head"]
 ----
 def test_returns_allocation():
-    batch = model.Batch('b1', 'sku1', 100, eta=None)
+    batch = model.Batch("batch1", "COMPLICATED-LAMP", 100, eta=None)
     repo = FakeRepository([batch])
 
-    result = services.allocate('o1', 'sku1', 10, repo, FakeSession())
-    assert result == 'b1'
+    result = services.allocate("o1", "COMPLICATED-LAMP", 10, repo, FakeSession())
+    assert result == "batch1"
 ----
 ====
 
@@ -935,9 +902,9 @@ class FakeRepository(set):
 
 
 def test_returns_allocation():
-    repo = FakeRepository.for_batch('b1', 'sku1', 100, eta=None)
-    result = services.allocate('o1', 'sku1', 10, repo, FakeSession())
-    assert result == 'b1'
+    repo = FakeRepository.for_batch("batch1", "COMPLICATED-LAMP", 100, eta=None)
+    result = services.allocate("o1", "COMPLICATED-LAMP", 10, repo, FakeSession())
+    assert result == "batch1"
 ----
 ====
 
@@ -960,8 +927,8 @@ on the domain:
 ----
 def test_add_batch():
     repo, session = FakeRepository([]), FakeSession()
-    services.add_batch('b1', 'sku1', 100, None, repo, session)
-    assert repo.get('b1') is not None
+    services.add_batch("b1", "CRUNCHY-ARMCHAIR", 100, None, repo, session)
+    assert repo.get("b1") is not None
     assert session.committed
 ----
 ====
@@ -1010,17 +977,17 @@ any dependencies on the model.
 ----
 def test_allocate_returns_allocation():
     repo, session = FakeRepository([]), FakeSession()
-    services.add_batch('b1', 'sku1', 100, None, repo, session)
-    result = services.allocate('o1', 'sku1', 10, repo, session)
-    assert result == 'b1'
+    services.add_batch("batch1", "COMPLICATED-LAMP", 100, None, repo, session)
+    result = services.allocate("o1", "COMPLICATED-LAMP", 10, repo, session)
+    assert result == "batch1"
 
 
 def test_allocate_errors_for_invalid_sku():
     repo, session = FakeRepository([]), FakeSession()
-    services.add_batch('b1', 'actualsku', 100, None, repo, session)
+    services.add_batch("b1", "AREALSKU", 100, None, repo, session)
 
-    with pytest.raises(services.InvalidSku, match='Invalid sku nonexistentsku'):
-        services.allocate('o1', 'nonexistentsku', 10, repo, FakeSession())
+    with pytest.raises(services.InvalidSku, match="Invalid sku NONEXISTENTSKU"):
+        services.allocate("o1", "NONEXISTENTSKU", 10, repo, FakeSession())
 ----
 ====
 
@@ -1087,16 +1054,12 @@ def post_to_add_batch(ref, sku, qty, eta):
 @pytest.mark.usefixtures('postgres_db')
 @pytest.mark.usefixtures('restart_api')
 def test_happy_path_returns_201_and_allocated_batch():
-    sku, othersku = random_ref('s1'), random_ref('s2')
-    batch1, batch2, batch3 = random_ref('b1'), random_ref('b2'), random_ref('b3')
+    sku, othersku = random_sku(), random_sku('other')
+    batch1, batch2, batch3 = random_batchref(1), random_batchref(2), random_batchref(3)
     post_to_add_batch(batch1, sku, 100, '2011-01-02')
     post_to_add_batch(batch2, sku, 100, '2011-01-01')
     post_to_add_batch(batch3, othersku, 100, None)
-    data = {
-        'orderid': random_ref('o'),
-        'sku': sku,
-        'qty': 3,
-    }
+    data = {'orderid': random_orderid(), 'sku': sku, 'qty': 3}
     url = config.get_api_url()
     r = requests.post(f'{url}/allocate', json=data)
     assert r.status_code == 201
