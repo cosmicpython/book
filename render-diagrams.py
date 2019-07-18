@@ -33,12 +33,21 @@ def render_images(chapter_name):
             continue
         if 'image-source' in next_element.classes:
             code = next_element.cssselect('pre')[0].text
-            print(code)
             render_image(code, image_id)
 
+def _add_dots(source, image_id):
+    lines = source.splitlines()
+    assert lines[0].startswith('[')
+    assert image_id in lines[0]
+    lines.insert(1, '....')
+    lines.append('....')
+    return '\n'.join(lines)
+
 def render_image(source, image_id):
+    source = _add_dots(source, image_id)
+    print(source)
     tf = Path(tempfile.NamedTemporaryFile().name)
-    tf.write_text(f'[ditaa,{image_id}]\n....\n{source}\n....\n')
+    tf.write_text(source)
     cmd = ['asciidoctor', '-r', 'asciidoctor-diagram', '-a', f'imagesoutdir={IMAGES_DIR}', str(tf)]
     print(' '.join(cmd))
     subprocess.run(cmd)
