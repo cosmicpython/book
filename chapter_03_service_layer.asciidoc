@@ -588,29 +588,16 @@ the happy path and one for the unhappy path:
 [source,python]
 [role="non-head"]
 ----
-import uuid
-import pytest
-import requests
-
-import config
-
-def random_ref(prefix):
-    return prefix + '-' + uuid.uuid4().hex[:10]
-
 @pytest.mark.usefixtures('restart_api')
 def test_happy_path_returns_201_and_allocated_batch(add_stock):
-    sku, othersku = random_ref('s1'), random_ref('s2')
-    batch1, batch2, batch3 = random_ref('b1'), random_ref('b2'), random_ref('b3')
+    sku, othersku = random_sku(), random_sku('other')
+    batch1, batch2, batch3 = random_batchref(1), random_batchref(2), random_batchref(3)
     add_stock([
         (batch1, sku, 100, '2011-01-02'),
         (batch2, sku, 100, '2011-01-01'),
         (batch3, othersku, 100, None),
     ])
-    data = {
-        'orderid': random_ref('o'),
-        'sku': sku,
-        'qty': 3,
-    }
+    data = {'orderid': random_orderid(), 'sku': sku, 'qty': 3}
     url = config.get_api_url()
     r = requests.post(f'{url}/allocate', json=data)
     assert r.status_code == 201
@@ -619,13 +606,12 @@ def test_happy_path_returns_201_and_allocated_batch(add_stock):
 
 @pytest.mark.usefixtures('restart_api')
 def test_unhappy_path_returns_400_and_error_message():
-    sku, order = random_ref('s'), random_ref('o')
-    data = {'orderid': order, 'sku': sku, 'qty': 20}
+    unknown_sku, orderid = random_sku(), random_orderid()
+    data = {'orderid': orderid, 'sku': unknown_sku, 'qty': 20}
     url = config.get_api_url()
     r = requests.post(f'{url}/allocate', json=data)
     assert r.status_code == 400
-    assert r.json()['message'] == f'Invalid sku {sku}'
-
+    assert r.json()['message'] == f'Invalid sku {unknown_sku}'
 ----
 ====
 
@@ -941,8 +927,8 @@ on the domain:
 ----
 def test_add_batch():
     repo, session = FakeRepository([]), FakeSession()
-    services.add_batch('b1', 'CRUNCHY-ARMCHAIR', 100, None, repo, session)
-    assert repo.get('b1') is not None
+    services.add_batch("b1", "CRUNCHY-ARMCHAIR", 100, None, repo, session)
+    assert repo.get("b1") is not None
     assert session.committed
 ----
 ====
