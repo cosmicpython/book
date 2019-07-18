@@ -2,7 +2,6 @@
 == Repository Pattern
 
 .In this chapter
-********************************************************************************
 
 * We show how to apply the dependency inversion principle to make your data layer
   depend on your model objects.
@@ -10,9 +9,6 @@
 * We'll see a concrete example of how this simplifying abstraction makes our
   system more testable by hiding the complexities of the database.
 
-  // DIAGRAM GOES HERE
-
-********************************************************************************
 
 In the previous chapter we built a simple domain model that can allocate orders
 to batches of stock. It's easy for us to write tests against this code because
