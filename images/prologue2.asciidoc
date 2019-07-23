@@ -1,0 +1,25 @@
+[plantuml, allocation_context_diagram]
+....
+@startuml Allocation Context Diagram
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4.puml
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Context.puml
+
+System(systema, "Allocation", "Allocates stock to customer orders")
+
+Person(customer, "Customer", "Wants to buy furniture")
+Person(buyer, "Buying Team", "Needs to purchase furniture from suppliers")
+
+System(procurement, "Purchasing", "Manages workflow for buying stock from suppliers")
+System(ecom, "E-commerce", "Sells goods online")
+System(warehouse, "Warehouse", "Manages workflow for shipping goods to customers.")
+
+Rel(customer, ecom, "Buys from")
+Rel(buyer, procurement, "Uses")
+Rel(procurement, systema, "Notifies about shipments")
+Rel(ecom, systema, "Asks for stock levels")
+Rel(ecom, systema, "Notifies about orders")
+Rel(systema, warehouse, "Sends instructions to")
+Rel(warehouse, customer, "Dispatches goods to")
+
+@enduml
+....

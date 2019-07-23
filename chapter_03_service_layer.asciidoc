@@ -2,22 +2,32 @@
 
 == Our First Use Case: Flask API And Service Layer.
 
-.In this chapter
-********************************************************************************
+Back to our allocations project! 
+
+In this chapter:
 
 * We'll discuss the difference between orchestration logic, business logic, and
   interfacing code.
-  depend on your model objects.
+
 * We introduce the service layer pattern for orchestrating our workflows.
+
 * We'll see how our database abstractions, plus a service layer, let us write
-  fast end-to-end tests of our core functionality
+  fast tests of our core functionality
+
 * We'll discuss different kinds of testing, and when each is appropriate
 
-  // DIAGRAM GOES HERE
+By the end of this chapter, we'll have add a _Flask API_, that will talk to
+a _Service Layer_, which will serve as the entrypoint to our domain model.
+By making the service layer depend on the `AbstractRepository`, we'll be
+able to unit test it using `FakeRepository`, and then run it in real life
+using `SqlAlchemyRepository`:
 
-********************************************************************************
+[[chapter_03_class_diagram]]
+.Our target architecture for the end of this chapter
+image::images/chapter_03_class_diagram.png[]
 
-Back to our allocations project!
+
+=== Connecting our Application to the Real World
 
 Like any good agile team, we're hustling to try and get an MVP out and
 in front of the users to start gathering feedback.  We have the core
