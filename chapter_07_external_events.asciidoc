@@ -9,7 +9,7 @@
   asynchronous message bus.
 * We'll start to rebuild our application as a message-processor.
 
-  // DIAGRAM GOES HERE
+// DIAGRAM GOES HERE
 
 ********************************************************************************
 
@@ -21,6 +21,8 @@ that an order has been allocated and needs to be sent to a customer?
 In this chapter we'd like to show how the events metaphor can be extended
 to encompass the way that we handle incoming and outgoing messages from the
 system.
+
+// TODO (DS): Are you really 'stretching a metaphor'?
 
 
 === An external event triggers internal invents
@@ -50,10 +52,13 @@ At MADE.com we use https://eventstore.org/[Eventstore] to convey messages
 between systems, but a lightweight solution based on Redis pubsub channels
 can work just fine, and are probably more familiar.
 
+// TODO (DS): I wonder if this para could be improved upon?
+
 
 Here's how we might start with an end-to-end test.  We can use our existing
 API to create batches, and then we'll test both inbound and outbound messages:
 
+// TODO (DS): A sidebar explaining redis pubsub channels would be useful.
 
 [[redis_e2e_test]]
 .An end-to-end test for our pubsub model (tests/e2e/test_external_events.py)
@@ -91,6 +96,15 @@ def test_change_batch_quantity_leading_to_reallocation():
     wait_for_assertion(check_messages)
 ----
 ====
+
+// TODO (DS): I'm generally a bit lost with this code snippet. Quite a lot of
+// code to digest... Might a diff of the new code be a better way to present?
+
+// TODO (DS): Where does subscribe_to_allocated_events come from?
+
+// TODO (DS): Why the print statements?
+
+// TODO (DS): What's the wait_for function?
 
 Because this is an end-to-end test and our publish/subscribe model is
 asynchronous, there's a bit of boilerplate to manage waiting, but
@@ -138,12 +152,18 @@ def handle_change_batch_quantity(m):  #<2>
 ----
 ====
 
+// TODO (DS): I was confused by the flush argument
+
 //TODO: add some calls to logging.debug, where there used to be prints?
+
 
 <1> Main subscribes us to the channel on load
 <2> And our main job is to deserialize JSON, and pass it to the service
     layer, much like the Flask adapter does.
 
+// TODO (DS): I'm generally just a bit lost here. Why do we need to do this? I
+// thought domain events are more about saying that something happened rather
+// than using commands...?
 
 So we'll need a new service called `change_batch_quantity`.
 
@@ -191,6 +211,13 @@ look like:
 ----
 ====
 
+// TODO (DS): Maybe splitting this into Arrange-Act-Assert blocks would help
+// readability.
+
+// TODO (DS): Why staticmethod?
+
+// TODO (DS): I think order1 etc would be clearer than o1
+
 <1> The simple case would be trivially easy to implement, we just
     modify a quantity.
 
@@ -211,6 +238,8 @@ service function, we can choose to clearly separate responsibility:
 * But reallocation can happen in a separate unit of work.
 
 So our flow would be:
+
+// TODO (DS): Sequence diagram?
 
 * call change batch quantity service
 * start uow
@@ -243,6 +272,7 @@ def change_batch_quantity(
         uow.commit()
 ----
 ====
+// TODO (DS): Indentation looks off
 
 //TODO: move up in file
 
@@ -398,6 +428,11 @@ class Deallocated(Event):
 ----
 ====
 
+// TODO (DS): I feel I'm having to hold too much in my brain at once....is
+// there a way of communicating  the deallocation logic separately from the
+// event driven stuff?
+
+// (HP) maybe present events before the rest?
 
 The handlers themselves aren't very complicated:
 
@@ -429,8 +464,12 @@ HANDLERS = {
 ----
 ====
 
+// TODO (DS): Again too much indent in function sigs?
+
 <1> reallocate just calls our existing service-layer `allocate` function
 <2> and publishing an external event is very easy too:
+
+// TODO (DS): It would be nice to see a diagram of the system at this point.
 
 //TODO, type hinting hints, use from __future__ import annotations
 
@@ -452,6 +491,9 @@ def publish(channel, event):
 Our event handlers do now need a UoW.  We make a small modification
 to the main `messagebus.handle()` function:
 
+// TODO (DS): This feels important, but I'm not sure why - slightly lost. Would
+// it be better just to have used this structure from the beginning?
+
 [[handle_takes_uow]]
 .Handle takes a UoW (src/allocation/messagebus.py)
 ====
@@ -465,7 +507,6 @@ def handle(events_: List[events.Event], uow: unit_of_work.AbstractUnitOfWork):
             handler(event, uow=uow)
 ----
 ====
-
 
 
 And to _unit_of_work.py_:
@@ -587,6 +628,8 @@ HANDLERS = {
 We define a series of new events, which capture the inputs, outputs, and
 internal message structures of our system in a single place:
 
+// TODO (DS): This is cool...but i can't help wishing you just started part 2
+// with this pattern...
 
 [[new_events]]
 .More events (src/allocation/events.py)
@@ -751,3 +794,7 @@ We've added bit of complexity to our architecture, but hopefully you can
 see how we've now made it very easy to plug in almost any new requirement
 from the business, whether it's a new use case, a new integration with
 one of our internal systems, or an integration with external systems.
+
+// TODO (DS): This whole chapter feels a little backwards... Why not start with
+// what we're trying to achieve, discuss event architecture as a general
+// approach, then show how it can be done in python.
