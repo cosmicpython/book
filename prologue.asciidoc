@@ -147,11 +147,30 @@ problem. In a layered architecture, we divide our code into discrete categories
 or roles and we introduce rules about which categories of code can call each
 other.
 
-For example most people are familiar with the three layered architecture (see <<layered_architecture1>>):
+For example most people are familiar with the three layered architecture (see
+<<layered_architecture1>>):
 
 [[layered_architecture1]]
 .Layered Architecture
 image::images/layered_architecture.png[]
+[role="image-source"]
+----
+[ditaa,layered_architecture]
++------------------------------------------------------------+
+|                  Presentation Layer                        |
++------------------------------------------------------------+
+                          |
+                          V
++------------------------------------------------------------+
+|                   Business Logic                           |
++------------------------------------------------------------+
+                          |
+                          V
++------------------------------------------------------------+
+|                    Database Layer                          |
++------------------------------------------------------------+
+----
+
 
 
 Layered architecture is perhaps the most common pattern for building business

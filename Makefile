@@ -1,5 +1,5 @@
 html:
-	asciidoctor -a source-highlighter=pygments -a '!example-caption' *.asciidoc
+	asciidoctor -a stylesheet=theme/asciidoctor.local.css -a source-highlighter=pygments -a '!example-caption' *.asciidoc
 
 test: html
 	pytest tests.py --tb=short -vv
@@ -12,5 +12,5 @@ update-code:
 count-todos:
 	ls *.asciidoc | xargs grep -c TODO | sed  s/:/\\t/
 
-render-diagrams:
-	asciidoctor -r asciidoctor-diagram -a imagesoutdir=. images/*.asciidoc
+diagrams: html
+	./render-diagrams.py

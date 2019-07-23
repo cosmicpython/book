@@ -25,6 +25,149 @@ using `SqlAlchemyRepository`:
 [[chapter_03_class_diagram]]
 .Our target architecture for the end of this chapter
 image::images/chapter_03_class_diagram.png[]
+[role="image-source"]
+....
+[plantuml, chapter_03_class_diagram]
+@startuml
+
+package api {
+
+  class Flask {
+    allocate_endpoint()
+  }
+}
+
+package sqlalchemy {
+  class Session {
+    query()
+    add()
+  }
+}
+
+package allocation {
+
+  class services {
+    allocate(line, repository, session)
+  }
+
+  class Batch {
+    allocate ()
+  }
+
+  abstract class AbstractRepository {
+    add ()
+    get ()
+    list ()
+  }
+
+  class BatchRepository {
+    session: Session
+  }
+
+  class FakeRepository {
+    batches: List<Batch>
+  }
+}
+
+services -> AbstractRepository: uses
+
+AbstractRepository <|-- FakeRepository : implements
+AbstractRepository <|-- BatchRepository : implements
+AbstractRepository --> Batch : stores
+Flask --> services : invokes
+
+BatchRepository --> Session : abstracts
+@enduml
+....
+
+
+[ditaa, test_spectrum_diagram]
+....
+| Low feedback                                                  High feedback |
+| Low barrier to change                                 High barrier to change|
+| High system coverage                                       Focused coverage |
+|                                                                             |
+| <---------                                                     ---------->  |
+| API tests                  service-layer tests                 domain tests |
+....
+
+
+
+[ditaa, service_layer_diagram_abstract_dependencies]
+....
+        +-----------------------------+
+        |         Service Layer       |
+        +-----------------------------+
+           |                   |
+           |                   | depends on abstraction
+           V                   V
++------------------+     +--------------------+
+|   Domain Model   |     | AbstractRepository |
++------------------+     +--------------------+
+....
+
+...
+
+
+[ditaa, service_layer_diagram_test_dependencies]
+....
+        +-----------------------------+
+        |           Tests             |-------------\
+        +-----------------------------+             |
+                       |                            |
+                       V                            |
+        +-----------------------------+             |
+        |         Service Layer       |    provides |
+        +-----------------------------+             |
+           |                     |                  |
+           V                     V                  |
++------------------+     +--------------------+     |
+|   Domain Model   |     | AbstractRepository |     |
++------------------+     +--------------------+     |
+                                    ^               |
+                         implements |               |
+                                    |               |
+                         +----------------------+   |
+                         |    FakeRepository    |<--/
+                         |      (in-memory)     |
+                         +----------------------+
+....
+
+...
+
+[ditaa, service_layer_diagram_runtime_dependencies]
+....
+       +--------------------------------+
+       | Flask API (Presentation layer) |-----------\
+       +--------------------------------+           |
+                       |                            |
+                       V                            |
+        +-----------------------------+             |
+        |         Service Layer       |             |
+        +-----------------------------+             |
+           |                     |                  |
+           V                     V                  |
++------------------+     +--------------------+     |
+|   Domain Model   |     | AbstractRepository |     |
++------------------+     +--------------------+     |
+              ^                     ^               |
+              |                     |               |
+              |          +----------------------+   |
+      imports |          | SqlAlchemyRepository |<--/
+              |          +----------------------+
+              |                | uses
+              |                V
+           +-----------------------+
+           |          ORM          |
+           | (another abstraction) |
+           +-----------------------+
+                       |
+                       | talks to
+                       V
+           +------------------------+
+           |       Database         |
+           +------------------------+
+....
 
 
 === Connecting our Application to the Real World
@@ -741,6 +884,19 @@ important to understand the trade-off between coupling and design feedback.
 [[test_spectrum_diagram]]
 .The test spectrum
 image::images/test_spectrum_diagram.png[]
+[role="image-source"]
+----
+[ditaa, test_spectrum_diagram]
+| Low feedback                                                  High feedback |
+| Low barrier to change                                 High barrier to change|
+| High system coverage                                       Focused coverage |
+|                                                                             |
+| <---------                                                     ---------->  |
+| API tests                  service-layer tests                 domain tests |
+----
+
+
+
 
 Extreme Programming (XP) exhorts us to "listen to the code." When we're writing
 tests, we might find that the code is hard to use, or notice a code smell. This
@@ -1129,6 +1285,20 @@ dependencies of our service layer:
 [[service_layer_diagram_abstract_dependencies]]
 .Abstract Dependencies of the service layer
 image::images/service_layer_diagram_abstract_dependencies.png[]
+[role="image-source"]
+----
+[ditaa, service_layer_diagram_abstract_dependencies]
+        +-----------------------------+
+        |         Service Layer       |
+        +-----------------------------+
+           |                   |
+           |                   | depends on abstraction
+           V                   V
++------------------+     +--------------------+
+|   Domain Model   |     | AbstractRepository |
++------------------+     +--------------------+
+----
+
 
 When we run the tests, we implement the abstract dependencies using
 `FakeRepository`, as in <<service_layer_diagram_test_dependencies>>:
@@ -1136,6 +1306,30 @@ When we run the tests, we implement the abstract dependencies using
 [[service_layer_diagram_test_dependencies]]
 .Tests provide an implementation of the abstract dependency
 image::images/service_layer_diagram_test_dependencies.png[]
+[role="image-source"]
+----
+[ditaa, service_layer_diagram_test_dependencies]
+        +-----------------------------+
+        |           Tests             |-------------\
+        +-----------------------------+             |
+                       |                            |
+                       V                            |
+        +-----------------------------+             |
+        |         Service Layer       |    provides |
+        +-----------------------------+             |
+           |                     |                  |
+           V                     V                  |
++------------------+     +--------------------+     |
+|   Domain Model   |     | AbstractRepository |     |
++------------------+     +--------------------+     |
+                                    ^               |
+                         implements |               |
+                                    |               |
+                         +----------------------+   |
+                         |    FakeRepository    |<--/
+                         |      (in-memory)     |
+                         +----------------------+
+----
 
 And when we actually run our app, we swap in the "real" dependency,
 <<service_layer_diagram_runtime_dependencies>>:
@@ -1143,6 +1337,41 @@ And when we actually run our app, we swap in the "real" dependency,
 [[service_layer_diagram_runtime_dependencies]]
 .Dependencies at runtime
 image::images/service_layer_diagram_runtime_dependencies.png[]
+[role="image-source"]
+----
+[ditaa, service_layer_diagram_runtime_dependencies]
+       +--------------------------------+
+       | Flask API (Presentation layer) |-----------\
+       +--------------------------------+           |
+                       |                            |
+                       V                            |
+        +-----------------------------+             |
+        |         Service Layer       |             |
+        +-----------------------------+             |
+           |                     |                  |
+           V                     V                  |
++------------------+     +--------------------+     |
+|   Domain Model   |     | AbstractRepository |     |
++------------------+     +--------------------+     |
+              ^                     ^               |
+              |                     |               |
+              |          +----------------------+   |
+      imports |          | SqlAlchemyRepository |<--/
+              |          +----------------------+
+              |                | uses
+              |                V
+           +-----------------------+
+           |          ORM          |
+           | (another abstraction) |
+           +-----------------------+
+                       |
+                       | talks to
+                       V
+           +------------------------+
+           |       Database         |
+           +------------------------+
+----
+
 
 
 //TODO (DS): Good wrap up. I'd really like to see a table or something that

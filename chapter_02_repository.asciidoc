@@ -18,6 +18,39 @@ in <<chapter_02_class_diagram>>:
 [[chapter_02_class_diagram]]
 .Batch, Repository and SqlAlchemy
 image::images/chapter_02_class_diagram.png[]
+[role="image-source"]
+----
+[plantuml, chapter_02_class_diagram]
+@startuml
+
+package allocation {
+
+  class BatchRepository {
+    add (batch)
+    get (reference)
+    list ()
+  }
+
+  class Batch {
+    allocate ()
+  }
+
+
+}
+
+package SqlAlchemy {
+  class Session {
+    query ()
+    add ()
+  }
+
+}
+
+  BatchRepository *-- Session : abstracts >
+  BatchRepository -> Batch : fetches >
+
+@enduml
+----
 
 
 === Persisting our domain model
@@ -107,6 +140,24 @@ Instead, as discussed in the prologue, we'll think of our model as being on the
 [[onion_architecture]]
 .Onion Architecture
 image::images/onion_architecture.png[]
+[role="image-source"]
+----
+[ditaa, onion_architecture]
++------------------------+
+|   Presentation Layer   |
++------------------------+
+           |
+           V
+   +---------------------------------------------------+
+   |                   Domain model                    |
+   +---------------------------------------------------+
+                                        ^
+                                        |
+                               +-------------------+
+                               |   Database Layer  |
+                               +-------------------+
+----
+
 
 .Is this Ports and Adapters?
 *******************************************************************************
@@ -511,6 +562,28 @@ worlds, they're likely to recognise it.
 [[repository_pattern_diagram]]
 .Repository pattern
 image::images/repository_pattern_diagram.png[]
+[role="image-source"]
+----
+[ditaa, repository_pattern_diagram]
+  +-----------------------------+
+  |      Presentation Layer     |
+  +-----------------------------+
+                 |^
+                 ||          +------------------+
+                 ||----------|   Domain Model   |
+                 ||          |      objects     |
+                 ||          +------------------+
+                 V|       
+  +------------------------------+
+  |          Repository          |
+  +------------------------------+
+                 |
+                 V
+  +------------------------------+
+  |        Database Layer        |
+  +------------------------------+
+----
+
 
 TODO: not sure if this diagram is helping.
 
