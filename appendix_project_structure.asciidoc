@@ -46,6 +46,11 @@ be of interest to outline the moving parts.
 ----
 ====
 
+// TODO (DS): All this seems sensible. 
+// It would be nice to include a dependency graph so we can see the layering
+// within src/allocation.
+// Maybe should include message bus too?
+
 <1> Our _docker-compose.yml_ and our _Dockerfile_ are the main bits of configuration
     for the containers that run our app, and can also run the tests (for CI).  A
     more complex project might have several Dockerfiles, although we've found that
@@ -62,13 +67,16 @@ be of interest to outline the moving parts.
     `docker-compose` and `pytest` directly, but if nothing else it's nice to
     have all the "common commands" in a list somewhere, and unlike
     documentation, a Makefile is code so it has less tendency to go out of date.
+// TODO (DS): Could mention invoke as an alternative.
 
 <3> All the actual source code for our app, including the domain model, the
-    flask app, and infrastructure code, lives in a Python package inside _src_,
+    flask app, and infrastructure code, lives in a Python package inside
+    _src_,footnote:[More on _src_ folders: https//hynek.me/articles/testing-packaging/]
     which we install using `pip install -e` and the _setup.py_ file.  This makes
     imports easy. Currently the structure within this module is totally flat,
     but for a more complex project you'd expect to grow a folder hierarchy
     including _domain_model/_, _infrastructure/_, _services/_, _api/_
+
 
 <4> Tests live in their own folder, with subfolders to distinguish different test
     types, and allow you to run them separately.  We can keep shared fixtures
@@ -77,6 +85,9 @@ be of interest to outline the moving parts.
 
 TIP:  The https://docs.pytest.org/en/latest/goodpractices.html#choosing-a-test-layout-import-rules[pytest docs]
     are really good on test layout and importability.
+
+// TODO (DS): Might be good to structure it according to the layers you've
+// talked about....e.g. where is the service layer?
 
 Let's look at a few of these in more detail.
 
@@ -90,6 +101,8 @@ TODO: add more subfolders/structure inside our main source tree?
 
 === Env Vars, 12-factor, And Config, Inside And Outside Containers.
 
+// TODO (DS): Bit of a verbose subtitle...
+
 The basic problem we're trying to solve here is that we need different
 config settings for:
 
@@ -101,6 +114,8 @@ config settings for:
 - and different settings for different container environments, dev,
   staging, prod, and so on.
 
+// TODO (DS): Not totally clear on the specifics of what you're saying in these
+// bullet points, though of course i understand in general.
 
 Configuration through environment variables as suggested by the
 https://12factor.net/config[12-factor] manifesto will solve this problem,
@@ -114,16 +129,26 @@ Ed:
 
 Would you consider this a singleton?
 
-I have some past negative experiences with this style of configuration, because it can be easily abused. The env var mitigates against that, and I suppose this varies from codebase to codebase.
+I have some past negative experiences with this style of configuration, because
+it can be easily abused. The env var mitigates against that, and I suppose this
+varies from codebase to codebase.
 
 Bob:
-Not strictly. It's possible to create more than one of them, but it's unlikely that I'd do so outside of unit tests. I more or less think of these config classes as part of my composition root. They tend only to be used by the entry point to the application.
+Not strictly. It's possible to create more than one of them, but it's unlikely
+that I'd do so outside of unit tests. I more or less think of these config
+classes as part of my composition root. They tend only to be used by the entry
+point to the application.
 
 Ed:
-"Entry point to the application" is key, I think. The anti-pattern I've seen is where the config just gets imported anywhere, and anything remotely related to configuration gets put in there.
+"Entry point to the application" is key, I think. The anti-pattern I've seen is
+where the config just gets imported anywhere, and anything remotely related to
+configuration gets put in there.
 
 https://github.com/python-leap/book/issues/52
 ////
+
+// TODO (DS): I reckon configuration patterns are an important part of the
+// architecture your outlining, i wonder if they belong in the main book?
 
 Whenever our application code needs access to some config, it's going to
 get it from a file called _config.py__. <<config_dot_py>> shows a couple of
@@ -160,11 +185,19 @@ def get_api_url():
     to fail hard if an env var is not set, but this gives us a local dev
     setup that "just works" (as much as possible).].
 
+// TODO (DS): The way config interacts with dependency injection might be worth
+// a diagram (ie the layers)
+
+// TODO (DS): Say something about mutability of config here? I tend to think
+// it's good for it to be immutable in runtime environments, but mutable in
+// tests.... Not sure though
 
 === Docker-compose And Containers Config
 
 We use a lightweight docker container orchestration tool called docker-compose.
-It's main configuration is via a YAML file (sigh), <<docker_compose>>:
+It's main configuration is via a YAML file (sighfootnote:[Harry hates YAML. He says
+he can never remember the syntax or how it's supposed to indent.]),
+<<docker_compose>>:
 
 
 [[docker_compose]]
@@ -286,6 +319,8 @@ want to install as top-level modules. The `name` entry is just cosmetic, but
 it's required. For a package that's never actually going to hit PyPI, this is
 all you need.
 
+// TODO (DS): Offhand, I think this might fail if you had any subpackages, as
+// it won't install those files?
 
 === Dockerfile
 
@@ -364,3 +399,6 @@ config and so on.
 
 We've not needed to make tests pip-installable, but if you have difficulties with
 import paths, you might find it helps.
+
+// TODO (DS): Mysterious...
+
