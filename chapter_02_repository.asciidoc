@@ -5,10 +5,22 @@
 
 * We show how to apply the dependency inversion principle to make your data layer
   depend on your model objects.
-* We introduce the repository, a simplifying abstraction over data storage.
+
+* We introduce the _Repository_, a simplifying abstraction over data storage.
+
 * We'll see a concrete example of how this simplifying abstraction makes our
   system more testable by hiding the complexities of the database.
 
+By the end of the chapter, we'll have built a `Repository` class that sits
+between `SqlAlchemy` (our ORM) and our domain model's `Batch` classes, as
+in <<chapter_02_class_diagram>>:
+
+[[chapter_02_class_diagram]]
+.Batch, Repository and SqlAlchemy
+image::images/chapter_02_class_diagram.png[]
+
+
+=== Persisting our domain model
 
 In the previous chapter we built a simple domain model that can allocate orders
 to batches of stock. It's easy for us to write tests against this code because
@@ -31,7 +43,7 @@ storage, and this is a textbook, so we can allow ourselves a tiny bit more
 bottom-up development, and start to think about storage and databases.
 
 
-=== Some Pseudocode: What Are We Going To Need?
+==== Some Pseudocode: What Are We Going To Need?
 
 When we build our first API endpoint, we know we're going to have
 some code that looks more or less like <<api_endpoint_pseudocode>>

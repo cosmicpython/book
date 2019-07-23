@@ -37,3 +37,35 @@
    +------------------------------+
 ....
 
+[plantuml, chapter_02_class_diagram]
+....
+@startuml
+
+package allocation {
+
+  class BatchRepository {
+    add (batch)
+    get (reference)
+    list ()
+  }
+
+  class Batch {
+    allocate ()
+  }
+
+
+}
+
+package SqlAlchemy {
+  class Session {
+    query ()
+    add ()
+  }
+
+}
+
+  BatchRepository *-- Session : abstracts >
+  BatchRepository -> Batch : fetches >
+
+@enduml
+....
