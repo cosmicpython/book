@@ -323,11 +323,10 @@ HANDLERS = {
 //TODO: maybe handle should just take one event?
 
 
-==== In A First Cut, The Service Layer Puts Events On The Message Bus
+==== One Simple Option: The Service Layer Puts Events On The Message Bus
 
-And now we need something to catch events from the model and pass
-them to the message bus.  The service layer might be one place to do
-it...
+Now we need something to catch events from the model and pass them to the
+message bus.  The service layer is one place you can do it...
 
 [[service_talks_to_messagebus]]
 .The service layer with an explicit message bus (src/allocation/services.py)
@@ -354,18 +353,22 @@ def allocate(
 ====
 
 <1> We keep the `try/finally` from our ugly earlier implementation,
+
 <2> But now instead of depending directly on some email infrastructure,
     the service layer is just in charge of passing events from the model
     up to the message bus.
 
-That avoids some of the ugliness that we had in our naive implementation,
-but we can do better.
+That already avoids some of the ugliness that we had in our naive
+implementation, and we have several systems that work like this,
+in which the service layer explicitly collects events from aggregates,
+and passes them to the messagebus.
 
+NOTE: Another variant on this is that you can have the message bus in charge of
+    raising events directly, rather than having them raised by the
+    domain model.
 
-TODO: discussion, service layer can/could raise events directly too.
-
-// TODO (DS): Again do we really need to read code for this if you don't think
-// it's a great idea anyway?
+We'd like to show you another solution, in which we put the unit of
+work in charge of collecting and raising events.
 
 
 === The Unit Of Work Can Pass Events To The Message Bus
@@ -376,12 +379,14 @@ a good place to spot events and pass them to the message bus:
 
 ////
 TODO
-In Example 9. The UoW meets the Message Bus (src/allocation/unit_of_work.py), I got stuck trying to figure out where the seen attribute had come from.
+In Example 9. The UoW meets the Message Bus (src/allocation/unit_of_work.py), I
+got stuck trying to figure out where the .seen attribute had come from.
 It might be helpful to add a line explicitly introducing it before Example 9.
 Once I read on to Example 10 everything cleared up immediately.
 
 https://github.com/python-leap/book/issues/35
 ////
+
 [[uow_with_messagebus]]
 .The UoW meets the message bus (src/allocation/unit_of_work.py)
 ====
@@ -392,7 +397,7 @@ class AbstractUnitOfWork(abc.ABC):
 
     def commit(self):
         self._commit()  #<1>
-        for obj in self.products.seen:  #<2>
+        for obj in self.products.seen:  #<2><3>
             messagebus.handle(obj.events)
 
     @abc.abstractmethod
@@ -415,7 +420,9 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 <2> After committing, we run through all the objects that our
     repository has seen and pass their events to the message bus.
 
-That relies on the repository keeping track of aggregates that it's seen:
+<3> That relies on the repository keeping track of aggregates that it's seen,
+    as we'll see in the next listing.
+
 
 [[repository_tracks_seen]]
 .Repository tracks aggregates seen (src/allocation/repository.py)
@@ -553,7 +560,16 @@ TODO - wrap up for domain events chapter
 Events can help with SRP::
     bla
 
-Unit of Work pattern can help::
-    bla bla.
+A messagebus maps events to handlers::
+    bla
+
+Option 1: domain model raises events, service layer passes them to messagebus::
+    bla
+
+Option 2: service layer raises events and passes them to messagebus::
+    bla
+
+Option 3: unit of work collects events from aggregates and passes them to message bus::
+    bla
 
 *****************************************************************
