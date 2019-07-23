@@ -34,11 +34,15 @@ that collaborate in their roles are called _object neighborhoods_ which
 is, in our professional opinion, totally adorable.]
 This gives us two useful things:
 
+//TODO (DS): Maybe the fact that it provides access to repositories needs more emphasis.  
+
 1) It gives us a stable snapshot of the database to work with, so that the
 objects we use aren't changing halfway through an operation.
 
 2) It gives us a way to persist all of our changes at once so that if something
 goes wrong, we don't end up in an inconsistent state.
+
+In other words, it allows us to manage concurrency and atomicity.
 
 For now, that translates straight into a database transaction, but by giving
 ourselves our own abstraction, we can make it mean more things, as we'll see
@@ -58,6 +62,7 @@ the end, some different handling for error and success cases?  Something like
 
 A context manager.
 
+//TODO (DS): Could be a good moment to revisit the diagram at the beginning of the book.
 
 === Test-driving A Uow With Integration Tests
 
@@ -107,6 +112,7 @@ def test_uow_can_retrieve_a_batch_and_allocate_to_it(session_factory):
     assert batchref == 'batch1'
 ----
 ====
+//TODO (DS): This example would be easier to understand if it had the test at the top.
 
 <1> We initialise the unit of work using our custom session factory,
     and get back a `uow` object to use in our `with` block.
@@ -115,6 +121,8 @@ def test_uow_can_retrieve_a_batch_and_allocate_to_it(session_factory):
     `uow.batches`
 
 <3> And we call `commit()` on it when we're done.
+
+//TODO (DS): I'm not sure a test is the clearest way to begin this. I can't see the wood for the trees. Maybe first show some client code using the abstraction?
 
 
 === Unit Of Work And Its Context Manager
@@ -198,11 +206,11 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 ----
 ====
 
-<1> the module defines a default session factory that will connect to postgres,
+<1> The module defines a default session factory that will connect to postgres,
     but we allow that to be overriden in our integration tests, so that we
     can use SQLite instead.
 
-<2> the init is responsible for starting a database session, and starting
+<2> The init is responsible for starting a database session, and starting
     a real repository that can use that session
 
 <3> Finally, we provide concrete `commit()` and `rollback()` methods that
