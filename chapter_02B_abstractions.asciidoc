@@ -443,6 +443,7 @@ def read_paths_and_hashes(root):  #<1>
             hashes[hash_file(Path(folder) / fn)] = fn
     return hashes
 
+
 def determine_actions(src_hashes, dst_hashes, src_folder, dst_folder):  #<2>
     for sha, filename in src_hashes.items():
         if sha not in dst_hashes:
