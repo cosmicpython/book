@@ -88,7 +88,7 @@ Instead, as discussed in the prologue, we'll think of our model as being on the
 .Onion Architecture
 image::images/onion_architecture.png[]
 [role="image-source"]
-....
+----
 [ditaa, onion_architecture]
 +------------------------+
 |   Presentation Layer   |
@@ -103,7 +103,7 @@ image::images/onion_architecture.png[]
                                +-------------------+
                                |   Database Layer  |
                                +-------------------+
-....
+----
 
 
 .Is this Ports and Adapters?
@@ -510,7 +510,7 @@ worlds, they're likely to recognise it.
 .Repository pattern
 image::images/repository_pattern_diagram.png[]
 [role="image-source"]
-....
+----
 [ditaa, repository_pattern_diagram]
   +-----------------------------+
   |      Presentation Layer     |
@@ -529,7 +529,7 @@ image::images/repository_pattern_diagram.png[]
   +------------------------------+
   |        Database Layer        |
   +------------------------------+
-....
+----
 
 
 TODO: not sure if this diagram is helping.

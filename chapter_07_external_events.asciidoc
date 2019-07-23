@@ -25,7 +25,7 @@ is a common technique], we model the situation as in
 .batch quantity changed means deallocate and reallocate
 image::images/batch_changed_events_flow_diagram.png[]
 [role="image-source"]
-....
+----
 [ditaa, batch_changed_events_flow_diagram]
 +----------+    /----\      +------------+        +------------+
 | batch    |--> |RULE| -->  | Deallocate | ---->  | Reallocate |
@@ -34,7 +34,7 @@ image::images/batch_changed_events_flow_diagram.png[]
 +----------+                  +------------+-+      +------------+-+
                                 | Deallocate | ---->  | Reallocate |
                                 +------------+        +------------+
-....
+----
 
 An event we'll called _batch quantity changed_ should lead us to change the
 quantity on the batch, yes, but also to apply a business rule: if the new

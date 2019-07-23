@@ -749,7 +749,7 @@ important to understand the trade-off between coupling and design feedback.
 .The test spectrum
 image::images/test_spectrum_diagram.png[]
 [role="image-source"]
-....
+----
 [ditaa, test_spectrum_diagram]
 | Low feedback                                                  High feedback |
 | Low barrier to change                                 High barrier to change|
@@ -757,7 +757,7 @@ image::images/test_spectrum_diagram.png[]
 |                                                                             |
 | <---------                                                     ---------->  |
 | API tests                  service-layer tests                 domain tests |
-....
+----
 
 
 
@@ -1154,7 +1154,7 @@ dependencies of our service layer:
 .Abstract Dependencies of the service layer
 image::images/service_layer_diagram_abstract_dependencies.png[]
 [role="image-source"]
-....
+----
 [ditaa, service_layer_diagram_abstract_dependencies]
         +-----------------------------+
         |         Service Layer       |
@@ -1165,7 +1165,7 @@ image::images/service_layer_diagram_abstract_dependencies.png[]
 +------------------+     +--------------------+
 |   Domain Model   |     | AbstractRepository |
 +------------------+     +--------------------+
-....
+----
 
 
 When we run the tests, we implement the abstract dependencies using
@@ -1175,7 +1175,7 @@ When we run the tests, we implement the abstract dependencies using
 .Tests provide an implementation of the abstract dependency
 image::images/service_layer_diagram_test_dependencies.png[]
 [role="image-source"]
-....
+----
 [ditaa, service_layer_diagram_test_dependencies]
         +-----------------------------+
         |           Tests             |-------------\
@@ -1197,7 +1197,7 @@ image::images/service_layer_diagram_test_dependencies.png[]
                          |    FakeRepository    |<--/
                          |      (in-memory)     |
                          +----------------------+
-....
+----
 
 And when we actually run our app, we swap in the "real" dependency,
 <<service_layer_diagram_runtime_dependencies>>:
@@ -1206,7 +1206,7 @@ And when we actually run our app, we swap in the "real" dependency,
 .Dependencies at runtime
 image::images/service_layer_diagram_runtime_dependencies.png[]
 [role="image-source"]
-....
+----
 [ditaa, service_layer_diagram_runtime_dependencies]
        +--------------------------------+
        | Flask API (Presentation layer) |-----------\
@@ -1238,7 +1238,7 @@ image::images/service_layer_diagram_runtime_dependencies.png[]
            +------------------------+
            |       Database         |
            +------------------------+
-....
+----
 
 
 

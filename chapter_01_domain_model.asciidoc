@@ -142,8 +142,8 @@ https://www.codemag.com/Article/0205051/UML-Collaboration-Diagrams[info]. ]
 [[allocation_context_diagram]]
 .A sort-of context diagram for the allocation service.
 image::images/allocation_context_diagram.png[]
-[role=image-source]
-....
+[role="image-source"]
+----
 [ditaa, allocation_context_diagram]
 Orders                          +------------+         Shipments, Stock
  OrderLines(product/qty) -----> | Allocation | ------>  Batches(product/qty/eta)
@@ -155,7 +155,7 @@ Orders                          +------------+         Shipments, Stock
                                       V
                                "An allocation"
                                orderline->batch.
-....
+----
 
 
 //TODO: Better diagram for allocation? context diag?"
@@ -466,7 +466,7 @@ TODO (EJ)
 [[model_diagram]]
 .Our Model
 image::images/model_diagram.png[]
-....
+----
 [ditaa, model_diagram]
 +=====================+
 | Batch               |
@@ -480,7 +480,7 @@ image::images/model_diagram.png[]
                               | sku         |
                               | qty         |
                               +-------------+
-....
+----
 
 
 Now we're getting somewhere! A batch now keeps track of a set of allocated
