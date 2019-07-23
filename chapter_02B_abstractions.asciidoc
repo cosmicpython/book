@@ -51,6 +51,7 @@ simple abstractions to hide messy details. When we're writing code for fun, or
 in a kata, we get to play with ideas freely, hammering things out and
 refactoring aggressively. In a large-scale system, though, we become constrained
 by the decisions made elsewhere in the system.
+// TODO (DS): Should you say what a kata is?
 
 When we're unable to change component A for fear of breaking component B, we say
 that the components have become coupled. Locally, coupling is a good thing: it's
@@ -122,8 +123,28 @@ lists of paths. Our second is trickier, though. In order to detect renames,
 we'll have to inspect the content of files. For this we can use a hashing
 function like md5 or SHA.
 
+
 A gallon of coffee later, we've got a working prototype, and it looks
 something like this:
+
+////
+TODO (DS)
+This is a pattern we see a lot in the book: giving an example of the less good, then showing a better way.
+
+The problem is you're asking your readers to put effort into understanding
+something you don't even recommend doing. Also, because this less good way of
+writing things is the more obvious way, the readers will be very familiar with
+it already.
+
+Personally I'd prefer to see an example of good practice from the get go. You
+could talk about what it helps you avoid, but it doesn't need detailed code
+samples. 
+
+Also, a good way to approach writing abstracted code is to start with the
+abstraction anyway, only later writing the implementation. Explaining things in
+that order would demonstrate nicely that abstractions allow you to defer
+decisions about implementation until a late stage...
+////
 
 [[sync_first_cut]]
 .Basic sync algorithm (sync.py)
@@ -173,8 +194,19 @@ def sync(source, dest):
 <5> Finally we run through any files in the source that we haven't seen
     in the destination and we copy them.
 
+// TODO (DS): Might be easier to understand if you broke sync into a few
+// private functions.
+
+// TODO (DS): I read fn as function the first time. Would filename be better?
+
+// TODO (DS): What's hash_file and how does it relate to hashlib?
+// Edit: now i see below, but it confused me at this point.
+
+// TODO (DS): I think you'd need less of these footnotes with a few comments or
+// some clearer factoring
 
 `hash_file` just returns the SHA-1 hash for a given path:
+
 
 [[hash_file]]
 .Hashing a file (sync.py)
@@ -296,6 +328,9 @@ the current state of the filesystem.
     source_files = {'hash1': 'path1', 'hash2': 'path2'}
     dest_files = {'hash1': 'path1', 'hash2': 'pathX'}
 
+// TODO (DS): That approach could have been used in the non abstracted version
+// maybe? 
+
 What about moving from step (2) to step (3)?  How can we abstract out the
 actual move/copy/delete filesystem interaction?  This one is perhaps a little
 less intuitive, but how about some sort of collection of strings?
@@ -303,6 +338,18 @@ less intuitive, but how about some sort of collection of strings?
     ("COPY", "sourcepath", "destpath"),
     ("MOVE", "old", "new"),
 
+////
+TODO (DS): Difficult to follow this bit...
+
+It feels like you're making an implicit concept explicit: modelling the
+*intent* of the system.
+
+But is that really the same as using abstractions? It feels like you're doing
+two things at once here: moving away from an imperative style to one that is
+more declarative, *and* depending on abstractions instead of implementations.
+Those are kind of orthogonal.... Looking at one of these at a time might be
+clearer.
+////
 
 Now we could write tests that just use 2 filesystem dicts as inputs, and
 expect lists of tuples of strings representing actions as outputs.
@@ -342,6 +389,11 @@ There are essentially two ways.  The first is to try and split out the core of
 our "business logic" into a functional core and test that directly, pushing the
 I/O out to a thin, imperative shell which we can either test with (few) end to
 end tests, or make simple enough that we're happy to not test at all.
+
+// TODO (DS): Really interesting. I wonder if the two approaches would be
+// served by two contrasting diagrams.
+// Also, maybe these two contrasting approaches to decoupling biz logic from
+// implementation should be in the intro to the chapter...?
 
 The second way would be to expose the IO dependencies in our top-level
 function, and use dependency injection to swap out stub versions of our
@@ -542,6 +594,9 @@ def synchronise_dirs(reader, apply_func, src_folder, dst_folder):  #<1>
 ----
 ====
 
+// TODO (DS): Why not just call reader `read_paths_and_hashes`, like in the
+// FCIS example?
+
 //NICE-TO-HAVE: test this listing
 
 <1> Our top-level function now exposes two new dependencies, a `reader` and an
@@ -557,6 +612,23 @@ TIP: Notice that, although we're using dependency injection, there was no need
     book we often show ABCs because we hope they help to understand what the
     abstraction is, but they're not necessary.  Python's dynamic nature means
     we can always rely on duck typing.
+
+////
+TODO (DS)
+Really, the only difference between the DI approach shown here and the FCIS is
+that in DI, the orchestration logic can be tested against abstractions too (at
+the cost of some extra indirection).
+
+It feels to me that this DI approach is building on the FCIS, rather than
+demonstrating the 'pure' version of DI. In real life, it's nice to combine
+them, but perhaps it would be a clearer comparison if you showed a purer
+version of each.
+
+I also think you might need to address how the patterns you propose in this
+book relate to the alternative approaches. To me, it seems the core patterns
+are much more DI than FCIS. But you could also point out that the approaches
+can be combined - it's not either/or.
+////
 
 ////
 TODO (e.j)
@@ -673,10 +745,30 @@ a few heuristics and questions to ask yourself:
 * Can I choose a familiar Python datastructure to represent the state of the
   messy system, and try to imagine a single function that can return that
   state?
+// TODO (DS): These are great heuristics... Maybe they deserve more attention?
+
 * Where can I draw a line between my systems, where can I carve out a seam, to
   stick that abstraction in?
+
+// TODO (DS): Drawing lines and the dependencies between them is really
+// relevant to what you've done in this chapter, but i don't think you've
+// explicitly addressed them except in this bullet point.
+
+// TODO (DS): I think the seam metaphor might need more explanation.
+// (I assume this is taken from Michael Feathers? I've always been confused
+// about whether it's a sewing seam, or a mining seam!)
+
+// TODO (DS): And maybe, which implicit concepts can i make explicit?
+
 * What are the dependencies and what is the core "business" logic?
 
+
+
 Practice makes less-imperfect!
+
+// TODO (DS): I think this is potentially a great chapter, perhaps belonging
+// really on in the book. But it is also a bit of a brain dump of lots of deep,
+// amazing concepts. I don't think you've quite found the best structure here
+// yet. Perhaps it could be structured around these heuristics?
 
 And now back to our regular programming...
