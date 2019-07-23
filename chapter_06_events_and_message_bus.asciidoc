@@ -11,7 +11,7 @@
   your codebase.
 * We'll see how our _unit of work_ can be extended to cover multi-step processes.
 
-  // DIAGRAM GOES HERE
+TODO: DIAGRAM GOES HERE
 
 ********************************************************************************
 
@@ -41,7 +41,6 @@ When we have a new requirement like this, that's not _really_ to do with the
 core domain, it's all too easy to start dumping these things into our web
 controllers:
 
-
 [[email_in_flask]]
 .Just whack it in the endpoint, what could go wrong? (src/allocation/flask_app.py)
 ====
@@ -59,8 +58,8 @@ def allocate_endpoint():
         batchref = services.allocate(line, unit_of_work.start)
     except (model.OutOfStock, services.InvalidSku) as e:
         send_mail(
-            'out of stock', 
-            'stock_admin@made.com', 
+            'out of stock',
+            'stock_admin@made.com',
             f'{line.orderid} - {line.sku}'
         )
         return jsonify({'message': str(e)}), 400
@@ -68,6 +67,11 @@ def allocate_endpoint():
     return jsonify({'batchref': batchref}), 201
 ----
 ====
+
+//TODO (DS): I wonder if the code snippets for the messy ways are really
+//necessary. Reading code takes up a fair amount of mental energy and really
+//all you're talking about is, who's responsible? Perhaps sequence diagrams
+//would be a better way of showing the different options...
 
 As a one-off hack, this might be okay, but it's easy to see how we can quickly
 end up in a mess by patching things in this way. Sending emails isn't the job of
@@ -105,6 +109,9 @@ NOTE: If you find yourself using `mock.patch` to test external dependencies
     at the service layer, you should be aware that Other Testing Options Are
     Available (TM).  See <<chapter_10_dependency_injection>>.
 
+
+//TODO (DS): Do we *really* need to see this mocky test? Why not skip straight
+//to the good practice?
 
 ==== ... And Let's Not Make A Mess Of Our Model Either
 
@@ -169,16 +176,18 @@ definitely making us unhappy.
 
 === Single Responsibility Principle
 
-Really this is a violation of the Single Responsibility Principle.  Our use
-case is allocation. Our endpoint, service function, and domain methods are all
-called `allocate`, not `allocate_and_send_mail_if_out_of_stock`.
+Really this is a violation of the __single responsibility principle__footnote:[
+the https://en.wikipedia.org/wiki/Single_responsibility_principle[S]
+from https://en.wikipedia.org/wiki/SOLID[SOLID]].
+Our use case is allocation. Our endpoint, service function, and domain methods
+are all called `allocate`, not `allocate_and_send_mail_if_out_of_stock`.
 
-NOTE: Rule of thumb: if you can't describe what your class does without using
-    words like "then" or "and," you might be violating SRP.
+TIP: Rule of thumb: if you can't describe what your function does without using
+    words like "then" or "and," you might be violating the SRP.
 
 This email sending thing is unwelcome *goop* messing up the nice clean flow
 of our system. What we'd like is to keep our domain model focused on the rule
-"You can't allocate more stuff than is actually available." 
+"You can't allocate more stuff than is actually available."
 
 The domain model's job is to know that we're out of stock, but the
 responsibility of sending an alert belongs elsewhere. We should be able to turn
@@ -231,7 +240,7 @@ class Product:
 <2> Rather than invoking some email-sending code directly, we record those
     events at the place they occur, using only the language of the domain.
 
-<3> We're also going to stop raising an exception for the out-of-stock 
+<3> We're also going to stop raising an exception for the out-of-stock
     case.  The event will do the job the exception was doing.
 
 TIP: Exceptions and Events don't mix.  If you're implementing domain
@@ -244,6 +253,8 @@ exceptions for control-of-flow. It's like a classic design smell.
 
 
 ==== Events Are Simple Dataclasses
+
+//TODO (DS): Maybe worth moving this code above the previous snippet.
 
 Events are part of our domain.  We could store them in _model.py_, but we
 may as well keep them in their own file.  (this might be a good time to
@@ -279,6 +290,9 @@ class OutOfStock(Event):  #<2>
 
 A message bus essentially says: when I see this event, I should
 invoke the following handlers.  Here's a minimal implementation:
+
+//TODO (DS): Maybe mention pub sub? I also think a system diagram is a good way
+//of illustrating the point.
 
 [[messagebus]]
 .Simple message bus (src/allocation/messagebus.py)
@@ -349,6 +363,9 @@ but we can do better.
 
 
 TODO: discussion, service layer can/could raise events directly too.
+
+// TODO (DS): Again do we really need to read code for this if you don't think
+// it's a great idea anyway?
 
 
 === The Unit Of Work Can Pass Events To The Message Bus
