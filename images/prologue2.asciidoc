@@ -1,6 +1,8 @@
-
+[plantuml, allocation_context_diagram]
+....
 @startuml Allocation Context Diagram
-!include ./c4-model/C4_Context.puml
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4.puml
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Context.puml
 
 System(systema, "Allocation", "Allocates stock to customer orders")
 
@@ -20,4 +22,4 @@ Rel(systema, warehouse, "Sends instructions to")
 Rel(warehouse, customer, "Dispatches goods to")
 
 @enduml
-`
+....

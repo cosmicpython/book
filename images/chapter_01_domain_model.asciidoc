@@ -1,16 +1,3 @@
-[ditaa, allocation_context_diagram]
-....
-Orders                          +------------+         Shipments, Stock
- OrderLines(product/qty) -----> | Allocation | ------>  Batches(product/qty/eta)
- OrderLines(product/qty) -----> |  Service   | ------>  Batches(product/qty/eta)
- ...                      sent  |            |  looks   ...
-                           to   +------------+   up
-                                      |
-                                      | outputs
-                                      V
-                               "An allocation"
-                               orderline->batch.
-....
 
 [ditaa, model_diagram]
 ....
@@ -27,4 +14,3 @@ Orders                          +------------+         Shipments, Stock
                               | qty         |
                               +-------------+
 ....
-
