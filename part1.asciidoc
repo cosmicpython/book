@@ -49,12 +49,15 @@ box one by one.
 .A component diagram for our app at the end of Part 1
 image::diagrams/Chapter1Components.png[]
 
-//TODO: inline this diagram's source using asciidoc-diagram?
+//TODO: inline this diagram's source.
+
+We'll also take a little time out to talk about
+<<chapter_02B_abstractions,coupling and abstractions>>, illustrating the
+discussion with a simple example that shows how and why we choose our
+abstractions.
+
 
 Several of the appendices are further explorations of the content from Part 1:
-
-* Each pattern usually involves an abstraction. <<chapter_02B_abstractions>> takes a
-  step back and uses a simple example to show how and why we choose abstractions
 
 * <<appendix_project_structure>> is a write-up of the infrastructure for our example
   code: how we build and run the docker images, where we manage configuration
@@ -67,5 +70,3 @@ Several of the appendices are further explorations of the content from Part 1:
 
 * Finally, <<appendix_django>> may be of interest if you're wondering how these
   patterns might look if using Django, instead of Flask+SQLAlchemy
-
-
