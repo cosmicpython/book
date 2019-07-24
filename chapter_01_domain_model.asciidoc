@@ -169,13 +169,15 @@ System(procurement, "Purchasing", "Manages workflow for buying stock from suppli
 System(ecom, "E-commerce", "Sells goods online")
 System(warehouse, "Warehouse", "Manages workflow for shipping goods to customers.")
 
-Rel(customer, ecom, "Buys from")
 Rel(buyer, procurement, "Uses")
 Rel(procurement, systema, "Notifies about shipments")
+Rel(customer, ecom, "Buys from")
 Rel(ecom, systema, "Asks for stock levels")
 Rel(ecom, systema, "Notifies about orders")
-Rel(systema, warehouse, "Sends instructions to")
-Rel(warehouse, customer, "Dispatches goods to")
+Rel_R(systema, warehouse, "Sends instructions to")
+Rel_R(warehouse, customer, "Dispatches goods to")
+Lay_U(ecom, warehouse)
+Lay_R(buyer, warehouse)
 
 @enduml
 ----
