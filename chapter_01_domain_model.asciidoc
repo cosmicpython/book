@@ -119,37 +119,6 @@ stock, selling stock to customers, and shipping goods to customers. There's a
 system in the middle that needs to coordinate the process by allocating stock
 to a customer's orders.
 
-////
-TODO (EJ)
-. Maybe describe how MADE operates from the viewpoint of other stakeholders
-(e.g., a customer ordering furniture, an accountant tracking credits and
-debits, a customer service representative, or the warehouse that actually has
-to store the stock) before diving into the Stock Allocation Service.  It will
-help home the value of DDD and domain modeling.
-////
-
-For the purposes of this book, we're imagining a situation where the business
-decides to implement an exciting new way of allocating stock.  Until now, the
-business has been presenting stock and lead times based on what is physically
-available in the warehouse.  If and when the warehouse runs out, a product is
-listed as "out of stock" until the next shipment arrives from the manufacturer.
-
-The innovation is: if we have a system that can keep track of all our shipments
-and when they're due to arrive, then we can treat the goods on those ships as
-real stock, and part of our inventory, just with slightly longer lead times.
-Fewer goods will appear to be out of stock, we'll sell more, and the business
-can save money by keeping lower inventory in the domestic warehouse.
-
-But allocating orders is no longer a trivial matter of decrementing a single
-quantity in the warehouse system.  We need a more complex allocation mechanism.
-Time for some domain modelling.
-////
-TODO (EJ):   I find myself using collboration diagrams most frequently for
-these kinds of things. A sequence diagram here would be good too, but they are
-a little bit cumbersome to draw.  More
-https://www.codemag.com/Article/0205051/UML-Collaboration-Diagrams[info]. ]
-////
-
 [[allocation_context_diagram]]
 .Context diagram for the allocation service
 image::images/allocation_context_diagram.png[]
@@ -182,8 +151,21 @@ Lay_R(buyer, warehouse)
 @enduml
 ----
 
+For the purposes of this book, we're imagining a situation where the business
+decides to implement an exciting new way of allocating stock.  Until now, the
+business has been presenting stock and lead times based on what is physically
+available in the warehouse.  If and when the warehouse runs out, a product is
+listed as "out of stock" until the next shipment arrives from the manufacturer.
 
-//TODO: Better diagram for allocation? context diag?"
+The innovation is: if we have a system that can keep track of all our shipments
+and when they're due to arrive, then we can treat the goods on those ships as
+real stock, and part of our inventory, just with slightly longer lead times.
+Fewer goods will appear to be out of stock, we'll sell more, and the business
+can save money by keeping lower inventory in the domestic warehouse.
+
+But allocating orders is no longer a trivial matter of decrementing a single
+quantity in the warehouse system.  We need a more complex allocation mechanism.
+Time for some domain modelling.
 
 
 
