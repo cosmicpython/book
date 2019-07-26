@@ -61,6 +61,7 @@ working, we'll switch to "everything is events".  We'll use events to express
 all our external inputs, including messages coming into the API, so we'll make the
 service layer into event handlers, and everything will go via the message bus.
 
+*****************************************************************************************
 TODO: consider re-ordering this chapter as follows:
 
 1. make the change easy:
@@ -68,6 +69,7 @@ TODO: consider re-ordering this chapter as follows:
 3. introduce new internal event, Deallocated
 4. change API to use events, AllocationRequest and BatchCreated, merge service layer and message handlers
 5. make the easy change, add redis and its handler
+*****************************************************************************************
 
 
 But first, an end-to-end test to drive us towards a working solution.
