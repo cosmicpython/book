@@ -176,6 +176,9 @@ def handle_change_batch_quantity(m):  #<2>
 // thought domain events are more about saying that something happened rather
 // than using commands...?
 
+// TODO: This should be covered by a context or component diagram to show how
+// Procurement drives changes in Allocation
+
 So we'll need a new service called `change_batch_quantity`.
 
 
@@ -410,11 +413,6 @@ class Batch:
 TODO: should we have `Batch.change_purchased_quantity`?  But how to
     pass events back up to Product object?
 
-//TODO: access to underscore variable
-//TODO: we changed from Batch.deallocate to Batch.deallocate_one,
-// needed to delete/amend some unit tests. ok to gloss over?
-
-
 === New Handlers For Allocated And Deallocated Events
 
 Here's what the events will look like:
@@ -498,6 +496,8 @@ def publish(channel, event):
 
 
 ==== But Handlers Do Now Need A Uow
+
+TODO: Introduce the infrastrutural changes at the end of the chapter so as not to interrupt flow.
 
 Our event handlers do now need a UoW.  We make a small modification
 to the main `messagebus.handle()` function:
@@ -783,6 +783,8 @@ TODO: talk about the fact that we've implemented quite a complicated use case
     of work.  it's easy to reason about, and easy to explain.  Possibly
     show a hacky version for comparison?
 
+
+=== Why have we achieved?
 
 === What Have We Achieved?
 
