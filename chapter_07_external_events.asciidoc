@@ -276,19 +276,31 @@ service function, we can choose to clearly separate responsibility:
 
 So our flow would be:
 
-// TODO (DS): Sequence diagram?
+[[reallocation_sequence_diagram]]
+.Reallocation flow
+image::images/reallocation_sequence_diagram.png[]
+[role="image-source"]
+....
+[plantuml, reallocation_sequence_diagram]
+@startuml
+Redis -> Service_Layer : batch_quantity_changed event
 
-* call change batch quantity service
-* start uow
-* change quantity
-* deallocate, emit Deallocated events
-* end uow
-* enter deallocation handler
-* start new uow
-* re-allocate
-* emit allocated event
-* enter allocated event handler
-* publish allocated event to redis
+group Unit of Work 1
+    Service_Layer -> Domain_Model : change quantity
+    Domain_Model -> Message_Bus : emit deallocated event(s)
+end
+
+Message_Bus -> Service_Layer : re-allocate
+
+group Unit(s) of Work 2 (or more)
+    Service_Layer -> Domain_Model : allocate
+    Domain_Model -> Message_Bus : emit allocated event(s)
+end
+
+Message_Bus -> Redis : publish Allocated events
+@enduml
+....
+
 
 
 ==== Implementation
