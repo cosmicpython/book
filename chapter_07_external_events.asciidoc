@@ -22,8 +22,6 @@ In this chapter we'd like to show how the events metaphor can be extended
 to encompass the way that we handle incoming and outgoing messages from the
 system.
 
-// TODO (DS): Are you really 'stretching a metaphor'?
-
 
 === An external event triggers internal invents
 
@@ -71,11 +69,9 @@ https://redis.io/topics/pubsub[pubsub channels] can also work just fine, and we
 think more of our readers will be familiar with Redis, so we thought we'd that
 for this book.
 
-
 Here's how we might start with an end-to-end test.  We can use our existing
 API to create batches, and then we'll test both inbound and outbound messages:
 
-// TODO (DS): A sidebar explaining redis pubsub channels would be useful.
 
 [[redis_e2e_test]]
 .An end-to-end test for our pubsub model (tests/e2e/test_external_events.py)
@@ -229,41 +225,35 @@ look like:
 [source,python]
 [role="non-head"]
 ----
-    @staticmethod
     def test_changes_available_quantity():
         uow = FakeUnitOfWork()
-        services.add_batch("b1", "ADORABLE-SETTEE", 100, None, uow)
+        services.add_batch("batch1", "ADORABLE-SETTEE", 100, None, uow)
         [batch] = uow.products.get(sku="ADORABLE-SETTEE").batches
         assert batch.available_quantity == 100
-        services.change_batch_quantity("b1", 50, uow)  #<1>
+
+        services.change_batch_quantity("batch1", 50, uow)  #<1>
+
         assert batch.available_quantity == 50  #<1>
 
+    ...
 
-    @staticmethod
     def test_reallocates_if_necessary():
         uow = FakeUnitOfWork()
-        services.add_batch("b1", "INDIFFERENT-TABLE", 50, None, uow)
-        services.add_batch("b2", "INDIFFERENT-TABLE", 50, date.today(), uow)
-        services.allocate("o1", "INDIFFERENT-TABLE", 20, uow)
-        services.allocate("o2", "INDIFFERENT-TABLE", 20, uow)
+        services.add_batch("batch1", "INDIFFERENT-TABLE", 50, None, uow)
+        services.add_batch("batch2", "INDIFFERENT-TABLE", 50, date.today(), uow)
+        services.allocate("order1", "INDIFFERENT-TABLE", 20, uow)
+        services.allocate("order2", "INDIFFERENT-TABLE", 20, uow)
         [batch1, batch2] = uow.products.get(sku="sku1").batches
         assert batch1.available_quantity == 10  #<2>
 
-        services.change_batch_quantity("b1", 25, uow)  #<2>
+        services.change_batch_quantity("batch1", 25, uow)  #<2>
 
-        # o1 or o2 will be deallocated, so we"ll have 25 - 20 * 1
+        # order1 or order2 will be deallocated, so we"ll have 25 - 20 * 1
         assert batch1.available_quantity == 5  #<2>
         # and 20 will be reallocated to the next batch
         assert batch2.available_quantity == 30  #<2>
 ----
 ====
-
-// TODO (DS): Maybe splitting this into Arrange-Act-Assert blocks would help
-// readability.
-
-// TODO (DS): Why staticmethod?
-
-// TODO (DS): I think order1 etc would be clearer than o1
 
 <1> The simple case would be trivially easy to implement, we just
     modify a quantity.
@@ -803,7 +793,8 @@ TIP: External events are one of the places it's important to apply some validati
 It's a good idea to keep the distinction between internal and external events
 clear.  Some events may come from the outside, and some events may get upgraded
 and published externally, but not all of them.  This is particularly important
-if you get into event sourcing (TODO: link)
+if you get into [event sourcing](https://io.made.com/eventsourcing-101/) (very
+much a topic for another book though).
 
 *******************************************************************************
 
