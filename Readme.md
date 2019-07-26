@@ -33,6 +33,7 @@ In the meantime, pull requests, typofixes, and more substantial feedback + sugge
 | [Appendix C: A major infrastructure change, made easy](appendix_csvs.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=appendix_csvs)](https://travis-ci.org/python-leap/code) |
 | [Appendix D: Django](appendix_django.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=appendix_django)](https://travis-ci.org/python-leap/code) |
 | [Appendix E: Bootstrap](appendix_bootstrap.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=appendix_bootstrap)](https://travis-ci.org/python-leap/code) |
+| [Appendix F: Validation](appendix_validation.asciidoc) | |
 
 
 

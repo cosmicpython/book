@@ -794,9 +794,8 @@ def handle_change_batch_quantity(m):
 
 And our system is now entirely event-driven.
 
-TODO add a bit on validating input (and outputs) by using event schemas.
-    Maybe a whole chapter on validation, including that bit about validating
-    at the edges and not programming defensively in your inner layers.
+TIP: External events are one of the places it's important to apply some validation.
+    See <<appendix_validation>> for some validation philosophy and examples.
 
 
 .Internal vs External events
