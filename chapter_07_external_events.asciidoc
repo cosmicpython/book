@@ -167,44 +167,49 @@ def wait_for(fn):
 [source,python]
 [role="non-head"]
 ----
-from allocation import config, orm, services, unit_of_work
-
 r = redis.Redis(**config.get_redis_host_and_port())
 
 
-def main():  #<1>
+def main():
     orm.start_mappers()
     pubsub = r.pubsub(ignore_subscribe_messages=True)
-    pubsub.subscribe('change_batch_quantity')
+    pubsub.subscribe('change_batch_quantity')  #<1>
 
     for m in pubsub.listen():
         handle_change_batch_quantity(m)
 
 
-def handle_change_batch_quantity(m):  #<2>
-    print('handling', m, flush=True)
-    data = json.loads(m['data'])
-    services.change_batch_quantity(
+def handle_change_batch_quantity(m):
+    logging.debug('handling %s', m)
+    data = json.loads(m['data'])  #<2>
+    services.change_batch_quantity(  #<2>
         ref=data['batchref'], qty=data['qty'],
         uow=unit_of_work.SqlAlchemyUnitOfWork(),
     )
+
+
+def publish(channel, event):  #<3>
+    logging.debug('publishing: channel=%s, event=%s', channel, event)
+    r.publish(channel, json.dumps(asdict(event)))
+
+
+if __name__ == '__main__':
+    main()
 ----
 ====
 
-// TODO (DS): I was confused by the flush argument
+<1> `main()` subscribes us to the `change_batch_quantity` channel on load
 
-//TODO: add some calls to logging.debug, where there used to be prints?
+<2> And our main job as an entrypoint to the system is to deserialize JSON, and
+    pass it to the service layer, much like the Flask adapter does.
 
-
-<1> Main subscribes us to the channel on load
-<2> And our main job is to deserialize JSON, and pass it to the service
-    layer, much like the Flask adapter does.
+<3> We also provide a helper function to publish events back into Redis.
 
 // TODO (DS): I'm generally just a bit lost here. Why do we need to do this? I
 // thought domain events are more about saying that something happened rather
 // than using commands...?
 
-// TODO: This should be covered by a context or component diagram to show how
+// BOB: This should be covered by a context or component diagram to show how
 // Procurement drives changes in Allocation
 
 So we'll need a new service called `change_batch_quantity`.
@@ -517,7 +522,7 @@ HANDLERS = {
 [source,python]
 ----
 def publish(channel, event):
-    print('publishing', channel, event, flush=True)
+    logging.debug('publishing: channel=%s, event=%s', channel, event)
     r.publish(channel, json.dumps(asdict(event)))
 ----
 ====
@@ -779,7 +784,7 @@ Redis now looks very similar
 [source,python]
 ----
 def handle_change_batch_quantity(m):
-    print('handling', m, flush=True)
+    logging.debug('handling %s', m)
     data = json.loads(m['data'])
     event = events.BatchQuantityChanged(ref=data['batchref'], qty=data['qty'])
     messagebus.handle([event], uow=unit_of_work.SqlAlchemyUnitOfWork())
