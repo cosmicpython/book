@@ -141,32 +141,38 @@ file directories which we'll call the source and the destination.
 Our first and third requirements are simple enough, we can just compare two
 lists of paths. Our second is trickier, though. In order to detect renames,
 we'll have to inspect the content of files. For this we can use a hashing
-function like md5 or SHA.
+function like md5 or SHA. The code to generate a SHA hash from a file is simple
+enough.
 
+[[hash_file]]
+.Hashing a file (sync.py)
+====
+[source,python]
+----
+BLOCKSIZE = 65536
 
-A gallon of coffee later, we've got a working prototype, and it looks
-something like this:
+def hash_file(path):
+"""
+Read the file at 'path' and return a SHA1 sum of the contents.
+"""
+    hasher = hashlib.sha1()  #<2>
+    with path.open("rb") as file:
+        buf = file.read(BLOCKSIZE)
+        while buf:
+            hasher.update(buf)
+            buf = file.read(BLOCKSIZE)
+    return hasher.hexdigest()
+----
+====
 
-////
-TODO (DS)
-This is a pattern we see a lot in the book: giving an example of the less good, then showing a better way.
+Now we need to write the interesting business logic. When we have to tackle a
+problem from first principles, we usually try to write a simple implementation,
+and then refactor towards better design. We'll use this approach throughout the
+book, because it's how we write code in the real world: start with a solution
+to the smallest part of the problem, and then iteratively make the solution
+richer and better designed.
 
-The problem is you're asking your readers to put effort into understanding
-something you don't even recommend doing. Also, because this less good way of
-writing things is the more obvious way, the readers will be very familiar with
-it already.
-
-Personally I'd prefer to see an example of good practice from the get go. You
-could talk about what it helps you avoid, but it doesn't need detailed code
-samples. 
-
-Also, a good way to approach writing abstracted code is to start with the
-abstraction anyway, only later writing the implementation. Explaining things in
-that order would demonstrate nicely that abstractions allow you to defer
-decisions about implementation until a late stage...
-////
-
-// TODO: Change some variable names etc.
+Our first hackish approach looks something like this:
 
 [[sync_first_cut]]
 .Basic sync algorithm (sync.py)
@@ -180,76 +186,41 @@ import shutil
 from pathlib import Path
 
 def sync(source, dest):
-    source_hashes = {}  #<1>
-    for folder, _, files in os.walk(source):
-        for fn in files:
-            source_hashes[hash_file(Path(folder) / fn)] = fn  #<1>
 
-    seen = set()  #<5>
-    for folder, _, files in os.walk(dest):  #<2>
-        for fn in files:
+    # Walk the source folder and build a dict of filenames and their
+    # hashes
+    source_hashes = {}
+    for folder, _, files in os.walk(source):
+        for filename in files:
+            source_hashes[hash_file(Path(folder) / filename)] = filename  #<1>
+
+    # Keep track of the files we've found in the target
+    seen = set()
+
+    # Walk the target folder and get the filenames and hashes
+    for folder, _, files in os.walk(dest):
+        for filename in files:
             dest_path = Path(folder) / fn
             dest_hash = hash_file(dest_path)
             seen.add(dest_hash)
 
+              # if there's a file in target that's not in source, delete it
+
             if dest_hash not in source_hashes:
-                dest_path.remove()  #<3>
+                dest_path.remove()
+
+            # if there's a file in target that has a different path in source,
+            # move it to the correct path
             elif dest_hash in source_hashes and fn != source_hashes[dest_hash]:
-                shutil.move(dest_path, Path(folder) / source_hashes[dest_hash])  #<4>
+                shutil.move(dest_path, Path(folder) / source_hashes[dest_hash])
 
-    for src_hash, fn in source_hashes.items():
+    # for every file that appears in source but not target, copy the file to
+    # the target
+    for src_hash, filename in source_hashes.items():
         if src_hash not in seen:
-            shutil.copy(Path(source) / fn, Path(dest) / fn)  #<5>
+            shutil.copy(Path(source) / filename, Path(dest) / filename)
 ----
 ====
-
-<1> We first walk the source folder and build up a dictionary of hashes to
-    relative file paths.
-
-<2> We then walk the target folder and hash its files, in order to determine
-
-<3> If there are any hashes we don't recognise, we delete the file,
-
-<4> Or if there is a hash we recognise but the filename doesn't match, we
-    do a rename.
-
-<5> Finally we run through any files in the source that we haven't seen
-    in the destination and we copy them.
-
-// TODO (DS): Might be easier to understand if you broke sync into a few
-// private functions.
-
-// TODO (DS): I read fn as function the first time. Would filename be better?
-
-// TODO (DS): What's hash_file and how does it relate to hashlib?
-// Edit: now i see below, but it confused me at this point.
-
-// TODO (DS): I think you'd need less of these footnotes with a few comments or
-// some clearer factoring
-
-`hash_file` just returns the SHA-1 hash for a given path:
-
-// TODO: Replace with get_md5_hash ?
-
-
-[[hash_file]]
-.Hashing a file (sync.py)
-====
-[source,python]
-----
-BLOCKSIZE = 65536
-
-def hash_file(path):
-    hasher = hashlib.sha1()  #<2>
-    with path.open("rb") as file:
-        buf = file.read(BLOCKSIZE)
-        while buf:
-            hasher.update(buf)
-            buf = file.read(BLOCKSIZE)
-    return hasher.hexdigest()
-----
-====
-
 
 Fantastic! We have some code and it _looks_ okay, but before we run it on our
 hard drive, maybe we should test it?  How do we go about testing this sort of thing?
