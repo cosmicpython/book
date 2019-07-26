@@ -33,7 +33,7 @@ all: the distributed big ball of mud.
 
 In part two, we'll show how the techniques from part one can be extended to
 distributed systems. We'll zoom out to look at how we can compose a system from
-many small components that interact through message passing.
+many small components that interact through asynchronous message passing.
 
 We'll see how our service layer and unit of work allow us to reconfigure our app
 to run as an asynchronous message processor, and how event driven systems help

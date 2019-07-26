@@ -1,17 +1,17 @@
 [[chapter_07_external_events]]
 == Event-driven Architecture (using Events To Integrate Microservices)
 
-.In this chapter
-********************************************************************************
+In this chapter:
 
 * We'll see how to use events to communicate between multiple micro-services.
+
 * We'll show how our service-layer lets us easily replace an HTTP API with an
   asynchronous message bus.
-* We'll start to rebuild our application as a message-processor.
 
-// DIAGRAM GOES HERE
+* We'll rebuild our application as a message-processor.
 
-********************************************************************************
+TODO: DIAGRAM GOES HERE
+
 
 We've got a microservice with a web api, but what about other ways of talking
 to other systems?  how does it know if, say, a shipment is delayed or the
@@ -59,11 +59,17 @@ to other batches.
 
 === Using A Redis Pubsub Channel For Integration
 
-At MADE.com we use https://eventstore.org/[Eventstore] to convey messages
-between systems, but a lightweight solution based on Redis pubsub channels
-can work just fine, and are probably more familiar.
+When moving towards events as an integration solution, you need to choose
+some sort of technology for passing those events from one system to another.
+We need our systems to be able to publish events to some central service, and
+we need some way for other systems to be able to "subscribe" to different types
+of messages, and pick them up asynchronously from some sort of queue.
 
-// TODO (DS): I wonder if this para could be improved upon?
+At MADE.com we use https://eventstore.org/[Eventstore];  Kafka or RabbitMQ
+are valid alternatives. A lightweight solution based on Redis
+https://redis.io/topics/pubsub[pubsub channels] can also work just fine, and we
+think more of our readers will be familiar with Redis, so we thought we'd that
+for this book.
 
 
 Here's how we might start with an end-to-end test.  We can use our existing
@@ -77,57 +83,79 @@ API to create batches, and then we'll test both inbound and outbound messages:
 [source,python]
 [role="non-head"]
 ----
-@pytest.mark.usefixtures('postgres_db')
-@pytest.mark.usefixtures('restart_api')
-@pytest.mark.usefixtures('restart_redis_pubsub')
 def test_change_batch_quantity_leading_to_reallocation():
-    orderid, sku = random_ref('o'), random_ref('s')
-    batch1, batch2 = random_ref('b1'), random_ref('b2')
-    post_to_add_batch(batch1, sku, 10, '2011-01-02')
-    post_to_add_batch(batch2, sku, 10, '2011-01-03')
-    post_to_allocate(orderid, sku, 10, expected_batch=batch1)
+    # start with two batches and an order allocated to one of them  #<1>
+    orderid, sku = random_orderid(), random_sku()
+    earlier_batch, later_batch = random_batchref('old'), random_batchref('newer')
+    api_client.post_to_add_batch(earlier_batch, sku, qty=10, eta='2011-01-02')  <2>
+    api_client.post_to_add_batch(later_batch, sku, qty=10, eta='2011-01-02')  <2>
+    response = api_client.post_to_allocate(orderid, sku, 10)  <2>
+    assert response.json()['batchref'] == earlier_batch
 
-    r = redis.Redis(**config.get_redis_host_and_port())
-    pubsub = subscribe_to_allocated_events(r)  #<2>
+    subscription = redis_client.subscribe_to('line_allocated')  #<3>
 
-    print('sending change batch quantity for', batch1)
-    r.publish('change_batch_quantity', json.dumps({  #<1>
-        'batchref': batch1, 'sku': sku, 'qty': 5
-    }))
+    # change quantity on allocated batch so it's less than our order  #<1>
+    redis_client.publish_message('change_batch_quantity', {  #<3>
+        'batchref': earlier_batch, 'qty': 5
+    })
 
-    print('waiting for reallocation event')
+    # wait until we see a message saying the order has been reallocated  #<1>
     messages = []
-    def check_messages():
-        messages.append(wait_for(pubsub.get_message))  #<2>
+    def assert_new_allocation_published():  #<4>
+        messages.append(wait_for(subscription.get_message))  #<4>
         print(messages)
         data = json.loads(messages[-1]['data'])
         assert data['orderid'] == orderid
-        assert data['batchref'] == batch2
+        assert data['batchref'] == later_batch
+        return True
 
-    wait_for_assertion(check_messages)
+    wait_for(assert_new_allocation_published)  #<4>
 ----
 ====
 
-// TODO (DS): I'm generally a bit lost with this code snippet. Quite a lot of
-// code to digest... Might a diff of the new code be a better way to present?
+<1> You can read the story of what's going on in this test from the comments:
+    we want to send an event into the system that causes an order line to be
+    reallocated, and we see that reallocation come out as an event in redis too.
 
-// TODO (DS): Where does subscribe_to_allocated_events come from?
+<2> `api_client` is a little helper that we refactored out to share between
+    our two test types, it wraps our calls to `requests.post`
 
-// TODO (DS): Why the print statements?
-
-// TODO (DS): What's the wait_for function?
-
-Because this is an end-to-end test and our publish/subscribe model is
-asynchronous, there's a bit of boilerplate to manage waiting, but
-essentially:
-
-<1> We'll use a channel called `change_batch_quantity` to send
-    in our request to change the quantity for a batch.  In this
-    case we deliberately change the quantity such that we expect
-    an order to be reallocated to a different batch.
-
-<2> And we'll listen to another channel called `line_allocated` to
+<3> `redis_client` is another test little test helper, the details of which
+    don't really matter; its job is to be able to send and receive messages
+    from various Redis channels. We'll use a channel called
+    `change_batch_quantity` to send in our request to change the quantity for a
+    batch, and we'll listen to another channel called `line_allocated` to
     look out for the expected reallocation.
+
+<4> The last little test helper is a `wait_for` function.  Because we're
+    moving to asynchronous model, we need our tests to be able to wait until
+    something happens.  To do that, we wrap our assertions inside a function.
+    We'll show the code for `wait_for` below, for the curious:
+
+
+[[wait_for]]
+.A helper function for testing asynchronous behaviour (tests/e2e/wait_for.py)
+====
+[source,python]
+----
+def wait_for(fn):
+    """
+    Keep retrying a function, catching any exceptions, until it returns something truthy,
+    or we hit a timeout.
+    """
+    timeout = time.time() + 3
+    while time.time() < timeout:
+        try:
+            r = fn()
+            if r:
+                return r
+        except:
+            if time.time() > timeout:
+                raise
+        time.sleep(0.1)
+    pytest.fail(f'function {fn} never returned anything truthy')
+----
+====
 
 
 ==== Redis Is Another Thin Adapter Around Our Service Layer
