@@ -152,9 +152,6 @@ enough.
 BLOCKSIZE = 65536
 
 def hash_file(path):
-"""
-Read the file at 'path' and return a SHA1 sum of the contents.
-"""
     hasher = hashlib.sha1()  #<2>
     with path.open("rb") as file:
         buf = file.read(BLOCKSIZE)
@@ -308,7 +305,9 @@ Reading through the code, there are really three distinct things happening.
 
 3. We copy, move, or delete, files to match the source.
 
-What could we do to abstract out the filesystem in each case?
+Remember that we want to find _simplifying abstractions_ for each of these
+responsibilities. That will let us hide the messy details so that we can
+focus on the interesting logic.
 
 NOTE: In this chapter we're refactoring some gnarly code into a more testable
     structure by identifying the separate tasks that need to be done and giving
@@ -324,33 +323,15 @@ the current state of the filesystem.
     source_files = {'hash1': 'path1', 'hash2': 'path2'}
     dest_files = {'hash1': 'path1', 'hash2': 'pathX'}
 
-// TODO (DS): That approach could have been used in the non abstracted version
-// maybe? 
-
 What about moving from step (2) to step (3)?  How can we abstract out the
-actual move/copy/delete filesystem interaction?  This one is perhaps a little
-less intuitive, but how about some sort of collection of strings?
+actual move/copy/delete filesystem interaction? 
+
+We're going to apply a trick here that we'll employ on a grand scale later in
+the book. We're going to separate _what_ we want to do from _how_ to do it.
+We're going to make our program output a list of commands that look like this:
 
     ("COPY", "sourcepath", "destpath"),
     ("MOVE", "old", "new"),
-
-////
-TODO (DS): Difficult to follow this bit...
-
-It feels like you're making an implicit concept explicit: modelling the
-*intent* of the system.
-
-But is that really the same as using abstractions? It feels like you're doing
-two things at once here: moving away from an imperative style to one that is
-more declarative, *and* depending on abstractions instead of implementations.
-Those are kind of orthogonal.... Looking at one of these at a time might be
-clearer.
-////
-
-TODO: Discuss what we mean by abstraction here. We're doing two things:
-* We've identified a set of responsibilities and encapsulated each of them
-* We've designed a simplifying API for those responsibilities so that we
-  don't have to think about _details_.
 
 Now we could write tests that just use 2 filesystem dicts as inputs, and
 expect lists of tuples of strings representing actions as outputs.
