@@ -55,6 +55,24 @@ _deallocate_  those orders from that batch.  Then, we want to _reallocate_ them
 to other batches.
 
 
+For now, our message bus only handles internal events.  We'll use those to express the need
+to reallocate after deallocation, using a `Deallocated` event.  Once we've got everything
+working, we'll switch to "everything is events".  We'll use events to express
+all our external inputs, including messages coming into the API, so we'll make the
+service layer into event handlers, and everything will go via the message bus.
+
+TODO: consider re-ordering this chapter as follows:
+
+1. make the change easy:
+2. introduce new external events, BatchQuantityChanged and Allocated
+3. introduce new internal event, Deallocated
+4. change API to use events, AllocationRequest and BatchCreated, merge service layer and message handlers
+5. make the easy change, add redis and its handler
+
+
+But first, an end-to-end test to drive us towards a working solution.
+
+
 === Using A Redis Pubsub Channel For Integration
 
 When moving towards events as an integration solution, you need to choose
@@ -263,7 +281,7 @@ look like:
     and we expect to reallocated it to a new batch
 
 
-==== An Internal Event To Express De-allocation
+==== Adding some Internal Events To Express De-allocation
 
 A batch might have dozens of orders allocated to it. Similarly to the "out of
 stock" email, rather than doing deallocation and re-allocation in-line in the
@@ -277,29 +295,52 @@ service function, we can choose to clearly separate responsibility:
 So our flow would be:
 
 [[reallocation_sequence_diagram]]
-.Reallocation flow
+.Sequence diagram for reallocation flow
 image::images/reallocation_sequence_diagram.png[]
 [role="image-source"]
 ....
 [plantuml, reallocation_sequence_diagram]
 @startuml
-Redis -> Service_Layer : batch_quantity_changed event
+Redis -> Service_Layer : invoke change_batch_quantity service
 
 group Unit of Work 1
-    Service_Layer -> Domain_Model : change quantity
-    Domain_Model -> Message_Bus : emit deallocated event(s)
+    Service_Layer -> Domain_Model : change batch quantity
+    Domain_Model -> Message_Bus : emit Deallocated event(s)
 end
 
 Message_Bus -> Service_Layer : re-allocate
 
 group Unit(s) of Work 2 (or more)
     Service_Layer -> Domain_Model : allocate
-    Domain_Model -> Message_Bus : emit allocated event(s)
+    Domain_Model -> Message_Bus : emit Allocated event(s)
 end
 
-Message_Bus -> Redis : publish Allocated events
+Message_Bus -> Redis : publish to line_allocated channel
 @enduml
 ....
+
+
+Here's what our new internal events will look like:
+
+[[two_new_events]]
+.Allocated and Deallocated events (src/allocation/events.py)
+====
+[source,python]
+----
+@dataclass
+class Allocated(Event):
+    orderid: str
+    sku: str
+    qty: int
+    batchref: str
+
+@dataclass
+class Deallocated(Event):
+    orderid: str
+    sku: str
+    qty: int
+----
+====
 
 
 
@@ -323,7 +364,6 @@ def change_batch_quantity(
 ====
 // TODO (DS): Indentation looks off
 
-//TODO: move up in file
 
 (along the way we need a new query type on our repository)
 
@@ -445,32 +485,8 @@ class Batch:
 ====
 
 
-TODO: should we have `Batch.change_purchased_quantity`?  But how to
-    pass events back up to Product object?
 
 === New Handlers For Allocated And Deallocated Events
-
-Here's what the events will look like:
-
-[[two_new_events]]
-.Allocated and Deallocated events (src/allocation/events.py)
-====
-[source,python]
-----
-@dataclass
-class Allocated(Event):
-    orderid: str
-    sku: str
-    qty: int
-    batchref: str
-
-@dataclass
-class Deallocated(Event):
-    orderid: str
-    sku: str
-    qty: int
-----
-====
 
 // TODO (DS): I feel I'm having to hold too much in my brain at once....is
 // there a way of communicating  the deallocation logic separately from the
