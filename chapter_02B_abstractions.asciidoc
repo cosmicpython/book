@@ -43,9 +43,11 @@ abstraction?  What do we want from them?
 
 A key theme in this book, hidden among the fancy patterns, is that we can use
 simple abstractions to hide messy details. When we're writing code for fun, or
-in a kata, footnote:[We'll talk about TDD kata soon, but if you're new to the idea check out http://www.peterprovost.org/blog/2012/05/02/kata-the-only-way-to-learn-tdd/] we get to play with ideas freely, hammering things out and
-refactoring aggressively. In a large-scale system, though, we become constrained
-by the decisions made elsewhere in the system.
+in a kata, footnote:[We'll talk about TDD kata soon, but if you're new to the
+idea check out http://www.peterprovost.org/blog/2012/05/02/kata-the-only-way-to-learn-tdd/]
+we get to play with ideas freely, hammering things out and refactoring
+aggressively. In a large-scale system, though, we become constrained by the
+decisions made elsewhere in the system.
 
 When we're unable to change component A for fear of breaking component B, we say
 that the components have become coupled. Locally, coupling is a good thing: it's
