@@ -23,14 +23,24 @@ to encompass the way that we handle incoming and outgoing messages from the
 system.
 
 
-=== An external event triggers internal invents
+=== Events for requirements gathering
 
-We learn about the need to change batch quantities when they're already
-in the system.  Perhaps someone made a mistake on the number in the manifest,
-or perhaps some sofas fell off a truck. Following a conversation with the
-business,footnote:[https://en.wikipedia.org/wiki/Event_storming[Event storming]
-is a common technique], we model the situation as in
-<<batch_changed_events_flow_diagram>>:
+As always, let's imagine a new requirement that motivates the need to change
+our architecture.  In this chapter, let's say we learn about the need to change
+batch quantities when they're already in the system:  perhaps someone made a
+mistake on the number in the manifest, or perhaps some sofas fell off a truck.
+
+Events aren't just a good way of decoupling internal tasks and enforcing the
+SRP in our code.  They can also be used as a way to describe your system in
+conversations with the business.  A requirements-elucidation
+technique called https://en.wikipedia.org/wiki/Event_storming[Event storming]
+is a popular way to structure modelling conversations with the business, in
+which we describe a system in terms of the events that happen in our business
+processes, and the rules that surround them.
+
+You don't need to learn anything about event storming to understand this chapter
+though.  Suffice to say that, following a session with the business, we might
+model the situation as in <<batch_changed_events_flow_diagram>>:
 
 
 [[batch_changed_events_flow_diagram]]
@@ -54,22 +64,44 @@ quantity drops to less than the total already allocated, we need to
 _deallocate_  those orders from that batch. Then, we want to _reallocate_ them
 to other batches.
 
+
+=== Events as an integration platform
+
+Currently, our inputs to to the system come in the form of `POST` requests
+to our API, and the only outputs is that we respond to the `allocate` API
+endpoint with some JSON that includes a batch reference.
+
+When looking to integrate with other systems, rather than having everything
+call everything else via an API using synchronous HTTP protocols, we'd like
+to have a more loosely coupled, atemporal solution, and the established pattern
+is asynchronous messaging.
+
+When moving towards events as an integration solution, you need to choose
+some sort of technology for passing those events from one system to another.
+We need our systems to be able to publish events to some central service, and
+we need some way for other systems to be able to "subscribe" to different types
+of messages, and pick them up asynchronously from some sort of queue.
+
+At MADE.com we use https://eventstore.org/[Eventstore];  Kafka or RabbitMQ
+are valid alternatives. A lightweight solution based on Redis
+https://redis.io/topics/pubsub[pubsub channels] can also work just fine, and we
+think more of our readers will be familiar with Redis, so we thought we'd that
+for this book.
+
+
 For now, our message bus only handles internal events.  We'll use those to express the need
 to reallocate after deallocation, using a `Deallocated` event.  Once we've got everything
 working, we'll switch to "everything is events":  we'll use events to express
 all our external inputs, including messages coming into the API, so we'll make the
 service layer into event handlers, and _everything_ will go via the message bus.
 
-////
-TODO: consider re-ordering this chapter as follows:
+TODO: WIP re-ordering this chapter as follows:
 
 1. make the change easy:
 2. introduce new external events, BatchQuantityChanged and Allocated
 3. introduce new internal event, Deallocated
 4. change API to use events, AllocationRequest and BatchCreated, merge service layer and message handlers
 5. make the easy change, add redis and its handler
-////
-
 
 But first, an end-to-end test to drive us towards a working solution.
 
