@@ -296,6 +296,7 @@ What could we do to rewrite our code to make it more testable?
 
 Firstly we need to think about what our code needs from the filesystem.
 Reading through the code, there are really three distinct things happening.
+We can think of these as three distinct _responsibilities_ that the code has.
 
 1. We interrogate the filesystem using `os.walk` and determine hashes for a
    series of paths. This is actually very similar in both the source and the
@@ -367,30 +368,13 @@ what _abstraction_ of filesystem actions will happen?"
 That's all very well, but how do we _actually_ write those new
 tests, and how do we change our implementation to make it all work?
 
-There are essentially two ways.  The first is to try and split out the core of
-our "business logic" into a functional core and test that directly, pushing the
-I/O out to a thin, imperative shell which we can either test with (few) end to
-end tests, or make simple enough that we're happy to not test at all.
+Our goal is to isolate the clever part of our system, and to be able to test it
+thoroughly without needing to set up a real filesystem. We'll create a "core"
+of code that has no dependencies on external state, and then see how it responds
+when we give it input from the outside world.
 
-// TODO (DS): Really interesting. I wonder if the two approaches would be
-// served by two contrasting diagrams.
-// Also, maybe these two contrasting approaches to decoupling biz logic from
-// implementation should be in the intro to the chapter...?
-
-The second way would be to expose the IO dependencies in our top-level
-function, and use dependency injection to swap out stub versions of our
-abstraction for the tests, leaving the real versions for the real code.
-
-Let's see them in turn.
-
-
-==== Option 1 - Functional Core, Imperative Shell. Ish.
-
-Let's call this the "Harry Way."  FCIS is probably a bit of an aspirational
-name, in fact the point is not to have a pure-functional solution in the
-sense of not-using-classes, but more in the sense of having no (or minimal)
-side-effects.  The aim is to split out a core of business logic with no
-dependencies, and test that separately from the rest of our system.
+Let's start off by splitting the code up to separate the stateful parts from
+the logic.
 
 // (ej)
 // Referring to the "Coupling" diagram comment previously, the snippet below
