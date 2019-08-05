@@ -18,8 +18,8 @@ What's the point of a domain model anyway? What's the fundamental problem
 we're trying to addresss?
 
 Couldn't we just run everything in a spreadsheet? Many of our users would be
-delighted by that. Business users _like_ spreadsheets because they're simple and
-familiar but offer .
+delighted by that. Business users _like_ spreadsheets because they're simple,
+familiar, and ubiquitous.
 
 In fact, an enormous number of business processes do operate by manually sending
 spreadsheets back and forward over e-mail. This "csv over smtp" architecture has
@@ -66,6 +66,31 @@ this constraint.
 
 //TODO (DS): I'm unclear on the distinction between invariant and constraint.
 
+////
+// (ej): 
+         I'm not sure that "constraint" has any specific definition beyond
+         just being some kind of rule, so maybe just saying rule will be 
+         clearer.
+
+         I would say that an invariant has a narrower definition
+         in that it defines some condition that must always be true. 
+
+         Under that definition, instead of saying "The invariant is that we never oversell stock
+         by allocating two customers to the same physical cushion", you might say
+         "The invariant is that no batch may have a negative available quantity."
+
+         As another toy example, in the Account class, the invariant is that balance is always > 0,
+         and the constraint is that no debits are allowed that would make the balance negative.
+
+         class Account:
+            def balance(self):
+                return self.money
+
+            def debit(self, amount):
+                if amount > money:
+                    raise NoMoney()
+                self.money -= amount
+////
 
 ==== Invariants And Concurrency
 
@@ -95,11 +120,17 @@ We usually solve this problem by applying locks to our database tables. This
 prevents two operations happening simultaneously on the same row or same
 table.
 
+////
+(ej) In a miscroservices architecture This gets even harder when there's distributed state
+    and locking tables is either not possible or advisable. (Not sure how this comment fits in the text.)
+////
+
 As we start to think about scaling up our app, we realise that our model
 of allocating lines against all available batches may not scale.  If we've
 got tens of thousands of orders per hour, and hundreds of thousands of
 order lines, we can't hold a lock over the whole `batches` table for
 every single one.
+
 
 In the rest of this chapter, we'll first discuss choosing an aggregate
 and demonstrate its usefulness for managing invariants at the conceptual level,
@@ -147,6 +178,12 @@ for collections of batches.
 
 //TODO (DS): I don't really understand this para.
 
+////
+ (ej): The preceding and following paragraph are a bit confusing until you get to the actual code examples.
+         A visual picture would help clarify here (e.g. a cartoon piece of paper with lines, and
+         a warehouse with chairs, a truck with chairs in it).  
+////
+
 When we allocate an order line, we're actually only interested in batches
 that have the same SKU as the order line.  Some sort of concept of `GlobalSkuStock`
 or perhaps just simply `Product` -- after all, that was the first concept we
@@ -185,8 +222,8 @@ class Product:
 ====
 //TODO (DS): I think a diagram illustrating the product as the aggregate root might make the message land more clearly.
 
-<1> Product's main identifier is the `sku`
-<2> It hold a reference to a collection of `batches` for that sku
+<1> `Product`'s main identifier is the `sku`
+<2> It holds a reference to a collection of `batches` for that sku
 <3> And finally, we can move the `allocate()` domain service to
     being a method on `Product`.  
 
@@ -196,6 +233,8 @@ NOTE: This `Product` might not look like what you'd expect a `Product`
     This is the power of microservices and bounded contexts, the concept
     of Product in one app can be very different from another.footnote:[Well, either
     that, or it's just a bad name.  but `SKUStock` would be so _awkward_!]
+
+
 
 //TODO: AA prompted the note above, he said "Product" was a confusing name at first.
 // maybe we should just go for something like `ProductStock`, or just `Stock`?
@@ -238,6 +277,24 @@ elsewhere.
 
 //TODO more links or suggestions on where to read about bounded context?
 
+////
+ (ej)   This section opens up a whole can of worms, but here are some thoughts.  They may be
+      too much of a digression from the text though.
+
+      * IIRC from the PyCon open space, many people wanted to know "How do you build a model??"  
+      I recall someone specifically asking about "how you get everyone to use the same domain model". 
+      Putting in a mention of the "Canonical Model" pattern would be a good breadcrumb.
+
+      * Re AA's Note, and SkuStock vs Product vs ProductStock, 
+      the literal conversations might be worth placing somewhere, maybe at the end of the chapter.
+      Putting in an example of a messy conversation like the one with AA would help demonstrate.  
+
+      *  Re: BoundedContexts, my experience with explaining BoundedContexts is that
+      people don't understand it without a concrete example.
+
+      Literally having a second, `Product` class  in psuedo-code
+      (for warehousing or shipping or something) would be helpful.
+////
 *******************************************************************************
 
 
@@ -455,11 +512,25 @@ assert version == product_version +1
 https://github.com/python-leap/book/issues/36
 ////
 
+////
+
+(ej) +1 on the where the 4 came from.  Here is a small pseudo-code 
+       snippet using concurrent.futures.ThreadPoolExecutor that is a bit more compact.
+       Theoretically right, but not tested!
+from concurrent.futures import ThreadPoolExecutor
+with ThreadPoolExecutor(max_workers=2) as pool:
+    r1 = pool.submit(try_to_allocate, o1, sku, exceptions)
+    r2 = pool.submit(try_to_allocate, o2, sku, exceptions)
+concurrent.futures.wait([r1, r2])
+
+////
+
 [[data_integrity_test]]
 .An integration test for concurrency behaviour (tests/integration/test_uow.py)
 ====
 [source,python]
 ----
+
 def test_concurrent_updates_to_version_are_not_allowed(postgres_session_factory):
     sku, batch = random_ref('s'), random_ref('b')
     session = postgres_session_factory()
@@ -597,6 +668,16 @@ will depend on circumstances.
 
 //TODO (DS): Maybe worth explaining the difference between optimistic and
 //pessimistic locking in more detail, and earlier in the chapter?
+
+//// 
+(ej): 
++1 to (DS) comment. The jump in the middle to talking about version numbers is a little abrupt.  
+   Maybe introduce the section by talking about integrity and concurrency, then read-modify-write cycles, 
+   and optimistic concurrency control?  Ch7 of "Desiging Data Intensive Applications" is i
+   a good reference.
+
+   I also like this treatemnt: https://www.2ndquadrant.com/en/blog/postgresql-anti-patterns-read-modify-write-cycles/
+//// 
 
 .Recap: Aggregates and consistency boundaries
 *****************************************************************

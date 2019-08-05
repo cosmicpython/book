@@ -54,6 +54,14 @@ quantity drops to less than the total already allocated, we need to
 _deallocate_  those orders from that batch. Then, we want to _reallocate_ them
 to other batches.
 
+////
+(ej) Is "reallocate" as a separate concept necessary? Or is that just covered by "allocate"?
+     I find myself being a bit confused by some of the text, because it feels like
+     "reallocate" = "deallocate" + "allocate", and just "deallocation" seems resonable
+     for things like cancellations.
+////
+
+
 For now, our message bus only handles internal events.  We'll use those to express the need
 to reallocate after deallocation, using a `Deallocated` event.  Once we've got everything
 working, we'll switch to "everything is events":  we'll use events to express
@@ -87,6 +95,17 @@ are valid alternatives. A lightweight solution based on Redis
 https://redis.io/topics/pubsub[pubsub channels] can also work just fine, and we
 think more of our readers will be familiar with Redis, so we thought we'd that
 for this book.
+////
+(ej)  I think the differences between the families of messaging implementations based 
+      on streams (Kafka, EventStore, Redis Streams, Kinesis), pub-sub (Redis PubSub, SNS, etc.)
+      and queuing (RabbitMQ, Redis Queues) are significant enough to call out here. They're
+      not always easily interchangeable, due to concerns like message ordering, failure handling, 
+      and idempotency.
+
+      With Redis Pub-Sub specifically, I would wonder how you deal with client side failures and lost
+      messages.
+////
+
 
 Here's how we might start with an end-to-end test.  We can use our existing
 API to create batches, and then we'll test both inbound and outbound messages:
@@ -147,6 +166,13 @@ def test_change_batch_quantity_leading_to_reallocation():
     something happens.  To do that, we wrap our assertions inside a function.
     We'll show the code for `wait_for` below, for the curious:
 
+////
+(ej) Minor comment: This e2e test might not be safe or repeatable as part of a
+     larger test suite, since test run data is being persisted in redis.
+     Purging the queue as part of setup will help, but it would still have problems
+     with running tests in parallel. Not sure if it's worth bringing up as it might 
+     be too much of a digression.
+////
 
 [[wait_for]]
 .A helper function for testing asynchronous behaviour (tests/e2e/wait_for.py)
@@ -171,6 +197,13 @@ def wait_for(fn):
     pytest.fail(f'function {fn} never returned anything truthy')
 ----
 ====
+////
+(ej)  Not 100% sure of the necessity of wait_for. According to the source code, redis-py
+      subscription.get_message already takes a timeout, and under what conditions would
+      a re-triable exception be thrown?
+
+     If you do need to poll and retry, the tenacity library may be simpler than wait_for. 
+////
 
 
 ==== Redis Is Another Thin Adapter Around Our Service Layer
@@ -320,6 +353,17 @@ Message_Bus -> Redis : publish to line_allocated channel
 @enduml
 ....
 
+////
+(ej)  There is a minor but important technical point here, I think, that could be a source
+      of confusion.  The UOW and session commit are not exactly synonymous as the events are 
+      not actually emitted until after the UOW "ends".  Otherwise you could end up with 
+      a race or skew on the persisted state. (Or would that be prevented by re-using the same uow+session
+      instance in the event handlers?)
+
+      I am unsure how to present that information without adding a lot of detail to the sequence
+      diagram.
+
+////
 
 Here's what our new internal events will look like:
 
@@ -436,12 +480,17 @@ class FakeRepository(repository.AbstractRepository):
 ----
 ====
 
+
 You may be starting to worry that maintaining these fakes is going to be a
 maintenance burden.  There's no doubt that it is work, but in our experience
 it's not a lot of work.  Once your project is up and running, the interface for
 your repository and UoW abstractions really don't change much.  And if you're
 using ABC's, they'll help remind you when things get out of sync.
 
+////
+(ej)  This will be a comon question, I'm sure.  The other option
+      would be to use a mock or patch, which have their own burdens.
+////
 
 TODO: discuss finder methods on repository.
 
@@ -556,6 +605,12 @@ to the main `messagebus.handle()` function:
 
 // TODO (DS): This feels important, but I'm not sure why - slightly lost. Would
 // it be better just to have used this structure from the beginning?
+
+////
+(ej) Devil's advocate:  If your messagebus.handle processes half the events
+     in the list, then drops the rest on the floor due to a db network outage
+     or being OOM killed, how do you mitigate problems cause by the lost messages?
+////
 
 [[handle_takes_uow]]
 .Handle takes a UoW (src/allocation/messagebus.py)
@@ -691,6 +746,31 @@ HANDLERS = {
 ====
 
 
+////
+(ej) 
+
+* I follow what's going on at a high level, but am getting lost in the weeds
+due to the way some things are named and concepts are used. Some of the events
+are implicitly named like commands instead of events, which is making it hard to
+keep track. 
+
+* The combination of type-hints+duck-typing, and treatment of AllocationRequest vs. 
+Deallocated is a confusing, because there is only an
+allocate(event: AllocationRequest,...) and no allocate(event:Deallocated).
+
+* The naming of some things looks backwards.  For example,
+  `BatchCreated` triggers `add_batch`, `BatchQuantityChanged` triggers
+  `change_batch_quantity`, etc.  
+
+  But then `AllocationRequest` triggers `allocate, and I'm unsure why
+  it's not called `AllocationRequested`. Similarly, `BatchAdditionRequested`, 
+  instead of `BatchCreated` would make be more intuitive. 
+
+  And maybe something like `BatchQuantityChanged` -> handlers.update_batch_quantity,
+  would be more clear `BatchQuantityChanged` -> handlers.change_batch_quantity
+
+////
+
 We define a series of new events, which capture the inputs, outputs, and
 internal message structures of our system in a single place:
 
@@ -812,7 +892,6 @@ def handle_change_batch_quantity(m):
     messagebus.handle([event], uow=unit_of_work.SqlAlchemyUnitOfWork())
 ----
 ====
-
 
 And our system is now entirely event-driven.
 

@@ -20,6 +20,11 @@ So far we've spent a lot of time and energy on a simple problem that we could
 easily have solved with Django. You might be asking if the increased testability
 and expressiveness are *really* worth all the effort.
 
+////
+(ej) This chart PoEA has been helpful to me in justifying the value of modeling:
+https://www.reflektis.com/blog/global-complexity-local-simplicity/
+////
+
 In practice, though, we find that it's not the obvious features that make a mess
 of our codebases: it's the goop around the edge. It's reporting, and permissions
 and workflows that touch a zillion objects.
@@ -72,6 +77,20 @@ def allocate_endpoint():
 //necessary. Reading code takes up a fair amount of mental energy and really
 //all you're talking about is, who's responsible? Perhaps sequence diagrams
 //would be a better way of showing the different options...
+
+////
+ (ej): I like the messy examples here, because they are exactly
+       like things that happen in practice, and some people will do better 
+       with a concrete example over a sequence diagram.
+
+       The transitions/flow between the snippets is a bit confusing though.  
+
+       Right now it reads like:
+         ex1. whack it in the endpoint
+         ex2. mocky test for send_email (after implicility whacking it into the service?)
+         ex3. whack it into the model
+         ex4. whack it into the service (to match the mocky test)
+////
 
 As a one-off hack, this might be okay, but it's easy to see how we can quickly
 end up in a mess by patching things in this way. Sending emails isn't the job of
@@ -185,9 +204,11 @@ are all called `allocate`, not `allocate_and_send_mail_if_out_of_stock`.
 TIP: Rule of thumb: if you can't describe what your function does without using
     words like "then" or "and," you might be violating the SRP.
 
+
 This email sending thing is unwelcome *goop* messing up the nice clean flow
 of our system. What we'd like is to keep our domain model focused on the rule
 "You can't allocate more stuff than is actually available."
+
 
 The domain model's job is to know that we're out of stock, but the
 responsibility of sending an alert belongs elsewhere. We should be able to turn
@@ -199,6 +220,16 @@ want to apply the Dependency Inversion Principle to notifications, so that our
 service layer depends on an abstraction, in the same way as we avoid depending
 on the database by using a UnitOfWork.
 
+
+////
+(ej) *Maybe "weed" instead of "goop" to match the "gardening" metaphor?
+     * "[F]ree of implementation details" is ambiguous and could be a confusing phrase.  
+     Something like "free of volatile concerns" or "decoupled from details that are likely to change"
+     would be clearer.
+     *  I'm not sure that this (using events) is actaully "Dependency Inversion", strictly speaking.
+        Safest thing here would be to just say "decoupling".
+////
+
 === All Aboard The Message Bus!
 
 The patterns we're going to introduce here are _Domain Events_ and the _Message Bus_.
@@ -206,7 +237,6 @@ The patterns we're going to introduce here are _Domain Events_ and the _Message 
 First, rather than being concerned about emails, our model will be in charge of
 recording "events"--facts about things that have happened. We'll use a Message
 Bus to respond to events, and invoke some new operation.
-
 
 ==== The Model Records Events
 
@@ -370,6 +400,14 @@ NOTE: Another variant on this is that you can have the message bus in charge of
 We'd like to show you another solution, in which we put the unit of
 work in charge of collecting and raising events.
 
+////
+(ej) 
+     * I'm unsure what the NOTE: about message bus raising events means.
+     * Some of the language/names around  "raising" vs "handling" events is fuzzy.
+     Depending on how the "messagebus" is implemented, couldn't there be latency and re-ordering
+     of events between the time when an event is "raised" vs. "handled"?  I'm finding the name 
+     `messagebus.handle` to be a little bit confusing, as a consequence.
+////
 
 === The Unit Of Work Can Pass Events To The Message Bus
 
@@ -385,6 +423,28 @@ It might be helpful to add a line explicitly introducing it before Example 9.
 Once I read on to Example 10 everything cleared up immediately.
 
 https://github.com/python-leap/book/issues/35
+////
+
+////
+(ej) +1 to the above comment.  Adding a little bit of indirection to make it more self-documenting
+     could help, like below.  (Will require some changes to messagebus.handle, but it looks like you
+     are re-considering that as well anyway?)
+
+     Also, the `seen` variable is never purged.  Is that something to be concerned about, either
+     for performance or correctness?
+
+class AbstractRepository(abc.ABC):
+    @property
+    def unprocessed_events(self):
+        for p in self.seen:
+             evt = p.events.pop(0)
+             yield evt
+
+class AbstractUnitOfWork(abc.ABC):
+    def commit(self):
+        self._commit()
+        messagebus.handle(self.products.unprocessed_events) 
+
 ////
 
 [[uow_with_messagebus]]
@@ -423,6 +483,8 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 <3> That relies on the repository keeping track of aggregates that it's seen,
     as we'll see in the next listing.
 
+// (ej) Devil's Advocate question: What happens if one of the handlers in the message bus fails?
+//      How should you handle that?
 
 [[repository_tracks_seen]]
 .Repository tracks aggregates seen (src/allocation/repository.py)
@@ -480,6 +542,21 @@ class SqlAlchemyRepository(AbstractRepository):
 Once the UoW and repository collaborate in this way to automatically keep
 track of live objects and process their events, the service layer can now be
 totally free of event-handling concerns:
+
+////
+(ej) FWIW, my instinct on the above changes would be to do something like below. 
+     This would avoid cascading changes to add _underscorey methods. (This
+     might be a language idiom thing, though.  I don't think it's possible in Java/C#.)
+
+class AbstractRepository():
+    def add(self, product):
+        self.seen.append(product)
+
+class SqlAlchemyRepository(AbstractRepository):
+    def add(self, product):
+        super().add(product)
+        self.session.add(product)
+////
 
 
 [[services_clean]]
