@@ -553,7 +553,7 @@ We will have to write a few lines of code in our repository class each time we
 add a new domain object that we want to retrieve, but in return we get a very
 simple abstraction over our storage layer, which we control. It would make
 it very easy to make fundamental changes to the way we store things (see
-<appendix_csvs>>), and as we'll see, it is very easy to fake out for unit tests.
+<<appendix_csvs>>), and as we'll see, it is very easy to fake out for unit tests.
 
 In addition, repository pattern is so common in the DDD world that, if you
 do collaborate with programmers that have come to Python from the Java and C#
