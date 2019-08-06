@@ -23,7 +23,11 @@ to encompass the way that we handle incoming and outgoing messages from the
 system.
 
 
-=== An external event triggers internal invents
+=== A New Requirement Leads Us To Consider A New Architecture
+
+Let's consider a business requirement first:
+
+==== Changing Batch Quantities Leads to Reallocation
 
 We learn about the need to change batch quantities when they're already
 in the system.  Perhaps someone made a mistake on the number in the manifest,
@@ -39,20 +43,29 @@ image::images/batch_changed_events_flow_diagram.png[]
 [role="image-source"]
 ----
 [ditaa, batch_changed_events_flow_diagram]
-+----------+    /----\      +------------+       +------------+
-| Batch    |--> |RULE| -->  | Deallocate | ----> | Reallocate |
-| Quantity |    \----/      +------------+-+     +------------+-+
-| Changed  |                  | Deallocate | ----> | Reallocate |
-+----------+                  +------------+-+     +------------+-+
-                                | Deallocate | ----> | Reallocate |
-                                +------------+       +------------+
++----------+    /----\      +------------+       +----------+
+| Batch    |--> |RULE| -->  | Deallocate | ----> | Allocate |
+| Quantity |    \----/      +------------+-+     +----------+-+
+| Changed  |                  | Deallocate | ----> | Allocate |
++----------+                  +------------+-+     +----------+-+
+                                | Deallocate | ----> | Allocate |
+                                +------------+       +----------+
 ----
 
 An event we'll called _batch quantity changed_ should lead us to change the
 quantity on the batch, yes, but also to apply a _business rule_: if the new
 quantity drops to less than the total already allocated, we need to
-_deallocate_  those orders from that batch. Then, we want to _reallocate_ them
-to other batches.
+_deallocate_  those orders from that batch. Then, we want to reallocate them
+to other batches (which is just the same as doing a fresh _allocate_, in fact).
+
+Perhaps you're already anticipating that our internal messagebus and events can
+help implement this requirement.  We could define a service called
+`change_batch_quantity` that knows how to adjust batch quantities and also how
+to _deallocate_ any excess order lines, and then we can emit several events
+called `Deallocated` which can be forwarded on to the existing `allocate` service,
+in separate transactions.  Once again, our message bus helps us to enforce the
+single responsibility principle, and it allows us to make choices about
+transactions and data integrity.
 
 ////
 TODO (ej) Is "reallocate" as a separate concept necessary? Or is that just covered by "allocate"?
@@ -62,27 +75,15 @@ TODO (ej) Is "reallocate" as a separate concept necessary? Or is that just cover
 ////
 
 
-For now, our message bus only handles internal events.  We'll use those to express the need
-to reallocate after deallocation, using a `Deallocated` event.  Once we've got everything
-working, we'll switch to "everything is events":  we'll use events to express
-all our external inputs, including messages coming into the API, so we'll make the
-service layer into event handlers, and _everything_ will go via the message bus.
 
-////
-TODO: consider re-ordering this chapter as follows:
+==== Using A Redis Pubsub Channel For Integration
 
-1. make the change easy:
-2. introduce new external events, BatchQuantityChanged and Allocated
-3. introduce new internal event, Deallocated
-4. change API to use events, AllocationRequest and BatchCreated, merge service layer and message handlers
-5. make the easy change, add redis and its handler
-////
-
-
-But first, an end-to-end test to drive us towards a working solution.
-
-
-=== Using A Redis Pubsub Channel For Integration
+But we also have a technical requirement:  to avoid the "distributed BBOM"
+antipattern, instead of temporally coupled HTTP API calls, we want to use some
+sort of asynchronous messaging layer to integrate between systems.  We want
+our "batch quantity changed" messages to come in as external events from upstream
+systems, and we want our system to publish "allocated" events for downstream systems
+to listen to.
 
 When moving towards events as an integration solution, you need to choose
 some sort of technology for passing those events from one system to another.
@@ -95,17 +96,80 @@ are valid alternatives. A lightweight solution based on Redis
 https://redis.io/topics/pubsub[pubsub channels] can also work just fine, and we
 think more of our readers will be familiar with Redis, so we thought we'd that
 for this book.
-////
-TODO (ej)  I think the differences between the families of messaging implementations based 
-      on streams (Kafka, EventStore, Redis Streams, Kinesis), pub-sub (Redis PubSub, SNS, etc.)
-      and queuing (RabbitMQ, Redis Queues) are significant enough to call out here. They're
-      not always easily interchangeable, due to concerns like message ordering, failure handling, 
-      and idempotency.
 
-      With Redis Pub-Sub specifically, I would wonder how you deal with client side failures and lost
-      messages.
+NOTE: We're glossing over the complexity involved in choosing the right messaging
+    platform.  Concerns like message ordering, failure handling and idempotency
+    all need to be thought through.  For a few pointers, see the
+    <<footguns,Footguns>> section in <<epilogue_1_how_to_get_there_from_here>>.
+
+
+
+==== Imagining an Architecture Change: Everything Will Be An Event Handler
+
+So we're now considering three kinds of flows through our system:
+
+* API calls that are handled by a service-layer function
+
+* Internal events (which might be raised as a side-effect of a service-layer function)
+  and their _handlers_ (which in turn might be service-layer functions)
+
+* External events, which can either be inputs to our system (probably invoking
+  a service-layer function), or outputs from our system (coming out of a service-layer
+  function or an internal event handler)
+
+So we have internal events vs external events, and we have service-layer functions
+as well as internal-event-handlers.
+
+Wouldn't it be easier if everything was an event handler?  If we rethink our API
+calls as capturing events, then the service-layer functions can be event handlers
+too, and we no longer need to make a distinction between internal and external
+event handlers:
+
+* `services.allocate()` we could imagine as being the handler for an
+  `AllocationRequest` event, and it can emit `Allocated` events as its output.
+
+* `services.add_batch()` could be the handler for a `BatchCreated`
+  event.footnote:[If you've done a bit of reading around event-driven
+    architectures, you may be thinking "some of these events sound more like
+    commands!". Bear with us!  We're trying to introduce one concept at a time.
+    In the <<chapter_08_commands,next chapter>> we'll introduce the distinction
+    between command and events.]
+
+Our new requirement will fit the same pattern:
+
+* An event called `BatchQuantityChanged` can invoke a handler called `change_batch_quantity()`.
+
+* And the new `Deallocated` events can be passed on to `services.allocate()`,
+  now that it's a handler too.
+
+
+
+All sound like a bit much?   Let's work towards it all gradually.
+
+* We'll start by building an end-to-end test that uses redis to put
+  `BatchQuantityChanged` events into the system, and look for `Allocated` events
+  coming out
+
+* We'll start by implementing a "normal" service for `change_batch_quantity()`,
+  which will use our existing internal message bus to emit any `Deallocated`
+  events.
+
+* Once it's all working, we'll refactor to combine our services with our
+  message handlers, so that the entire application will be a message processor.
+
+////
+TODO: consider re-ordering this chapter as follows:
+
+1. make the change easy:
+2. introduce new external events, BatchQuantityChanged and Allocated
+3. introduce new internal event, Deallocated
+4. change API to use events, AllocationRequest and BatchCreated, merge service layer and message handlers
+5. make the easy change, add redis and its handler
 ////
 
+
+
+=== Test-driving It All Using An End-to-end Test
 
 Here's how we might start with an end-to-end test.  We can use our existing
 API to create batches, and then we'll test both inbound and outbound messages:
@@ -170,7 +234,7 @@ def test_change_batch_quantity_leading_to_reallocation():
 TODO (ej) Minor comment: This e2e test might not be safe or repeatable as part of a
      larger test suite, since test run data is being persisted in redis.
      Purging the queue as part of setup will help, but it would still have problems
-     with running tests in parallel. Not sure if it's worth bringing up as it might 
+     with running tests in parallel. Not sure if it's worth bringing up as it might
      be too much of a digression.
 ////
 
@@ -202,7 +266,7 @@ TODO (ej)  Not 100% sure of the necessity of wait_for. According to the source c
       subscription.get_message already takes a timeout, and under what conditions would
       a re-triable exception be thrown?
 
-     If you do need to poll and retry, the tenacity library may be simpler than wait_for. 
+     If you do need to poll and retry, the tenacity library may be simpler than wait_for.
 ////
 
 
@@ -355,8 +419,8 @@ Message_Bus -> Redis : publish to line_allocated channel
 
 ////
 TODO (ej)  There is a minor but important technical point here, I think, that could be a source
-      of confusion.  The UOW and session commit are not exactly synonymous as the events are 
-      not actually emitted until after the UOW "ends".  Otherwise you could end up with 
+      of confusion.  The UOW and session commit are not exactly synonymous as the events are
+      not actually emitted until after the UOW "ends".  Otherwise you could end up with
       a race or skew on the persisted state. (Or would that be prevented by re-using the same uow+session
       instance in the event handlers?)
 
@@ -747,24 +811,24 @@ HANDLERS = {
 
 
 ////
-TODO (ej) 
+TODO (ej)
 
 * I follow what's going on at a high level, but am getting lost in the weeds
 due to the way some things are named and concepts are used. Some of the events
 are implicitly named like commands instead of events, which is making it hard to
-keep track. 
+keep track.
 
-* The combination of type-hints+duck-typing, and treatment of AllocationRequest vs. 
+* The combination of type-hints+duck-typing, and treatment of AllocationRequest vs.
 Deallocated is a confusing, because there is only an
 allocate(event: AllocationRequest,...) and no allocate(event:Deallocated).
 
 * The naming of some things looks backwards.  For example,
   `BatchCreated` triggers `add_batch`, `BatchQuantityChanged` triggers
-  `change_batch_quantity`, etc.  
+  `change_batch_quantity`, etc.
 
   But then `AllocationRequest` triggers `allocate, and I'm unsure why
-  it's not called `AllocationRequested`. Similarly, `BatchAdditionRequested`, 
-  instead of `BatchCreated` would make be more intuitive. 
+  it's not called `AllocationRequested`. Similarly, `BatchAdditionRequested`,
+  instead of `BatchCreated` would make be more intuitive.
 
   And maybe something like `BatchQuantityChanged` -> handlers.update_batch_quantity,
   would be more clear `BatchQuantityChanged` -> handlers.change_batch_quantity
@@ -910,15 +974,14 @@ much a topic for another book though).
 *******************************************************************************
 
 
+=== Why have we achieved?
+
 TODO: talk about the fact that we've implemented quite a complicated use case
     (change quantity, deallocate, start new transaction, reallocate,
     publish external notification), but thanks to our architecture the
     _complexity_ stays constant.  we just have events, handlers, and a unit
     of work.  it's easy to reason about, and easy to explain.  Possibly
     show a hacky version for comparison?
-
-
-=== Why have we achieved?
 
 === What Have We Achieved?
 
