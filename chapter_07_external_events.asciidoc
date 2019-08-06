@@ -13,6 +13,8 @@ In this chapter:
 TODO: DIAGRAM GOES HERE
 
 
+=== How Do We Talk To The Outside World?
+
 We've got a microservice with a web API, but what about other ways of talking
 to other systems?  How does it know if, say, a shipment is delayed or the
 quantity is amended?  How does it communicate to our warehouse system to say
@@ -88,15 +90,15 @@ to listen to.
 
 When moving towards events as an integration solution, you need to choose
 some sort of technology for passing those events from one system to another.
-We need our systems to be able to publish events to some central service, and
-we need some way for other systems to be able to "subscribe" to different types
-of messages, and pick them up asynchronously from some sort of queue.
+We need to be able to publish events to some central service, and we need some
+way for other systems to be able to "subscribe" to different types of messages,
+and pick them up asynchronously from some sort of queue.
 
 At MADE.com we use https://eventstore.org/[Eventstore];  Kafka or RabbitMQ
 are valid alternatives. A lightweight solution based on Redis
-https://redis.io/topics/pubsub[pubsub channels] can also work just fine, and we
-think more of our readers will be familiar with Redis, so we thought we'd that
-for this book.
+https://redis.io/topics/pubsub[pubsub channels] can also work just fine, and since
+Redis is much more generally familiar to people, we thought we'd use it for this
+book.
 
 NOTE: We're glossing over the complexity involved in choosing the right messaging
     platform.  Concerns like message ordering, failure handling and idempotency
@@ -153,15 +155,15 @@ Refactoring] workflow, AKA "make the change easy, then make the easy change":
 
 
 * We'll start by refactoring our service layer into event handlers.  We can
-  get used to the idea of events being the way we describe inputs and outputs
-  from our system.  The existing `services.allocate()` function will become the
-  handler for an event called `AllocationRequired`.
+  get used to the idea of events being the way we describe inputs to our
+  system.  In particular, the existing `services.allocate()` function will
+  become the handler for an event called `AllocationRequired`.
 
 * Then we'll build an end-to-end test that uses Redis to put
   `BatchQuantityChanged` events into the system, and look for `Allocated` events
   coming out.
 
-* We'll build a thin wrapper around redis that knows how to convert internal events
+* We'll build a thin wrapper around Redis that knows how to convert internal events
   to external/redis events, and vice-versa.
 
 * And then our actual implementation will be conceptually very simple: a new
@@ -187,15 +189,13 @@ class BatchCreated(Event):
     qty: int
     eta: Optional[date] = None
 
+...
+
 @dataclass
 class AllocationRequired(Event):
     orderid: str
     sku: str
     qty: int
-
-@dataclass
-class OutOfStock(Event):
-    sku: str
 ----
 ====
 
@@ -244,9 +244,10 @@ TODO: discuss moving from primitives (primitive obsession) to events as our
 The change might be clearer as a diff:
 
 [[services_to_handlers_diff]]
-.Changing from services to handlers
+.Changing from services to handlers (src/allocation/handlers.py)
 ====
 [source,diff]
+[role="skip"]
 ----
  def add_batch(
 -        ref: str, sku: str, qty: int, eta: Optional[date],
@@ -276,6 +277,8 @@ The change might be clearer as a diff:
      ...
 ----
 ====
+
+//TODO: test diffs
 
 
 ==== The MessageBus needs to pass a UoW to each handler
@@ -331,10 +334,11 @@ class AbstractUnitOfWork(abc.ABC):
 ==== Our tests are all written in terms of events too:
 
 
-[[id_here]]
-.Listing title
+[[handler_tests]]
+.Handler Tests use Events (tests/unit/test_handlers.py)
 ====
 [source,python]
+[role="non-head"]
 ----
 class TestAddBatch:
 
@@ -355,10 +359,9 @@ class TestAllocate:
         uow = FakeUnitOfWork()
         result = messagebus.handle([
             events.BatchCreated("b1", "COMPLICATED-LAMP", 100, None),
-            events.AllocationRequired("o1", "COMPLICATED-LAMP", 10 )
+            events.AllocationRequired("o1", "COMPLICATED-LAMP", 10)
         ], uow)
         assert result == "b1"
-
 ----
 ====
 
@@ -375,6 +378,7 @@ a temporary hack on our messagebus to let it return events.
 .Messagebus returns results (src/allocation/messagebus.py)
 ====
 [source,diff]
+[role="skip"]
 ----
  def handle(events_: List[events.Event], uow: unit_of_work.AbstractUnitOfWork):
 +    results = []
@@ -388,6 +392,7 @@ a temporary hack on our messagebus to let it return events.
 ----
 ====
 
+//TODO: unskip
 
 We'll come back to fix this wart in <<chapter_09_cqrs>>.
 
@@ -402,6 +407,7 @@ We'll come back to fix this wart in <<chapter_09_cqrs>>.
 .Flaks changing to messagebus as a diff (src/allocation/flask_app.py)
 ====
 [source,python]
+[role="skip"]
 ----
  @app.route("/allocate", methods=['POST'])
  def allocate_endpoint():
@@ -411,7 +417,7 @@ We'll come back to fix this wart in <<chapter_09_cqrs>>.
 -            request.json['sku'],
 -            request.json['qty'],
 -            unit_of_work.SqlAlchemyUnitOfWork(),
-+        event = events.AllocationRequest(  #<2>
++        event = events.AllocationRequired(  #<2>
 +            request.json['orderid'], request.json['sku'], request.json['qty'],
          )
 +        results = messagebus.handle([event], unit_of_work.SqlAlchemyUnitOfWork())  #<3>
@@ -429,6 +435,7 @@ We'll come back to fix this wart in <<chapter_09_cqrs>>.
 
 
 
+//TODO: unskip
 
 And we should be back to a fully functional application.
 
@@ -730,7 +737,7 @@ TODO (ej)  There is a minor but important technical point here, I think, that co
 ==== Implementation
 
 [[change_quantity_handler]]
-.Handler delegates to model layer (src/allocation/services.py)
+.Handler delegates to model layer (src/allocation/handlers.py)
 ====
 [source,python]
 ----
@@ -797,7 +804,7 @@ class SqlAlchemyRepository(AbstractRepository):
 And on our fakerepository too:
 
 [[fakerepo_get_by_batchref]]
-.Updating the fake repo too (tests/unit/test_services.py)
+.Updating the fake repo too (tests/unit/test_handlers.py)
 ====
 [source,python]
 [role="non-head"]
@@ -872,6 +879,8 @@ class Batch:
 ----
 ====
 
+We wire up our new handler, and specify another one for publishing
+the external event:
 
 
 [[full_messagebus]]
@@ -883,16 +892,17 @@ HANDLERS = {
     events.BatchCreated: [handlers.add_batch],
     events.BatchQuantityChanged: [handlers.change_batch_quantity],
     events.AllocationRequired: [handlers.allocate],
-    events.OutOfStock: [handlers.send_out_of_stock_notification],
     events.Allocated: [handlers.publish_allocated_event],
+    events.OutOfStock: [handlers.send_out_of_stock_notification],
 
 }  # type: Dict[Type[events.Event], List[Callable]]
 ----
 ====
 
+Publishing the event uses our helper function from the redis wrapper:
 
-[[id_here]]
-.Listing title
+[[publish_event_handler]]
+.Publish to redis (src/allocation/handlers.py)
 ====
 [source,python]
 ----
@@ -903,12 +913,11 @@ def publish_allocated_event(
 ----
 ====
 
-
-
-And our system is now entirely event-driven.
-
 TIP: External events are one of the places it's important to apply some validation.
     See <<appendix_validation>> for some validation philosophy and examples.
+
+
+And our system is now entirely event-driven!
 
 
 .Internal vs External events
