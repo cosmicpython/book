@@ -67,7 +67,7 @@ this constraint.
 //TODO (DS): I'm unclear on the distinction between invariant and constraint.
 
 ////
-// (ej): 
+TODO // (ej): 
          I'm not sure that "constraint" has any specific definition beyond
          just being some kind of rule, so maybe just saying rule will be 
          clearer.
@@ -121,7 +121,7 @@ prevents two operations happening simultaneously on the same row or same
 table.
 
 ////
-(ej) In a miscroservices architecture This gets even harder when there's distributed state
+TODO (ej) In a miscroservices architecture This gets even harder when there's distributed state
     and locking tables is either not possible or advisable. (Not sure how this comment fits in the text.)
 ////
 
@@ -179,7 +179,7 @@ for collections of batches.
 //TODO (DS): I don't really understand this para.
 
 ////
- (ej): The preceding and following paragraph are a bit confusing until you get to the actual code examples.
+ TODO (ej): The preceding and following paragraph are a bit confusing until you get to the actual code examples.
          A visual picture would help clarify here (e.g. a cartoon piece of paper with lines, and
          a warehouse with chairs, a truck with chairs in it).  
 ////
@@ -278,7 +278,7 @@ elsewhere.
 //TODO more links or suggestions on where to read about bounded context?
 
 ////
- (ej)   This section opens up a whole can of worms, but here are some thoughts.  They may be
+ TODO (ej)   This section opens up a whole can of worms, but here are some thoughts.  They may be
       too much of a digression from the text though.
 
       * IIRC from the PyCon open space, many people wanted to know "How do you build a model??"  
@@ -514,7 +514,7 @@ https://github.com/python-leap/book/issues/36
 
 ////
 
-(ej) +1 on the where the 4 came from.  Here is a small pseudo-code 
+TODO (ej) +1 on the where the 4 came from.  Here is a small pseudo-code 
        snippet using concurrent.futures.ThreadPoolExecutor that is a bit more compact.
        Theoretically right, but not tested!
 from concurrent.futures import ThreadPoolExecutor
@@ -670,7 +670,7 @@ will depend on circumstances.
 //pessimistic locking in more detail, and earlier in the chapter?
 
 //// 
-(ej): 
+TODO (ej): 
 +1 to (DS) comment. The jump in the middle to talking about version numbers is a little abrupt.  
    Maybe introduce the section by talking about integrity and concurrency, then read-modify-write cycles, 
    and optimistic concurrency control?  Ch7 of "Desiging Data Intensive Applications" is i

@@ -21,7 +21,7 @@ easily have solved with Django. You might be asking if the increased testability
 and expressiveness are *really* worth all the effort.
 
 ////
-(ej) This chart PoEA has been helpful to me in justifying the value of modeling:
+TODO (ej) This chart PoEA has been helpful to me in justifying the value of modeling:
 https://www.reflektis.com/blog/global-complexity-local-simplicity/
 ////
 
@@ -79,7 +79,7 @@ def allocate_endpoint():
 //would be a better way of showing the different options...
 
 ////
- (ej): I like the messy examples here, because they are exactly
+ TODO (ej): I like the messy examples here, because they are exactly
        like things that happen in practice, and some people will do better 
        with a concrete example over a sequence diagram.
 
@@ -222,7 +222,7 @@ on the database by using a UnitOfWork.
 
 
 ////
-(ej) *Maybe "weed" instead of "goop" to match the "gardening" metaphor?
+TODO (ej) *Maybe "weed" instead of "goop" to match the "gardening" metaphor?
      * "[F]ree of implementation details" is ambiguous and could be a confusing phrase.  
      Something like "free of volatile concerns" or "decoupled from details that are likely to change"
      would be clearer.
@@ -401,7 +401,7 @@ We'd like to show you another solution, in which we put the unit of
 work in charge of collecting and raising events.
 
 ////
-(ej) 
+TODO (ej) 
      * I'm unsure what the NOTE: about message bus raising events means.
      * Some of the language/names around  "raising" vs "handling" events is fuzzy.
      Depending on how the "messagebus" is implemented, couldn't there be latency and re-ordering
@@ -426,7 +426,7 @@ https://github.com/python-leap/book/issues/35
 ////
 
 ////
-(ej) +1 to the above comment.  Adding a little bit of indirection to make it more self-documenting
+TODO (ej) +1 to the above comment.  Adding a little bit of indirection to make it more self-documenting
      could help, like below.  (Will require some changes to messagebus.handle, but it looks like you
      are re-considering that as well anyway?)
 
@@ -483,7 +483,7 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 <3> That relies on the repository keeping track of aggregates that it's seen,
     as we'll see in the next listing.
 
-// (ej) Devil's Advocate question: What happens if one of the handlers in the message bus fails?
+// TODO (ej) Devil's Advocate question: What happens if one of the handlers in the message bus fails?
 //      How should you handle that?
 
 [[repository_tracks_seen]]
@@ -544,7 +544,7 @@ track of live objects and process their events, the service layer can now be
 totally free of event-handling concerns:
 
 ////
-(ej) FWIW, my instinct on the above changes would be to do something like below. 
+(TODO ej) FWIW, my instinct on the above changes would be to do something like below. 
      This would avoid cascading changes to add _underscorey methods. (This
      might be a language idiom thing, though.  I don't think it's possible in Java/C#.)
 
