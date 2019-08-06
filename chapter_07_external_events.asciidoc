@@ -247,7 +247,6 @@ The change might be clearer as a diff:
 .Changing from services to handlers (src/allocation/handlers.py)
 ====
 [source,diff]
-[role="skip"]
 ----
  def add_batch(
 -        ref: str, sku: str, qty: int, eta: Optional[date],
@@ -277,8 +276,6 @@ The change might be clearer as a diff:
      ...
 ----
 ====
-
-//TODO: test diffs
 
 
 ==== The MessageBus needs to pass a UoW to each handler
@@ -378,7 +375,6 @@ a temporary hack on our messagebus to let it return events.
 .Messagebus returns results (src/allocation/messagebus.py)
 ====
 [source,diff]
-[role="skip"]
 ----
  def handle(events_: List[events.Event], uow: unit_of_work.AbstractUnitOfWork):
 +    results = []
@@ -392,7 +388,6 @@ a temporary hack on our messagebus to let it return events.
 ----
 ====
 
-//TODO: unskip
 
 We'll come back to fix this wart in <<chapter_09_cqrs>>.
 
@@ -406,8 +401,7 @@ We'll come back to fix this wart in <<chapter_09_cqrs>>.
 [[flask_uses_messagebus]]
 .Flaks changing to messagebus as a diff (src/allocation/flask_app.py)
 ====
-[source,python]
-[role="skip"]
+[source,diff]
 ----
  @app.route("/allocate", methods=['POST'])
  def allocate_endpoint():
@@ -434,8 +428,6 @@ We'll come back to fix this wart in <<chapter_09_cqrs>>.
 <3> And pass it to the messagebus.
 
 
-
-//TODO: unskip
 
 And we should be back to a fully functional application.
 
