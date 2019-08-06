@@ -55,7 +55,7 @@ _deallocate_  those orders from that batch. Then, we want to _reallocate_ them
 to other batches.
 
 ////
-(ej) Is "reallocate" as a separate concept necessary? Or is that just covered by "allocate"?
+TODO (ej) Is "reallocate" as a separate concept necessary? Or is that just covered by "allocate"?
      I find myself being a bit confused by some of the text, because it feels like
      "reallocate" = "deallocate" + "allocate", and just "deallocation" seems resonable
      for things like cancellations.
@@ -96,7 +96,7 @@ https://redis.io/topics/pubsub[pubsub channels] can also work just fine, and we
 think more of our readers will be familiar with Redis, so we thought we'd that
 for this book.
 ////
-(ej)  I think the differences between the families of messaging implementations based 
+TODO (ej)  I think the differences between the families of messaging implementations based 
       on streams (Kafka, EventStore, Redis Streams, Kinesis), pub-sub (Redis PubSub, SNS, etc.)
       and queuing (RabbitMQ, Redis Queues) are significant enough to call out here. They're
       not always easily interchangeable, due to concerns like message ordering, failure handling, 
@@ -167,7 +167,7 @@ def test_change_batch_quantity_leading_to_reallocation():
     We'll show the code for `wait_for` below, for the curious:
 
 ////
-(ej) Minor comment: This e2e test might not be safe or repeatable as part of a
+TODO (ej) Minor comment: This e2e test might not be safe or repeatable as part of a
      larger test suite, since test run data is being persisted in redis.
      Purging the queue as part of setup will help, but it would still have problems
      with running tests in parallel. Not sure if it's worth bringing up as it might 
@@ -198,7 +198,7 @@ def wait_for(fn):
 ----
 ====
 ////
-(ej)  Not 100% sure of the necessity of wait_for. According to the source code, redis-py
+TODO (ej)  Not 100% sure of the necessity of wait_for. According to the source code, redis-py
       subscription.get_message already takes a timeout, and under what conditions would
       a re-triable exception be thrown?
 
@@ -354,7 +354,7 @@ Message_Bus -> Redis : publish to line_allocated channel
 ....
 
 ////
-(ej)  There is a minor but important technical point here, I think, that could be a source
+TODO (ej)  There is a minor but important technical point here, I think, that could be a source
       of confusion.  The UOW and session commit are not exactly synonymous as the events are 
       not actually emitted until after the UOW "ends".  Otherwise you could end up with 
       a race or skew on the persisted state. (Or would that be prevented by re-using the same uow+session
@@ -488,7 +488,7 @@ your repository and UoW abstractions really don't change much.  And if you're
 using ABC's, they'll help remind you when things get out of sync.
 
 ////
-(ej)  This will be a comon question, I'm sure.  The other option
+TODO (ej)  This will be a comon question, I'm sure.  The other option
       would be to use a mock or patch, which have their own burdens.
 ////
 
@@ -607,7 +607,7 @@ to the main `messagebus.handle()` function:
 // it be better just to have used this structure from the beginning?
 
 ////
-(ej) Devil's advocate:  If your messagebus.handle processes half the events
+TODO (ej) Devil's advocate:  If your messagebus.handle processes half the events
      in the list, then drops the rest on the floor due to a db network outage
      or being OOM killed, how do you mitigate problems cause by the lost messages?
 ////
@@ -747,7 +747,7 @@ HANDLERS = {
 
 
 ////
-(ej) 
+TODO (ej) 
 
 * I follow what's going on at a high level, but am getting lost in the weeds
 due to the way some things are named and concepts are used. Some of the events
