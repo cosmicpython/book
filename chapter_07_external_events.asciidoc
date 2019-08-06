@@ -43,28 +43,29 @@ image::images/batch_changed_events_flow_diagram.png[]
 [role="image-source"]
 ----
 [ditaa, batch_changed_events_flow_diagram]
-+----------+    /----\      +------------+       +----------+
-| Batch    |--> |RULE| -->  | Deallocate | ----> | Allocate |
-| Quantity |    \----/      +------------+-+     +----------+-+
-| Changed  |                  | Deallocate | ----> | Allocate |
-+----------+                  +------------+-+     +----------+-+
-                                | Deallocate | ----> | Allocate |
-                                +------------+       +----------+
++----------+    /----\      +------------+       +--------------------+
+| Batch    |--> |RULE| -->  | Deallocate | ----> | AllocationRequired |
+| Quantity |    \----/      +------------+-+     +--------------------+-+
+| Changed  |                  | Deallocate | ----> | AllocationRequired |
++----------+                  +------------+-+     +--------------------+-+
+                                | Deallocate | ----> | AllocationRequired |
+                                +------------+       +--------------------+
 ----
 
 An event we'll called _batch quantity changed_ should lead us to change the
 quantity on the batch, yes, but also to apply a _business rule_: if the new
 quantity drops to less than the total already allocated, we need to
-_deallocate_  those orders from that batch. Then, we want to reallocate them
-to other batches (which is just the same as doing a fresh _allocate_, in fact).
+_deallocate_  those orders from that batch. Then each one will require
+a new allocation, which we can capture as an event called `AllocationRequired`.
+
 
 Perhaps you're already anticipating that our internal messagebus and events can
 help implement this requirement.  We could define a service called
 `change_batch_quantity` that knows how to adjust batch quantities and also how
-to _deallocate_ any excess order lines, and then we can emit several events
-called `Deallocated` which can be forwarded on to the existing `allocate` service,
-in separate transactions.  Once again, our message bus helps us to enforce the
-single responsibility principle, and it allows us to make choices about
+to _deallocate_ any excess order lines, and then each deallocation can emit an
+`AllocationRequired` event which can be forwarded on to the existing `allocate`
+service, in separate transactions.  Once again, our message bus helps us to
+enforce the single responsibility principle, and it allows us to make choices about
 transactions and data integrity.
 
 ////
@@ -126,7 +127,7 @@ too, and we no longer need to make a distinction between internal and external
 event handlers:
 
 * `services.allocate()` we could imagine as being the handler for an
-  `AllocationRequest` event, and it can emit `Allocated` events as its output.
+  `AllocationRequired` event, and it can emit `Allocated` events as its output.
 
 * `services.add_batch()` could be the handler for a `BatchCreated`
   event.footnote:[If you've done a bit of reading around event-driven
@@ -139,34 +140,37 @@ Our new requirement will fit the same pattern:
 
 * An event called `BatchQuantityChanged` can invoke a handler called `change_batch_quantity()`.
 
-* And the new `Deallocated` events can be passed on to `services.allocate()`,
-  now that it's a handler too.
+* And the new `AllocationRequired` events that it may raise can be passed on to
+  `services.allocate()` too, so there is no conceptual difference between a
+  brand-new allocation coming from the API, and a reallocation that's
+  internally triggered by a deallocation
 
 
+All sound like a bit much?   Let's work towards it all gradually.  We'll
+follow the
+https://martinfowler.com/articles/preparatory-refactoring-example.html[Preparatory
+Refactoring] workflow, AKA "make the change easy, then make the easy change":
 
-All sound like a bit much?   Let's work towards it all gradually.
 
-* We'll start by building an end-to-end test that uses redis to put
+* We'll start by refactoring our service layer into event handlers.  We can
+  get used to the idea of events being the way we describe inputs and outputs
+  from our system.  The existing `services.allocate()` function will become the
+  handler for an event called `AllocationRequired`.
+
+* Then we'll build an end-to-end test that uses Redis to put
   `BatchQuantityChanged` events into the system, and look for `Allocated` events
-  coming out
+  coming out.
 
-* We'll start by implementing a "normal" service for `change_batch_quantity()`,
-  which will use our existing internal message bus to emit any `Deallocated`
-  events.
+* We'll build a thin wrapper around redis that knows how to convert internal events
+  to external/redis events, and vice-versa.
 
-* Once it's all working, we'll refactor to combine our services with our
-  message handlers, so that the entire application will be a message processor.
+* And then our actual implementation will be conceptually very simple: a new
+  handler for `BatchQuantityChanged` events, whose implementation will emit
+  `AllocationRequired` events, which in turn will be handled by the exact same
+  handler for allocation that in use in the API.
 
-////
-TODO: consider re-ordering this chapter as follows:
 
-1. make the change easy:
-2. introduce new external events, BatchQuantityChanged and Allocated
-3. introduce new internal event, Deallocated
-4. change API to use events, AllocationRequest and BatchCreated, merge service layer and message handlers
-5. make the easy change, add redis and its handler
-////
-
+=== Test-driving It All Using An End-to-end Test
 
 
 === Test-driving It All Using An End-to-end Test
