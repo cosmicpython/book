@@ -1,29 +1,20 @@
 [[chapter_07_external_events]]
-== Event-driven Architecture (using Events To Integrate Microservices)
+== Event-driven Architecture: The Application as Message Processor
 
-In this chapter:
+In this chapter we'll start to make events more fundamental to the internal
+structure of our application, by transforming it into a message-processor;
+everything will go via the message bus.
 
-* We'll see how to use events to communicate between multiple microservices.
+* We'll integrate a new requirement that introduces new events, and re-uses
+  some of our existing logic
 
-* We'll show how our service-layer lets us easily replace an HTTP API with an
-  asynchronous message bus.
+* We'll show the increasing similarity between functions at the service layer
+  and functions for event handling
 
-* We'll rebuild our application as a message-processor.
+* We'll merge the two, and use events to represent the external inputs to our
+  system, as well as internal events
 
 TODO: DIAGRAM GOES HERE
-
-
-=== How Do We Talk To The Outside World?
-
-We've got a microservice with a web API, but what about other ways of talking
-to other systems?  How does it know if, say, a shipment is delayed or the
-quantity is amended?  How does it communicate to our warehouse system to say
-that an order has been allocated and needs to be sent to a customer?
-
-In this chapter we'd like to show how the events metaphor can be extended
-to encompass the way that we handle incoming and outgoing messages from the
-system.
-
 
 === A New Requirement Leads Us To Consider A New Architecture
 
@@ -60,7 +51,6 @@ quantity drops to less than the total already allocated, we need to
 _deallocate_  those orders from that batch. Then each one will require
 a new allocation, which we can capture as an event called `AllocationRequired`.
 
-
 Perhaps you're already anticipating that our internal messagebus and events can
 help implement this requirement.  We could define a service called
 `change_batch_quantity` that knows how to adjust batch quantities and also how
@@ -71,50 +61,14 @@ enforce the single responsibility principle, and it allows us to make choices ab
 transactions and data integrity.
 
 
-
-==== Using A Redis Pubsub Channel For Integration
-
-But we also have a technical requirement:  to avoid the "distributed BBOM"
-antipattern, instead of temporally coupled HTTP API calls, we want to use some
-sort of asynchronous messaging layer to integrate between systems.  We want
-our "batch quantity changed" messages to come in as external events from upstream
-systems, and we want our system to publish "allocated" events for downstream systems
-to listen to.
-
-When moving towards events as an integration solution, you need to choose
-some sort of technology for passing those events from one system to another.
-We need to be able to publish events to some central service, and we need some
-way for other systems to be able to "subscribe" to different types of messages,
-and pick them up asynchronously from some sort of queue.
-
-At MADE.com we use https://eventstore.org/[Eventstore];  Kafka or RabbitMQ
-are valid alternatives. A lightweight solution based on Redis
-https://redis.io/topics/pubsub[pubsub channels] can also work just fine, and since
-Redis is much more generally familiar to people, we thought we'd use it for this
-book.
-
-NOTE: We're glossing over the complexity involved in choosing the right messaging
-    platform.  Concerns like message ordering, failure handling and idempotency
-    all need to be thought through.  For a few pointers, see the
-    <<footguns,Footguns>> section in <<epilogue_1_how_to_get_there_from_here>>.
-
-
-
 ==== Imagining an Architecture Change: Everything Will Be An Event Handler
 
-So we're now considering three kinds of flows through our system:
+So we're now considering two kinds of flows through our system:
 
 * API calls that are handled by a service-layer function
 
 * Internal events (which might be raised as a side-effect of a service-layer function)
   and their _handlers_ (which in turn might be service-layer functions)
-
-* External events, which can either be inputs to our system (probably invoking
-  a service-layer function), or outputs from our system (coming out of a service-layer
-  function or an internal event handler)
-
-So we have internal events vs external events, and we have service-layer functions
-as well as internal-event-handlers.
 
 Wouldn't it be easier if everything was an event handler?  If we rethink our API
 calls as capturing events, then the service-layer functions can be event handlers
@@ -133,7 +87,8 @@ event handlers:
 
 Our new requirement will fit the same pattern:
 
-* An event called `BatchQuantityChanged` can invoke a handler called `change_batch_quantity()`.
+* An event called `BatchQuantityChanged` can invoke a handler called
+  `change_batch_quantity()`.
 
 * And the new `AllocationRequired` events that it may raise can be passed on to
   `services.allocate()` too, so there is no conceptual difference between a
@@ -155,9 +110,6 @@ Refactoring] workflow, AKA "make the change easy, then make the easy change":
 * Then we'll build an end-to-end test that uses Redis to put
   `BatchQuantityChanged` events into the system, and look for `Allocated` events
   coming out.
-
-* We'll build a thin wrapper around Redis that knows how to convert internal events
-  to external/redis events, and vice-versa.
 
 * And then our actual implementation will be conceptually very simple: a new
   handler for `BatchQuantityChanged` events, whose implementation will emit
@@ -382,6 +334,7 @@ a temporary hack on our messagebus to let it return events.
 ====
 
 
+It's because we're mixing the read and write responsibilities in our system.
 We'll come back to fix this wart in <<chapter_09_cqrs>>.
 
 
@@ -446,7 +399,7 @@ image::images/reallocation_sequence_diagram.png[]
 ....
 [plantuml, reallocation_sequence_diagram]
 @startuml
-Redis -> MessageBus : BatchQuantityChanged event
+API -> MessageBus : BatchQuantityChanged event
 
 group BatchQuantityChanged Handler + Unit of Work 1
     MessageBus -> Domain_Model : change batch quantity
@@ -459,115 +412,15 @@ group AllocationRequired Handler + Unit of Work 2 (or more)
     Domain_Model -> MessageBus : emit Allocated event(s)
 end
 
-MessageBus -> Redis : publish to line_allocated channel
 @enduml
 ....
 
 
-=== Test-driving It All Using An End-to-end Test
 
+==== Our new event
 
-Here's how we might start with an end-to-end test.  We can use our existing
-API to create batches, and then we'll test both inbound and outbound messages:
-
-
-[[redis_e2e_test]]
-.An end-to-end test for our pubsub model (tests/e2e/test_external_events.py)
-====
-[source,python]
-----
-def test_change_batch_quantity_leading_to_reallocation():
-    # start with two batches and an order allocated to one of them  #<1>
-    orderid, sku = random_orderid(), random_sku()
-    earlier_batch, later_batch = random_batchref('old'), random_batchref('newer')
-    api_client.post_to_add_batch(earlier_batch, sku, qty=10, eta='2011-01-02')  <2>
-    api_client.post_to_add_batch(later_batch, sku, qty=10, eta='2011-01-02')  <2>
-    response = api_client.post_to_allocate(orderid, sku, 10)  <2>
-    assert response.json()['batchref'] == earlier_batch
-
-    subscription = redis_client.subscribe_to('line_allocated')  #<3>
-
-    # change quantity on allocated batch so it's less than our order  #<1>
-    redis_client.publish_message('change_batch_quantity', {  #<3>
-        'batchref': earlier_batch, 'qty': 5
-    })
-
-    # wait until we see a message saying the order has been reallocated  #<1>
-    messages = []
-    def assert_new_allocation_published():  #<4>
-        messages.append(wait_for(subscription.get_message))  #<4>
-        print(messages)
-        data = json.loads(messages[-1]['data'])
-        assert data['orderid'] == orderid
-        assert data['batchref'] == later_batch
-        return True
-
-    wait_for(assert_new_allocation_published)  #<4>
-----
-====
-
-<1> You can read the story of what's going on in this test from the comments:
-    we want to send an event into the system that causes an order line to be
-    reallocated, and we see that reallocation come out as an event in redis too.
-
-<2> `api_client` is a little helper that we refactored out to share between
-    our two test types, it wraps our calls to `requests.post`
-
-<3> `redis_client` is another test little test helper, the details of which
-    don't really matter; its job is to be able to send and receive messages
-    from various Redis channels. We'll use a channel called
-    `change_batch_quantity` to send in our request to change the quantity for a
-    batch, and we'll listen to another channel called `line_allocated` to
-    look out for the expected reallocation.
-
-<4> The last little test helper is a `wait_for` function.  Because we're
-    moving to asynchronous model, we need our tests to be able to wait until
-    something happens.  To do that, we wrap our assertions inside a function.
-    We'll show the code for `wait_for` below, for the curious:
-
-////
-TODO (ej) Minor comment: This e2e test might not be safe or repeatable as part of a
-     larger test suite, since test run data is being persisted in redis.
-     Purging the queue as part of setup will help, but it would still have problems
-     with running tests in parallel. Not sure if it's worth bringing up as it might
-     be too much of a digression.
-////
-
-[[wait_for]]
-.A helper function for testing asynchronous behaviour (tests/e2e/wait_for.py)
-====
-[source,python]
-----
-def wait_for(fn):
-    """
-    Keep retrying a function, catching any exceptions, until it returns something truthy,
-    or we hit a timeout.
-    """
-    timeout = time.time() + 3
-    while time.time() < timeout:
-        try:
-            r = fn()
-            if r:
-                return r
-        except:
-            if time.time() > timeout:
-                raise
-        time.sleep(0.1)
-    pytest.fail(f'function {fn} never returned anything truthy')
-----
-====
-////
-TODO (ej)  Not 100% sure of the necessity of wait_for. According to the source code, redis-py
-      subscription.get_message already takes a timeout, and under what conditions would
-      a re-triable exception be thrown?
-
-     If you do need to poll and retry, the tenacity library may be simpler than wait_for.
-////
-
-
-==== Our new events
-
-We have two new events, one for input and one for output.
+The event that tells us a batch quantity has changed is very simple, it just
+nees a batch reference and a new quantity:
 
 
 [[batch_quantity_changed_event]]
@@ -576,74 +429,11 @@ We have two new events, one for input and one for output.
 [source,python]
 ----
 @dataclass
-class BatchQuantityChanged(Event):  #<1>
+class BatchQuantityChanged(Event):
     ref: str
     qty: int
-
-...
-
-@dataclass
-class Allocated(Event):  #<2>
-    orderid: str
-    sku: str
-    qty: int
-    batchref: str
-
 ----
 ====
-
-<1> The input event that tells us a batch quantity has changed is very simple,
-    it just has a batch reference and a new quantity.
-
-<2> The output event captures everything we need to know about an allocation:
-    the details of the order line, and which batch it was allocated to.
-
-
-==== Redis Is Another Thin Adapter Around Our Message Bus
-
-Our Redis pubsub client is very much like flask:  it translates from the outside
-world to our events:
-
-
-[[redis_pubsub_first_cut]]
-.A first cut of a redis message listener (src/allocation/redis_pubsub.py)
-====
-[source,python]
-----
-r = redis.Redis(**config.get_redis_host_and_port())
-
-
-def main():
-    orm.start_mappers()
-    pubsub = r.pubsub(ignore_subscribe_messages=True)
-    pubsub.subscribe('change_batch_quantity')  <1>
-
-    for m in pubsub.listen():
-        handle_change_batch_quantity(m)
-
-
-def handle_change_batch_quantity(m):
-    logging.debug('handling %s', m)
-    data = json.loads(m['data'])  #<2>
-    event = events.BatchQuantityChanged(ref=data['batchref'], qty=data['qty'])  #<2>
-    messagebus.handle([event], uow=unit_of_work.SqlAlchemyUnitOfWork())
-
-
-def publish(channel, event):  #<3>
-    logging.debug('publishing: channel=%s, event=%s', channel, event)
-    r.publish(channel, json.dumps(asdict(event)))
-----
-====
-
-<1> `main()` subscribes us to the `change_batch_quantity` channel on load
-
-<2> And our main job as an entrypoint to the system is to deserialize JSON, and
-    pass it to the service layer, much like the Flask adapter does.
-
-<3> We also provide a helper function to publish events back into Redis.
-
-
-Now we can build our handler for `BatchQuantityChanged`.
 
 
 === Test-driving A New Handler
@@ -700,8 +490,6 @@ class TestChangeBatchQuantity:
 <2> But if we try and change the quantity so that there's less than
     has been allocated, we'll need to deallocate at least one order,
     and we expect to reallocated it to a new batch
-
-
 
 
 
@@ -836,14 +624,6 @@ allocate function to publish an event.
 [source,python]
 ----
 class Product:
-    #...
-    def allocate(self, line: OrderLine) -> str:
-        try:
-            ...
-            batch.allocate(line)
-            self.events.append(events.Allocated(
-                line.orderid, line.sku, line.qty, batch.reference
-            ))
     ...
 
     def change_batch_quantity(self, ref: str, qty: int):
@@ -854,18 +634,17 @@ class Product:
             self.events.append(
                 events.AllocationRequired(line.orderid, line.sku, line.qty)
             )
-#...
+...
 
 class Batch:
-    #...
+    ...
 
     def deallocate_one(self) -> OrderLine:
         return self._allocations.pop()
 ----
 ====
 
-We wire up our new handler, and specify another one for publishing
-the external event:
+We wire up our new handler:
 
 
 [[full_messagebus]]
@@ -877,29 +656,11 @@ HANDLERS = {
     events.BatchCreated: [handlers.add_batch],
     events.BatchQuantityChanged: [handlers.change_batch_quantity],
     events.AllocationRequired: [handlers.allocate],
-    events.Allocated: [handlers.publish_allocated_event],
     events.OutOfStock: [handlers.send_out_of_stock_notification],
 
 }  # type: Dict[Type[events.Event], List[Callable]]
 ----
 ====
-
-Publishing the event uses our helper function from the redis wrapper:
-
-[[publish_event_handler]]
-.Publish to redis (src/allocation/handlers.py)
-====
-[source,python]
-----
-def publish_allocated_event(
-        event: events.Allocated, uow: unit_of_work.AbstractUnitOfWork,
-):
-    redis_pubsub.publish('line_allocated', event)
-----
-====
-
-TIP: External events are one of the places it's important to apply some validation.
-    See <<appendix_validation>> for some validation philosophy and examples.
 
 
 And our system is now entirely event-driven!
@@ -916,6 +677,19 @@ much a topic for another book though).
 *******************************************************************************
 
 
+=== What Have We Achieved?
+
+* events are simple dataclasses that define the data structures for inputs,
+  and internal messages within our system.  this is quite powerful from a DDD
+  standpoint, since events often translate really well into business language;
+  cf. "event storming" (TODO: link)
+
+* handlers are the way we react to events.   They can call down to our
+  model, or they can call out to external services.  We can define multiple
+  handlers for a single event if we want to.  handlers can also raise other
+  events.  This allows us to be very granular about what a handler does,
+  and really stick to the SRP.
+
 === Why have we achieved?
 
 TODO: talk about the fact that we've implemented quite a complicated use case
@@ -924,26 +698,4 @@ TODO: talk about the fact that we've implemented quite a complicated use case
     _complexity_ stays constant.  we just have events, handlers, and a unit
     of work.  it's easy to reason about, and easy to explain.  Possibly
     show a hacky version for comparison?
-
-=== What Have We Achieved?
-
-* events are simple dataclasses that define the data structures for inputs,
-  outputs, and internal messages within our system.  this is quite powerful
-  from a DDD standpoint, since events often translate really well into
-  business language; cf. "event storming" (TODO: link)
-
-* handlers are the way we react to events.   They can call down to our
-  model, or they can call out to external services.  We can define multiple
-  handlers for a single event if we want to.  handlers can also raise other
-  events.  This allows us to be very granular about what a handler does,
-  and really stick to the SRP.
-
-* events can come _from_ the outside, but they can also be published
-  externally -- our `publish` handler converts an event to a message
-  on a redis channel. We use events to talk to the outside world.
-
-We've added bit of complexity to our architecture, but hopefully you can
-see how we've now made it very easy to plug in almost any new requirement
-from the business, whether it's a new use case, a new integration with
-one of our internal systems, or an integration with external systems.
 

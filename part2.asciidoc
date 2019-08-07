@@ -19,7 +19,6 @@ the real world, our applications sit within an organisation and need to exchange
 information with other parts of the system.
 
 
-
 //TODO (DS): Up until this point you haven't really said much about how this
 //code exists in the context of a wider system. I had assumed it was a
 //microservice...Maybe earlier in the book we need to understand a bit about how
@@ -52,12 +51,7 @@ Message bus::
 CQRS::
   Improve performance and scalability by separating reads and writes.
 
-Plus we'll introduce a dependency injection framework that uses type hints, just
-to annoy Harry.
-
-//TODO (DS): Doesn't seem much to do with event driven architecture?
-
-//TODO: plus, we don't, currently.
+Plus we'll introduce a dependency injection framework, just to annoy Harry.
 
 //TODO (DS): It seems to me the two key themes in this book are vertical and
 //horizontal decoupling. Did you consider choosing those for the two parts?
