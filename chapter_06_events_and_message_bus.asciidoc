@@ -5,11 +5,11 @@
 ********************************************************************************
 
 * We'll examine the kind of requirement that leads to a _big ball of mud_.
-* We'll see how we can use _domain events_ to separate side-effects from our
+* We'll see how we can use Domain Events to separate side-effects from our
   use-cases.
-* We'll show how to build a simple _message bus_ for triggering behavior in
+* We'll show how to build a simple Message Bus for triggering behavior in
   your codebase.
-* We'll see how our _unit of work_ can be extended to cover multi-step processes.
+* We'll see how our Unit of Work can be extended to cover multi-step processes.
 
 TODO: DIAGRAM GOES HERE
 
@@ -274,7 +274,7 @@ class Product:
 
 TIP: Exceptions and Events don't mix.  If you're implementing domain
     events, don't raise exceptions to describe the same domain concept.
-    As we'll see later when we handle events in the unit of work, it's
+    As we'll see later when we handle events in the Unit of Work, it's
     confusing to have to reason about events and exceptions together.
 
 TODO: This ^^^ is true, but I think the real problem is that you shouldn't use
@@ -411,7 +411,7 @@ TODO (ej)
 === The Unit Of Work Can Pass Events To The Message Bus
 
 The UoW already has a `try/finally`, and it knows about all the aggregates
-currently in play because it provides access to the _Repository_.  So it's
+currently in play because it provides access to the Repository.  So it's
 a good place to spot events and pass them to the message bus:
 
 ////
@@ -636,16 +636,16 @@ TODO - wrap up for domain events chapter
 Events can help with SRP::
     bla
 
-A messagebus maps events to handlers::
+A Message Bus maps Events to Handlers::
     bla
 
-Option 1: domain model raises events, service layer passes them to messagebus::
+Option 1: Domain Model raises events, Service Layer passes them to Message Bus::
     bla
 
-Option 2: service layer raises events and passes them to messagebus::
+Option 2: Service Layer raises events and passes them to Message Bus::
     bla
 
-Option 3: unit of work collects events from aggregates and passes them to message bus::
+Option 3: Unit of Work collects events from Aggregates and passes them to Message Bus::
     bla
 
 *****************************************************************

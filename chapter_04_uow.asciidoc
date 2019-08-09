@@ -4,15 +4,15 @@
 .In this chapter
 ********************************************************************************
 
-* We'll introduce a final piece of the puzzle that ties together the repository
-  and service layer: the _Unit of Work_ pattern.
+* We'll introduce a final piece of the puzzle that ties together the Repository
+  and Service Layer: the _Unit of Work_ pattern.
 * We'll see how to use a context manager as a simplifying abstraction for doing
   atomic operations.
 * We'll completely decouple the service layer from our data layer.
 
-  // NOTE: I feel like maybe we should waffle a bit more in this chapter? We
-  could talk about guidelines for what to mock?
-  // DIAGRAM GOES HERE
+// TODO: I feel like maybe we should waffle a bit more in this chapter? We
+// could talk about guidelines for what to mock?
+// DIAGRAM GOES HERE
 
 ********************************************************************************
 
@@ -72,7 +72,7 @@ things from repos, and commit:
 
 
 [[test_unit_of_work]]
-.A basic "roundtrip" test for a unit of work (tests/integration/test_uow.py)
+.A basic "roundtrip" test for a Unit of Work (tests/integration/test_uow.py)
 ====
 [source,python]
 ----
@@ -114,7 +114,7 @@ def test_uow_can_retrieve_a_batch_and_allocate_to_it(session_factory):
 ====
 //TODO (DS): This example would be easier to understand if it had the test at the top.
 
-<1> We initialise the unit of work using our custom session factory,
+<1> We initialise the Unit of Work using our custom session factory,
     and get back a `uow` object to use in our `with` block.
 
 <2> The UoW gives us access to the batches repository via
@@ -133,7 +133,7 @@ base class:
 
 
 [[abstract_unit_of_work]]
-.the unit of work context manager in the abstract (src/allocation/unit_of_work.py)
+.the Unit of Work context manager in the abstract (src/allocation/unit_of_work.py)
 ====
 [source,python]
 ----
@@ -183,7 +183,7 @@ class AbstractUnitOfWork(abc.ABC):
 ==== The Real Unit Of Work Uses Sqlalchemy Sessions
 
 [[unit_of_work]]
-.the real SQLAlchemy unit of work (src/allocation/unit_of_work.py)
+.the real SQLAlchemy Unit of Work (src/allocation/unit_of_work.py)
 ====
 [source,python]
 ----
@@ -222,7 +222,7 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 
 === Fake Unit Of Work For Testing:
 
-Here's how we use a fake unit of work in our service layer tests
+Here's how we use a fake Unit of Work in our service layer tests
 
 
 [[fake_unit_of_work]]
@@ -268,7 +268,7 @@ https://github.com/python-leap/book/issues/44
 ////
 
 <1> `FakeUnitOfWork` and `FakeRepository` are tightly coupled,
-    just like the real unit of work and repository classes
+    just like the real Unit of Work and Repository classes
 
 <2> Notice the similarity with the fake `commit()` function
     from `FakeSession` (which we can now get rid of).  But it's
@@ -328,7 +328,7 @@ def allocate(
 ====
 
 <1> Our service layer now only has the one dependency, once again
-    on an _abstract_ unit of work.
+    on an _abstract_ Unit of Work.
 
 
 === Explicit Tests For Commit/rollback Behaviour
@@ -451,7 +451,7 @@ next time?  But you should experiment and figure out your own preferences here.
 
 === Examples: Using Uow To Group Multiple Operations Into An Atomic Unit
 
-Here's a few examples showing the unit of work pattern in use.  You can
+Here's a few examples showing the Unit of Work pattern in use.  You can
 see how it leads to simple reasoning about what blocks of code happen
 together:
 
@@ -567,7 +567,7 @@ something you're particularly proud of?
 
 === Wrap-up
 
-Hopefully we've convinced you that the unit of work is a useful pattern, and
+Hopefully we've convinced you that the Unit of Work is a useful pattern, and
 hopefully you'll agree that the context manager is a really nice Pythonic way
 of visually grouping code into blocks that we want to happen atomically.
 
@@ -608,19 +608,18 @@ SQLAlchemy's own recommendations:
 
 .Unit of Work Pattern: Wrap-up
 *****************************************************************
-_Unit of work_ is an abstraction around data integrity::
+Unit of Work is an abstraction around data integrity::
     It helps to enforce the consistency of our domain model, and improves
     performance, by letting us perform a single _flush_ operation at the
     end of an operation.
 
-It works closely with _repository_ and Service Layer::
-    The unit of work pattern completes our abstractions over data-access by
-    representing atomic updates.
-    Each of our service-layer use-cases runs in a single unit of work which
-    succeeds or fails as a block.
+It works closely with the Repository and Service Layer::
+    The Unit of Work pattern completes our abstractions over data-access by
+    representing atomic updates. Each of our service-layer use-cases runs in a
+    single unit of work which succeeds or fails as a block.
 
 This is a lovely case for a context manager::
-    Context managers are an idiomatic way of defining scope. We can use a
+    Context managers are an idiomatic way of defining scope in Python. We can use a
     context manager to automatically rollback our work at the end of request
     which means the system is safe by default.
 

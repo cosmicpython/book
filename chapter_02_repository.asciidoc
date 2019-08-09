@@ -12,7 +12,7 @@
   system more testable by hiding the complexities of the database.
 
 By the end of the chapter, we'll have built a `Repository` class that sits
-between `SqlAlchemy` (our ORM) and our domain model's `Batch` classes, as
+between `SqlAlchemy` (our ORM) and our Domain Model's `Batch` classes, as
 in <<chapter_02_class_diagram>>:
 
 [[chapter_02_class_diagram]]
@@ -149,7 +149,7 @@ image::images/onion_architecture.png[]
            |
            V
    +---------------------------------------------------+
-   |                   Domain model                    |
+   |                   Domain Model                    |
    +---------------------------------------------------+
                                         ^
                                         |
@@ -278,7 +278,7 @@ way around.
 
 Django doesn't provide an equivalent for SQLAlchemy's "classical mapper,"
 but see <<appendix_django>> for some examples of how you apply dependency
-inversion and the repository pattern to Django.
+inversion and the Repository pattern to Django.
 
 *******************************************************************************
 
@@ -380,7 +380,7 @@ def test_orderline_mapper_can_save_lines(session):
 
 
 You probably wouldn't keep these tests around--as we'll see shortly, once
-you've taken the step of inverting the dependency of ORM and domain model, it's
+you've taken the step of inverting the dependency of ORM and Domain Model, it's
 only a small additional step to implement an additional abstraction called the
 repository pattern, which will be easier to write tests against, and will
 provide a simple, common interface for faking out later in tests.
@@ -437,7 +437,7 @@ def allocate_endpoint():
 
 === Introducing Repository Pattern.
 
-The _Repository Pattern_ is an abstraction over persistent storage. It hides the
+The _Repository pattern_ is an abstraction over persistent storage. It hides the
 boring details of data access by pretending that all of our data is in memory.
 
 If we had infinite memory in our laptops, we'd have no need for clumsy databases.
@@ -476,8 +476,8 @@ The simplest repository has just two methods: `add` to put a new item in the
 repository, and `get` to return a previously added item.footnote:[
 You may be thinking, what about `list` or `delete` or `update`, but in the
 ideal world, we only modify our model objects one at a time, and delete is
-usally handled as a soft-delete, ie `batch.cancel()`. Finally, update is
-taken care of by the unit of work, as we'll see in <<chapter_04_uow>>.].
+usually handled as a soft-delete, ie `batch.cancel()`. Finally, update is
+taken care of by the Unit of Work, as we'll see in <<chapter_04_uow>>.].
 We stick rigidly to using these methods for data access in our domain and our
 service layer. This self-imposed simplicity stops us from coupling our domain
 model to the database.

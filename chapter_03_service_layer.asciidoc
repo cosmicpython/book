@@ -9,15 +9,15 @@ In this chapter:
 * We'll discuss the difference between orchestration logic, business logic, and
   interfacing code.
 
-* We introduce the service layer pattern for orchestrating our workflows.
+* We introduce the _Service Layer_ pattern for orchestrating our workflows.
 
 * We'll see how our database abstractions, plus a service layer, let us write
   fast tests of our core functionality
 
 * We'll discuss different kinds of testing, and when each is appropriate
 
-By the end of this chapter, we'll have add a _Flask API_, that will talk to
-a _Service Layer_, which will serve as the entrypoint to our domain model.
+By the end of this chapter, we'll have added a _Flask API_, that will talk to
+a _Service Layer_, which will serve as the entrypoint to our Domain Model.
 By making the service layer depend on the `AbstractRepository`, we'll be
 able to unit test it using `FakeRepository`, and then run it in real life
 using `SqlAlchemyRepository`.  <<chapter_03_class_diagram>> is a class
@@ -1381,6 +1381,6 @@ image::images/service_layer_diagram_runtime_dependencies.png[]
 
 Wonderful. But there's still a bit of awkwardness we'd like to get rid of. The
 service layer is tightly coupled to a `session` object.  In the next chapter,
-we'll introduce one more pattern that works closely with _repository_ and
-_service layer_, the _unit of work_ pattern, and everything will be absolutely
+we'll introduce one more pattern that works closely with Repository and
+Service Layer, the Unit of Work pattern, and everything will be absolutely
 lovely. You'll see!

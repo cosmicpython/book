@@ -16,7 +16,7 @@ In this chapter:
 
 In the <<prologue>>, we used the term _business logic layer_ to describe the
 central layer of a three-layered architecture. For the rest of the book, we're
-going to use the term _domain model_ instead. This is a term from the DDD
+going to use the term _Domain Model_ instead. This is a term from the DDD
 community that does a better job of capturing our intended meaning (see the
 next sidebar for more on DDD).
 
@@ -41,7 +41,7 @@ but it does mean that some predictions fall outside of its domain.
 .This is not a DDD book.  You should read a DDD book.
 *****************************************************************
 
-Domain-Driven Design, or DDD, is where the concept of domain modelling was
+Domain-driven design, or DDD, is where the concept of domain modelling was
 popularized,footnote:[
 DDD did not originate domain modelling. Eric Evans refers to _Object Design_
 from Rebecca Whirfs-Brock and Alan McKean, which introduced Responsibility-Driven
@@ -51,7 +51,7 @@ Jacobson and Grady Booch; the term has been around since the mid-1980s.]
 and it's been a hugely successful movement in transforming the way people
 design software by focusing on the core business domain.  Many of the
 architecture patterns that we cover in this book, like Entity, Aggregate
-and Value Objects (see <<chapter_04_uow>>), and _repository pattern_ (in
+and Value Objects (see <<chapter_04_uow>>), and Repository pattern (in
 <<chapter_02,the next chapter>>) all come from the DDD tradition.
 
 In a nutshell, DDD says that the most important thing about software is that it
@@ -74,7 +74,7 @@ and cannot encourage you enough to go on and read a proper DDD book.
 
 *****************************************************************
 
-The domain model is the mental map that business owners have of their
+The Domain Model is the mental map that business owners have of their
 businesses. All business people have these mental maps, they're how humans think
 about complex processes.
 
@@ -783,7 +783,7 @@ ____
 
 Evans discusses the idea of Domain Servicesfootnote:[Domain services are
 not the same thing as the services from the
-<<chapter_03_service_layer,service layer>>, although they are
+<<chapter_03_service_layer,Service Layer>>, although they are
 often closely related.  A Domain Service represents a business concept or
 process, whereas a service-layer service represents a use case for your
 application.  Often the service layer will call a domain service.]
