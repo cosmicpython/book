@@ -16,7 +16,7 @@ root" in OO parlance, is a pattern that can help us to keep things tidy.  Let's
 take a look.
 
 
-=== Defaults And Config
+=== Defaults and Config
 
 Where do we declare our defaults?  _config.py_ is one place, but we also do
 some in, eg, _unit_of_work.py_, which declares the "default" database session
@@ -98,7 +98,7 @@ def bootstrap(
 * it gives us back the core of our app, the messagebus
 
 
-=== Using Bootstrap In Our Entrypoints
+=== Using Bootstrap in Our Entrypoints
 
 In our application's entrypoints, we just call `bootstrap.bootstrap()`
 to get a messagebus, rather than configuring a UoW and the rest of it.

@@ -8,16 +8,24 @@ SPECIAL = {
     'CSVs', 'To/From', 'UoW',
 }
 
+LOWERCASE = {
+    'with', 'our', 'is',
+}
+
 
 
 def specialcases(w, **_):
-    if w.lower() in SPECIAL:
-        return next(special for special in SPECIAL if special == w.lower())
+    if w.lower() in LOWERCASE:
+        return w.lower()
+    if w.lower() in {s.lower() for s in SPECIAL}:
+        return next(special for special in SPECIAL if special.lower() == w.lower())
+    if  '_' in w:
+        return w
     return None
 
 
 def fix_line(l):
-    if not (l.startswith('==') or l.startswith('.')):
+    if not l.startswith('=='):
         return l
     if l == '====':
         return l
@@ -39,6 +47,8 @@ def main():
 if __name__ == '__main__':
     main()
 
+import pytest
+
 def test_lowercases_short_words():
     assert fix_line('=== What Is A Domain Model') == '=== What Is a Domain Model'
 
@@ -49,14 +59,15 @@ def test_fix_line_leaves_small_words_alone_except_at_beginning():
     assert fix_line('=== This is a line') == '=== This Is a Line'
     assert fix_line('=== The initial the is fine') == '=== The Initial the Is Fine'
 
+@pytest.mark.skip
 def test_dotstarters():
     assert fix_line('.A sidebar title') == '.A Sidebar Title'
 
 def test_hyphens():
-    assert fix_line('.A wrap-up') == '.A Wrap-Up'
+    assert fix_line('=== A wrap-up') == '=== A Wrap-Up'
 
 def test_uow():
-    assert fix_line('.A Uow') == '.A UoW'
+    assert fix_line('=== A Uow') == '=== A UoW'
 
 def test_underscores():
-    assert fix_line('.A special_method') == '.A special_method'
+    assert fix_line('=== A special_method') == '=== A special_method'
