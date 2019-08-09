@@ -53,7 +53,7 @@ package SqlAlchemy {
 ----
 
 
-=== Persisting our domain model
+=== Persisting Our Domain Model
 
 In the previous chapter we built a simple domain model that can allocate orders
 to batches of stock. It's easy for us to write tests against this code because
@@ -180,7 +180,7 @@ and whether there is a Pythonic equivalent of interfaces, later in the book.
 *******************************************************************************
 
 
-=== Reminder: our Model
+=== Reminder: Our Model
 
 Let's remind ourselves of our domain model (see <<model_diagram_reminder>>):
 An allocation is the concept of linking an `OrderLine` to a `Batch`.  We're

@@ -23,7 +23,7 @@ to encompass the way that we handle incoming and outgoing messages from the
 system.
 
 
-=== An external event triggers internal invents
+=== An External Event Triggers Internal Invents
 
 We learn about the need to change batch quantities when they're already
 in the system.  Perhaps someone made a mistake on the number in the manifest,
@@ -315,7 +315,7 @@ look like:
     and we expect to reallocated it to a new batch
 
 
-==== Adding some Internal Events To Express De-allocation
+==== Adding Some Internal Events To Express De-allocation
 
 A batch might have dozens of orders allocated to it. Similarly to the "out of
 stock" email, rather than doing deallocation and re-allocation in-line in the
@@ -918,7 +918,7 @@ TODO: talk about the fact that we've implemented quite a complicated use case
     show a hacky version for comparison?
 
 
-=== Why have we achieved?
+=== Why Have We Achieved?
 
 === What Have We Achieved?
 

@@ -423,7 +423,7 @@ class TestAddBatch:
 ====
 
 
-=== Building an adapter "properly": a worked example
+=== Building An Adapter "properly": A Worked Example
 
 We've got two types of dependency:
 
@@ -459,7 +459,7 @@ Even though it's simple, let's use `send_mail` as an example to talk
 through how you might define a more complex dependency.
 
 
-==== Define the Abstract and Concrete implementations
+==== Define The Abstract And Concrete Implementations
 
 We'll imagine a more generic "notifications" API.  Could be
 email, could be SMS, could be slack posts one day.
