@@ -2,7 +2,7 @@
 [preface]
 == Preface
 
-=== Who Are We And Why Are We Writing This Book?
+You may be wondering, who we are, and why we wrote this book.
 
 At the end of Harry's last book,
 http://www.obeythetestinggoat.com/pages/book.html[Test-Driven Development with Python],
@@ -15,11 +15,13 @@ made vague references to "Hexagonal Architecture" and "Ports and Adapters" and
 that these weren't things he really understood or had done in practice.
 
 And then he was lucky enough to run into Bob, who has the answers to all these
-questions.  
+questions.
 
 Bob ended up a software architect because nobody else on his team was
-doing it. He turned out to be pretty bad at it, but was lucky enough to run
-into Ian, who taught him new ways of writing and thinking about code.
+doing it. He turned out to be pretty bad at it, but _he_ was lucky enough to run
+into Ian Cooper, who taught him new ways of writing and thinking about code.
+
+=== Managing Complexity, Solving Business Problems
 
 We both work for MADE.com - a European e-commerce company who sell furniture
 online - where we apply the techniques in this book to build distributed systems
@@ -64,7 +66,7 @@ requirements.
 
 None of the techniques and patterns we're going to discuss in this book are
 new, but they are mostly new to the Python world.  And this book won't be
-a replacement for the classics in the field like 
+a replacement for the classics in the field like
 https://domainlanguage.com/ddd/[Eric Evans' _Domain-Driven Design_]
 or
 https://www.martinfowler.com/books/eaa.html[Martin Fowler's _Patterns of
@@ -90,17 +92,17 @@ Here are a few things we assume about you, dear reader.
 We assume you've been close to some reasonably complex Python applications.
 
 We assume you've seen some of the pain that comes with trying to manage
-that complexity
+that complexity.
 
 We do _not_ assume that you already know anything about DDD, or any of the
 classic application architecture patterns.
 
 We structure our explorations of architectural patterns around an example app,
-building it up chapter by chapter.  We use Test-Driven Development (TDD) at
+building it up chapter by chapter.  We use test-driven development (TDD) at
 work, so we tend to show listings of tests first, followed by implementation.
-If you're not used to working test-first, that may be a little strange at
-first, but we hope you'll soon get used to seeing code "being used," i.e. from
-the outside, before you see how it's built on the inside.
+If you're not used to working test-first, it may feel a little strange at
+the beginning, but we hope you'll soon get used to seeing code "being used,"
+i.e. from the outside, before you see how it's built on the inside.
 
 We use some specific Python (version 3) frameworks and technologies, like
 Flask, SQLAlchemy, and Pytest, as well as Docker and Redis.  If you're already
@@ -110,9 +112,9 @@ technology choices become minor implementation details.
 
 
 
-=== A Brief Overview Of What You'll Learn
+=== A Brief Overview of What You'll Learn
 
-==== Part 1: Dependency Inversion and Domain modelling
+==== Part 1: Dependency Inversion and Domain Modelling
 
 Chapter 1: Domain Modelling and DDD::
     At some level, everyone has learned the lesson that complex business
@@ -123,7 +125,7 @@ Chapter 1: Domain Modelling and DDD::
     show how to get started with a model that has no external dependencies, and
     fast unit tests.
 
-Chapter 2, 3 & 4: Repository, Service Layer and Unit of Work Patterns::
+Chapter 2, 4 and 5: Repository, Service Layer and Unit of Work Patterns::
     In these three chapters we present three closely related and
     mutually reinforcing patterns that support our ambition to keep
     the model free of extraneous dependencies.  We build a layer of
@@ -132,7 +134,12 @@ Chapter 2, 3 & 4: Repository, Service Layer and Unit of Work Patterns::
     primary use cases. We show how this layer makes it easy to build
     very thin entrypoints to our system, be it a Flask API or a CLI.
 
-Chapter 5: Aggregate Pattern::
+Chapter 3: An Aside on Coupling and Abstractions::
+    After presenting the first abstraction (Repository Pattern), we take the
+    opportunity for a general discussion of how to choose abstractions, and
+    what their role is in choosing how our software is coupled together.
+
+Chapter 6: Aggregate Pattern::
     A brief return to the world of DDD, where we discuss how to choose the
     right _Aggregate_, and how this choice relates to questions of data
     integrity
@@ -140,40 +147,40 @@ Chapter 5: Aggregate Pattern::
 
 ==== Part 2: Event-Driven Architecture
 
-Chapters 6, 7 & 8: Event-Driven Architecture::
-    We introduce three more mutually-reinforcing patterns, starting with 
+Chapters 7, 8 and 9: Event-Driven Architecture::
+    We introduce three more mutually-reinforcing patterns, starting with
     the concept of _Domain Events_, a vehicle for capturing the idea that some
-    interactions with a system are triggers for others.  We use  a Message
-    bus to allow actions to trigger events, and call appropriate _Handlers_.
+    interactions with a system are triggers for others.  We use  a _Message
+    Bus_ to allow actions to trigger events, and call appropriate _Handlers_.
     We move on to discuss how events can be used as a pattern for integration
     between services, in a microservices architecture. Finally we add the
     distinction between _Commands_ and _Events_.  Our application is now
     fundamentally a message-processing system.
 
-Chapter 9: CQRS::
+Chapter 10: CQRS::
     An example of _command-query responsibility segregation_, with and without
     events.
 
-Chapter 10 Dependency Injection::
+Chapter 11 Dependency Injection::
     We tidy up our explicit and implicit dependencies, and implement a very
     simple dependency injection framework.
 
 
-// TODO (DS): (General thoughts) There's nothing in the book about how to
-// migrate to the pattern described here. I would have thought target readers
-// are likely to be working on an existing project that isn't scaling well -
-// how do they begin to apply these principles to existing architecture.
-// Perhaps some advice on how to begin if you have (a) traditional three layer
-// architecture or (b) big ball of mud.
+==== Epilogue (Chapter 12): How Do I Get There From Here?
+
+Implementing architectural patterns always looks easy when you show a simple
+example, starting from scratch, but many of you will probably be wondering how
+to apply these principles to existing software.  We'll attempt to provide a
+few pointers in this last chapter and some links to further reading.
 
 
-=== Example Code and Coding along
+
+=== Example Code and Coding Along
 
 You're reading a book, but you'll probably agree with us when we say that
-the best way to learn about code is to code.  Bob and I learned most of what
-we know from pairing with people, writing code with them, and learning by
-doing, and we'd like to recreate that experience as much as possible for you
-in this book.
+the best way to learn about code is to code.  We learned most of what we know
+from pairing with people, writing code with them, and learning by doing, and
+we'd like to recreate that experience as much as possible for you in this book.
 
 As a result, we've structured the book around a single example project
 (although we do sometimes throw in other examples), which we build up as we go,
