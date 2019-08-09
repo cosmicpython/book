@@ -1,29 +1,22 @@
 [[chapter_04_uow]]
 == Unit Of Work Pattern
 
-.In this chapter
-********************************************************************************
+In this chapter we'll introduce the final piece of the puzzle that ties
+together the Repository and Service Layer: the _Unit of Work_ pattern.
 
-* We'll introduce a final piece of the puzzle that ties together the Repository
-  and Service Layer: the _Unit of Work_ pattern.
-* We'll see how to use a context manager as a simplifying abstraction for doing
-  atomic operations.
-* We'll completely decouple the service layer from our data layer.
+If the Repository is our abstraction over the idea of persistent storage,
+the Unit of Work is our abstraction over the idea of _atomic operations_. It
+will allow us to finally, fully, decouple our Service Layer from the data layer.
+
+And we'll do it using a lovely piece of Python syntax, a context manager.
+
+// TODO DIAGRAM GOES HERE
 
 // TODO: I feel like maybe we should waffle a bit more in this chapter? We
 // could talk about guidelines for what to mock?
-// DIAGRAM GOES HERE
-
-********************************************************************************
-
-In this chapter we'll introduce a final piece of the puzzle that really pulls
-the Repository and Service Layer patterns together, the _Unit of Work_ pattern.
-
-//TODO: Big Lebowski illustration
 
 
-A Repository is an abstraction over the idea of persistent storage. A Unit of
-Work is an abstraction over the idea of atomic operation.
+=== The Unit of Work Collaborates With Repository(-ies)
 
 The unit of work will give us access to our repository(-ies), and then keep
 track of what objects were loaded and what the latest state is.footnote:[
@@ -34,7 +27,8 @@ that collaborate in their roles are called _object neighborhoods_ which
 is, in our professional opinion, totally adorable.]
 This gives us two useful things:
 
-//TODO (DS): Maybe the fact that it provides access to repositories needs more emphasis.  
+//TODO (DS): Maybe the fact that it provides access to repositories needs more
+//emphasis.
 
 1) It gives us a stable snapshot of the database to work with, so that the
 objects we use aren't changing halfway through an operation.
@@ -64,7 +58,7 @@ A context manager.
 
 //TODO (DS): Could be a good moment to revisit the diagram at the beginning of the book.
 
-=== Test-driving A Uow With Integration Tests
+=== Test-driving A UoW With Integration Tests
 
 Here's a test for a new `UnitofWork` (or UoW, which we pronounce "you-wow").
 It's a context manager that allows us to start a transaction, retrieve and get
