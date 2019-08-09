@@ -1,26 +1,24 @@
 [[chapter_03_service_layer]]
 
-== Our First Use Case: Flask API And Service Layer.
+== our First Use Case: Flask API and Service Layer.
 
 Back to our allocations project! 
 
-In this chapter:
+In this chapter, we'll discuss the difference between orchestration logic,
+business logic, and interfacing code, and we introduce the _Service Layer_
+pattern to take care of orchestrating our workflows and defining the use
+cases of our system.
 
-* We'll discuss the difference between orchestration logic, business logic, and
-  interfacing code.
+We'll also discuss testing: by combining the Service Layer with our Repository
+abstraction over the database, we're able to write fast tests, not just of
+our domain model, but the entire workflow for a use case.
 
-* We introduce the service layer pattern for orchestrating our workflows.
-
-* We'll see how our database abstractions, plus a service layer, let us write
-  fast tests of our core functionality
-
-* We'll discuss different kinds of testing, and when each is appropriate
-
-By the end of this chapter, we'll have add a _Flask API_, that will talk to
-a _Service Layer_, which will serve as the entrypoint to our domain model.
+By the end of this chapter, we'll have added a Flask API, that will talk to
+the Service Layer, which will serve as the entrypoint to our Domain Model.
 By making the service layer depend on the `AbstractRepository`, we'll be
 able to unit test it using `FakeRepository`, and then run it in real life
-using `SqlAlchemyRepository`:
+using `SqlAlchemyRepository`.  <<chapter_03_class_diagram>> is a class
+diagram showing where we're heading.
 
 [[chapter_03_class_diagram]]
 .Our target architecture for the end of this chapter
@@ -50,124 +48,38 @@ package allocation {
     allocate(line, repository, session)
   }
 
-  class Batch {
-    allocate ()
-  }
-
   abstract class AbstractRepository {
     add ()
     get ()
     list ()
   }
 
-  class BatchRepository {
-    session: Session
+  class Batch {
+    allocate ()
   }
+
 
   class FakeRepository {
     batches: List<Batch>
   }
+
+  class BatchRepository {
+    session: Session
+  }
+
 }
 
 services -> AbstractRepository: uses
+AbstractRepository -> Batch : stores
 
 AbstractRepository <|-- FakeRepository : implements
 AbstractRepository <|-- BatchRepository : implements
-AbstractRepository --> Batch : stores
 Flask --> services : invokes
 
-BatchRepository --> Session : abstracts
+BatchRepository ---> Session : abstracts
 @enduml
 ....
 
-
-[ditaa, test_spectrum_diagram]
-....
-| Low feedback                                                  High feedback |
-| Low barrier to change                                 High barrier to change|
-| High system coverage                                       Focused coverage |
-|                                                                             |
-| <---------                                                     ---------->  |
-| API tests                  service-layer tests                 domain tests |
-....
-
-
-
-[ditaa, service_layer_diagram_abstract_dependencies]
-....
-        +-----------------------------+
-        |         Service Layer       |
-        +-----------------------------+
-           |                   |
-           |                   | depends on abstraction
-           V                   V
-+------------------+     +--------------------+
-|   Domain Model   |     | AbstractRepository |
-+------------------+     +--------------------+
-....
-
-...
-
-
-[ditaa, service_layer_diagram_test_dependencies]
-....
-        +-----------------------------+
-        |           Tests             |-------------\
-        +-----------------------------+             |
-                       |                            |
-                       V                            |
-        +-----------------------------+             |
-        |         Service Layer       |    provides |
-        +-----------------------------+             |
-           |                     |                  |
-           V                     V                  |
-+------------------+     +--------------------+     |
-|   Domain Model   |     | AbstractRepository |     |
-+------------------+     +--------------------+     |
-                                    ^               |
-                         implements |               |
-                                    |               |
-                         +----------------------+   |
-                         |    FakeRepository    |<--/
-                         |      (in-memory)     |
-                         +----------------------+
-....
-
-...
-
-[ditaa, service_layer_diagram_runtime_dependencies]
-....
-       +--------------------------------+
-       | Flask API (Presentation layer) |-----------\
-       +--------------------------------+           |
-                       |                            |
-                       V                            |
-        +-----------------------------+             |
-        |         Service Layer       |             |
-        +-----------------------------+             |
-           |                     |                  |
-           V                     V                  |
-+------------------+     +--------------------+     |
-|   Domain Model   |     | AbstractRepository |     |
-+------------------+     +--------------------+     |
-              ^                     ^               |
-              |                     |               |
-              |          +----------------------+   |
-      imports |          | SqlAlchemyRepository |<--/
-              |          +----------------------+
-              |                | uses
-              |                V
-           +-----------------------+
-           |          ORM          |
-           | (another abstraction) |
-           +-----------------------+
-                       |
-                       | talks to
-                       V
-           +------------------------+
-           |       Database         |
-           +------------------------+
-....
 
 
 === Connecting our Application to the Real World
@@ -200,7 +112,7 @@ plan:
   storage layer to set up test data.
 
 
-=== A First End-to-end (E2E) Test
+=== A First End-To-End (E2E) Test
 
 No-one is interested in getting into a long terminology debate about what
 counts as an E2E test vs a functional test vs an acceptance test vs an
@@ -431,7 +343,7 @@ E2E tests is starting to get out of control, and soon we'll end up with an
 inverted test pyramid (or "ice cream cone model" as Bob likes to call it).
 
 
-=== Introducing A Service Layer, And Using Fakerepository To Unit Test It
+=== Introducing a Service Layer, and Using Fakerepository to Unit Test It
 
 If we look at what our Flask app is doing, there's quite a lot of what we
 might call "orchestration" -- fetching stuff out of our repository, validating
@@ -532,7 +444,7 @@ We tend to find that building our own fakes is an excellent way of exercising
 design pressure against our abstractions.  If our abstractions are nice and
 simple, then they should be easy to fake.
 
-In fact in the case of `FakeRepository`, because our fake has actual behaviour,
+In fact in the case of `FakeRepository`, because our fake has actual behavior,
 using a magic mock from `unittest.mock` wouldn't really help.
 
 In the case of `FakeSession`, the `session` object isn't one of our own
@@ -556,7 +468,7 @@ Regarding the definition of fakes vs mocks, the short but simplistic answer is:
 * Fakes are working implementations of the thing they're replacing, but
   they're only designed for use in tests; they wouldn't work "in real life",
   like our in-memory repository. But you can use them to make assertions about
-  the end state of a system, rather than the behaviours along the way, so
+  the end state of a system, rather than the behaviors along the way, so
   they're associated with classic-style TDD.
 
 (We're slightly conflating mocks with spies and fakes with stubs here, and you
@@ -573,7 +485,7 @@ two in Martin Fowler's article just cited, as well as https://softwareengineerin
 but in this book we're pretty firmly in the classicist camp.  We like to
 build our tests around state, both in setup and assertions, and we like
 to work at the highest level of abstraction possible rather than doing
-checks on the behaviour of intermediary collaborators.footnote:[
+checks on the behavior of intermediary collaborators.footnote:[
 Which is not to say that we think the London School people are wrong. There
 are some insanely smart people that work that way.  It's just not what we're
 used to].
@@ -646,7 +558,7 @@ layer is tightly coupled to our database layer, but we'll improve on
 that in the next chapter.
 
 
-."Depend On Abstractions"
+."Depend on Abstractions"
 *******************************************************************************
 Notice one more thing about our service-layer function:
 
@@ -773,7 +685,7 @@ stuff, which we implement end-to-end; and tests about orchestration stuff, which
 we can test against the service layer in memory.
 
 
-=== How Is Our Test Pyramid Looking?
+=== How is our Test Pyramid Looking?
 
 Let's see what this move to using a Service Layer, with its own service-layer tests,
 does to our test pyramid:
@@ -803,7 +715,7 @@ a healthy-looking test pyramid.
 
 
 
-=== Should Domain Layer Tests Move To The Service Layer?
+=== Should Domain Layer Tests Move to the Service Layer?
 
 We could take this a step further. Since we can test the our software against
 the service layer, we don't really need tests for the domain model any more.
@@ -859,7 +771,7 @@ use tests to enforce that some property of the system doesn't change while we're
 working. We use tests to check that the API continues to return 200, that the
 database session continues to commit, and that orders are still being allocated.
 
-If we accidentally change one of those behaviours, our tests will break. The
+If we accidentally change one of those behaviors, our tests will break. The
 flip side, though, is that if we want to change the design of our code, any
 tests relying directly on that code will also fail.
 
@@ -875,11 +787,12 @@ attributes on our model objects, which leaves us more free to refactor them.
 
 
 [[kinds_of_tests]]
-=== On Deciding What Kind Of Tests To Write
+=== On Deciding What Kind of Tests to Write
 
 You might be asking yourself "should I rewrite all my unit tests, then? Is it
 wrong to write tests against the domain model?" To answer the question, it's
-important to understand the trade-off between coupling and design feedback.
+important to understand the trade-off between coupling and design feedback (see
+<<test_spectrum_diagram>>.)
 
 [[test_spectrum_diagram]]
 .The test spectrum
@@ -921,7 +834,7 @@ Because the tests are written in the domain language, they act as living
 documentation for our model. A new team member can read these tests to quickly
 understand how the system works, and how the core concepts interrelate.
 
-We often "sketch" new behaviours by writing tests at this level to see how the
+We often "sketch" new behaviors by writing tests at this level to see how the
 code might look.
 
 When we want to improve the design of the code, though, we will need to replace
@@ -938,7 +851,7 @@ implementation.
 // layer
 
 
-==== Low And High Gear
+==== Low and High Gear
 
 Most of the time, when we are adding a new feature, or fixing a bug, we don't
 need to make extensive changes to the domain model. In these cases, we prefer
@@ -960,7 +873,7 @@ hazard, we again drop down to a low gear until we can pick up speed again.
 
 
 
-.Different types of test: Rules of thumb
+.Different Types of Test: Rules of Thumb
 ******************************************************************************
 
 * Write one end-to-end test per featurefootnote:[what about happy path and
@@ -981,7 +894,7 @@ hazard, we again drop down to a low gear until we can pick up speed again.
 ******************************************************************************
 
 
-=== Fully Decoupling The Service Layer Tests From The Domain
+=== Fully Decoupling the Service Layer Tests From the Domain
 
 We still have some direct dependencies on the domain in our service-layer
 tests, because we use domain objects to set up our test data and to invoke
@@ -1043,7 +956,7 @@ But our tests still depend on the domain, because we still manually instantiate
 model works, we'll have to change a bunch of tests.
 
 
-==== Mitigation: Keep All Domain Dependencies In Fixture Functions
+==== Mitigation: Keep All Domain Dependencies in Fixture Functions
 
 We could at least abstract that out to a helper function or a fixture
 in our tests.  Here's one way you could do that, adding a factory
@@ -1078,7 +991,7 @@ At least that would move all of our tests' dependencies on the domain
 into one place.
 
 
-==== Adding A Missing Service
+==== Adding a Missing Service
 
 We could go one step further though.  If we had a service to add stock,
 then we could use that, and make our service-layer tests fully expressed
@@ -1162,7 +1075,7 @@ This is a really nice place to be in.  Our service-layer tests only depend on
 the services layer itself, leaving us completely free to refactor the model as
 we see fit.
 
-=== Carrying The Improvement Through To The E2E Tests
+=== Carrying the Improvement Through to the E2E Tests
 
 In the same way that adding `add_batch` helped decouple our services-layer
 tests from the model, adding an API endpoint to add a batch would remove
@@ -1254,7 +1167,7 @@ TIP: If you decide you want to build a read-only endpoint for retrieving allocat
 ******************************************************************************
 
 
-=== Wrap-up
+=== Wrap-Up
 
 
 Adding the service layer has really bought us quite a lot:
@@ -1379,6 +1292,6 @@ image::images/service_layer_diagram_runtime_dependencies.png[]
 
 Wonderful. But there's still a bit of awkwardness we'd like to get rid of. The
 service layer is tightly coupled to a `session` object.  In the next chapter,
-we'll introduce one more pattern that works closely with _repository_ and
-_service layer_, the _unit of work_ pattern, and everything will be absolutely
+we'll introduce one more pattern that works closely with Repository and
+Service Layer, the Unit of Work pattern, and everything will be absolutely
 lovely. You'll see!

@@ -1,6 +1,6 @@
 [[appendix_django]]
 [appendix]
-== Repository And Unit Of Work Patterns With Django
+== Repository and Unit of Work Patterns with Django
 
 Supposing you wanted to use Django instead of SQLAlchemy and Flask, how
 might things look?
@@ -48,7 +48,7 @@ package next to our main allocation code:
 ====
 
 
-=== Repository Pattern With Django
+=== Repository Pattern with Django
 
 I used a plugin called
 https://github.com/pytest-dev/pytest-django[pytest-django] to help with test
@@ -140,7 +140,7 @@ You can see that the implementation relies on the Django models having
 some custom methods for translating to and from our domain model.
 
 
-==== Custom Methods On Django ORM Classes To Translate To/from Our Domain Model
+==== Custom Methods on Django ORM Classes to Translate To/From our Domain Model
 
 NOTE: As in <<chapter_02_repository>>, we use dependency inversion.
     The ORM (Django) depends on the model, and not the other way around
@@ -204,7 +204,7 @@ class OrderLine(models.Model):
 
 
 
-=== Unit Of Work Pattern With Django
+=== Unit of Work Pattern with Django
 
 
 The tests don't change too much
@@ -253,7 +253,7 @@ def test_rolls_back_on_error():
     SQLA
 
 <2> the pytest-django `mark.django_db(transaction=True)` is required to
-    test our custom transaction/rollback behaviours.
+    test our custom transaction/rollback behaviors.
 
 
 

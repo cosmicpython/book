@@ -1,15 +1,17 @@
 [[chapter_06_events_and_message_bus]]
-== Events And The Message Bus
+== Events and the Message Bus
 
 .In this chapter
 ********************************************************************************
 
+//TODO get rid of bullets
+
 * We'll examine the kind of requirement that leads to a _big ball of mud_.
-* We'll see how we can use _domain events_ to separate side-effects from our
+* We'll see how we can use Domain Events to separate side-effects from our
   use-cases.
-* We'll show how to build a simple _message bus_ for triggering behaviour in
+* We'll show how to build a simple Message Bus for triggering behavior in
   your codebase.
-* We'll see how our _unit of work_ can be extended to cover multi-step processes.
+* We'll see how our Unit of Work can be extended to cover multi-step processes.
 
 TODO: DIAGRAM GOES HERE
 
@@ -38,9 +40,9 @@ problem by buying more stock, and all will be well.
 
 For a first version, our product owner says we can just send the alert by email.
 
-=== Avoiding Making A Mess.
+=== Avoiding Making a Mess.
 
-==== First, Avoid Making A Mess Of Of Our Web Controllers
+==== First, Avoid Making a Mess of of our Web Controllers
 
 When we have a new requirement like this, that's not _really_ to do with the
 core domain, it's all too easy to start dumping these things into our web
@@ -132,7 +134,7 @@ NOTE: If you find yourself using `mock.patch` to test external dependencies
 //TODO (DS): Do we *really* need to see this mocky test? Why not skip straight
 //to the good practice?
 
-==== ... And Let's Not Make A Mess Of Our Model Either
+==== ... And Let's Not Make a Mess of our Model Either
 
 Assuming we don't want to put this code into our web controllers, because
 we want them to be as thin as possible, we may look at putting it right at
@@ -160,7 +162,7 @@ But that's even worse!  We don't want our model to have any dependencies on
 infrastructure concerns like `email.send_mail`.
 
 
-==== Or The Service Layer!
+==== Or the Service Layer!
 
 In the service layer it's a little better, but it's still not lovely:
 
@@ -196,8 +198,7 @@ definitely making us unhappy.
 === Single Responsibility Principle
 
 Really this is a violation of the __single responsibility principle__footnote:[
-the https://en.wikipedia.org/wiki/Single_responsibility_principle[S]
-from https://en.wikipedia.org/wiki/SOLID[SOLID]].
+the S from https://scotch.io/bar-talk/s-o-l-i-d-the-first-five-principles-of-object-oriented-design[SOLID]].
 Our use case is allocation. Our endpoint, service function, and domain methods
 are all called `allocate`, not `allocate_and_send_mail_if_out_of_stock`.
 
@@ -230,7 +231,7 @@ TODO (ej) *Maybe "weed" instead of "goop" to match the "gardening" metaphor?
         Safest thing here would be to just say "decoupling".
 ////
 
-=== All Aboard The Message Bus!
+=== All Aboard the Message Bus!
 
 The patterns we're going to introduce here are _Domain Events_ and the _Message Bus_.
 
@@ -275,7 +276,7 @@ class Product:
 
 TIP: Exceptions and Events don't mix.  If you're implementing domain
     events, don't raise exceptions to describe the same domain concept.
-    As we'll see later when we handle events in the unit of work, it's
+    As we'll see later when we handle events in the Unit of Work, it's
     confusing to have to reason about events and exceptions together.
 
 TODO: This ^^^ is true, but I think the real problem is that you shouldn't use
@@ -309,14 +310,14 @@ class OutOfStock(Event):  #<2>
 
 
 <1> Once we have a number of events we'll find it useful to have a parent
-    class that can store common behaviour.  It's also useful for type
+    class that can store common behavior.  It's also useful for type
     hints in our message bus, as we'll see shortly.
 
 <2> `dataclasses` are great for domain events too.
 
 
 
-==== The Message Bus Maps Events To Handlers
+==== The Message Bus Maps Events to Handlers
 
 A message bus essentially says: when I see this event, I should
 invoke the following handlers.  Here's a minimal implementation:
@@ -353,7 +354,7 @@ HANDLERS = {
 //TODO: maybe handle should just take one event?
 
 
-==== One Simple Option: The Service Layer Puts Events On The Message Bus
+==== One Simple Option: The Service Layer Puts Events on the Message Bus
 
 Now we need something to catch events from the model and pass them to the
 message bus.  The service layer is one place you can do it...
@@ -409,10 +410,10 @@ TODO (ej)
      `messagebus.handle` to be a little bit confusing, as a consequence.
 ////
 
-=== The Unit Of Work Can Pass Events To The Message Bus
+=== The Unit of Work Can Pass Events to the Message Bus
 
 The UoW already has a `try/finally`, and it knows about all the aggregates
-currently in play because it provides access to the _Repository_.  So it's
+currently in play because it provides access to the Repository.  So it's
 a good place to spot events and pass them to the message bus:
 
 ////
@@ -619,14 +620,14 @@ class FakeUnitOfWork(unit_of_work.AbstractUnitOfWork):
 ====
 
 
-=== Unit Testing With A Fake Message Bus
+=== Unit Testing with a Fake Message Bus
 
 TODO: discuss replacing @mock test with `FakeMessageBus`
 
 
 
 
-=== Wrap-up
+=== Wrap-Up
 
 TODO - wrap up for domain events chapter
 
@@ -637,16 +638,16 @@ TODO - wrap up for domain events chapter
 Events can help with SRP::
     bla
 
-A messagebus maps events to handlers::
+A Message Bus maps Events to Handlers::
     bla
 
-Option 1: domain model raises events, service layer passes them to messagebus::
+Option 1: Domain Model raises events, Service Layer passes them to Message Bus::
     bla
 
-Option 2: service layer raises events and passes them to messagebus::
+Option 2: Service Layer raises events and passes them to Message Bus::
     bla
 
-Option 3: unit of work collects events from aggregates and passes them to message bus::
+Option 3: Unit of Work collects events from Aggregates and passes them to Message Bus::
     bla
 
 *****************************************************************

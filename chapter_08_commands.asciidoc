@@ -1,5 +1,7 @@
 [[chapter_08_commands]]
-== Commands And Command Handler
+== Commands and Command Handler
+
+//TODO get rid of bullets
 
 .In this chapter
 ********************************************************************************
@@ -25,7 +27,7 @@ This might have felt counter-intuitive. After all, the batch _hasn't_ been
 created yet, that's why we called the API. We're going to fix that conceptual
 wart by introducing _commands_.
 
-=== Commands And Events
+=== Commands and Events
 
 Like events, commands are a type of message - instructions sent by one part of
 a system to another. Like events, we usually represent commands with dumb data

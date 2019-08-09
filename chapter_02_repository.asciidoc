@@ -1,19 +1,18 @@
 [[chapter_02_repository]]
 == Repository Pattern
 
-.In this chapter
+In this chapter, we'll start to make good on our promise to apply the
+dependency inversion principle as a way of decoupling our core logic from
+infrastructural concerns.
 
-* We show how to apply the dependency inversion principle to make your data layer
-  depend on your model objects.
+We'll introduce the _Repository_, a simplifying abstraction over data storage,
+allowing us to decouple our model layer from the data layer.  We'll see a
+concrete example of how this simplifying abstraction makes our system more
+testable by hiding the complexities of the database.
 
-* We introduce the _Repository_, a simplifying abstraction over data storage.
-
-* We'll see a concrete example of how this simplifying abstraction makes our
-  system more testable by hiding the complexities of the database.
-
-By the end of the chapter, we'll have built a `Repository` class that sits
-between `SqlAlchemy` (our ORM) and our domain model's `Batch` classes, as
-in <<chapter_02_class_diagram>>:
+<<chapter_02_class_diagram>> shows a little preview of what we're going to
+build: a `Repository` class that sits between `SqlAlchemy` (our ORM) and our
+Domain Model's `Batch` classes.
 
 [[chapter_02_class_diagram]]
 .Batch, Repository and SqlAlchemy
@@ -53,7 +52,7 @@ package SqlAlchemy {
 ----
 
 
-=== Persisting our domain model
+=== Persisting our Domain Model
 
 In the previous chapter we built a simple domain model that can allocate orders
 to batches of stock. It's easy for us to write tests against this code because
@@ -76,7 +75,7 @@ storage, and this is a textbook, so we can allow ourselves a tiny bit more
 bottom-up development, and start to think about storage and databases.
 
 
-==== Some Pseudocode: What Are We Going To Need?
+==== Some Pseudocode: What Are We Going to Need?
 
 When we build our first API endpoint, we know we're going to have
 some code that looks more or less like <<api_endpoint_pseudocode>>
@@ -110,7 +109,7 @@ model objects from it, and we'll also need a way of saving them back to the
 database.
 
 
-=== Applying The Dependency Inversion Principle To The Database
+=== Applying the Dependency Inversion Principle to the Database
 
 As mentioned in <<part1_prologue>>, the "layered architecture" is a common
 approach to structuring a system that has a UI, some logic, and a database (see
@@ -149,7 +148,7 @@ image::images/onion_architecture.png[]
            |
            V
    +---------------------------------------------------+
-   |                   Domain model                    |
+   |                   Domain Model                    |
    +---------------------------------------------------+
                                         ^
                                         |
@@ -182,9 +181,9 @@ and whether there is a Pythonic equivalent of interfaces, later in the book.
 
 === Reminder: our Model
 
-Let's remind ourselves of our domain model:  An allocation is the concept
-of linking an `OrderLine` to a `Batch`.  We're storing the allocations as
-a collection on our `Batch` object:
+Let's remind ourselves of our domain model (see <<model_diagram_reminder>>):
+An allocation is the concept of linking an `OrderLine` to a `Batch`.  We're
+storing the allocations as a collection on our `Batch` object:
 
 [[model_diagram_reminder]]
 .Our Model
@@ -193,7 +192,7 @@ image::images/model_diagram.png[]
 Let's see how we might translate this to a relational database.
 
 
-==== The "Normal" ORM Way: Model Depends On ORM.
+==== The "Normal" ORM Way: Model Depends on ORM.
 
 In 2019 it's unlikely that your team are hand-rolling their own SQL queries.
 Instead, you're almost certainly using some kind of framework to generate
@@ -247,7 +246,7 @@ Can we really say this model is ignorant of the database? How can it be
 separate from storage concerns when our model properties are directly coupled
 to database columns?
 
-.Django's ORM is essentially the same, but more restrictive
+.Django's ORM is Essentially the Same, but More Restrictive
 *******************************************************************************
 
 If you're more used to Django, the SQLAlchemy snippet above translates to
@@ -278,13 +277,13 @@ way around.
 
 Django doesn't provide an equivalent for SQLAlchemy's "classical mapper,"
 but see <<appendix_django>> for some examples of how you apply dependency
-inversion and the repository pattern to Django.
+inversion and the Repository pattern to Django.
 
 *******************************************************************************
 
 
 
-==== Inverting The Dependency: ORM Depends On Model.
+==== Inverting the Dependency: ORM Depends on Model.
 
 Well, thankfully, that's not the only way to use SQLAlchemy.  The alternative is
 to define your schema separately, and an explicit _mapper_ for how to convert
@@ -380,7 +379,7 @@ def test_orderline_mapper_can_save_lines(session):
 
 
 You probably wouldn't keep these tests around--as we'll see shortly, once
-you've taken the step of inverting the dependency of ORM and domain model, it's
+you've taken the step of inverting the dependency of ORM and Domain Model, it's
 only a small additional step to implement an additional abstraction called the
 repository pattern, which will be easier to write tests against, and will
 provide a simple, common interface for faking out later in tests.
@@ -394,7 +393,7 @@ all.
 
 Depending on what you're doing in your domain model, and especially if you
 stray far from the OO paradigm, you may find it increasingly hard to get the
-ORM to produce the exact behaviour you need,  and you may need to modify your
+ORM to produce the exact behavior you need,  and you may need to modify your
 domain modelfootnote:[Shout out to the amazingly helpful SQLAlchemy
 maintainers, and Mike Bayer in particular].  As so often with
 architectural decisions, there is a trade-off you'll need to consider.  As the
@@ -437,7 +436,7 @@ def allocate_endpoint():
 
 === Introducing Repository Pattern.
 
-The _Repository Pattern_ is an abstraction over persistent storage. It hides the
+The _Repository pattern_ is an abstraction over persistent storage. It hides the
 boring details of data access by pretending that all of our data is in memory.
 
 If we had infinite memory in our laptops, we'd have no need for clumsy databases.
@@ -470,14 +469,14 @@ list or a set, and since the objects are in memory we never need to call a
 "Save" method, we just fetch the object we care about, and modify it in memory.
 
 
-==== The Repository In The Abstract
+==== The Repository in the Abstract
 
 The simplest repository has just two methods: `add` to put a new item in the
 repository, and `get` to return a previously added item.footnote:[
 You may be thinking, what about `list` or `delete` or `update`, but in the
 ideal world, we only modify our model objects one at a time, and delete is
-usally handled as a soft-delete, ie `batch.cancel()`. Finally, update is
-taken care of by the unit of work, as we'll see in <<chapter_04_uow>>.].
+usually handled as a soft-delete, ie `batch.cancel()`. Finally, update is
+taken care of by the Unit of Work, as we'll see in <<chapter_04_uow>>.].
 We stick rigidly to using these methods for data access in our domain and our
 service layer. This self-imposed simplicity stops us from coupling our domain
 model to the database.
@@ -517,14 +516,14 @@ WARNING: We're using abstract base classes in this book for didactic reasons:
     parent class
 
 <2> `raise NotImplementedError` is nice but neither necessary nor sufficient.
-    In fact, your abstract methods can have real behaviour which subclasses
+    In fact, your abstract methods can have real behavior which subclasses
     can call out to, if you want.
 
 NOTE: To really reap the benefits of ABCs (such as they may be) you'll want to
     be running some helpers like `pylint` and `mypy`.
 
 
-==== What Is The Trade-off?
+==== What is the Trade-Off?
 
 
 [quote, Rich Hickey]
@@ -557,7 +556,8 @@ it very easy to make fundamental changes to the way we store things (see
 
 In addition, repository pattern is so common in the DDD world that, if you
 do collaborate with programmers that have come to Python from the Java and C#
-worlds, they're likely to recognise it.
+worlds, they're likely to recognise it.  <<repository_pattern_diagram>> shows
+an illustration.
 
 [[repository_pattern_diagram]]
 .Repository pattern
@@ -573,7 +573,7 @@ image::images/repository_pattern_diagram.png[]
                  ||----------|   Domain Model   |
                  ||          |      objects     |
                  ||          +------------------+
-                 V|       
+                 V|
   +------------------------------+
   |          Repository          |
   +------------------------------+
@@ -752,7 +752,7 @@ but the nice thing is--the rest of your application just doesn't care.
 ******************************************************************************
 
 
-=== Building A Fake Repository For Tests Is Now Trivial!
+=== Building a Fake Repository for Tests is Now Trivial!
 
 Here's one of the biggest benefits of _repository pattern_.
 

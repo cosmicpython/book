@@ -1,9 +1,9 @@
 [[appendix_csvs]]
 [appendix]
-== Swapping Out The Infrastructure: Do Everything With CSVs
+== Swapping Out the Infrastructure: Do Everything with CSVs
 
 This appendix is intended as a little illustration of the benefits of the
-_repository_, _unit of work_ and Service Layer patterns. It's intended to
+Repository, Unit of Work, and Service Layer patterns. It's intended to
 follow on from <<chapter_04_uow>>.
 
 Just as we finish building out our Flask API and getting it ready for release,
@@ -174,15 +174,15 @@ def test_cli_app_also_reads_existing_allocations_and_can_append_to_them(
 And we could keep hacking about and adding extra lines to that `load_batches` function,
 and some sort of way of tracking and saving new allocations... 
 
-But we already have a model for doing that!  It's called our _repository_ and our _unit
-of work_.
+But we already have a model for doing that!  It's called our Repository and our Unit
+of Work.
 
 All we need to do ("all we need to do") is reimplement those same abstractions, but
 with CSVs underlying them, instead of a database.  And as you'll see, it's
 actually quite straightforward.
 
 
-=== Implementing A Repository And Unit Of Work For CSVs
+=== Implementing a Repository and Unit of Work for CSVs
 
 
 Here's what a CSV-based repository could look like.  It abstracts away all the

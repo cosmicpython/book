@@ -37,8 +37,8 @@ of mud aren't complex.
 === Encapsulation
 
 The term _encapsulation_ covers two closely related ideas: simplifying
-behaviour, and hiding data. In this book, when we say "encapsulation" we're
-using the first sense. We encapsulate behaviour by identifying a task
+behavior, and hiding data. In this book, when we say "encapsulation" we're
+using the first sense. We encapsulate behavior by identifying a task
 that needs to be done in our code, and giving that task to a well defined
 object or function.
 
@@ -46,10 +46,6 @@ Take a look at the following two snippets of Python code, <<urllib_example>> and
 <<requests_example>>:
 
 
-[cols="6,.^1", frame="none", grid="none"]
-|===
-
-a| 
 [[urllib_example]]
 .Do a search with urllib
 ====
@@ -71,9 +67,6 @@ for r in results:
 ----
 ====
 
-a| image::images/galaxybrainmeme1.jpg["Galaxybrain meme",width="200px",float="right"]
-
-a| 
 [[requests_example]]
 .Do a search with requests
 ====
@@ -91,9 +84,6 @@ for r in results:
 ----
 ====
 
-a| image::images/galaxybrainmeme2.jpg["Galaxybrain meme",width="200px",float="right"]
-|===
-
 Both of these code listings do the same thing: they submit form-encoded values
 to a URL in order to use a search engine API. But the second is simpler to read
 and understand because it operates at a higher level of abstraction.
@@ -102,10 +92,6 @@ We can take this one step further still by identifying and naming the task we
 want the code to perform for us, and use an even higher-level abstraction to make
 it explicit:
 
-[cols="6,.^1", frame="none", grid="none"]
-|===
-
-a| 
 [[ddg_example]]
 .Do a search with the duckduckgo module
 ====
@@ -117,20 +103,16 @@ for r in duckduckgo.query('Sausages').results:
 ----
 ====
 
-a| image::images/galaxybrainmeme3.jpg["Galaxybrain meme",width="200px",float="right"]
-|===
-
-Encapsulating behaviour using abstractions is a powerful tool for making
+Encapsulating behavior using abstractions is a powerful tool for making
 our code more expressive, more testable, and easier to maintain.
 
 
 NOTE: This approach is inspired by the OO practice of
     http://www.wirfs-brock.com/Design.html[responsibility-driven design].
-    which would use the words _roles_ and _responsibilities_ rather than "tasks".
-    The main point is to think about code in terms of behaviour, rather than
-    in terms of data or algorithms.  If you've come across
-    https://en.wikipedia.org/wiki/Class-responsibility-collaboration_card[CRC cards],
-    they're driving at the same thing.
+    which would use the words _roles_ and _responsibilities_ rather than tasks.
+    The main point is to think about code in terms of behavior, rather than
+    in terms of data or algorithms.  If you've come across CRC cards, they're
+    driving at the same thing.
 
 
 === Layering
@@ -151,7 +133,7 @@ For example most people are familiar with the three layered architecture (see
 <<layered_architecture1>>):
 
 [[layered_architecture1]]
-.Layered Architecture
+.Layered architecture
 image::images/layered_architecture.png[]
 [role="image-source"]
 ----
@@ -200,8 +182,12 @@ https://github.com/python-leap/book/issues/49
 ////
 
 You might be familiar with the dependency inversion principle already, because
-it's the D in the https://en.wikipedia.org/wiki/SOLID[SOLID] mnemonic.
-Formally, the DIP says:
+it's the D in the SOLIDfootnote:[Uncle Bob's five principles of object-oriented
+design: Single responsibility, Open for extension but
+closed for modification, Liskov substitution, Interface segregation, and
+Dependency Inversion.  There's a good overview, with examples, at
+https://scotch.io/bar-talk/s-o-l-i-d-the-first-five-principles-of-object-oriented-design]
+mnemonic. Formally, the DIP says:
 
 1.  High-level modules should not depend on low-level modules. Both should
     depend on abstractions.
@@ -231,7 +217,7 @@ _Depends on_ doesn't mean "imports" or "calls", necessarily, but more a more
 general idea that one module "knows about" or "needs" another module.
 
 And we've mentioned _abstractions_ already: they're simplified interfaces that
-encapsulate some behaviour, in the way that our duckduckgo module encapsulated a
+encapsulate some behavior, in the way that our duckduckgo module encapsulated a
 search engine's API. In a traditional-OO language you might use an abstract base
 class or an interface to define an abstraction.  In Python you can (and we
 sometimes do) use ABCs, but you can also rely on duck typing.  The abstraction

@@ -1,5 +1,7 @@
 [[chapter_10_dependency_injection]]
-== Dependency Injection (and Mocks)
+== Dependency Injection (And Mocks)
+
+//TODO get rid of bullets
 
 .In this chapter
 ********************************************************************************
@@ -28,7 +30,7 @@ TIP: If you haven't already, it's worth reading <<chapter_02B_abstractions>>
     before continuing with this chapter.
 
 
-=== Implicit Vs Explicit Dependencies
+=== Implicit vs Explicit Dependencies
 
 Our main handler functions declare an explicit dependency on the unit
 of work:
@@ -96,7 +98,7 @@ def test_rolls_back_uncommitted_work_by_default(sqlite_session_factory):
 
 
 
-=== Explicit Dependencies Are Totally Weird An Java-ey Tho
+=== Explicit Dependencies Are Totally Weird an Java-Ey Tho
 
 If you're used to the way things normally happen in Python, you'll be thinking
 all this is a bit weird.  The standard way to do things is to declare our
@@ -268,7 +270,7 @@ What else changes in the bus?
     the event we want to call:
 
 
-==== Dependency Injection With Minimal Magic
+==== Dependency Injection with Minimal Magic
 
 Here's the core of our dependency injection approach then.  As you'll see
 there's not much to it:
@@ -300,7 +302,7 @@ functions and event handlers and other entrypoints, our dependencies would be
 all over the place.
 
 
-==== The Messagebus Takes Ownership Of Adding New Events To Its Queue
+==== The Messagebus Takes Ownership of Adding New Events to Its Queue
 
 We've seen that the messagebus now has responsibility for collecting
 any new events raised by a handler, and adding them to the end of the queue.
@@ -331,7 +333,7 @@ class AbstractUnitOfWork(abc.ABC):
 ====
 
 
-=== Initialising DI In Our App Entrypoints
+=== Initialising DI in our App Entrypoints
 
 In our flask app, we can just initialise the messagebus inline with
 the rest of our app config and setup, passing it in the actual
@@ -392,7 +394,7 @@ def handle_change_batch_quantity(m, bus: messagebus.MessageBus):
     (we'll look at fixing that in <<appendix_bootstrap>>.
 
 
-=== Initialising DI In Our Tests
+=== Initialising DI in our Tests
 
 
 [[fakebus]]
@@ -423,7 +425,7 @@ class TestAddBatch:
 ====
 
 
-=== Building an adapter "properly": a worked example
+=== Building an Adapter "Properly": A Worked Example
 
 We've got two types of dependency:
 
@@ -459,7 +461,7 @@ Even though it's simple, let's use `send_mail` as an example to talk
 through how you might define a more complex dependency.
 
 
-==== Define the Abstract and Concrete implementations
+==== Define the Abstract and Concrete Implementations
 
 We'll imagine a more generic "notifications" API.  Could be
 email, could be SMS, could be slack posts one day.

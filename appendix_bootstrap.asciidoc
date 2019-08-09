@@ -16,7 +16,7 @@ root" in OO parlance, is a pattern that can help us to keep things tidy.  Let's
 take a look.
 
 
-=== Defaults And Config
+=== Defaults and Config
 
 Where do we declare our defaults?  _config.py_ is one place, but we also do
 some in, eg, _unit_of_work.py_, which declares the "default" database session
@@ -98,7 +98,7 @@ def bootstrap(
 * it gives us back the core of our app, the messagebus
 
 
-=== Using Bootstrap In Our Entrypoints
+=== Using Bootstrap in our Entrypoints
 
 In our application's entrypoints, we just call `bootstrap.bootstrap()`
 to get a messagebus, rather than configuring a UoW and the rest of it.
@@ -162,28 +162,38 @@ TODO: bootstrapper as class instead?
 === Dependency Diagrams
 
 
-In chapter 9 it's a real mess.
+In chapter 9 (<<chapter_09_dependency_graph>>), it's a real mess:
 
-image::images/chapter_09_dependency_graph.png["Dependency graph for chapter 9 (it's a mess)"]
+[[chapter_09_dependency_graph]]
+.Dependency graph for chapter 9 (it's a mess)
+image::images/chapter_09_dependency_graph.png[]
 
-By chapter 10, when we introduce DI, things are much better
+By chapter 10 (<<chapter_10_dependency_graph>>), when we introduce DI, things
+are much better:
 
-image::images/chapter_10_dependency_graph.png["Dependency graph for chapter 10 (it's better)"]
+[[chapter_10_dependency_graph]]
+.Dependency graph for chapter 10 (it's better)
+image::images/chapter_10_dependency_graph.png[]
 
-Does the bootstrap script help? Kinda.
+Does the bootstrap script help? As <<appendix_bootstrap_dependency_graph_1>>
+shows, the answer is: "kinda."
 
-image::images/appendix_bootstrap_dependency_graph_1.png["Dependency graph with bootstrap script"]
+[[appendix_bootstrap_dependency_graph_1]]
+.Dependency graph with bootstrap script
+image::images/appendix_bootstrap_dependency_graph_1.png[]
 
 
-Well kindo not actually.  that redis circular dependency is still there and looking
-ugly.
+Well kinda-not actually.  That Redis circular dependency is still there and
+looking ugly.
 
-One fix is to split the "pub" from the "sub":
+One fix is to split the "pub" from the "sub", as in
+<<appendix_bootstrap_dependency_graph_2>>:
 
-image::images/appendix_bootstrap_dependency_graph_2.png["Dependency graph with bootstrap script and no circular deps"]
+[[appendix_bootstrap_dependency_graph_2]]
+.Dependency graph with bootstrap script and no circular deps
+image::images/appendix_bootstrap_dependency_graph_2.png["
 
 Now we have what our esteemed tech reviewer David Seddon would call a "rocky
 road architecture": all the dependencies flow in one direction.
 
 TODO: alternative fix by making an abstract redis thingie?  
-

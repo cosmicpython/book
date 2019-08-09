@@ -99,7 +99,7 @@ TODO: add more subfolders/structure inside our main source tree?
 
 
 
-=== Env Vars, 12-factor, And Config, Inside And Outside Containers.
+=== Env Vars, 12-Factor, and Config, Inside and Outside Containers.
 
 // TODO (DS): Bit of a verbose subtitle...
 
@@ -192,7 +192,7 @@ def get_api_url():
 // it's good for it to be immutable in runtime environments, but mutable in
 // tests.... Not sure though
 
-=== Docker-compose And Containers Config
+=== Docker-Compose and Containers Config
 
 We use a lightweight docker container orchestration tool called docker-compose.
 It's main configuration is via a YAML file (sighfootnote:[Harry hates YAML. He says
@@ -276,7 +276,7 @@ NOTE: Inside docker, other containers are available through hostnames named afte
     port defined in the `ports` section.
 
 
-=== Installing Your Source As A Package
+=== Installing Your Source as a Package
 
 All our application code (everything except tests really) lives inside an
 _src_ folder, as in <<src_folder_tree>>:
@@ -401,4 +401,3 @@ We've not needed to make tests pip-installable, but if you have difficulties wit
 import paths, you might find it helps.
 
 // TODO (DS): Mysterious...
-

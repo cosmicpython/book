@@ -1,25 +1,23 @@
 [[chapter_05_aggregate]]
-== Aggregates And Consistency Boundaries
+== Aggregates and Consistency Boundaries
 
-.In this chapter
-********************************************************************************
+In this chapter we'd like to revisit our domain model to talk about invariants
+and constraints, and see how our our domain objects can maintain their own
+internal consistency, both conceptually and in persistent storage.  We'll
+discuss the concept of a _consistency boundary_, and show how making it
+explicit can help us to build high-performance software without compromising
+maintainability.
 
-* We'll revisit our domain model and talk about invariants and constraints.
-* We'll see how our domain objects can maintain their own internal consistency.
-* We'll show how this consistency model applies to persistent storage.
-* We'll discuss how tight control of consistency boundaries helps us to build
-  high-performing software without compromising maintainability.
+//TODO DIAGRAM GOES HERE
 
-  // DIAGRAM GOES HERE
-
-********************************************************************************
+=== Why Not Just Run Everything in a Spreadsheet?
 
 What's the point of a domain model anyway? What's the fundamental problem
 we're trying to addresss?
 
 Couldn't we just run everything in a spreadsheet? Many of our users would be
 delighted by that. Business users _like_ spreadsheets because they're simple,
-familiar, and ubiquitous.
+familiar, and yet enormously powerful.
 
 In fact, an enormous number of business processes do operate by manually sending
 spreadsheets back and forward over e-mail. This "csv over smtp" architecture has
@@ -67,13 +65,13 @@ this constraint.
 //TODO (DS): I'm unclear on the distinction between invariant and constraint.
 
 ////
-TODO // (ej): 
+TODO // (ej):
          I'm not sure that "constraint" has any specific definition beyond
-         just being some kind of rule, so maybe just saying rule will be 
+         just being some kind of rule, so maybe just saying rule will be
          clearer.
 
          I would say that an invariant has a narrower definition
-         in that it defines some condition that must always be true. 
+         in that it defines some condition that must always be true.
 
          Under that definition, instead of saying "The invariant is that we never oversell stock
          by allocating two customers to the same physical cushion", you might say
@@ -92,7 +90,7 @@ TODO // (ej):
                 self.money -= amount
 ////
 
-==== Invariants And Concurrency
+==== Invariants and Concurrency
 
 Let's look at another one of our business rules:
 
@@ -142,7 +140,7 @@ enforce invariants at a lower level.  In that role, it'll be defending us
 against concurrency / data integrity bugs.
 
 
-=== Choosing The Right Aggregate
+=== Choosing the Right Aggregate
 
 [quote, Eric Evans, DDD blue book]
 ____
@@ -181,7 +179,7 @@ for collections of batches.
 ////
  TODO (ej): The preceding and following paragraph are a bit confusing until you get to the actual code examples.
          A visual picture would help clarify here (e.g. a cartoon piece of paper with lines, and
-         a warehouse with chairs, a truck with chairs in it).  
+         a warehouse with chairs, a truck with chairs in it).
 ////
 
 When we allocate an order line, we're actually only interested in batches
@@ -225,7 +223,7 @@ class Product:
 <1> `Product`'s main identifier is the `sku`
 <2> It holds a reference to a collection of `batches` for that sku
 <3> And finally, we can move the `allocate()` domain service to
-    being a method on `Product`.  
+    being a method on `Product`.
 
 NOTE: This `Product` might not look like what you'd expect a `Product`
     model to look like.  No price, no description, no dimensions...
@@ -281,13 +279,13 @@ elsewhere.
  TODO (ej)   This section opens up a whole can of worms, but here are some thoughts.  They may be
       too much of a digression from the text though.
 
-      * IIRC from the PyCon open space, many people wanted to know "How do you build a model??"  
-      I recall someone specifically asking about "how you get everyone to use the same domain model". 
+      * IIRC from the PyCon open space, many people wanted to know "How do you build a model??"
+      I recall someone specifically asking about "how you get everyone to use the same domain model".
       Putting in a mention of the "Canonical Model" pattern would be a good breadcrumb.
 
-      * Re AA's Note, and SkuStock vs Product vs ProductStock, 
+      * Re AA's Note, and SkuStock vs Product vs ProductStock,
       the literal conversations might be worth placing somewhere, maybe at the end of the chapter.
-      Putting in an example of a messy conversation like the one with AA would help demonstrate.  
+      Putting in an example of a messy conversation like the one with AA would help demonstrate.
 
       *  Re: BoundedContexts, my experience with explaining BoundedContexts is that
       people don't understand it without a concrete example.
@@ -425,7 +423,7 @@ There are essentially 3 options for implementing version numbers:
    and `Product.allocate()` is responsible for incrementing it.
 
 2. The services layer could do it!  The version number isn't _strictly_ a domain
-   concern, so instead our service layer could assume that the current version number 
+   concern, so instead our service layer could assume that the current version number
    is attached to `Product` by the repository, and the service layer will increment it
    before it does the `commit()`
 
@@ -482,17 +480,17 @@ TODO: more discussion of version number -- actual numebr doesn't matter,
 
 //TODO (DS): I guess it's just pragmatism, but it seems like the concurrency
 //protection isn't really in the abstraction, it just happens to be in the
-//implementation - know what i mean? 
+//implementation - know what i mean?
 
-=== Testing For Our Data Integrity Rules
+=== Testing for our Data Integrity Rules
 
-Now to actually make sure we can get the behaviour we want: if we have two
+Now to actually make sure we can get the behavior we want: if we have two
 concurrent attempts to do allocation against the same `Product`, one of them
 should fail, because they can't both update the version number:
 
 ////
 TODO:
-In Example 5. An integration test for concurrency behaviour (tests/integration/test_uow.py)
+In Example 5. An integration test for concurrency behavior (tests/integration/test_uow.py)
 it might be helpful to use order1 and order2 instead of o1 and o2.
 
 This might have been morning-brain, but I had to read the code over a few times to figure out why product version was 4 instead of 1 or 2.
@@ -514,7 +512,7 @@ https://github.com/python-leap/book/issues/36
 
 ////
 
-TODO (ej) +1 on the where the 4 came from.  Here is a small pseudo-code 
+TODO (ej) +1 on the where the 4 came from.  Here is a small pseudo-code
        snippet using concurrent.futures.ThreadPoolExecutor that is a bit more compact.
        Theoretically right, but not tested!
 from concurrent.futures import ThreadPoolExecutor
@@ -526,7 +524,7 @@ concurrent.futures.wait([r1, r2])
 ////
 
 [[data_integrity_test]]
-.An integration test for concurrency behaviour (tests/integration/test_uow.py)
+.An integration test for concurrency behavior (tests/integration/test_uow.py)
 ====
 [source,python]
 ----
@@ -567,7 +565,7 @@ def test_concurrent_updates_to_version_are_not_allowed(postgres_session_factory)
 ----
 ====
 
-<1> We set up two threads that will reliably produce the concurrency behaviour we
+<1> We set up two threads that will reliably produce the concurrency behavior we
     want:  `read1, read2, write1, write2`. (see below for the code being run in
     each thread).
 
@@ -579,7 +577,7 @@ def test_concurrent_updates_to_version_are_not_allowed(postgres_session_factory)
 
 
 [[time_sleep_thread]]
-.time.sleep can reliably produce concurrency behaviour (tests/integration/test_uow.py)
+.time.sleep can reliably produce concurrency behavior (tests/integration/test_uow.py)
 ====
 [source,python]
 ----
@@ -600,7 +598,7 @@ def try_to_allocate(orderid, sku, exceptions):
 //TODO (DS): I wonder if it would read better to introduce this function first,
 //then show the test?
 
-==== Enforcing Concurrency Rules By Using Database Transaction Isolation Levels
+==== Enforcing Concurrency Rules by Using Database Transaction Isolation Levels
 
 To get the test to pass as it is, we can set the transaction isolation level
 on our session:
@@ -626,7 +624,7 @@ documentation].
 
 An alternative to using the `SERIALIZABLE` isolation level is to use
 https://www.postgresql.org/docs/9.6/explicit-locking.html[SELECT FOR UPDATE],
-which will produce different behaviour: two concurrent transactions will not
+which will produce different behavior: two concurrent transactions will not
 be allowed to do a read on the same rows at the same time.
 
 [[with_for_update]]
@@ -644,7 +642,7 @@ be allowed to do a read on the same rows at the same time.
 ====
 
 
-This will have the effect of changing the concurrency pattern from 
+This will have the effect of changing the concurrency pattern from
 
 [role="skip"]
 ----
@@ -669,17 +667,17 @@ will depend on circumstances.
 //TODO (DS): Maybe worth explaining the difference between optimistic and
 //pessimistic locking in more detail, and earlier in the chapter?
 
-//// 
-TODO (ej): 
-+1 to (DS) comment. The jump in the middle to talking about version numbers is a little abrupt.  
-   Maybe introduce the section by talking about integrity and concurrency, then read-modify-write cycles, 
+////
+TODO (ej):
++1 to (DS) comment. The jump in the middle to talking about version numbers is a little abrupt.
+   Maybe introduce the section by talking about integrity and concurrency, then read-modify-write cycles,
    and optimistic concurrency control?  Ch7 of "Desiging Data Intensive Applications" is i
    a good reference.
 
    I also like this treatemnt: https://www.2ndquadrant.com/en/blog/postgresql-anti-patterns-read-modify-write-cycles/
-//// 
+////
 
-.Recap: Aggregates and consistency boundaries
+.Recap: Aggregates and Consistency Boundaries
 *****************************************************************
 Choose the right aggregate::
     bla

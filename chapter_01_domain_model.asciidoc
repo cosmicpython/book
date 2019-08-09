@@ -1,22 +1,18 @@
 [[chapter_01_domain_model]]
 == Domain Modelling
 
-In this chapter:
 
-* We'll see how TDD supports us in building rich domain models that model
-  business processes.
-
-* We'll discuss _why_ domain modelling matters.
-
-* We'll look at a few key patterns for modelling domains: entities,
-  value objects, and domain services.
+In this chapter we'll look into how we can model business processes with
+code, in a way that's highly compatible with TDD.  We'll discuss _why_
+domain modelling matters, and we'll look at a few key patterns for modelling
+domains: Entities, Value Objects, and Domain Services.
 
 
-=== What Is A Domain Model?
+=== What is a Domain Model?
 
 In the <<prologue>>, we used the term _business logic layer_ to describe the
 central layer of a three-layered architecture. For the rest of the book, we're
-going to use the term _domain model_ instead. This is a term from the DDD
+going to use the term _Domain Model_ instead. This is a term from the DDD
 community that does a better job of capturing our intended meaning (see the
 next sidebar for more on DDD).
 
@@ -38,10 +34,10 @@ was never designed to cover those cases. That doesn't mean the model is wrong,
 but it does mean that some predictions fall outside of its domain.
 
 
-.This is not a DDD book.  You should read a DDD book.
+.This is not a DDD Book.  You Should Read a DDD book.
 *****************************************************************
 
-Domain-Driven Design, or DDD, is where the concept of domain modelling was
+Domain-driven design, or DDD, is where the concept of domain modelling was
 popularized,footnote:[
 DDD did not originate domain modelling. Eric Evans refers to _Object Design_
 from Rebecca Whirfs-Brock and Alan McKean, which introduced Responsibility-Driven
@@ -51,7 +47,7 @@ Jacobson and Grady Booch; the term has been around since the mid-1980s.]
 and it's been a hugely successful movement in transforming the way people
 design software by focusing on the core business domain.  Many of the
 architecture patterns that we cover in this book, like Entity, Aggregate
-and Value Objects (see <<chapter_04_uow>>), and _repository pattern_ (in
+and Value Objects (see <<chapter_04_uow>>), and Repository pattern (in
 <<chapter_02,the next chapter>>) all come from the DDD tradition.
 
 In a nutshell, DDD says that the most important thing about software is that it
@@ -74,7 +70,7 @@ and cannot encourage you enough to go on and read a proper DDD book.
 
 *****************************************************************
 
-The domain model is the mental map that business owners have of their
+The Domain Model is the mental map that business owners have of their
 businesses. All business people have these mental maps, they're how humans think
 about complex processes.
 
@@ -117,7 +113,7 @@ to get your goods from Poland or China or Vietnam, and into your living room.
 At a high level, we have separate systems that are responsible for buying
 stock, selling stock to customers, and shipping goods to customers. There's a
 system in the middle that needs to coordinate the process by allocating stock
-to a customer's orders.
+to a customer's orders; see <<allocation_context_diagram>>.
 
 [[allocation_context_diagram]]
 .Context diagram for the allocation service
@@ -168,7 +164,7 @@ Time for some domain modelling.
 
 
 
-=== Exploring The Domain Language
+=== Exploring the Domain Language
 
 Understanding the domain model takes time, and patience, and post-it notes. We
 have an initial conversation with our business experts and we agree on a glossary
@@ -271,10 +267,10 @@ def test_allocating_to_a_batch_reduces_the_available_quantity():
 ====
 
 
-The name of our unit test describes the behaviour that we want to see from the
+The name of our unit test describes the behavior that we want to see from the
 system, and the names of the classes and variables that we use are taken from the
 business jargon. We could show this code to our non-technical co-workers, and
-they would agree that this correctly describes the behaviour of the system.
+they would agree that this correctly describes the behavior of the system.
 
 And here is a domain model that meets our requirements:
 
@@ -309,7 +305,7 @@ class Batch:
 <1> `OrderLine` is an immutable dataclassfootnote:[In previous Python versions we
     might have used a namedtuple.  You could also check out Hynek Schlawack's
     excellent https://pypi.org/project/attrs/[attrs].]
-    with no behaviour.
+    with no behavior.
 
 <2> Type hints are still a matter of controversy in the Python world. For
     domain models, they can sometimes help to clarify or document what the
@@ -536,7 +532,7 @@ Please, please don't do this. Harry.] is a matter of debate.
 
 *******************************************************************************
 
-==== Dataclasses Are Great For Value Objects
+==== Dataclasses Are Great for Value Objects
 
 We've used the _line_ liberally in the previous code listings, but what is a
 line? In the business language, an _order_ has multiple _line_ items, where
@@ -625,7 +621,7 @@ These Value Objects match our real-world intuitions about how their values work.
 It doesn't matter _which_ $10 note we're talking about, because they all have
 the same value. Likewise two names are equal if both the first and last name
 match, and two lines are equivalent if they have the same customer order, product code and
-quantity. We can still have complex behaviour on a Value Object, though. In
+quantity. We can still have complex behavior on a Value Object, though. In
 fact, it's common to support operations on values, for example mathematical
 operators.
 
@@ -661,7 +657,7 @@ def multiplying_two_money_values_is_an_error():
 
 
 
-==== Value Objects And Entities
+==== Value Objects and Entities
 
 An order line is uniquely identified by its orderid, sku and quantity; if we
 change one of those values, we now have a new line. That's the definition of a
@@ -747,7 +743,7 @@ class Batch:
 ----
 ====
 
-Python's `__eq__` magic method defines the behaviour of the class for the
+Python's `__eq__` magic method defines the behavior of the class for the
 `==` operator.
 
 // TODO (EJ) The difference between "is" and "__eq__" might be a tripping point
@@ -755,7 +751,7 @@ Python's `__eq__` magic method defines the behaviour of the class for the
 
 For both Entity and Value Objects it's also worth thinking through how
 `__hash__` will work.  It's the magic method Python uses to control the
-behaviour of objects when you add them to sets or use them as dict keys;
+behavior of objects when you add them to sets or use them as dict keys;
 more info https://docs.python.org/3/glossary.html#term-hashable[in the Python docs].
 
 For Value Objects, the hash should be based on all the value attributes.
@@ -770,7 +766,7 @@ on the attribute(s), like `.reference`, that define identity over time.
 
 
 
-=== Not Everything Has To Be An Object: A Domain Service Function
+=== Not Everything Has to Be an Object: A Domain Service Function
 
 We've made a model to represent batches, but what we actually need
 to do is allocate order lines against a specific set of batches that
@@ -783,7 +779,7 @@ ____
 
 Evans discusses the idea of Domain Servicesfootnote:[Domain services are
 not the same thing as the services from the
-<<chapter_03_service_layer,service layer>>, although they are
+<<chapter_03_service_layer,Service Layer>>, although they are
 often closely related.  A Domain Service represents a business concept or
 process, whereas a service-layer service represents a use case for your
 application.  Often the service layer will call a domain service.]
@@ -853,7 +849,7 @@ def allocate(line: OrderLine, batches: List[Batch]) -> str:
 ====
 
 
-==== Python's Magic Methods Let Us Use Our Models With Idiomatic Python
+==== Python's Magic Methods Let Us Use our Models with Idiomatic Python
 
 You may or may not like the use of `next()` above, but we're pretty
 sure you'll agree that being able to use `sorted()` on our list of
@@ -931,7 +927,7 @@ That'll probably do for now! We have a Domain Service which we can use for our
 first use case.   But first we'll need a database.
 
 
-.Domain modelling wrap-up
+.Domain Modelling Wrap-Up
 *****************************************************************
 Domain modelling::
     This is the part of your code that is closest to the business,
