@@ -182,8 +182,12 @@ https://github.com/python-leap/book/issues/49
 ////
 
 You might be familiar with the dependency inversion principle already, because
-it's the D in the https://en.wikipedia.org/wiki/SOLID[SOLID] mnemonic.
-Formally, the DIP says:
+it's the D in the SOLIDfootnote:[Uncle Bob's five principles of object-oriented
+design: Single responsibility, Open for extension but
+closed for modification, Liskov substitution, Interface segregation, and
+Dependency Inversion.  There's a good overview, with examples, at
+https://scotch.io/bar-talk/s-o-l-i-d-the-first-five-principles-of-object-oriented-design]
+mnemonic. Formally, the DIP says:
 
 1.  High-level modules should not depend on low-level modules. Both should
     depend on abstractions.

@@ -196,8 +196,7 @@ definitely making us unhappy.
 === Single Responsibility Principle
 
 Really this is a violation of the __single responsibility principle__footnote:[
-the https://en.wikipedia.org/wiki/Single_responsibility_principle[S]
-from https://en.wikipedia.org/wiki/SOLID[SOLID]].
+the S from https://scotch.io/bar-talk/s-o-l-i-d-the-first-five-principles-of-object-oriented-design[SOLID]].
 Our use case is allocation. Our endpoint, service function, and domain methods
 are all called `allocate`, not `allocate_and_send_mail_if_out_of_stock`.
 
