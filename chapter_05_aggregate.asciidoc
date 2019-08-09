@@ -486,13 +486,13 @@ TODO: more discussion of version number -- actual numebr doesn't matter,
 
 === Testing For Our Data Integrity Rules
 
-Now to actually make sure we can get the behaviour we want: if we have two
+Now to actually make sure we can get the behavior we want: if we have two
 concurrent attempts to do allocation against the same `Product`, one of them
 should fail, because they can't both update the version number:
 
 ////
 TODO:
-In Example 5. An integration test for concurrency behaviour (tests/integration/test_uow.py)
+In Example 5. An integration test for concurrency behavior (tests/integration/test_uow.py)
 it might be helpful to use order1 and order2 instead of o1 and o2.
 
 This might have been morning-brain, but I had to read the code over a few times to figure out why product version was 4 instead of 1 or 2.
@@ -526,7 +526,7 @@ concurrent.futures.wait([r1, r2])
 ////
 
 [[data_integrity_test]]
-.An integration test for concurrency behaviour (tests/integration/test_uow.py)
+.An integration test for concurrency behavior (tests/integration/test_uow.py)
 ====
 [source,python]
 ----
@@ -567,7 +567,7 @@ def test_concurrent_updates_to_version_are_not_allowed(postgres_session_factory)
 ----
 ====
 
-<1> We set up two threads that will reliably produce the concurrency behaviour we
+<1> We set up two threads that will reliably produce the concurrency behavior we
     want:  `read1, read2, write1, write2`. (see below for the code being run in
     each thread).
 
@@ -579,7 +579,7 @@ def test_concurrent_updates_to_version_are_not_allowed(postgres_session_factory)
 
 
 [[time_sleep_thread]]
-.time.sleep can reliably produce concurrency behaviour (tests/integration/test_uow.py)
+.time.sleep can reliably produce concurrency behavior (tests/integration/test_uow.py)
 ====
 [source,python]
 ----
@@ -626,7 +626,7 @@ documentation].
 
 An alternative to using the `SERIALIZABLE` isolation level is to use
 https://www.postgresql.org/docs/9.6/explicit-locking.html[SELECT FOR UPDATE],
-which will produce different behaviour: two concurrent transactions will not
+which will produce different behavior: two concurrent transactions will not
 be allowed to do a read on the same rows at the same time.
 
 [[with_for_update]]

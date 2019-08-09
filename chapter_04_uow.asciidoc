@@ -333,11 +333,11 @@ def allocate(
 
 === Explicit Tests For Commit/rollback Behaviour
 
-To convince ourselves that the commit/rollback behaviour works, we wrote
+To convince ourselves that the commit/rollback behavior works, we wrote
 a couple of tests:
 
 [[testing_rollback]]
-.Integration tests for rollback behaviour (tests/integration/test_uow.py)
+.Integration tests for rollback behavior (tests/integration/test_uow.py)
 ====
 [source,python]
 ----
@@ -368,7 +368,7 @@ def test_rolls_back_on_error(session_factory):
 ====
 
 TIP: We haven't shown it here, but it can be worth testing some of the more
-    "obscure" database behaviour, like transactions, against the "real"
+    "obscure" database behavior, like transactions, against the "real"
     database, ie the same engine.  For now we're getting away with using
     SQLite instead of Postgres, but in <<chapter_05_aggregate>> we'll switch
     some of the tests to using the real DB.  It's convenient that our UoW
@@ -427,7 +427,7 @@ This is a judgement call, but we tend to prefer requiring the explicit commit
 so that we have to choose when to flush state.
 
 Although it's an extra line of code this makes the software safe-by-default.
-The default behaviour is to _not change anything_. In turn, that makes our code
+The default behavior is to _not change anything_. In turn, that makes our code
 easier to reason about because there's only one code path that leads to changes
 in the system: total success and an explicit commit. Any other code path, any
 exception, any early exit from the uow's scope, leads to a safe state.

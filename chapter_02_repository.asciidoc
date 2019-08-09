@@ -394,7 +394,7 @@ all.
 
 Depending on what you're doing in your domain model, and especially if you
 stray far from the OO paradigm, you may find it increasingly hard to get the
-ORM to produce the exact behaviour you need,  and you may need to modify your
+ORM to produce the exact behavior you need,  and you may need to modify your
 domain modelfootnote:[Shout out to the amazingly helpful SQLAlchemy
 maintainers, and Mike Bayer in particular].  As so often with
 architectural decisions, there is a trade-off you'll need to consider.  As the
@@ -517,7 +517,7 @@ WARNING: We're using abstract base classes in this book for didactic reasons:
     parent class
 
 <2> `raise NotImplementedError` is nice but neither necessary nor sufficient.
-    In fact, your abstract methods can have real behaviour which subclasses
+    In fact, your abstract methods can have real behavior which subclasses
     can call out to, if you want.
 
 NOTE: To really reap the benefits of ABCs (such as they may be) you'll want to

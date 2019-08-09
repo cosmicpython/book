@@ -7,7 +7,7 @@
 * We'll examine the kind of requirement that leads to a _big ball of mud_.
 * We'll see how we can use _domain events_ to separate side-effects from our
   use-cases.
-* We'll show how to build a simple _message bus_ for triggering behaviour in
+* We'll show how to build a simple _message bus_ for triggering behavior in
   your codebase.
 * We'll see how our _unit of work_ can be extended to cover multi-step processes.
 
@@ -309,7 +309,7 @@ class OutOfStock(Event):  #<2>
 
 
 <1> Once we have a number of events we'll find it useful to have a parent
-    class that can store common behaviour.  It's also useful for type
+    class that can store common behavior.  It's also useful for type
     hints in our message bus, as we'll see shortly.
 
 <2> `dataclasses` are great for domain events too.

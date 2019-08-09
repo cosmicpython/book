@@ -253,7 +253,7 @@ def test_rolls_back_on_error():
     SQLA
 
 <2> the pytest-django `mark.django_db(transaction=True)` is required to
-    test our custom transaction/rollback behaviours.
+    test our custom transaction/rollback behaviors.
 
 
 

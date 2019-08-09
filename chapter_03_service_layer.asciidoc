@@ -532,7 +532,7 @@ We tend to find that building our own fakes is an excellent way of exercising
 design pressure against our abstractions.  If our abstractions are nice and
 simple, then they should be easy to fake.
 
-In fact in the case of `FakeRepository`, because our fake has actual behaviour,
+In fact in the case of `FakeRepository`, because our fake has actual behavior,
 using a magic mock from `unittest.mock` wouldn't really help.
 
 In the case of `FakeSession`, the `session` object isn't one of our own
@@ -556,7 +556,7 @@ Regarding the definition of fakes vs mocks, the short but simplistic answer is:
 * Fakes are working implementations of the thing they're replacing, but
   they're only designed for use in tests; they wouldn't work "in real life",
   like our in-memory repository. But you can use them to make assertions about
-  the end state of a system, rather than the behaviours along the way, so
+  the end state of a system, rather than the behaviors along the way, so
   they're associated with classic-style TDD.
 
 (We're slightly conflating mocks with spies and fakes with stubs here, and you
@@ -573,7 +573,7 @@ two in Martin Fowler's article just cited, as well as https://softwareengineerin
 but in this book we're pretty firmly in the classicist camp.  We like to
 build our tests around state, both in setup and assertions, and we like
 to work at the highest level of abstraction possible rather than doing
-checks on the behaviour of intermediary collaborators.footnote:[
+checks on the behavior of intermediary collaborators.footnote:[
 Which is not to say that we think the London School people are wrong. There
 are some insanely smart people that work that way.  It's just not what we're
 used to].
@@ -859,7 +859,7 @@ use tests to enforce that some property of the system doesn't change while we're
 working. We use tests to check that the API continues to return 200, that the
 database session continues to commit, and that orders are still being allocated.
 
-If we accidentally change one of those behaviours, our tests will break. The
+If we accidentally change one of those behaviors, our tests will break. The
 flip side, though, is that if we want to change the design of our code, any
 tests relying directly on that code will also fail.
 
@@ -921,7 +921,7 @@ Because the tests are written in the domain language, they act as living
 documentation for our model. A new team member can read these tests to quickly
 understand how the system works, and how the core concepts interrelate.
 
-We often "sketch" new behaviours by writing tests at this level to see how the
+We often "sketch" new behaviors by writing tests at this level to see how the
 code might look.
 
 When we want to improve the design of the code, though, we will need to replace

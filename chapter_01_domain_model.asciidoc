@@ -271,10 +271,10 @@ def test_allocating_to_a_batch_reduces_the_available_quantity():
 ====
 
 
-The name of our unit test describes the behaviour that we want to see from the
+The name of our unit test describes the behavior that we want to see from the
 system, and the names of the classes and variables that we use are taken from the
 business jargon. We could show this code to our non-technical co-workers, and
-they would agree that this correctly describes the behaviour of the system.
+they would agree that this correctly describes the behavior of the system.
 
 And here is a domain model that meets our requirements:
 
@@ -309,7 +309,7 @@ class Batch:
 <1> `OrderLine` is an immutable dataclassfootnote:[In previous Python versions we
     might have used a namedtuple.  You could also check out Hynek Schlawack's
     excellent https://pypi.org/project/attrs/[attrs].]
-    with no behaviour.
+    with no behavior.
 
 <2> Type hints are still a matter of controversy in the Python world. For
     domain models, they can sometimes help to clarify or document what the
@@ -625,7 +625,7 @@ These Value Objects match our real-world intuitions about how their values work.
 It doesn't matter _which_ $10 note we're talking about, because they all have
 the same value. Likewise two names are equal if both the first and last name
 match, and two lines are equivalent if they have the same customer order, product code and
-quantity. We can still have complex behaviour on a Value Object, though. In
+quantity. We can still have complex behavior on a Value Object, though. In
 fact, it's common to support operations on values, for example mathematical
 operators.
 
@@ -747,7 +747,7 @@ class Batch:
 ----
 ====
 
-Python's `__eq__` magic method defines the behaviour of the class for the
+Python's `__eq__` magic method defines the behavior of the class for the
 `==` operator.
 
 // TODO (EJ) The difference between "is" and "__eq__" might be a tripping point
@@ -755,7 +755,7 @@ Python's `__eq__` magic method defines the behaviour of the class for the
 
 For both Entity and Value Objects it's also worth thinking through how
 `__hash__` will work.  It's the magic method Python uses to control the
-behaviour of objects when you add them to sets or use them as dict keys;
+behavior of objects when you add them to sets or use them as dict keys;
 more info https://docs.python.org/3/glossary.html#term-hashable[in the Python docs].
 
 For Value Objects, the hash should be based on all the value attributes.
