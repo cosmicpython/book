@@ -326,7 +326,7 @@ service function, we can choose to clearly separate responsibility:
 
 * But reallocation can happen in a separate unit of work.
 
-So our flow would be:
+So our flow would look like <<reallocation_sequence_diagram>>:
 
 [[reallocation_sequence_diagram]]
 .Sequence diagram for reallocation flow

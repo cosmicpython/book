@@ -182,9 +182,9 @@ and whether there is a Pythonic equivalent of interfaces, later in the book.
 
 === Reminder: our Model
 
-Let's remind ourselves of our domain model:  An allocation is the concept
-of linking an `OrderLine` to a `Batch`.  We're storing the allocations as
-a collection on our `Batch` object:
+Let's remind ourselves of our domain model (see <<model_diagram_reminder>>):
+An allocation is the concept of linking an `OrderLine` to a `Batch`.  We're
+storing the allocations as a collection on our `Batch` object:
 
 [[model_diagram_reminder]]
 .Our Model
@@ -557,7 +557,8 @@ it very easy to make fundamental changes to the way we store things (see
 
 In addition, repository pattern is so common in the DDD world that, if you
 do collaborate with programmers that have come to Python from the Java and C#
-worlds, they're likely to recognise it.
+worlds, they're likely to recognise it.  <<repository_pattern_diagram>> shows
+an illustration.
 
 [[repository_pattern_diagram]]
 .Repository pattern

@@ -20,7 +20,8 @@ By the end of this chapter, we'll have add a _Flask API_, that will talk to
 a _Service Layer_, which will serve as the entrypoint to our domain model.
 By making the service layer depend on the `AbstractRepository`, we'll be
 able to unit test it using `FakeRepository`, and then run it in real life
-using `SqlAlchemyRepository`:
+using `SqlAlchemyRepository`.  <<chapter_03_class_diagram>> is a class
+diagram showing where we're heading.
 
 [[chapter_03_class_diagram]]
 .Our target architecture for the end of this chapter
@@ -879,7 +880,8 @@ attributes on our model objects, which leaves us more free to refactor them.
 
 You might be asking yourself "should I rewrite all my unit tests, then? Is it
 wrong to write tests against the domain model?" To answer the question, it's
-important to understand the trade-off between coupling and design feedback.
+important to understand the trade-off between coupling and design feedback (see
+<<test_spectrum_diagram>>.)
 
 [[test_spectrum_diagram]]
 .The test spectrum
