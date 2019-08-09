@@ -4,20 +4,17 @@
 
 Back to our allocations project! 
 
-In this chapter:
+In this chapter, we'll discuss the difference between orchestration logic,
+business logic, and interfacing code, and we introduce the _Service Layer_
+pattern to take care of orchestrating our workflows and defining the use
+cases of our system.
 
-* We'll discuss the difference between orchestration logic, business logic, and
-  interfacing code.
+We'll also discuss testing: by combining the Service Layer with our Repository
+abstraction over the database, we're able to write fast tests, not just of
+our domain model, but the entire workflow for a use case.
 
-* We introduce the _Service Layer_ pattern for orchestrating our workflows.
-
-* We'll see how our database abstractions, plus a service layer, let us write
-  fast tests of our core functionality
-
-* We'll discuss different kinds of testing, and when each is appropriate
-
-By the end of this chapter, we'll have added a _Flask API_, that will talk to
-a _Service Layer_, which will serve as the entrypoint to our Domain Model.
+By the end of this chapter, we'll have added a Flask API, that will talk to
+the Service Layer, which will serve as the entrypoint to our Domain Model.
 By making the service layer depend on the `AbstractRepository`, we'll be
 able to unit test it using `FakeRepository`, and then run it in real life
 using `SqlAlchemyRepository`.  <<chapter_03_class_diagram>> is a class

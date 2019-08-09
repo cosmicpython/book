@@ -1,19 +1,18 @@
 [[chapter_02_repository]]
 == Repository Pattern
 
-.In this chapter
+In this chapter, we'll start to make good on our promise to apply the
+dependency inversion principle as a way of decoupling our core logic from
+infrastructural concerns.
 
-* We show how to apply the dependency inversion principle to make your data layer
-  depend on your model objects.
+We'll introduce the _Repository_, a simplifying abstraction over data storage,
+allowing us to decouple our model layer from the data layer.  We'll see a
+concrete example of how this simplifying abstraction makes our system more
+testable by hiding the complexities of the database.
 
-* We introduce the _Repository_, a simplifying abstraction over data storage.
-
-* We'll see a concrete example of how this simplifying abstraction makes our
-  system more testable by hiding the complexities of the database.
-
-By the end of the chapter, we'll have built a `Repository` class that sits
-between `SqlAlchemy` (our ORM) and our Domain Model's `Batch` classes, as
-in <<chapter_02_class_diagram>>:
+<<chapter_02_class_diagram>> shows a little preview of what we're going to
+build: a `Repository` class that sits between `SqlAlchemy` (our ORM) and our
+Domain Model's `Batch` classes.
 
 [[chapter_02_class_diagram]]
 .Batch, Repository and SqlAlchemy
@@ -574,7 +573,7 @@ image::images/repository_pattern_diagram.png[]
                  ||----------|   Domain Model   |
                  ||          |      objects     |
                  ||          +------------------+
-                 V|       
+                 V|
   +------------------------------+
   |          Repository          |
   +------------------------------+
