@@ -1,5 +1,5 @@
 [[chapter_07_external_events]]
-== Event-driven Architecture (using Events To Integrate Microservices)
+== Event-Driven Architecture (Using Events to Integrate Microservices)
 
 //TODO get rid of bullets
 
@@ -84,7 +84,7 @@ TODO: consider re-ordering this chapter as follows:
 But first, an end-to-end test to drive us towards a working solution.
 
 
-=== Using A Redis Pubsub Channel For Integration
+=== Using a Redis Pubsub Channel for Integration
 
 When moving towards events as an integration solution, you need to choose
 some sort of technology for passing those events from one system to another.
@@ -208,7 +208,7 @@ TODO (ej)  Not 100% sure of the necessity of wait_for. According to the source c
 ////
 
 
-==== Redis Is Another Thin Adapter Around Our Service Layer
+==== Redis is Another Thin Adapter Around our Service Layer
 
 
 [[redis_pubsub_first_cut]]
@@ -265,7 +265,7 @@ if __name__ == '__main__':
 So we'll need a new service called `change_batch_quantity`.
 
 
-=== Test-driving A New Service At The Service Layer
+=== Test-Driving a New Service at the Service Layer
 
 Following the lessons learned in <<chapter_03_service_layer>>,
 we can operate in "high gear," and write our unit tests at the highest
@@ -317,7 +317,7 @@ look like:
     and we expect to reallocated it to a new batch
 
 
-==== Adding Some Internal Events To Express De-allocation
+==== Adding Some Internal Events to Express De-Allocation
 
 A batch might have dozens of orders allocated to it. Similarly to the "out of
 stock" email, rather than doing deallocation and re-allocation in-line in the
@@ -538,7 +538,7 @@ class Batch:
 
 
 
-=== New Handlers For Allocated And Deallocated Events
+=== New Handlers for Allocated and Deallocated Events
 
 // TODO (DS): I feel I'm having to hold too much in my brain at once....is
 // there a way of communicating  the deallocation logic separately from the
@@ -598,7 +598,7 @@ def publish(channel, event):
 ====
 
 
-==== But Handlers Do Now Need A Uow
+==== But Handlers Do Now Need a UoW
 
 TODO: Introduce the infrastrutural changes at the end of the chapter so as not to interrupt flow.
 

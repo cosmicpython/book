@@ -1,5 +1,5 @@
 [[appendix_bootstrap]]
-== Bootstrap (aka Configuration Root)
+== Bootstrap (Aka Configuration Root)
 
 NOTE: placeholder chapter, under construction
 
@@ -98,7 +98,7 @@ def bootstrap(
 * it gives us back the core of our app, the messagebus
 
 
-=== Using Bootstrap in Our Entrypoints
+=== Using Bootstrap in our Entrypoints
 
 In our application's entrypoints, we just call `bootstrap.bootstrap()`
 to get a messagebus, rather than configuring a UoW and the rest of it.
@@ -197,4 +197,3 @@ Now we have what our esteemed tech reviewer David Seddon would call a "rocky
 road architecture": all the dependencies flow in one direction.
 
 TODO: alternative fix by making an abstract redis thingie?  
-

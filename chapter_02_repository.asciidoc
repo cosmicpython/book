@@ -52,7 +52,7 @@ package SqlAlchemy {
 ----
 
 
-=== Persisting Our Domain Model
+=== Persisting our Domain Model
 
 In the previous chapter we built a simple domain model that can allocate orders
 to batches of stock. It's easy for us to write tests against this code because
@@ -75,7 +75,7 @@ storage, and this is a textbook, so we can allow ourselves a tiny bit more
 bottom-up development, and start to think about storage and databases.
 
 
-==== Some Pseudocode: What Are We Going To Need?
+==== Some Pseudocode: What Are We Going to Need?
 
 When we build our first API endpoint, we know we're going to have
 some code that looks more or less like <<api_endpoint_pseudocode>>
@@ -109,7 +109,7 @@ model objects from it, and we'll also need a way of saving them back to the
 database.
 
 
-=== Applying The Dependency Inversion Principle To The Database
+=== Applying the Dependency Inversion Principle to the Database
 
 As mentioned in <<part1_prologue>>, the "layered architecture" is a common
 approach to structuring a system that has a UI, some logic, and a database (see
@@ -179,7 +179,7 @@ and whether there is a Pythonic equivalent of interfaces, later in the book.
 *******************************************************************************
 
 
-=== Reminder: Our Model
+=== Reminder: our Model
 
 Let's remind ourselves of our domain model (see <<model_diagram_reminder>>):
 An allocation is the concept of linking an `OrderLine` to a `Batch`.  We're
@@ -192,7 +192,7 @@ image::images/model_diagram.png[]
 Let's see how we might translate this to a relational database.
 
 
-==== The "Normal" ORM Way: Model Depends On ORM.
+==== The "Normal" ORM Way: Model Depends on ORM.
 
 In 2019 it's unlikely that your team are hand-rolling their own SQL queries.
 Instead, you're almost certainly using some kind of framework to generate
@@ -283,7 +283,7 @@ inversion and the Repository pattern to Django.
 
 
 
-==== Inverting The Dependency: ORM Depends On Model.
+==== Inverting the Dependency: ORM Depends on Model.
 
 Well, thankfully, that's not the only way to use SQLAlchemy.  The alternative is
 to define your schema separately, and an explicit _mapper_ for how to convert
@@ -469,7 +469,7 @@ list or a set, and since the objects are in memory we never need to call a
 "Save" method, we just fetch the object we care about, and modify it in memory.
 
 
-==== The Repository In The Abstract
+==== The Repository in the Abstract
 
 The simplest repository has just two methods: `add` to put a new item in the
 repository, and `get` to return a previously added item.footnote:[
@@ -523,7 +523,7 @@ NOTE: To really reap the benefits of ABCs (such as they may be) you'll want to
     be running some helpers like `pylint` and `mypy`.
 
 
-==== What Is The Trade-off?
+==== What is the Trade-Off?
 
 
 [quote, Rich Hickey]
@@ -752,7 +752,7 @@ but the nice thing is--the rest of your application just doesn't care.
 ******************************************************************************
 
 
-=== Building A Fake Repository For Tests Is Now Trivial!
+=== Building a Fake Repository for Tests is Now Trivial!
 
 Here's one of the biggest benefits of _repository pattern_.
 

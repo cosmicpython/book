@@ -1,6 +1,6 @@
 [[chapter_03_service_layer]]
 
-== Our First Use Case: Flask API And Service Layer.
+== our First Use Case: Flask API and Service Layer.
 
 Back to our allocations project! 
 
@@ -112,7 +112,7 @@ plan:
   storage layer to set up test data.
 
 
-=== A First End-to-end (E2E) Test
+=== A First End-To-End (E2E) Test
 
 No-one is interested in getting into a long terminology debate about what
 counts as an E2E test vs a functional test vs an acceptance test vs an
@@ -343,7 +343,7 @@ E2E tests is starting to get out of control, and soon we'll end up with an
 inverted test pyramid (or "ice cream cone model" as Bob likes to call it).
 
 
-=== Introducing A Service Layer, And Using Fakerepository To Unit Test It
+=== Introducing a Service Layer, and Using Fakerepository to Unit Test It
 
 If we look at what our Flask app is doing, there's quite a lot of what we
 might call "orchestration" -- fetching stuff out of our repository, validating
@@ -685,7 +685,7 @@ stuff, which we implement end-to-end; and tests about orchestration stuff, which
 we can test against the service layer in memory.
 
 
-=== How Is Our Test Pyramid Looking?
+=== How is our Test Pyramid Looking?
 
 Let's see what this move to using a Service Layer, with its own service-layer tests,
 does to our test pyramid:
@@ -715,7 +715,7 @@ a healthy-looking test pyramid.
 
 
 
-=== Should Domain Layer Tests Move To The Service Layer?
+=== Should Domain Layer Tests Move to the Service Layer?
 
 We could take this a step further. Since we can test the our software against
 the service layer, we don't really need tests for the domain model any more.
@@ -787,7 +787,7 @@ attributes on our model objects, which leaves us more free to refactor them.
 
 
 [[kinds_of_tests]]
-=== On Deciding What Kind Of Tests To Write
+=== On Deciding What Kind of Tests to Write
 
 You might be asking yourself "should I rewrite all my unit tests, then? Is it
 wrong to write tests against the domain model?" To answer the question, it's
@@ -851,7 +851,7 @@ implementation.
 // layer
 
 
-==== Low And High Gear
+==== Low and High Gear
 
 Most of the time, when we are adding a new feature, or fixing a bug, we don't
 need to make extensive changes to the domain model. In these cases, we prefer
@@ -894,7 +894,7 @@ hazard, we again drop down to a low gear until we can pick up speed again.
 ******************************************************************************
 
 
-=== Fully Decoupling The Service Layer Tests From The Domain
+=== Fully Decoupling the Service Layer Tests From the Domain
 
 We still have some direct dependencies on the domain in our service-layer
 tests, because we use domain objects to set up our test data and to invoke
@@ -956,7 +956,7 @@ But our tests still depend on the domain, because we still manually instantiate
 model works, we'll have to change a bunch of tests.
 
 
-==== Mitigation: Keep All Domain Dependencies In Fixture Functions
+==== Mitigation: Keep All Domain Dependencies in Fixture Functions
 
 We could at least abstract that out to a helper function or a fixture
 in our tests.  Here's one way you could do that, adding a factory
@@ -991,7 +991,7 @@ At least that would move all of our tests' dependencies on the domain
 into one place.
 
 
-==== Adding A Missing Service
+==== Adding a Missing Service
 
 We could go one step further though.  If we had a service to add stock,
 then we could use that, and make our service-layer tests fully expressed
@@ -1075,7 +1075,7 @@ This is a really nice place to be in.  Our service-layer tests only depend on
 the services layer itself, leaving us completely free to refactor the model as
 we see fit.
 
-=== Carrying The Improvement Through To The E2E Tests
+=== Carrying the Improvement Through to the E2E Tests
 
 In the same way that adding `add_batch` helped decouple our services-layer
 tests from the model, adding an API endpoint to add a batch would remove
@@ -1167,7 +1167,7 @@ TIP: If you decide you want to build a read-only endpoint for retrieving allocat
 ******************************************************************************
 
 
-=== Wrap-up
+=== Wrap-Up
 
 
 Adding the service layer has really bought us quite a lot:

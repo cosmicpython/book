@@ -8,7 +8,7 @@ domain modelling matters, and we'll look at a few key patterns for modelling
 domains: Entities, Value Objects, and Domain Services.
 
 
-=== What Is A Domain Model?
+=== What is a Domain Model?
 
 In the <<prologue>>, we used the term _business logic layer_ to describe the
 central layer of a three-layered architecture. For the rest of the book, we're
@@ -164,7 +164,7 @@ Time for some domain modelling.
 
 
 
-=== Exploring The Domain Language
+=== Exploring the Domain Language
 
 Understanding the domain model takes time, and patience, and post-it notes. We
 have an initial conversation with our business experts and we agree on a glossary
@@ -532,7 +532,7 @@ Please, please don't do this. Harry.] is a matter of debate.
 
 *******************************************************************************
 
-==== Dataclasses Are Great For Value Objects
+==== Dataclasses Are Great for Value Objects
 
 We've used the _line_ liberally in the previous code listings, but what is a
 line? In the business language, an _order_ has multiple _line_ items, where
@@ -657,7 +657,7 @@ def multiplying_two_money_values_is_an_error():
 
 
 
-==== Value Objects And Entities
+==== Value Objects and Entities
 
 An order line is uniquely identified by its orderid, sku and quantity; if we
 change one of those values, we now have a new line. That's the definition of a
@@ -766,7 +766,7 @@ on the attribute(s), like `.reference`, that define identity over time.
 
 
 
-=== Not Everything Has To Be An Object: A Domain Service Function
+=== Not Everything Has to Be an Object: A Domain Service Function
 
 We've made a model to represent batches, but what we actually need
 to do is allocate order lines against a specific set of batches that
@@ -849,7 +849,7 @@ def allocate(line: OrderLine, batches: List[Batch]) -> str:
 ====
 
 
-==== Python's Magic Methods Let Us Use Our Models With Idiomatic Python
+==== Python's Magic Methods Let Us Use our Models with Idiomatic Python
 
 You may or may not like the use of `next()` above, but we're pretty
 sure you'll agree that being able to use `sorted()` on our list of

@@ -1,5 +1,5 @@
 [[chapter_04_uow]]
-== Unit Of Work Pattern
+== Unit of Work Pattern
 
 In this chapter we'll introduce the final piece of the puzzle that ties
 together the Repository and Service Layer: the _Unit of Work_ pattern.
@@ -16,7 +16,7 @@ And we'll do it using a lovely piece of Python syntax, a context manager.
 // could talk about guidelines for what to mock?
 
 
-=== The Unit of Work Collaborates With Repository(-ies)
+=== The Unit of Work Collaborates with Repository(-Ies)
 
 The unit of work will give us access to our repository(-ies), and then keep
 track of what objects were loaded and what the latest state is.footnote:[
@@ -58,7 +58,7 @@ A context manager.
 
 //TODO (DS): Could be a good moment to revisit the diagram at the beginning of the book.
 
-=== Test-driving A UoW With Integration Tests
+=== Test-Driving a UoW with Integration Tests
 
 Here's a test for a new `UnitofWork` (or UoW, which we pronounce "you-wow").
 It's a context manager that allows us to start a transaction, retrieve and get
@@ -119,7 +119,7 @@ def test_uow_can_retrieve_a_batch_and_allocate_to_it(session_factory):
 //TODO (DS): I'm not sure a test is the clearest way to begin this. I can't see the wood for the trees. Maybe first show some client code using the abstraction?
 
 
-=== Unit Of Work And Its Context Manager
+=== Unit of Work and Its Context Manager
 
 In our tests we've implicitly defined an interface for what a unit
 of work needs to do, let's make that explicit by using an abstract
@@ -174,7 +174,7 @@ class AbstractUnitOfWork(abc.ABC):
     is needed because different subclasses will want to initialise repositories
     in slightly different ways, this just gives us a single place to do that.
 
-==== The Real Unit Of Work Uses Sqlalchemy Sessions
+==== The Real Unit of Work Uses Sqlalchemy Sessions
 
 [[unit_of_work]]
 .the real SQLAlchemy Unit of Work (src/allocation/unit_of_work.py)
@@ -214,7 +214,7 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 
 
 
-=== Fake Unit Of Work For Testing:
+=== Fake Unit of Work for Testing:
 
 Here's how we use a fake Unit of Work in our service layer tests
 
@@ -287,7 +287,7 @@ I think of "Don't mock what you don't own" as referring specifically to "mock ve
 https://github.com/python-leap/book/issues/44
 ////
 
-=== Using The Uow In The Service Layer
+=== Using the UoW in the Service Layer
 
 And here's what our new service layer looks like:
 
@@ -325,7 +325,7 @@ def allocate(
     on an _abstract_ Unit of Work.
 
 
-=== Explicit Tests For Commit/rollback Behaviour
+=== Explicit Tests for Commit/Rollback Behaviour
 
 To convince ourselves that the commit/rollback behavior works, we wrote
 a couple of tests:
@@ -369,7 +369,7 @@ TIP: We haven't shown it here, but it can be worth testing some of the more
     class makes that easy!
 
 
-=== Explicit Vs Implicit Commits
+=== Explicit vs Implicit Commits
 
 A brief digression on different ways of implementing the UoW pattern.
 
@@ -443,7 +443,7 @@ next time?  But you should experiment and figure out your own preferences here.
 // hard, presumably.
 
 
-=== Examples: Using Uow To Group Multiple Operations Into An Atomic Unit
+=== Examples: Using UoW to Group Multiple Operations Into an Atomic Unit
 
 Here's a few examples showing the Unit of Work pattern in use.  You can
 see how it leads to simple reasoning about what blocks of code happen
@@ -502,7 +502,7 @@ def change_batch_quantity(batchref: str, new_qty: int, uow: AbstractUnitOfWork):
     at any stage, we probably want to commit none of the changes.
 
 
-=== Tidying Up The Integration Tests
+=== Tidying Up the Integration Tests
 
 We now have three sets of tests all essentially pointing at the database,
 _test_orm.py_, _test_repository.py_ and _test_uow.py_.  Should we throw any
@@ -559,7 +559,7 @@ something you're particularly proud of?
 ******************************************************************************
 
 
-=== Wrap-up
+=== Wrap-Up
 
 Hopefully we've convinced you that the Unit of Work is a useful pattern, and
 hopefully you'll agree that the context manager is a really nice Pythonic way

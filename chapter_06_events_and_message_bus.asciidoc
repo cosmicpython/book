@@ -1,5 +1,5 @@
 [[chapter_06_events_and_message_bus]]
-== Events And The Message Bus
+== Events and the Message Bus
 
 .In this chapter
 ********************************************************************************
@@ -40,9 +40,9 @@ problem by buying more stock, and all will be well.
 
 For a first version, our product owner says we can just send the alert by email.
 
-=== Avoiding Making A Mess.
+=== Avoiding Making a Mess.
 
-==== First, Avoid Making A Mess Of Of Our Web Controllers
+==== First, Avoid Making a Mess of of our Web Controllers
 
 When we have a new requirement like this, that's not _really_ to do with the
 core domain, it's all too easy to start dumping these things into our web
@@ -134,7 +134,7 @@ NOTE: If you find yourself using `mock.patch` to test external dependencies
 //TODO (DS): Do we *really* need to see this mocky test? Why not skip straight
 //to the good practice?
 
-==== ... And Let's Not Make A Mess Of Our Model Either
+==== ... And Let's Not Make a Mess of our Model Either
 
 Assuming we don't want to put this code into our web controllers, because
 we want them to be as thin as possible, we may look at putting it right at
@@ -162,7 +162,7 @@ But that's even worse!  We don't want our model to have any dependencies on
 infrastructure concerns like `email.send_mail`.
 
 
-==== Or The Service Layer!
+==== Or the Service Layer!
 
 In the service layer it's a little better, but it's still not lovely:
 
@@ -231,7 +231,7 @@ TODO (ej) *Maybe "weed" instead of "goop" to match the "gardening" metaphor?
         Safest thing here would be to just say "decoupling".
 ////
 
-=== All Aboard The Message Bus!
+=== All Aboard the Message Bus!
 
 The patterns we're going to introduce here are _Domain Events_ and the _Message Bus_.
 
@@ -317,7 +317,7 @@ class OutOfStock(Event):  #<2>
 
 
 
-==== The Message Bus Maps Events To Handlers
+==== The Message Bus Maps Events to Handlers
 
 A message bus essentially says: when I see this event, I should
 invoke the following handlers.  Here's a minimal implementation:
@@ -354,7 +354,7 @@ HANDLERS = {
 //TODO: maybe handle should just take one event?
 
 
-==== One Simple Option: The Service Layer Puts Events On The Message Bus
+==== One Simple Option: The Service Layer Puts Events on the Message Bus
 
 Now we need something to catch events from the model and pass them to the
 message bus.  The service layer is one place you can do it...
@@ -410,7 +410,7 @@ TODO (ej)
      `messagebus.handle` to be a little bit confusing, as a consequence.
 ////
 
-=== The Unit Of Work Can Pass Events To The Message Bus
+=== The Unit of Work Can Pass Events to the Message Bus
 
 The UoW already has a `try/finally`, and it knows about all the aggregates
 currently in play because it provides access to the Repository.  So it's
@@ -620,14 +620,14 @@ class FakeUnitOfWork(unit_of_work.AbstractUnitOfWork):
 ====
 
 
-=== Unit Testing With A Fake Message Bus
+=== Unit Testing with a Fake Message Bus
 
 TODO: discuss replacing @mock test with `FakeMessageBus`
 
 
 
 
-=== Wrap-up
+=== Wrap-Up
 
 TODO - wrap up for domain events chapter
 
