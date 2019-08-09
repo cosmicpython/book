@@ -689,7 +689,7 @@ In either case, we can now work on fixing all the bugs in our implementation;
 enumerating tests for all the edge cases is now much easier.
 
 
-.So which do we use in this book? FCIS or DI?
+.So Which Do We Use in this Book? FCIS or DI?
 ******************************************************************************
 Both. Our domain model is entirely free of dependencies and side-effects,
 so that's our functional core.  The service layer that we build around it
