@@ -1,8 +1,67 @@
 [[appendix_validation]]
-[appendix]
+p[appendix]
 == Validation
 
-NOTE: placeholder chapter, under construction.
+Whenever we're teaching and talking about these techniques, one question that
+comes up over and over is "where should I do validation? Does that belong with
+my business logic, in the domain model, or is that an infrastructural concern?"
+
+As with any architectural question, the answer is: it depends!
+
+When people use the word "validation" they usually mean a process where they
+test the inputs of an operation to make sure that they match some criteria.
+Inputs that match the criteria are considered "valid", and inputs that don't
+are "invalid".
+
+If the input is invalid, then the operation can't continue, but should exit with
+some kind of error.
+
+In other words, validation is about creating _pre-conditions_. We find it useful
+to separate our pre-conditions into three sub-types: syntax, semantics, and
+pragmatics.
+
+=== Validating Syntax
+
+In linguistics, the syntax of a language is the set of rules that govern the
+structure of grammatical sentences. For example, in English, the sentence
+"Allocate three units of TASTELESS-LAMP to order twenty-seven" is grammatically
+sound while the phrase "hat hat hat hat hat hat wibble" is not.
+
+How does this map to our application? Here are some examples of syntactic rules:
+
+* An Allocate command must have an orderid, a sku, and a quantity.
+* A quantity is an integer
+* A sku is a string with a maximum length of 64 characters
+* An orderid is a string with a maximum length of 16 characters
+
+These are rules about the shape and structure of incoming data. An Allocate
+command without a sku or order id isn't a valid message. It's the equivalent
+of the phrase "Allocate three to".
+
+=== Validating Sematics
+
+While syntax is concerned with the structure of messages, semantics is the study
+of _meaning_ in messages. The sentence "allocate no dogs from ellipsis hat" is
+syntactically valid, and has the same structure as the sentence "allocate one
+teapot to order five", but it's meaningless.
+
+----
+{
+  "orderid": "superman",
+  "sku": "zygote",
+  "qty": -1
+}
+----
+
+We can read this json blob as an Allocate command but we can't successfully
+execute it, because it's _nonsense_.
+
+=== Validating Pragmatics
+
+Pragmatics is the study of how we understand language in context. After we have
+parsed a message and grasped it's meaning, we still need to process it in
+context. For example[INSERT
+HUMOROUS BRITISH IDIOM HERE, yo - not my cup of tea?]
 
 Places we can do validation, and different types of validation:
 
@@ -17,5 +76,5 @@ Topics to discuss:
 * Validate at the edges, don't program defensively inside
 * Difference between syntax and semantics
 * Discuss patterns for validating messages
-* Talk about reasons for loosely validating messages in the consumer, tolerant reader et c.
+* Talk about reasons for loosely validating messages in the consumer, tolerant reader et c.p
 
