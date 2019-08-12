@@ -489,6 +489,9 @@ it's not a lot of work.  Once your project is up and running, the interface for
 your repository and UoW abstractions really don't change much.  And if you're
 using ABC's, they'll help remind you when things get out of sync.
 
+Because we have a single fake for each of our dependencies, we save a lot of
+repetitive set up in our tests, so this approach pays off pretty quickly.
+
 ////
 TODO (ej)  This will be a comon question, I'm sure.  The other option
       would be to use a mock or patch, which have their own burdens.

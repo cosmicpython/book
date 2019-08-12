@@ -641,8 +641,8 @@ We avoid using mocks in this book, and in our production code, too. We're not
 going to enter into a Holy War, but our instinct is that mocking frameworks are
 a code smell.
 
-Instead, we like to clearly identify the responsiblities in our codebase, and to
-separate those responsibilties out into small, focused objects that are easy to
+Instead, we like to clearly identify the responsibilities in our codebase, and to
+separate those responsibilities out into small, focused objects that are easy to
 replace with a test double.
 
 There's a few, closely related reasons for that:
