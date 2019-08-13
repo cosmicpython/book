@@ -584,7 +584,7 @@ enumerating tests for all the edge cases is now much easier.
 ==== Why Not Just Patch It Out?
 
 At this point some of our readers will be scratching their heads and thinking
-"Why don't you just use `mock.patch`" and save yourself the effort?
+"Why don't you just use `mock.patch` and save yourself the effort?
 
 We avoid using mocks in this book, and in our production code, too. We're not
 going to enter into a Holy War, but our instinct is that mocking frameworks are
@@ -597,23 +597,23 @@ replace with a test double.
 There's a few, closely related reasons for that:
 
 1.  Patching out the dependency you're using makes it possible to unit test the
-    code, but it does nothing to improve the design. Using mock.patch won't let your
-    code work with a `--dry-run` flag, nor will it help you run against an ftp
-    server. For that, you'll need to introduce abstractions.
-    +
-    Designing for testability really means designing for extensibility. We trade off
-    a little more complexity for a cleaner design that admits novel use-cases.
+code, but it does nothing to improve the design. Using mock.patch won't let your
+code work with a `--dry-run` flag, nor will it help you run against an ftp
+server. For that, you'll need to introduce abstractions.
++
+Designing for testability really means designing for extensibility. We trade off
+a little more complexity for a cleaner design that admits novel use-cases.
 
 2.  Tests that use mocks _tend_ to be more coupled to the implementation details
-    of the codebase. That's because mock tests verify the interactions between
-    things: did I call `shutil.copy` with the right arguments? This coupling between
-    code and test _tends_ to make tests more brittle in our experience.
-    +
-    Martin Fowler wrote about this in his 2007 blog post 
-    https://www.martinfowler.com/articles/mocksArentStubs.html[Mocks Aren't Stubs]
+of the codebase. That's because mock tests verify the interactions between
+things: did I call `shutil.copy` with the right arguments? This coupling between
+code and test _tends_ to make tests more brittle in our experience.
++
+Martin Fowler wrote about this in his 2007 blog post 
+https://www.martinfowler.com/articles/mocksArentStubs.html[Mocks Aren't Stubs]
 
 3.  Over-use of mocks leads to complicated test suites that fail to explain the
-    code.
+code.
 
 We view TDD as a design practice first, and a testing practice second. The tests
 act as a record of our design choices, and serve to explain the system to us
