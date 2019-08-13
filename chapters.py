@@ -8,7 +8,7 @@ CHAPTERS = [
     "appendix_csvs",
     "chapter_06_aggregate",
     "chapter_07_events_and_message_bus",
-    "chapter_08_external_events",
+    "chapter_08_all_messagebus",
     "chapter_09_commands",
     "chapter_10_cqrs",
     "chapter_11_dependency_injection",
