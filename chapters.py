@@ -10,6 +10,7 @@ CHAPTERS = [
     "chapter_07_events_and_message_bus",
     "chapter_08_all_messagebus",
     "chapter_09_commands",
+    "chapter_09B_external_events",
     "chapter_10_cqrs",
     "chapter_11_dependency_injection",
     "appendix_bootstrap",
