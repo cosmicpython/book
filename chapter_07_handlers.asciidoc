@@ -1,5 +1,5 @@
-[[chapter_07_external_events]]
-== Event-driven Architecture: The Application as Message Processor
+[[chapter_07_handlers]]
+== Going to Town on the Message Bus
 
 In this chapter we'll start to make events more fundamental to the internal
 structure of our application, by transforming it into a message-processor;
@@ -17,10 +17,6 @@ everything will go via the message bus.
 TODO: DIAGRAM GOES HERE
 
 === A New Requirement Leads Us To Consider A New Architecture
-
-Let's consider a business requirement first:
-
-==== Changing Batch Quantities Leads to Reallocation
 
 We learn about the need to change batch quantities when they're already
 in the system.  Perhaps someone made a mistake on the number in the manifest,

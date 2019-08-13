@@ -1,5 +1,5 @@
 [[chapter_06_events_and_message_bus]]
-== Events And The Message Bus
+== Domain Events And A Simple Message Bus
 
 .In this chapter
 ********************************************************************************
@@ -118,19 +118,13 @@ def test_sends_email_on_out_of_stock_error():
 ----
 ====
 
-<1> We use `unittest.mock.patch` to monkeypatch out our "real" email-sending
-    function, which lives at _src/allocation/email.py_.  This may not be the best
-    pattern for testing dependencies like email. In the next chapter we'll discuss
-    alternative ways of approaching this.
+<1> We'll break our rule about not using `unittest.mock.patch` for now.  We
+    monkeypatch out our "real" email-sending function, which lives at
+    _src/allocation/email.py_, and that'll give us a nice simple test to
+    drive development.  In <<chapter_11_dependency_injection>> we'll see
+    how to build out a proper abstraction for email notifications, and how
+    to use DI to test it.
 
-
-NOTE: If you find yourself using `mock.patch` to test external dependencies
-    at the service layer, you should be aware that Other Testing Options Are
-    Available (TM).  See <<chapter_10_dependency_injection>>.
-
-
-//TODO (DS): Do we *really* need to see this mocky test? Why not skip straight
-//to the good practice?
 
 ==== ... And Let's Not Make A Mess Of Our Model Either
 
