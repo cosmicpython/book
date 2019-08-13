@@ -256,7 +256,7 @@ What else changes in the bus?
         print('handling command', command, flush=True)
         try:
             handler = COMMAND_HANDLERS[type(command)]
-            return self.call_handler_with_dependencies(handler, command)  #<2>
+            self.call_handler_with_dependencies(handler, command)  #<2>
         except Exception as e:
             print(f'Exception handling command {command}: {e}')
             raise e
@@ -286,7 +286,7 @@ there's not much to it:
             name: dependency for name, dependency in self.dependencies.items()  #<2>
             if name in params
         }
-        return handler(message, **deps)  #<3>
+        handler(message, **deps)  #<3>
 ----
 ====
 
