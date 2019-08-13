@@ -1,4 +1,4 @@
-[[chapter_07_external_events]]
+[[chapter_08_external_events]]
 == Event-Driven Architecture (Using Events to Integrate Microservices)
 
 //TODO get rid of bullets
@@ -267,7 +267,7 @@ So we'll need a new service called `change_batch_quantity`.
 
 === Test-Driving a New Service at the Service Layer
 
-Following the lessons learned in <<chapter_03_service_layer>>,
+Following the lessons learned in <<chapter_04_service_layer>>,
 we can operate in "high gear," and write our unit tests at the highest
 possible level of abstraction, the service layer.  Here's what they might
 look like:

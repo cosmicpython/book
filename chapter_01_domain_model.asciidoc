@@ -47,7 +47,7 @@ Jacobson and Grady Booch; the term has been around since the mid-1980s.]
 and it's been a hugely successful movement in transforming the way people
 design software by focusing on the core business domain.  Many of the
 architecture patterns that we cover in this book, like Entity, Aggregate
-and Value Objects (see <<chapter_04_uow>>), and Repository pattern (in
+and Value Objects (see <<chapter_05_uow>>), and Repository pattern (in
 <<chapter_02,the next chapter>>) all come from the DDD tradition.
 
 In a nutshell, DDD says that the most important thing about software is that it
@@ -779,7 +779,7 @@ ____
 
 Evans discusses the idea of Domain Servicesfootnote:[Domain services are
 not the same thing as the services from the
-<<chapter_03_service_layer,Service Layer>>, although they are
+<<chapter_04_service_layer,Service Layer>>, although they are
 often closely related.  A Domain Service represents a business concept or
 process, whereas a service-layer service represents a use case for your
 application.  Often the service layer will call a domain service.]
@@ -951,6 +951,6 @@ This is the time to apply your best OO design principles::
     revise SOLID.  has-a vs is-a.  composition over inheritance. etc etc.
 
 You'll also want to think about consistency boundaries and Aggregates::
-    But that's a topic for <<chapter_05_aggregate>>.
+    But that's a topic for <<chapter_06_aggregate>>.
 
 *****************************************************************

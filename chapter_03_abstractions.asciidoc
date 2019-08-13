@@ -1,5 +1,5 @@
 [preface]
-[[chapter_02B_abstractions]]
+[[chapter_03_abstractions]]
 == A Brief Interlude: On Coupling and Abstractions
 
 .In this chapter
@@ -632,11 +632,11 @@ https://www.youtube.com/watch?v=B48Exq57Zg8[Test Driven Development: That's Not 
 ******************************************************************************
 Both. Our domain model is entirely free of dependencies and side-effects,
 so that's our functional core.  The service layer that we build around it
-(in <<chapter_03_service_layer>>) allows us to drive the system edge-to-edge
+(in <<chapter_04_service_layer>>) allows us to drive the system edge-to-edge
 and we use dependency injection to provide those services with stateful
 components, so we can still unit test them.
 
-See <<chapter_10_dependency_injection>> for more exploration of making our
+See <<chapter_11_dependency_injection>> for more exploration of making our
 dependency injection more explicit and centralised.
 ******************************************************************************
 

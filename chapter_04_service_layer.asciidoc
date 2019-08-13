@@ -1,4 +1,4 @@
-[[chapter_03_service_layer]]
+[[chapter_04_service_layer]]
 
 == our First Use Case: Flask API and Service Layer.
 
@@ -432,7 +432,7 @@ class FakeSession():
 ====
 
 (The fake session is only a temporary solution.  We'll get rid of it and make
-things even nicer in the next chapter, <<chapter_04_uow>>)
+things even nicer in the next chapter, <<chapter_05_uow>>)
 
 .Mocks vs Fakes; Classic Style vs London School TDD
 *******************************************************************************
@@ -455,9 +455,9 @@ we'll be getting rid of it in the next chapter.
 In general we try and avoid using mocks, and the associated `mock.patch`.
 Whenever we find ourselves reaching for them, we often see it as an indication
 that something is missing from our design.  You'll see a good example of that
-in <<chapter_06_events_and_message_bus>> when we mock out an email-sending
+in <<chapter_07_events_and_message_bus>> when we mock out an email-sending
 module, but eventually we replace it with an explicit bit of dependency injection.
-That's discussed in <<chapter_10_dependency_injection>>.
+That's discussed in <<chapter_11_dependency_injection>>.
 
 Regarding the definition of fakes vs mocks, the short but simplistic answer is:
 
@@ -1153,7 +1153,7 @@ We've now got services for `add_batch` and `allocate`, why not build out
 a service for `deallocate`?  We've added an E2E test and a few stub
 service-layer tests for you to get started here:
 
-https://github.com/python-leap/code/tree/chapter_03_service_layer_exercise
+https://github.com/python-leap/code/tree/chapter_04_service_layer_exercise
 
 If that's not enough, continue into the E2E tests and _flask_app.py_, and
 refactor the Flask adapter to be more RESTful.  Notice how doing so doesn't
@@ -1162,7 +1162,7 @@ require any change to our service layer or domain layer!
 TIP: If you decide you want to build a read-only endpoint for retrieving allocation
     info, just do the simplest thing that can possibly work (TM), which is
     `repo.get()` right in the flask handler.  We'll talk more about reads vs
-    writes in <<chapter_09_cqrs>>.
+    writes in <<chapter_10_cqrs>>.
 
 ******************************************************************************
 
