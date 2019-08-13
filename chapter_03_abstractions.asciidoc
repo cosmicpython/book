@@ -1,44 +1,10 @@
 [[chapter_03_abstractions]]
 == A Brief Interlude: On Coupling and Abstractions
 
-.In this chapter
-* We'll discuss how to reduce coupling by introducing simple abstractions over
-  complex subsystems.
-* We'll show how to make complex processes testable by disentangling state from
-  logic.
-
-// this chapter is marked as a preface as a hack to disable
-// chapter numbering for it in atlas/pdf.  when we go to prod
-// we should find a better solution.
-
-// (ej) Looks like some of the intro and concluding text still need updating
-// for the move, but I think this is a good candidate for Chapter 1.
-//
-// If you closed out this chapter with some of the content from the Domain Modeling chapter,
-// it could serve as a gentle intro to Ch2 Domain Modeling.
-//
-//  Hypothetically, a flow that makes sense to me is:
-//  Ch1: Abstractions (or maybe Complexity?)
-//  - What are the causes of complexity in software? (changing requirements,
-//      turnover in teams, conway's law, evolving technologies etc., etc.)
-//  - BBOM
-//  - How do we manage complexity? -> By organizing code into abstractions and modules.
-//  - Content on the filesystem examples, fcis, di, etc. as examples of different styles of abstraction
-//  - How do you know what makes a "good" abstraction, or a "good" module decomposition?
-//  - Discussion of coupling and cohesion, sep-of-concerns, information hiding principle. (Information
-//    hiding pinciple suggests that modules/abstractions should be designed
-//    to *hide/encapsulate the things that are most likely to change.*)
-//  - 3-layer architecture as a form of information hiding and abstraction.
-//  - DDD and domain modeling as a way of choosing abstractions.
-//
-//  Ch 2. Domain modeling
-//  - Jump straight into DDD patterns and product/warehouse modeling.
-//
-
 Allow us a brief digression on the subject of abstractions, dear reader.
 We've talked about _abstractions_ quite a lot.  The repository is an
 abstraction over permanent storage for example.  But what makes a good
-abstraction?  What do we want from them?
+abstraction?  What do we want from them?  And how do they relate to testing?
 
 A key theme in this book, hidden among the fancy patterns, is that we can use
 simple abstractions to hide messy details. When we're writing code for fun, or
