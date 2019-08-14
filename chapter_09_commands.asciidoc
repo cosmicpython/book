@@ -14,18 +14,18 @@
 
 ********************************************************************************
 
-In the previous chapter we talked about using event messages as a way of
-integrating systems. This starts to turn our application into a message
+In the previous chapter we talked about using events as a way of representing
+the inputs to our system. This starts to turn our application into a message
 processing machine.
 
 TODO: DIAGRAM: Message processor
 
 To achieve that, we converted all our use-case functions to event-handlers.
-When the API receives a POST to create a new batch, it builds a new BatchCreated
+When the API receives a POST to create a new batch, it builds a new `BatchCreated`
 event and handles it as though it came from an external system.
 This might have felt counter-intuitive. After all, the batch _hasn't_ been
 created yet, that's why we called the API. We're going to fix that conceptual
-wart by introducing _commands_.
+wart by introducing _Commands_.
 
 === Commands and Events
 
@@ -42,10 +42,9 @@ tense verb phrases like "allocate stock," or "delay shipment."
 Commands capture _intent_. They express our wish for the system to do something.
 As a result, when they fail, the sender needs to receive error information.
 
-Events are broadcast by an actor to all interested listeners. When we pubish the
+Events are broadcast by an actor to all interested listeners. When we publish the
 `batch_quantity_changed` we don't know who's going to pick it up. We name events
-with past-tense verb phrases like "order allocated to stock," or
-"shipment delayed."
+with past-tense verb phrases like "order allocated to stock," or "shipment delayed."
 
 We often use events to spread the knowledge about successful commands.
 
@@ -53,13 +52,18 @@ Events capture _facts_ about things that happened in the past. Since we don't
 know who's handling an event, senders should not care whether the receivers
 succeeded or failed.
 
-| Type | Event | Command |
-| Named | Past-Tense | Imperative Tense |
-| Error Handling | Fail independently | Fail noisily |
-| Sent to | All listeners | One recipient |
+[cols="e,a,a", frame="none"]
+.Events vs Commands
+|===
+e|      e| Event e| Command
+| Named | Past-Tense | Imperative Tense
+| Error Handling | Fail independently | Fail noisily
+| Sent to | All listeners | One recipient
+|===
+
 
 // TODO: Diagram of user "buy stock" -> "stock purchased"
-                         "create batch" -> "batch created"
+//                       "create batch" -> "batch created"
 
 
 What kinds of commands do we have in our system right now? 
@@ -72,28 +76,29 @@ What kinds of commands do we have in our system right now?
 class Command:
     pass
 
-
 @dataclass
-class Allocate(Command):
+class Allocate(Command):  #<1>
     orderid: str
     sku: str
     qty: int
 
-
 @dataclass
-class CreateBatch(Command):
+class CreateBatch(Command):  #<2>
     ref: str
     sku: str
     qty: int
     eta: Optional[date] = None
 
-
 @dataclass
-class ChangeBatchQuantity(Command):
+class ChangeBatchQuantity(Command):  #<3>
     ref: str
     qty: int
 ----
 ====
+
+<1> `commands.Allocate` will replace `events.AllocationRequired`
+<2> `commands.CreateBatch` will replace `events.BatchCreated`
+<3> `commands.ChangeBatchQuantity` will replace `events.BatchQuantityChanged``
 
 Each of the use-cases that we discussed earlier in the book is really a command,
 an instruction for the system to try and do a thing. To unify the two halves of
@@ -142,8 +147,6 @@ def handle_command(command, uow: unit_of_work.AbstractUnitOfWork):  #<3>
 
 
 EVENT_HANDLERS = {
-    events.Allocated: [handlers.publish_allocated_event],
-    events.Deallocated: [handlers.allocate],
     events.OutOfStock: [handlers.send_out_of_stock_notification],
 }  # type: Dict[Type[events.Event], List[Callable]]  #<2>
 
@@ -169,7 +172,7 @@ COMMAND_HANDLERS = {
 
 //TODO: consider using a dispatcher thingie from functools?
 
-Why does `handle_command` have a `return`, but `handle_events` doesn't, I hear
+Why does `handle_command` have a `return`, but `handle_events` doesn't, we hear
 you ask?  It's so that we can return the batchref from the API.  
 
 
@@ -181,11 +184,11 @@ you ask?  It's so that we can return the batchref from the API.
 @app.route("/allocate", methods=['POST'])
 def allocate_endpoint():
     try:
-        command = commands.Allocate(
+        cmd = commands.Allocate(
             request.json['orderid'], request.json['sku'], request.json['qty'],
         )
         uow = unit_of_work.SqlAlchemyUnitOfWork()
-        batchref = messagebus.handle_command(command, uow)
+        batchref = messagebus.handle_command(cmd, uow)
     except exceptions.InvalidSku as e:
         return jsonify({'message': str(e)}), 400
 
@@ -193,9 +196,8 @@ def allocate_endpoint():
 ----
 ====
 
-
-That's a bit ugly.  In the next chapter, we'll look at a way of separating out command
-handling from read requests.
+It's the same wart we've drawn attention to before.  In <<chapter_10_cqrs>>
+we'll look at a way of separating out command handling from read requests.
 
 
 TODO: discussion, can events raise commands?

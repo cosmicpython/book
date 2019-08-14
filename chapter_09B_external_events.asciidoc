@@ -180,29 +180,6 @@ TODO (ej)  Not 100% sure of the necessity of wait_for. According to the source c
 ////
 
 
-==== Our new outgoing event
-
-Here's what the `Allocated` event will look like:
-
-[[allocated_event]]
-.New event (src/allocation/events.py)
-====
-[source,python]
-----
-@dataclass
-class Allocated(Event):
-    orderid: str
-    sku: str
-    qty: int
-    batchref: str
-
-----
-====
-
-It captures everything we need to know about an allocation: the details of the
-order line, and which batch it was allocated to.
-
-
 ==== Redis Is Another Thin Adapter Around Our Message Bus
 
 Our Redis pubsub client is very much like flask:  it translates from the outside
@@ -229,11 +206,11 @@ def main():
 def handle_change_batch_quantity(m):
     logging.debug('handling %s', m)
     data = json.loads(m['data'])  #<2>
-    event = events.BatchQuantityChanged(ref=data['batchref'], qty=data['qty'])  #<2>
-    messagebus.handle([event], uow=unit_of_work.SqlAlchemyUnitOfWork())
+    cmd = commands.ChangeBatchQuantity(ref=data['batchref'], qty=data['qty'])
+    messagebus.handle_command(cmd, uow=unit_of_work.SqlAlchemyUnitOfWork())
 
 
-def publish(channel, event):  #<3>
+def publish(channel, event: events.Event):  #<3>
     logging.debug('publishing: channel=%s, event=%s', channel, event)
     r.publish(channel, json.dumps(asdict(event)))
 ----
@@ -247,8 +224,56 @@ def publish(channel, event):  #<3>
 <3> We also provide a helper function to publish events back into Redis.
 
 
-The handler for `BatchQuantityChanged` already exists, so all we need to add
+==== Our new outgoing event
+
+Here's what the `Allocated` event will look like:
+
+[[allocated_event]]
+.New event (src/allocation/events.py)
+====
+[source,python]
+----
+@dataclass
+class Allocated(Event):
+    orderid: str
+    sku: str
+    qty: int
+    batchref: str
+----
+====
+
+It captures everything we need to know about an allocation: the details of the
+order line, and which batch it was allocated to.
+
+
+We use add it into our model's `allocate()` method (having added a test
+first, naturally)
+
+[[model_emits_allocated_event]]
+.Product.allocate() emits new event to record what happened (src/allocation/model.py)
+====
+[source,python]
+----
+class Product:
+    ...
+    def allocate(self, line: OrderLine) -> str:
+        ...
+
+            batch.allocate(line)
+            self.version_number += 1
+            self.events.append(events.Allocated(
+                orderid=line.orderid, sku=line.sku, qty=line.qty,
+                batchref=batch.reference,
+            ))
+            return batch.reference
+----
+====
+
+
+The handler for `ChangeBatchQuantity` already exists, so all we need to add
 is a handler that publishes the outgoing event:
+
+//TODO: consider keeping BatchQuantityChanged as an event?
 
 
 [[another_handler]]
@@ -257,18 +282,11 @@ is a handler that publishes the outgoing event:
 [source,python]
 ----
 HANDLERS = {
-    events.BatchCreated: [handlers.add_batch],
-    events.BatchQuantityChanged: [handlers.change_batch_quantity],
-    events.AllocationRequired: [handlers.allocate],
-    events.Allocated: [handlers.publish_allocated_event],  #<1>
+    events.Allocated: [handlers.publish_allocated_event],
     events.OutOfStock: [handlers.send_out_of_stock_notification],
-
 }  # type: Dict[Type[events.Event], List[Callable]]
 ----
 ====
-
-<1> here it is!
-
 
 Publishing the event uses our helper function from the redis wrapper:
 

@@ -42,7 +42,7 @@ of work:
 [role="existing"]
 ----
 def allocate(
-        event: commands.Allocate, uow: unit_of_work.AbstractUnitOfWork
+        cmd: commands.Allocate, uow: unit_of_work.AbstractUnitOfWork
 ):
 ----
 ====
