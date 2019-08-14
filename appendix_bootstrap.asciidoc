@@ -115,7 +115,7 @@ bus = bootstrap.bootstrap()
 @app.route("/add_batch", methods=['POST'])
 def add_batch():
     ...
-    bus.handle([command])
+    bus.handle([cmd])
     return 'OK', 201
 ----
 ====
