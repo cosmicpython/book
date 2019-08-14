@@ -27,8 +27,8 @@ In the meantime, pull requests, typofixes, and more substantial feedback + sugge
 | [Chapter 8: Going to Town on the MessageBus](chapter_08_all_messagebus.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_08_all_messagebus)](https://travis-ci.org/python-leap/code) |
 | [Chapter 9: Commands](chapter_09_commands.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_09_commands)](https://travis-ci.org/python-leap/code) |
 | [Chapter 9B: External Events for Integration](chapter_08_all_messagebus.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_08_all_messagebus)](https://travis-ci.org/python-leap/code) |
-| [Chapter 10: CQRS](chapter_10_cqrs.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_10_cqrs)](https://travis-ci.org/python-leap/code) |
-| [Chapter 11: Dependency Injection](chapter_11_dependency_injection.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_11_dependency_injection)](https://travis-ci.org/python-leap/code) |
+| [Chapter 10: CQRS](chapter_11_cqrs.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_11_cqrs)](https://travis-ci.org/python-leap/code) |
+| [Chapter 11: Dependency Injection](chapter_12_dependency_injection.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_12_dependency_injection)](https://travis-ci.org/python-leap/code) |
 | [Epilogue 1: How do I get there from here?](epilogue_1_how_to_get_there_from_here.asciidoc) | |
 | [Appendix B: Project Structure](appendix_project_structure.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=appendix_project_structure)](https://travis-ci.org/python-leap/code) |
 | [Appendix C: A major infrastructure change, made easy](appendix_csvs.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=appendix_csvs)](https://travis-ci.org/python-leap/code) |

@@ -1,16 +1,12 @@
 #!/usr/bin/env python
 import subprocess
 from pathlib import Path
+
 MOVES = [
-    ('chapter_02B_abstractions', 'chapter_03_abstractions'),
-    ('chapter_03_service_layer', 'chapter_04_service_layer'),
-    ('chapter_04_uow', 'chapter_05_uow'),
-    ('chapter_05_aggregate', 'chapter_06_aggregate'),
-    ('chapter_06_events_and_message_bus', 'chapter_07_events_and_message_bus'),
-    ('chapter_07_external_events', 'chapter_08_external_events'),
-    ('chapter_08_commands', 'chapter_09_commands'),
-    ('chapter_09_cqrs', 'chapter_10_cqrs'),
-    ('chapter_10_dependency_injection', 'chapter_11_dependency_injection'),
+    # change these as desired
+    ('chapter_09B_external_events', 'chapter_10_external_events'),
+    ('chapter_10_cqrs', 'chapter_11_cqrs'),
+    ('chapter_11_dependency_injection', 'chapter_12_dependency_injection'),
 ]
 
 for frm, to in MOVES:

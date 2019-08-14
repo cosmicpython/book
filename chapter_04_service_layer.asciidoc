@@ -457,7 +457,7 @@ Whenever we find ourselves reaching for them, we often see it as an indication
 that something is missing from our design.  You'll see a good example of that
 in <<chapter_07_events_and_message_bus>> when we mock out an email-sending
 module, but eventually we replace it with an explicit bit of dependency injection.
-That's discussed in <<chapter_11_dependency_injection>>.
+That's discussed in <<chapter_12_dependency_injection>>.
 
 Regarding the definition of fakes vs mocks, the short but simplistic answer is:
 
@@ -1162,7 +1162,7 @@ require any change to our service layer or domain layer!
 TIP: If you decide you want to build a read-only endpoint for retrieving allocation
     info, just do the simplest thing that can possibly work (TM), which is
     `repo.get()` right in the flask handler.  We'll talk more about reads vs
-    writes in <<chapter_10_cqrs>>.
+    writes in <<chapter_11_cqrs>>.
 
 ******************************************************************************
 
