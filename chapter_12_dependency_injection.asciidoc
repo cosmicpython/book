@@ -472,7 +472,7 @@ email, could be SMS, could be slack posts one day.
 ====
 [source,python]
 ----
-class Notifications(abc.ABC):
+class AbstractNotifications(abc.ABC):
 
     @abc.abstractmethod
     def send(self, destination, message):
@@ -480,7 +480,7 @@ class Notifications(abc.ABC):
 
 ...
 
-class EmailNotifications(Notifications):
+class EmailNotifications(AbstractNotifications):
 
     def __init__(self, smtp_host=DEFAULT_HOST, port=DEFAULT_PORT):
         self.server = smtplib.SMTP(smtp_host, port=port)
@@ -525,7 +525,7 @@ We work through and define a fake version for unit testing:
 ====
 [source,python]
 ----
-class FakeNotifications(notifications.Notifications):
+class FakeNotifications(notifications.AbstractNotifications):
 
     def __init__(self):
         self.sent = defaultdict(list)  # type: Dict[str, str]
