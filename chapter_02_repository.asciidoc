@@ -801,14 +801,6 @@ TIP: Building fakes for your abstractions is an excellent way to get design
     complicated.
 
 
-You'll be wondering, how do we actually instantiate these repositories, fake or
-real? What will our flask app actually look like?  We'll find out in the next
-exciting instalment!
-
-But first, a word from our sponsors.
-
-
-
 .Repository Pattern: Recap
 *****************************************************************
 Apply Dependency Inversion to your ORM::
@@ -824,3 +816,45 @@ Repository pattern is a simple abstraction around permanent storage::
     <<appendix_csvs>> for an example.
 
 *****************************************************************
+
+Bearing the Rich Hickey quote in mind, in each chapter we're going to try
+and summarise the costs and benefits of each architectural pattern we introduce.
+We want to be very clear that we're not saying every single application needs
+to be built this way; only sometimes does the complexity of the app and domain
+make it worth investing the time and effort in adding these extra layers of
+indirection.  With that in mind, <<chapter_02_repository_tradeoffs>> shows
+some of the pros and cons of _Repository Pattern_.
+
+
+[[chapter_02_repository_tradeoffs]]
+[options="header"]
+.Repository Pattern: The Trade-Offs
+|===
+|Pros|Cons
+a|
+* we have a simple interface between persistent storage and our domain model
+* it's well know for developers coming from outside the Python world
+* by reducing the API surface around what you can do to "save" models, we've
+  reduce the likelihood of weird things happening
+* it's easy to make a fake version of the repository for unit testing
+* and it's easy to swap out different storage solutions, we've fully decoupled
+  the model from infrastructure concerns
+a|
+* OTOH an ORM already buys you quite a lot of decoupling.  if you're using
+  an ORM it should be pretty easy to swap between, eg, mysql and postgres
+* how likely is it that you're going to want to change databases on your
+  project?
+* any extra layer of indirection always increases maintenance costs and
+  adds a 'wtf factor' for python programmers who've never seen Repository Pattern
+  before
+|===
+
+
+
+You'll be wondering, how do we actually instantiate these repositories, fake or
+real? What will our flask app actually look like?  We'll find out in the next
+exciting instalment!
+
+But first, a word from our sponsors...
+
+

@@ -1295,3 +1295,37 @@ service layer is tightly coupled to a `session` object.  In the next chapter,
 we'll introduce one more pattern that works closely with Repository and
 Service Layer, the Unit of Work pattern, and everything will be absolutely
 lovely. You'll see!
+
+
+[[chapter_04_service_layer_tradeoffs]]
+[options="header"]
+.Service Layer: The Trade-Offs
+|===
+|Pros|Cons
+a|
+* We've got a single place to capture all the use cases for our application.
+
+* We've decoupled our domain model classes from the client code that calls our
+  application, which makes us more free to refactor.
+
+* If you've ever found yourself wanting to have one of your web controllers (or
+  Django views) call another one, and you've felt dirty about it, the Service Layer
+  would let you do that in a structured way.
+
+* When combined with _Repository Pattern_ and a `FakeRepository`, we've got
+  a nice way of writing unit tests at a higher level than the Domain Layer;
+  we can test more of our workflow without needing to go to integration tests.
+
+a|
+* If your app is _purely_ a web app, your controllers/view functions can be
+  the single place to capture all the use cases
+
+* If you do ever want to share some logic between two controllers, you can
+  always extract a function just for that case; there's no need to rewrite
+  your entire application the very first time you see a need for reuse
+
+* You can get a lot of the benefits that come from having rich domain models
+  by simply pushing logic out of your controllers and down to the model layer,
+  without needing to add an extra layer in between (aka "fat models, thin
+  controllers")
+|===

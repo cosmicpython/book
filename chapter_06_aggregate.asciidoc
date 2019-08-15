@@ -687,3 +687,31 @@ Something something transactions::
     bla bla.
 
 *****************************************************************
+
+
+[[chapter_06_aggregate_tradoffs]]
+[options="header"]
+.Aggregates: The Trade-Offs
+|===
+|Pros|Cons
+a|
+* Python might not have "official" public and private methods, but the underscores
+  convention belies the fact that it's useful to try and separate what's for "internal"
+  use and what's for "outside code" to use.  Choosing aggregates is just the next level
+  up: it lets you decide which of your domain model classes are the public ones, and which
+  aren't.
+
+* Putting the aggregate in sole charge of state changes to its subsidiary models
+  should make the system easier to reason about, and it should be easier to control
+  invariants.
+
+* It gives you a single place to enforce integrity rules at the database level without
+  needing to lock whole tables.
+
+a|
+* Yet another new concept for new developers to take on.  Explaining Entities vs
+  Value Objects was already a mental load, now there's a third type of domain model object? 
+ 
+* We're all grown-ups here!  Stop telling me what objects I can and can't modify.  You
+  can't anticipate all future requirements, so stop restricting your future self.
+|===
