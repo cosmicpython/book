@@ -823,27 +823,30 @@ We want to be very clear that we're not saying every single application needs
 to be built this way; only sometimes does the complexity of the app and domain
 make it worth investing the time and effort in adding these extra layers of
 indirection.  With that in mind, <<chapter_02_repository_tradeoffs>> shows
-some of the pros and cons of _Repository Pattern_.
+some of the pros and cons of _Repository Pattern_ and our _Persistence Ignorant Model_.
 
 
 [[chapter_02_repository_tradeoffs]]
 [options="header"]
-.Repository Pattern: The Trade-Offs
+.Repository Pattern and Peristence Ignorance: The Trade-Offs
 |===
 |Pros|Cons
 a|
-* we have a simple interface between persistent storage and our domain model
-* it's well know for developers coming from outside the Python world
-* by reducing the API surface around what you can do to "save" models, we've
-  reduce the likelihood of weird things happening
-* it's easy to make a fake version of the repository for unit testing
-* and it's easy to swap out different storage solutions, we've fully decoupled
-  the model from infrastructure concerns
+* We have a simple interface between persistent storage and our domain model.
+* It's easy to make a fake version of the repository for unit testing or to
+  swap out different storage solutions, because we've fully decoupled the model
+  from infrastructure concerns.
+* Writing the domain model before thinking about persistence helps us focus on
+  the business problem at hand.
+* Our database schema is really simple because we have complete control over how
+  we map our objects to tables.
+  // TODO: Explain how Django ORM would intrude here.
 a|
 * OTOH an ORM already buys you quite a lot of decoupling.  if you're using
   an ORM it should be pretty easy to swap between, eg, mysql and postgres
 * how likely is it that you're going to want to change databases on your
   project?
+* Maintaining the ORM mappings by hand is extra work and extra code.
 * any extra layer of indirection always increases maintenance costs and
   adds a 'wtf factor' for python programmers who've never seen Repository Pattern
   before

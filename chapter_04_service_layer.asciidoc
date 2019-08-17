@@ -1305,24 +1305,25 @@ lovely. You'll see!
 a|
 * We've got a single place to capture all the use cases for our application.
 
-* We've decoupled our domain model classes from the client code that calls our
-  application, which makes us more free to refactor.
+* We've placed our clever domain logic behind an API which leaves us free to
+  refactor.
 
-* If you've ever found yourself wanting to have one of your web controllers (or
-  Django views) call another one, and you've felt dirty about it, the Service Layer
-  would let you do that in a structured way.
+* We have cleanly separated "stuff that talks HTTP" from "stuff that talks
+  allocation".
 
 * When combined with _Repository Pattern_ and a `FakeRepository`, we've got
-  a nice way of writing unit tests at a higher level than the Domain Layer;
+  a nice way of writing tests at a higher level than the Domain Layer;
   we can test more of our workflow without needing to go to integration tests.
 
 a|
 * If your app is _purely_ a web app, your controllers/view functions can be
-  the single place to capture all the use cases
+  the single place to capture all the use cases.
 
-* If you do ever want to share some logic between two controllers, you can
-  always extract a function just for that case; there's no need to rewrite
-  your entire application the very first time you see a need for reuse
+* It's yet another layer of abstraction.  
+
+* Putting too much logic into the service layer can lead to the _Anemic Domain_
+  anti pattern. It's better to introduce this layer once you spot orchestration
+  logic creeping into your controllers.
 
 * You can get a lot of the benefits that come from having rich domain models
   by simply pushing logic out of your controllers and down to the model layer,
