@@ -635,9 +635,9 @@ a|
   context manager makes it very easy to see, visually, what blocks of code are
   grouped together atomically.
 
-* It's really complementary to _Repository_ and _Service Layer_. The three of them
-  together give you a nice, testable way to build almost any application in a way
-  that's free of infrastructure concerns.
+* We have explicit control over when a transaction starts and finishes, and our
+  application fails in a way that is safe by default. We never have to worry
+  that an operation is partially committed.
 
 * It's a nice place to put all your repositories so client code can access it
 
@@ -645,10 +645,9 @@ a|
   can help us to work with events and the message bus.
 
 a|
-* OTOH: your ORM probably already has some perfectly good abstractions around
-  atomicity.  SQLAlchemy even has context managers.
-
-* It's yet another thing to have to explain to new developers on your team
+* Your ORM probably already has some perfectly good abstractions around
+  atomicity.  SQLAlchemy even has context managers. You can go a long way
+  just passing a Session around.
 
 * We've made it look easy, but you actually have to think quite carefully about
   things like rollbacks, multithreading, and nested transactions.  Perhaps just
