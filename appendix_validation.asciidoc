@@ -8,6 +8,10 @@ my business logic, in the domain model, or is that an infrastructural concern?"
 
 As with any architectural question, the answer is: it depends!
 
+The most important consideration is that we want to keep our code well-separated
+so that each part of the system is simple. We don't want to clutter our code
+with irrelevant detail. 
+
 When people use the word "validation" they usually mean a process where they
 test the inputs of an operation to make sure that they match some criteria.
 Inputs that match the criteria are considered "valid", and inputs that don't
@@ -38,6 +42,86 @@ These are rules about the shape and structure of incoming data. An Allocate
 command without a sku or order id isn't a valid message. It's the equivalent
 of the phrase "Allocate three to".
 
+We tend to validate these rules at the edge of the system. Our rule of thumb is
+that a message handler should only ever receive a message that is well-formed
+and contains all required information.
+
+One option is to put your validation logic on the message type itself:
+
+====
+from schema import And, Schema, Use
+
+
+@dataclass
+class Allocate(Command):
+
+    __schema = Schema({ #<1>
+        'orderid': int,
+         sku: str,
+         qty: And(Use(int), lambda n: n > 0)
+     })
+
+    orderid: str
+    sku: str
+    qty: int
+
+    @classmethod
+    def from_json(cls, data): #<2>
+       data = json.loads(data)
+       return cls(**__schema.validate(data))
+====
+
+<1> The 'schema'.footnote[https://pypi.org/project/schema/] library lets us
+describe the structure and validation of our messages in a nice declarative way.
+<2> The 'from_json' method reads a string as json, and turns it into our message
+type.
+
+This can get repetitive, though,  since we need to specify our fields twice,
+so we might want to introduce a helper library that can unify the validation and
+declaration of our message types.
+
+====
+[source,python]
+[role="non-head"]
+----
+def command(name, **fields): #<1>
+    schema = Schema(And(Use(json.loads), fields)) #<2>
+    cls = make_dataclass(name, fields.keys())
+    cls.from_json = lambda s: cls(**schema.validate(s)) #<3>
+    return cls
+
+def greater_than_zero(x):
+    return x > 0
+
+quantity = And(Use(int), greater_than_zero) #<4>
+
+Allocation = command( #<5>
+    orderid=int,
+    sku=str,
+    qty=quantity
+)
+
+AddStock = command(
+    sku=str,
+    qty=quantity
+----
+====
+
+<1> The `command` function takes a message name, plus kwargs for the fields of
+the message payload, where the name of the kwarg is the name of the field, and
+the value is the parser.
+<2> We use the make_dataclass function from the dataclass module to dynamically
+create our message type.
+<3> We patch the `from_json` method onto our dynamic dataclass
+<4> We can create reusable parsers for quantity, or sku, etc to keep things DRY.
+<5> Declaring a message type becomes a one-liner
+
+
+// TODO: Log and continue
+// TODO: add metrics around invalid messages
+// TODO: Postel's law
+// TODO: Tolerant reader pattern
+
 === Validating Sematics
 
 While syntax is concerned with the structure of messages, semantics is the study
@@ -55,6 +139,29 @@ teapot to order five", but it's meaningless.
 
 We can read this json blob as an Allocate command but we can't successfully
 execute it, because it's _nonsense_.
+
+We tend to validate semantic concerns at the message handler layer with a kind
+of contract-based programming.
+
+====
+# ensure.py
+
+def product_exists(event, uow):
+    product = uow.products.get(event.sku)
+    if product is None:
+        raise ProductNotFound(sku)
+
+# services.py
+
+def allocate(event, uow):
+    line = mode.OrderLine(event.orderid, event.sku, event.qty)
+    with uow:
+        ensure.sku_exists(uow, event)
+
+        product = uow.products.get(line.sku)
+        product.allocate(line)
+        uow.commit()
+====
 
 === Validating Pragmatics
 
