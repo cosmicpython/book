@@ -1,4 +1,4 @@
-[[chapter_04_uow]]
+[[chapter_05_uow]]
 == Unit of Work Pattern
 
 In this chapter we'll introduce the final piece of the puzzle that ties
@@ -40,7 +40,7 @@ In other words, it allows us to manage concurrency and atomicity.
 
 For now, that translates straight into a database transaction, but by giving
 ourselves our own abstraction, we can make it mean more things, as we'll see
-when we get to <<chapter_06_events_and_message_bus>>.
+when we get to <<chapter_07_events_and_message_bus>>.
 
 In the last chapter, the service layer was tightly coupled to the SQLAlchemy
 session object, so we'll fix that.
@@ -279,7 +279,7 @@ https://github.com/python-leap/book/issues/44
 ////
 TODO:
 
-https://github.com/python-leap/book/blame/master/chapter_04_uow.asciidoc#L238
+https://github.com/python-leap/book/blame/master/chapter_05_uow.asciidoc#L238
 Maybe "Only mock your immediate neighbors" is more applicable?
 
 I think of "Don't mock what you don't own" as referring specifically to "mock verification" (e.g. assert mock_session.commit.assert_called_once()), with the reason for this advice being that you cannot change those interfaces. So the mock has no value in providing feedback to your design.
@@ -364,7 +364,7 @@ def test_rolls_back_on_error(session_factory):
 TIP: We haven't shown it here, but it can be worth testing some of the more
     "obscure" database behavior, like transactions, against the "real"
     database, ie the same engine.  For now we're getting away with using
-    SQLite instead of Postgres, but in <<chapter_05_aggregate>> we'll switch
+    SQLite instead of Postgres, but in <<chapter_06_aggregate>> we'll switch
     some of the tests to using the real DB.  It's convenient that our UoW
     class makes that easy!
 
@@ -550,7 +550,7 @@ or rollback on exit.  If you feel like going all-functional rather than
 messing about with all these classes, you could use `@contextmanager` from
 `contextlib`.
 
-https://github.com/python-leap/code/tree/chapter_04_uow_exercise
+https://github.com/python-leap/code/tree/chapter_05_uow_exercise
 
 We've stripped out both the actual UoW and the fakes, as well as paring back
 the abstract UoW.  Why not send us a link to your repo if you come up with

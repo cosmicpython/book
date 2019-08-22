@@ -61,6 +61,10 @@ def check_listing(listing, chapter):
         actual_contents = file_contents_for_previous_chapter(
             listing.filename, chapter,
         )
+    elif listing.is_diff:
+        actual_contents = diff_for_tag(
+            listing.filename, chapter, listing.tag,
+        )
 
     else:
         actual_contents = file_contents_for_branch(listing.filename, chapter)
@@ -85,6 +89,7 @@ class Listing:
     tag: str
     contents: str
     classes: list
+    is_diff: bool
 
     callouts = re.compile(r'  #?(\(\d\) ?)+$', flags=re.MULTILINE)
     callouts_alone = re.compile(r'^\(\d\)$')
@@ -102,7 +107,6 @@ class Listing:
     @property
     def lines(self):
         return self.fixed_contents.split('\n')
-
 
 def parse_listings(chapter_name):
     raw_contents = Path(f'{chapter_name}.html').read_text()
@@ -125,11 +129,13 @@ def parse_listings(chapter_name):
             except AttributeError as e:
                 raise AssertionError(f'Could not find filename in title {title}') from e
 
+        is_diff = bool(listing_node.cssselect('code[data-lang="diff"]'))
         tag = listing_node.get('id')
 
         [code_node] = block_node.cssselect('.content pre')
         yield Listing(
-            filename, tag, contents=code_node.text_content(), classes=classes
+            filename, tag, contents=code_node.text_content(), classes=classes,
+            is_diff=is_diff
         )
 
 
@@ -148,6 +154,18 @@ def file_contents_for_previous_chapter(filename, chapter_name):
 def file_contents_for_tag(filename, chapter_name, tag):
     output = subprocess.run(
         ['git', 'show', f'{chapter_name}^{{/\\[{tag}\\]}}:{filename}'],
+        cwd=Path(__file__).parent / 'code',
+        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        check=True
+    ).stdout.decode()
+    assert output.strip(), f'no commit found for [{tag}]'
+    return output
+
+def diff_for_tag(filename, chapter_name, tag):
+    if tag.endswith('_diff'):
+        tag = tag[:-5]
+    output = subprocess.run(
+        ['git', 'show', f'{chapter_name}^{{/\\[{tag}\\]}}', '--', filename],
         cwd=Path(__file__).parent / 'code',
         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         check=True

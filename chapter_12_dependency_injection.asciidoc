@@ -1,4 +1,4 @@
-[[chapter_10_dependency_injection]]
+[[chapter_12_dependency_injection]]
 == Dependency Injection (And Mocks)
 
 //TODO get rid of bullets
@@ -26,7 +26,7 @@ testing them.
 For our database dependency, we've built a careful framework of explicit
 dependencies and easy options for overriding them in tests:
 
-TIP: If you haven't already, it's worth reading <<chapter_02B_abstractions>>
+TIP: If you haven't already, it's worth reading <<chapter_03_abstractions>>
     before continuing with this chapter.
 
 
@@ -42,7 +42,7 @@ of work:
 [role="existing"]
 ----
 def allocate(
-        event: commands.Allocate, uow: unit_of_work.AbstractUnitOfWork
+        cmd: commands.Allocate, uow: unit_of_work.AbstractUnitOfWork
 ):
 ----
 ====
@@ -256,7 +256,7 @@ What else changes in the bus?
         print('handling command', command, flush=True)
         try:
             handler = COMMAND_HANDLERS[type(command)]
-            return self.call_handler_with_dependencies(handler, command)  #<2>
+            self.call_handler_with_dependencies(handler, command)  #<2>
         except Exception as e:
             print(f'Exception handling command {command}: {e}')
             raise e
@@ -286,7 +286,7 @@ there's not much to it:
             name: dependency for name, dependency in self.dependencies.items()  #<2>
             if name in params
         }
-        return handler(message, **deps)  #<3>
+        handler(message, **deps)  #<3>
 ----
 ====
 
@@ -472,7 +472,7 @@ email, could be SMS, could be slack posts one day.
 ====
 [source,python]
 ----
-class Notifications(abc.ABC):
+class AbstractNotifications(abc.ABC):
 
     @abc.abstractmethod
     def send(self, destination, message):
@@ -480,7 +480,7 @@ class Notifications(abc.ABC):
 
 ...
 
-class EmailNotifications(Notifications):
+class EmailNotifications(AbstractNotifications):
 
     def __init__(self, smtp_host=DEFAULT_HOST, port=DEFAULT_PORT):
         self.server = smtplib.SMTP(smtp_host, port=port)
@@ -525,7 +525,7 @@ We work through and define a fake version for unit testing:
 ====
 [source,python]
 ----
-class FakeNotifications(notifications.Notifications):
+class FakeNotifications(notifications.AbstractNotifications):
 
     def __init__(self):
         self.sent = defaultdict(list)  # type: Dict[str, str]

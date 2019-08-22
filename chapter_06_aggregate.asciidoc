@@ -1,4 +1,4 @@
-[[chapter_05_aggregate]]
+[[chapter_06_aggregate]]
 == Aggregates and Consistency Boundaries
 
 In this chapter we'd like to revisit our domain model to talk about invariants
@@ -276,23 +276,24 @@ elsewhere.
 //TODO more links or suggestions on where to read about bounded context?
 
 ////
- TODO (ej)   This section opens up a whole can of worms, but here are some thoughts.  They may be
-      too much of a digression from the text though.
+TODO (ej)   This section opens up a whole can of worms, but here are some
+thoughts.  They may be too much of a digression from the text though.
 
-      * IIRC from the PyCon open space, many people wanted to know "How do you build a model??"
-      I recall someone specifically asking about "how you get everyone to use the same domain model".
-      Putting in a mention of the "Canonical Model" pattern would be a good breadcrumb.
+* IIRC from the PyCon open space, many people wanted to know "How do you build a model??"
+I recall someone specifically asking about "how you get everyone to use the same domain model".
+Putting in a mention of the "Canonical Model" pattern would be a good breadcrumb.
 
-      * Re AA's Note, and SkuStock vs Product vs ProductStock,
-      the literal conversations might be worth placing somewhere, maybe at the end of the chapter.
-      Putting in an example of a messy conversation like the one with AA would help demonstrate.
+* Re AA's Note, and SkuStock vs Product vs ProductStock,
+the literal conversations might be worth placing somewhere, maybe at the end of the chapter.
+Putting in an example of a messy conversation like the one with AA would help demonstrate.
 
-      *  Re: BoundedContexts, my experience with explaining BoundedContexts is that
-      people don't understand it without a concrete example.
+*  Re: BoundedContexts, my experience with explaining BoundedContexts is that
+people don't understand it without a concrete example.
 
-      Literally having a second, `Product` class  in psuedo-code
-      (for warehousing or shipping or something) would be helpful.
+Literally having a second, `Product` class  in psuedo-code
+(for warehousing or shipping or something) would be helpful.
 ////
+
 *******************************************************************************
 
 
@@ -379,6 +380,7 @@ TODO: discuss, should repository raise `InvalidSku`?
 //TODO (DS): More generally I'd be interested in some general principles about
 //handling exceptions in a layered architecture...
 
+//TODO: mention link between aggregates and foreign keys
 
 .Exercise for the Reader
 ******************************************************************************
@@ -391,7 +393,7 @@ if you do that, you'll still have to solve a few challenges on your own,
 like adding the model to the ORM and making sure all the moving parts can
 talk to each other, which we hope will be instructive.
 
-https://github.com/python-leap/code/tree/chapter_05_aggregate_exercise
+https://github.com/python-leap/code/tree/chapter_06_aggregate_exercise
 
 We've put in a "cheating" implementation in that delegates to the existing
 `allocate()` function, so you should be able to evolve that towards the real

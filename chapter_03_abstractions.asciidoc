@@ -1,45 +1,10 @@
-[preface]
-[[chapter_02B_abstractions]]
+[[chapter_03_abstractions]]
 == A Brief Interlude: On Coupling and Abstractions
-
-.In this chapter
-* We'll discuss how to reduce coupling by introducing simple abstractions over
-  complex subsystems.
-* We'll show how to make complex processes testable by disentangling state from
-  logic.
-
-// this chapter is marked as a preface as a hack to disable
-// chapter numbering for it in atlas/pdf.  when we go to prod
-// we should find a better solution.
-
-// (ej) Looks like some of the intro and concluding text still need updating
-// for the move, but I think this is a good candidate for Chapter 1.
-//
-// If you closed out this chapter with some of the content from the Domain Modeling chapter,
-// it could serve as a gentle intro to Ch2 Domain Modeling.
-//
-//  Hypothetically, a flow that makes sense to me is:
-//  Ch1: Abstractions (or maybe Complexity?)
-//  - What are the causes of complexity in software? (changing requirements,
-//      turnover in teams, conway's law, evolving technologies etc., etc.)
-//  - BBOM
-//  - How do we manage complexity? -> By organizing code into abstractions and modules.
-//  - Content on the filesystem examples, fcis, di, etc. as examples of different styles of abstraction
-//  - How do you know what makes a "good" abstraction, or a "good" module decomposition?
-//  - Discussion of coupling and cohesion, sep-of-concerns, information hiding principle. (Information
-//    hiding pinciple suggests that modules/abstractions should be designed
-//    to *hide/encapsulate the things that are most likely to change.*)
-//  - 3-layer architecture as a form of information hiding and abstraction.
-//  - DDD and domain modeling as a way of choosing abstractions.
-//
-//  Ch 2. Domain modeling
-//  - Jump straight into DDD patterns and product/warehouse modeling.
-//
 
 Allow us a brief digression on the subject of abstractions, dear reader.
 We've talked about _abstractions_ quite a lot.  The repository is an
 abstraction over permanent storage for example.  But what makes a good
-abstraction?  What do we want from them?
+abstraction?  What do we want from them?  And how do they relate to testing?
 
 A key theme in this book, hidden among the fancy patterns, is that we can use
 simple abstractions to hide messy details. When we're writing code for fun, or
@@ -183,26 +148,22 @@ import shutil
 from pathlib import Path
 
 def sync(source, dest):
-
-    # Walk the source folder and build a dict of filenames and their
-    # hashes
+    # Walk the source folder and build a dict of filenames and their hashes
     source_hashes = {}
     for folder, _, files in os.walk(source):
-        for filename in files:
-            source_hashes[hash_file(Path(folder) / filename)] = filename  #<1>
+        for fn in files:
+            source_hashes[hash_file(Path(folder) / fn)] = fn  #<1>
 
-    # Keep track of the files we've found in the target
-    seen = set()
+    seen = set()  # Keep track of the files we've found in the target
 
     # Walk the target folder and get the filenames and hashes
     for folder, _, files in os.walk(dest):
-        for filename in files:
+        for fn in files:
             dest_path = Path(folder) / fn
             dest_hash = hash_file(dest_path)
             seen.add(dest_hash)
 
-              # if there's a file in target that's not in source, delete it
-
+            # if there's a file in target that's not in source, delete it
             if dest_hash not in source_hashes:
                 dest_path.remove()
 
@@ -213,9 +174,9 @@ def sync(source, dest):
 
     # for every file that appears in source but not target, copy the file to
     # the target
-    for src_hash, filename in source_hashes.items():
+    for src_hash, fn in source_hashes.items():
         if src_hash not in seen:
-            shutil.copy(Path(source) / filename, Path(dest) / filename)
+            shutil.copy(Path(source) / fn, Path(dest) / fn)
 ----
 ====
 
@@ -389,9 +350,14 @@ the logic.
 [source,python]
 ----
 def sync(source, dest):  #<3>
+    # imperative shell step 1, gather inputs
     source_hashes = read_paths_and_hashes(source)
     dest_hashes = read_paths_and_hashes(dest)
+
+    # step 2: call functional core
     actions = determine_actions(source_hashes, dest_hashes, source, dest)
+
+    # imperative shell step 3, apply outputs
     for action, *paths in actions:
         if action == 'copy':
             shutil.copyfile(*paths)
@@ -435,63 +401,9 @@ def determine_actions(src_hashes, dst_hashes, src_folder, dst_folder):  #<2>
     hashes and filenames, what should we copy/move/delete?"  takes simple
     data structures and returns simple data structures.
 
-<3> And our top-level module now contains almost no logic whatseover
-
-
-////
-TODO (ej)
-ej.1 Calling out the sections that are "shell" and "core" will give the terms some visual impact.
-ej.2 I played around with refactoring this a bit, and stunbled across something interesting.
-
-Source + dest are only necessary if you actually want to mutate the filesystem.
-You could push the responsibility for forming the absolute paths out to the
-"shell".
-
-That then raises the question of whether this function is just detecting
-changes in filesystem state, or determining the actions that should be
-performed.  The flags could just as easily be {"file created", "file moved",
-"file deleted"} instead of {"copy", "move", "delete"}.
-
-IRL this would be unnecessary hair splitting, but for the purposes of this
-chapter, maybe it will be useful for discussing modeling + abstractions, and
-foreshadowing some of the event stuff in later chapters.  I am unsure if it
-will fit into the flow of this text.
-
-
-def ej_sync(source, dest):
-    # Imperative shell, input  # ej.1
-    source_hashes = read_paths_and_hashes(source)
-    dest_hashes = read_paths_and_hashes(dest)
-
-    # Functional core
-    actions = ej_determine_actions(source_hashes, dest_hashes)
-
-    # Imperative shell, output
-    for action, *paths in actions:
-        if action == 'copy':
-            shutil.copyfile(Path(source)/path[0], Path(dest)/path[1])
-        if action == 'move':
-            shutil.move(Path(dest)/path[0], Path(dest)/path[1])
-        if action == 'delete':
-    ...
-
-
-def ej_determine_actions(src_hashes, dst_hashes):  # ej.2
-    for sha, filename in src_hashes.items():
-        if sha not in dst_hashes:
-            sourcepath = filename
-            destpath = filename
-            yield 'copy', sourcepath, destpath
-
-        elif dst_hashes[sha] != filename:
-            olddestpath = dst_hashes[sha]
-            newdestpath =  filename
-            yield 'move', olddestpath, newdestpath
-
-    for sha, filename in dst_hashes.items():
-        if sha not in src_hashes:
-            yield 'delete', filename
-////
+<3> And our top-level module now contains almost no logic whatseover, it's
+    just an imperative series of steps: gather inputs, call our logic,
+    apply outputs.
 
 
 Our tests now act directly on the `determine_actions()` function:
@@ -521,6 +433,7 @@ Our tests now act directly on the `determine_actions()` function:
 
 Because we've disentangled the logic of our program - the code for identifying
 changes - from the low-level details of IO, we can easily test the core of our code.
+
 
 ==== Testing Edge-to-Edge with Fakes
 
@@ -573,7 +486,7 @@ TIP: Notice that, although we're using dependency injection, there was no need
     book we often show ABCs because we hope they help to understand what the
     abstraction is, but they're not necessary.  Python's dynamic nature means
     we can always rely on duck typing.
-////
+
 
 [[bob_tests]]
 .Tests using DI
@@ -617,11 +530,11 @@ def test_when_a_file_has_been_renamed_in_the_source():
 ====
 
 <1> Bob _loves_ using lists to build simple test doubles, even though his
-co-workers get mad. It means we can write tests like
-`assert 'foo' not in database`
+    co-workers get mad. It means we can write tests like 
+    ++assert 'foo' not in database++
 
 <2> Each method in our `FakeFileSystem` just appends something to the list so we
-can inspect it later. This is an example of a Spy Object.
+    can inspect it later. This is an example of a Spy Object.
 
 
 The advantage of this approach is that your tests act on the exact same function
@@ -632,10 +545,11 @@ described this as "test damage".
 In either case, we can now work on fixing all the bugs in our implementation;
 enumerating tests for all the edge cases is now much easier.
 
+
 ==== Why Not Just Patch It Out?
 
 At this point some of our readers will be scratching their heads and thinking
-"Why don't you just use `mock.patch`" and save yourself the effort?
+"Why don't you just use `mock.patch` and save yourself the effort?
 
 We avoid using mocks in this book, and in our production code, too. We're not
 going to enter into a Holy War, but our instinct is that mocking frameworks are
@@ -647,23 +561,23 @@ replace with a test double.
 
 There's a few, closely related reasons for that:
 
-1. Patching out the dependency you're using makes it possible to unit test the
+1.  Patching out the dependency you're using makes it possible to unit test the
 code, but it does nothing to improve the design. Using mock.patch won't let your
 code work with a `--dry-run` flag, nor will it help you run against an ftp
 server. For that, you'll need to introduce abstractions.
-
++
 Designing for testability really means designing for extensibility. We trade off
 a little more complexity for a cleaner design that admits novel use-cases.
 
-2. Tests that use mocks _tend_ to be more coupled to the implementation details
+2.  Tests that use mocks _tend_ to be more coupled to the implementation details
 of the codebase. That's because mock tests verify the interactions between
 things: did I call `shutil.copy` with the right arguments? This coupling between
 code and test _tends_ to make tests more brittle in our experience.
-
++
 Martin Fowler wrote about this in his 2007 blog post 
 https://www.martinfowler.com/articles/mocksArentStubs.html[Mocks Aren't Stubs]
 
-3. Over-use of mocks leads to complicated test suites that fail to explain the
+3.  Over-use of mocks leads to complicated test suites that fail to explain the
 code.
 
 We view TDD as a design practice first, and a testing practice second. The tests
@@ -683,11 +597,11 @@ https://www.youtube.com/watch?v=B48Exq57Zg8[Test Driven Development: That's Not 
 ******************************************************************************
 Both. Our domain model is entirely free of dependencies and side-effects,
 so that's our functional core.  The service layer that we build around it
-(in <<chapter_03_service_layer>>) allows us to drive the system edge-to-edge
+(in <<chapter_04_service_layer>>) allows us to drive the system edge-to-edge
 and we use dependency injection to provide those services with stateful
 components, so we can still unit test them.
 
-See <<chapter_10_dependency_injection>> for more exploration of making our
+See <<chapter_12_dependency_injection>> for more exploration of making our
 dependency injection more explicit and centralised.
 ******************************************************************************
 

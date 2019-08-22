@@ -476,7 +476,7 @@ repository, and `get` to return a previously added item.footnote:[
 You may be thinking, what about `list` or `delete` or `update`, but in the
 ideal world, we only modify our model objects one at a time, and delete is
 usually handled as a soft-delete, ie `batch.cancel()`. Finally, update is
-taken care of by the Unit of Work, as we'll see in <<chapter_04_uow>>.].
+taken care of by the Unit of Work, as we'll see in <<chapter_05_uow>>.].
 We stick rigidly to using these methods for data access in our domain and our
 service layer. This self-imposed simplicity stops us from coupling our domain
 model to the database.
@@ -622,7 +622,7 @@ def test_repository_can_save_a_batch(session):
 <2> We keep the `.commit()` outside of the repository, and make
     it the responsibility of the caller.  There are pros and cons for
     this, some of our reasons will become clearer when we get to
-    <<chapter_04_uow>>.
+    <<chapter_05_uow>>.
 
 <3> And we use the raw SQL to verify that the right data has been saved.
 
