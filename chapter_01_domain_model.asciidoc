@@ -456,11 +456,13 @@ image::images/model_diagram.png[]
 +---------------------+
 | reference           |
 | sku                 |
+| eta                 |
 | _purchased_quantity |       +=============+
-| allocations -------------->>| OrderLine   |
+| _allocations ------------->>| OrderLine   |
 +---------------------+       +-------------+
                               | order_id    |
                               | sku         |
+                              | eta         |
                               | qty         |
                               +-------------+
 ----
