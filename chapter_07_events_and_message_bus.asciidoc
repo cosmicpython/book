@@ -651,3 +651,20 @@ Option 3: Unit of Work collects events from Aggregates and passes them to Messag
     bla
 
 *****************************************************************
+
+[[chapter_07_events_and_message_bus_tradeoffs]]
+[options="header"]
+.Domain Events: The Trade-Offs
+|===
+|Pros|Cons
+a|
+* SRP
+
+* Events = quite a nice way to model real life
+
+a|
+* message bus is weird.  
+* the one we've presented is not async, so it can still, eg, hang your web
+  responses, which prolly isn't what you're expecting.
+* celery is _fine_.
+|===

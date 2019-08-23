@@ -1295,3 +1295,38 @@ service layer is tightly coupled to a `session` object.  In the next chapter,
 we'll introduce one more pattern that works closely with Repository and
 Service Layer, the Unit of Work pattern, and everything will be absolutely
 lovely. You'll see!
+
+
+[[chapter_04_service_layer_tradeoffs]]
+[options="header"]
+.Service Layer: The Trade-Offs
+|===
+|Pros|Cons
+a|
+* We've got a single place to capture all the use cases for our application.
+
+* We've placed our clever domain logic behind an API which leaves us free to
+  refactor.
+
+* We have cleanly separated "stuff that talks HTTP" from "stuff that talks
+  allocation".
+
+* When combined with _Repository Pattern_ and a `FakeRepository`, we've got
+  a nice way of writing tests at a higher level than the Domain Layer;
+  we can test more of our workflow without needing to go to integration tests.
+
+a|
+* If your app is _purely_ a web app, your controllers/view functions can be
+  the single place to capture all the use cases.
+
+* It's yet another layer of abstraction.  
+
+* Putting too much logic into the service layer can lead to the _Anemic Domain_
+  anti pattern. It's better to introduce this layer once you spot orchestration
+  logic creeping into your controllers.
+
+* You can get a lot of the benefits that come from having rich domain models
+  by simply pushing logic out of your controllers and down to the model layer,
+  without needing to add an extra layer in between (aka "fat models, thin
+  controllers")
+|===

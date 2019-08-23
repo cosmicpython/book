@@ -691,3 +691,24 @@ TODO: talk about the fact that we've implemented quite a complicated use case
     of work.  it's easy to reason about, and easy to explain.  Possibly
     show a hacky version for comparison?
 
+
+[[chapter_08_all_messagebus]]
+[options="header"]
+.Whole app is a Message Bus: The Trade-Offs
+|===
+|Pros|Cons
+a|
+* handlers and services are the same thing, so that's simpler
+* we have a nice datastructure for inputs to the system
+
+a|
+* messagebus is still a slighly unpredicatable way of doing things from
+  a web pov.  don't know in advance when things are going to end
+
+* we've gone from domain objects in service layer calls, to primities,
+  and now to domain events, which feels flip-floppey.  
+
+* duplication / maintenance cost of having model objects _and_ events
+  now.  adding a field to one usually means adding a field to at least
+  on of the others
+|===

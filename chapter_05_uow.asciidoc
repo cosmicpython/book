@@ -623,3 +623,34 @@ SqlAlchemy already implements this pattern::
     to keep us loosely coupled.
 
 *****************************************************************
+
+
+[[chapter_05_uow_tradeoffs]]
+[options="header"]
+.Unit of Work: The Trade-Offs
+|===
+|Pros|Cons
+a|
+* We've got a nice abstraction over the concept of atomic operations, and the
+  context manager makes it very easy to see, visually, what blocks of code are
+  grouped together atomically.
+
+* We have explicit control over when a transaction starts and finishes, and our
+  application fails in a way that is safe by default. We never have to worry
+  that an operation is partially committed.
+
+* It's a nice place to put all your repositories so client code can access it
+
+* And we'll see in later chapters, atomicity isn't only about transactions, it
+  can help us to work with events and the message bus.
+
+a|
+* Your ORM probably already has some perfectly good abstractions around
+  atomicity.  SQLAlchemy even has context managers. You can go a long way
+  just passing a Session around.
+
+* We've made it look easy, but you actually have to think quite carefully about
+  things like rollbacks, multithreading, and nested transactions.  Perhaps just
+  sticking to what Django or Flask-SQLAlchemy gives you will keep your life
+  simpler.
+|===
