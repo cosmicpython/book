@@ -67,6 +67,7 @@ be of interest to outline the moving parts.
     `docker-compose` and `pytest` directly, but if nothing else it's nice to
     have all the "common commands" in a list somewhere, and unlike
     documentation, a Makefile is code so it has less tendency to go out of date.
+
 // TODO (DS): Could mention invoke as an alternative.
 
 <3> All the actual source code for our app, including the domain model, the
@@ -91,7 +92,7 @@ TIP:  The https://docs.pytest.org/en/latest/goodpractices.html#choosing-a-test-l
 
 Let's look at a few of these in more detail.
 
-TODO: add more subfolders/structure inside our main source tree?
+// TODO: add more subfolders/structure inside our main source tree?
 
 // TODO: DS: Going a bit further, you could consider structuring the code with
 // subpackages according to each layer. This would make it a lot more obvious
@@ -147,9 +148,7 @@ configuration gets put in there.
 
 https://github.com/python-leap/book/issues/52
 ////
-
-// TODO (DS): I reckon configuration patterns are an important part of the
-// architecture your outlining, i wonder if they belong in the main book?
+// TODO (DS): I reckon configuration patterns are an important part of the architecture your outlining, i wonder if they belong in the main book?
 
 Whenever our application code needs access to some config, it's going to
 get it from a file called _config.py__. <<config_dot_py>> shows a couple of
