@@ -586,7 +586,7 @@ codebase is up to you.]
 This means it'll work both when the tests give it a `FakeRepository`, and
 when the flask app gives it a `SqlAlchemyRepository`.
 
-If you remember the <<dip,Dependency Inversion Principle section from the prologue>>,
+If you remember the <<dip,Dependency Inversion Principle section from the introduction>>,
 This is what we mean when we says we should "depend on abstractions". Our
 _high-level module_, the service layer, depends on the repository abstraction.
 And the _details_ of the implementation for our specific choice of persistent

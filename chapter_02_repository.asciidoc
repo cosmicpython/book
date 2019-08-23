@@ -111,7 +111,7 @@ database.
 
 === Applying the Dependency Inversion Principle to the Database
 
-As mentioned in <<part1_prologue>>, the "layered architecture" is a common
+As mentioned in <<introduction>>, the "layered architecture" is a common
 approach to structuring a system that has a UI, some logic, and a database (see
 <<layered_architecture2>>).
 
@@ -132,7 +132,7 @@ fine, depending on an ORM or a web framework is not].
 We don't want infrastructure concerns bleeding over into our domain model and
 slowing down our unit tests or our ability to make changes.
 
-Instead, as discussed in the prologue, we'll think of our model as being on the
+Instead, as discussed in the introduction, we'll think of our model as being on the
 "inside," and dependencies flowing inwards to it;  what people sometimes call
 "onion architecture" (see <<onion_architecture>>.)
 
@@ -188,6 +188,7 @@ storing the allocations as a collection on our `Batch` object:
 [[model_diagram_reminder]]
 .Our Model
 image::images/model_diagram.png[]
+// see chapter_01_domain_model for diagram source
 
 Let's see how we might translate this to a relational database.
 
