@@ -46,11 +46,6 @@ be of interest to outline the moving parts.
 ----
 ====
 
-// TODO (DS): All this seems sensible.
-// It would be nice to include a dependency graph so we can see the layering
-// within src/allocation.
-// Maybe should include message bus too?
-
 <1> Our _docker-compose.yml_ and our _Dockerfile_ are the main bits of configuration
     for the containers that run our app, and can also run the tests (for CI).  A
     more complex project might have several Dockerfiles, although we've found that
