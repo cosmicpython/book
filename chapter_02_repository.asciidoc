@@ -586,7 +586,7 @@ image::images/repository_pattern_diagram.png[]
 ----
 
 
-TODO: not sure if this diagram is helping.
+// TODO: not sure if this diagram is helping.
 
 
 As always, we start with a test. This would probably be classified as an
@@ -839,9 +839,11 @@ a|
   from infrastructure concerns.
 * Writing the domain model before thinking about persistence helps us focus on
   the business problem at hand.
-* Our database schema is really simple because we have complete control over how
-  we map our objects to tables.
-  // TODO: Explain how Django ORM would intrude here.
+* Our database schema is really simple because we have complete control over
+  how we map our objects to tables.
+
+// TODO: Explain how Django ORM would intrude here.
+
 a|
 * OTOH an ORM already buys you quite a lot of decoupling.  if you're using
   an ORM it should be pretty easy to swap between, eg, mysql and postgres

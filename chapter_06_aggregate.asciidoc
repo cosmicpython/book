@@ -375,7 +375,7 @@ def allocate(
 
 //TODO (DS): Another way you could present it is as a diff side by side.
 
-TODO: discuss, should repository raise `InvalidSku`?
+// TODO: discuss, should repository raise `InvalidSku`?
 
 //TODO (DS): More generally I'd be interested in some general principles about
 //handling exceptions in a layered architecture...
@@ -476,7 +476,7 @@ class Product:
 
 <1> There it is!
 
-TODO: more discussion of version number -- actual numebr doesn't matter,
+// TODO: more discussion of version number -- actual numebr doesn't matter,
     we're just setting _something_ so the db complains, could use uids,
     also discuss similarity with eventsourcing version numbers.
 
