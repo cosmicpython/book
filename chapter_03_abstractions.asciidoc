@@ -57,11 +57,11 @@ image::images/coupling_illustration2.png[]
 ----
 [ditaa,coupling_illustration2]
 +--------+                           +--------+
-| System | ---> /-------------\      | System |
-|   A    | ---> |             |      |   B    |
+| System |      /-------------\      | System |
+|   A    |      |             | ---> |   B    |
 |        | ---> | Abstraction | ---> |        |
-|        | ---> |             |      |        |
-|        | ---> \-------------/      |        |
+|        |      |             | ---> |        |
+|        |      \-------------/      |        |
 +--------+                           +--------+
 ----
 
@@ -76,22 +76,6 @@ In the second, though, we have reduced the degree of coupling by inserting a
 new, simpler, abstraction. This abstraction serves to protect us from change by
 hiding away the complex details of whatever system B does.
 
-// (ej)
-//       I'm a bit of a stickler on semantics of diagrams, but I'm not
-//       sure how to interpret the pictures, as they're too abstract.
-//
-//       In ASCII form, these are:
-//       - A <-> B
-//       - A <-> Abstraction <-> B
-//
-//        The double-ended arrow to me implies circular dependency, which means A and B are still
-//        coupled in the above diagrams.
-//
-//       For A and B to be decoupled, the pictures I see in my mind are one of these dependency relationships:
-//       - A -> Abstraction -> B
-//       - A <- Abstraction <- B
-//       - A -> Abstraction <- B
-//       - A <- Abstraction -> B
 
 === Abstracting State Aids Testability
 
