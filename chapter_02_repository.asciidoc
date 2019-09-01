@@ -51,6 +51,8 @@ package SqlAlchemy {
 @enduml
 ----
 
+[SG] what happenend to the other methods on Batch that came in in Chapter 1
+
 
 === Persisting our Domain Model
 
@@ -66,6 +68,9 @@ browsers and race conditions. For the next few chapters we're going to look at
 how we can connect our idealised domain model to external state.
 
 We expect to be working in an agile manner, so our priority is to get to an MVP
+
+[SG] Pedantry, Is this the first time we see acronym MVP
+
 as quickly as possible.  In our case, that's going to be a web API. In a real
 project, you might dive straight in with some end-to-end tests and start
 plugging in a web framework, test-driving things outside-in.
@@ -196,6 +201,9 @@ Let's see how we might translate this to a relational database.
 ==== The "Normal" ORM Way: Model Depends on ORM.
 
 In 2019 it's unlikely that your team are hand-rolling their own SQL queries.
+
+[SG] love it
+
 Instead, you're almost certainly using some kind of framework to generate
 SQL for you based on your model objects.
 
@@ -320,6 +328,11 @@ def start_mappers():
 ----
 ====
 
+[SG] missing imports?  Don't you need from sqlalchemy import Table, MetaData, Column, Integer, String
+Also is relationship used?  Are you not going to tell them that they need to create the table and how
+to get the session? Am I missing something, perhaps this is only a code snippet
+
+
 <1> The ORM imports (or "depends on" or "knows about") the domain model, and
     not the other way around.
 
@@ -433,7 +446,9 @@ def allocate_endpoint():
 ----
 ====
 
-
+[SG] from what I remember of the previous code if none of the batches can_allocate then this
+allocate(line, batches) will raise OutOfStock.  Is it OK to let this bubble up?  Should you
+add a try finally to close the session
 
 === Introducing Repository Pattern.
 
@@ -469,6 +484,7 @@ find them again. Our in memory data would let us add new objects, just like a
 list or a set, and since the objects are in memory we never need to call a
 "Save" method, we just fetch the object we care about, and modify it in memory.
 
+[SG] lovely explanation
 
 ==== The Repository in the Abstract
 
@@ -666,6 +682,7 @@ def test_repository_can_retrieve_a_batch_with_allocations(session):
 ----
 ====
 
+
 <1> This tests the read side, so the raw SQL is preparing data to be read
     by the `repo.get()`
 
@@ -825,6 +842,11 @@ to be built this way; only sometimes does the complexity of the app and domain
 make it worth investing the time and effort in adding these extra layers of
 indirection.  With that in mind, <<chapter_02_repository_tradeoffs>> shows
 some of the pros and cons of _Repository Pattern_ and our _Persistence Ignorant Model_.
+
+
+[SG] is it worth mentioning that the repository is specifically intended for add and get
+our domain model objects. Rather than something used to add and get any old data
+which you might call a DAO. Repository is more close to the business domain.
 
 
 [[chapter_02_repository_tradeoffs]]
