@@ -441,6 +441,9 @@ next time?  But you should experiment and figure out your own preferences here.
 // also - if you close the session, the current uow design won't reopen it
 // on next use, so the repo will try and work on a closed session and fail
 // hard, presumably.
+// TODO: Fix the UnitOfWork such that it can be opened idempotently. This might
+// force us to close things properly instead of just hoping it's all gonna be
+// okay
 
 
 === Examples: Using UoW to Group Multiple Operations Into an Atomic Unit
