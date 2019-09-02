@@ -8,9 +8,11 @@ jumbled. When you think of the word _order_ perhaps you think of an empty room,
 serene and calm. For scientists, though, chaos is characterized by homogeneity,
 and order by complexity.
 
+////
 [SG] Found previous paragraph a bit confusing.  It seems to suggest that a scientist would
 say that a noisy stock exchange is ordered. I feel like you want to talk about Entropy
 but do not want to go down that rabbit hole.
+////
 
 For example, a well-tended garden is a highly ordered system. Gardeners define
 boundaries with paths and fences, and they mark out flower beds or vegetable
@@ -158,7 +160,7 @@ image::images/layered_architecture.png[]
 ----
 
 
-[SG] do you really mean layers and not tiers, maybe we do not care.
+// [SG] do you really mean layers and not tiers, maybe we do not care.
 
 Layered architecture is perhaps the most common pattern for building business
 software. In this model we have user-interface components, which could be a web
@@ -198,7 +200,7 @@ Dependency Inversion.  There's a good overview, with examples, at
 https://scotch.io/bar-talk/s-o-l-i-d-the-first-five-principles-of-object-oriented-design]
 mnemonic. Formally, the DIP says:
 
-[SG] reference?
+// [SG] reference?
 
 1.  High-level modules should not depend on low-level modules. Both should
     depend on abstractions.
@@ -235,8 +237,12 @@ sometimes do) use ABCs, but you can also rely on duck typing.  The abstraction
 can just mean, "the public API of the thing you're using"; a function name
 plus some arguments, for example.
 
+////
+
 [SG] what about a code example of using an ABC versus duck typing to flesh out what you
 mean here?
+
+////
 
 So the first part of the DIP says that our business code shouldn't depend on
 technical details; instead they should both use abstractions.
@@ -278,7 +284,9 @@ us to keep our business layer, the domain model, free of dependencies and easy
 to maintain.
 
 //TODO: bob to review these last two paras.
+
+////
 [SG]  I was a bit suprised to see such an in depth explanation of "encapsulation"
  with detailed code examples in this Introduction: Why Do Our Designs Go Wrong. The other
- two sections on DIP and layering have more of an overview flavour and I presume
- will be expanded on in later chapters.
+ two sections on DIP and layering are much bigger topics but have more of an overview flavour.
+////
