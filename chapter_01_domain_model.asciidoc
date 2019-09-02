@@ -7,7 +7,7 @@ code, in a way that's highly compatible with TDD.  We'll discuss _why_
 domain modelling matters, and we'll look at a few key patterns for modelling
 domains: Entities, Value Objects, and Domain Services.
 
-[SG] I do like an overview - thank you.
+// [SG] I do like an overview - thank you.
 
 === What is a Domain Model?
 
@@ -103,7 +103,7 @@ in a specific way, we should listen to understand the deeper meaning and encode
 their hard-won experience into our software.
 
 
-[SG] Lovely explanation .. go on say it ... say ubiquitous language
+// [SG] Lovely explanation .. go on say it ... say ubiquitous language
 
 We're going to use a real-world domain model throughout this book, specifically
 a model from our current employment. Made.com is a successful furniture
@@ -305,9 +305,13 @@ class Batch:
 ----
 ====
 
+////
+
 [SG] Maybe worth pointing out that you are implementing the simplest solution to pass this first test -
- I presume that is what you are doing anyway as this allocate method is not checking for sku, when I
- first read this I initially thought the lack of check for sku was a mistake.
+ I presume that is what you are doing anyway as this allocate method is not checking for sku. When I
+ first read this I thought that the lack of check for sku was a mistake.
+
+////
 
 <1> `OrderLine` is an immutable dataclassfootnote:[In previous Python versions we
     might have used a namedtuple.  You could also check out Hynek Schlawack's
@@ -450,9 +454,12 @@ TODO (EJ)
 #      I am unsure what audience you are targeting.
 ///
 
-[SG] I would want to know if I tried to allocate to a batch and I was not able to.
-Was it because I targeted the wrong batch for my sku?  Was it because the batch
-was exhausted?
+
+////
+[SG] If the batch cannot be allocated, the allocate method just returns without complaint.
+I would prefer to know if I tried to allocate to a batch and I was not able to.
+Was it because I targeted the wrong batch for my sku?  Was it because the batch was exhausted?
+////
 
 <<model_diagram>> shows the model in diagram form.
 
@@ -544,7 +551,7 @@ Reference is expected, for example.
 Whether you think this is wonderful or appallingfootnote:[It is appalling.
 Please, please don't do this. Harry.] is a matter of debate.
 
-[SG] I love type hints but nooooooooo
+// [SG] I love type hints but nooooooooo
 
 *******************************************************************************
 
@@ -584,7 +591,7 @@ often choose to represent it using a Value Object. A Value Object is any
 domain object that is uniquely identified by the data it holds; we usually
 make them immutable.
 
-[SG] seems a bit odd to hear about value objects before any mention of entities.
+// [SG] seems a bit odd to hear about value objects before any mention of entities.
 
 [[orderline_value_object]]
 .OrderLine is a Value Object.
@@ -918,9 +925,13 @@ def test_raises_out_of_stock_exception_if_cannot_allocate():
 ----
 ====
 
+////
+
 [SG] Wouldn't it be nicer to create a batch of SMALL-FORK then allocate them all
 then try to allocate one more to see the exception. This test makes me think
-for goodness sake you are just looking in the wrong batch.
+for goodness sake you are just targeting the wrong batch.
+
+////
 
 We won't bore you too much with the implementation, but the main thing
 to note is that we take care in naming our exceptions in the ubiquitous
@@ -969,7 +980,7 @@ Not everything has to be an object::
     code be functions.  Classes called "Manager" or "Builder" or
     "Factory" are a code smell.
 
-[SG] Why is Factory a code smell?
+// [SG] Why is a Factory a code smell?
 
 This is the time to apply your best OO design principles::
     revise SOLID.  has-a vs is-a.  composition over inheritance. etc etc.
