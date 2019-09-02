@@ -755,7 +755,7 @@ but the nice thing is--the rest of your application just doesn't care.
 
 === Building a Fake Repository for Tests is Now Trivial!
 
-Here's one of the biggest benefits of _repository pattern_.
+Here's one of the biggest benefits of Repository Pattern.
 
 
 [[fake_repository]]
@@ -797,9 +797,13 @@ fake_repo = FakeRepository([batch1, batch2, batch3])
 
 You'll see this fake in action in the next chapter.
 
+
 TIP: Building fakes for your abstractions is an excellent way to get design
     feedback: if it's hard to fake, then the abstraction is probably too
     complicated.
+
+
+=== Wrap-Up
 
 
 .Repository Pattern: Recap
@@ -824,7 +828,8 @@ We want to be very clear that we're not saying every single application needs
 to be built this way; only sometimes does the complexity of the app and domain
 make it worth investing the time and effort in adding these extra layers of
 indirection.  With that in mind, <<chapter_02_repository_tradeoffs>> shows
-some of the pros and cons of _Repository Pattern_ and our _Persistence Ignorant Model_.
+some of the pros and cons of Repository Pattern and our persistence ignorant
+model.
 
 
 [[chapter_02_repository_tradeoffs]]
@@ -834,27 +839,82 @@ some of the pros and cons of _Repository Pattern_ and our _Persistence Ignorant 
 |Pros|Cons
 a|
 * We have a simple interface between persistent storage and our domain model.
-* It's easy to make a fake version of the repository for unit testing or to
+
+* It's easy to make a fake version of the repository for unit testing, or to
   swap out different storage solutions, because we've fully decoupled the model
   from infrastructure concerns.
+
 * Writing the domain model before thinking about persistence helps us focus on
   the business problem at hand.
 
-// TODO: Explain how Django ORM would intrude here.
-
-* Our database schema is really simple because we have complete control over how we map our objects to tables.
+* Our database schema is really simple because we have complete control over
+  how we map our objects to tables.
 
 a|
 * OTOH an ORM already buys you quite a lot of decoupling.  if you're using
-  an ORM it should be pretty easy to swap between, eg, mysql and postgres
-* how likely is it that you're going to want to change databases on your
-  project?
+  an ORM it should be pretty easy to swap between, eg, MySql and Postgres
+
+* How likely is it that you're going to want to change databases on your
+  project anyway?
+
 * Maintaining the ORM mappings by hand is extra work and extra code.
-* any extra layer of indirection always increases maintenance costs and
-  adds a 'wtf factor' for python programmers who've never seen Repository Pattern
+
+* Any extra layer of indirection always increases maintenance costs and
+  adds a 'wtf factor' for Python programmers who've never seen Repository Pattern
   before
+
 |===
 
+
+In a single diagramfootnote:[Diagram inspired by a post called
+https://www.reflektis.com/blog/global-complexity-local-simplicity/[Global
+complexity, local simplicity], by Rob Vens)]
+(<<domain_model_tradeoffs_diagram>>), the central conceit
+of is: yes, for simple cases, a decoupled domain model is harder work than
+a simple ORM / ActiveRecord pattern. But the more complex the domain, the more
+an investment in freeing yourself from infrastructure concerns will pay off,
+in terms of the ease of making changes:
+
+
+[[domain_model_tradeoffs_diagram]]
+.Domain Model Tradeoffs as a Diagram
+image::images/domain_model_tradeoffs_diagram.png[]
+[role="image-source"]
+....
+[ditaa, domain_model_tradeoffs_diagram]
+
+
+Cost of changes
+
+     ^                         /
+     |      ActiveRecord / ORM |
+     |                         |                             ----/
+     |                        /                         ----/
+     |                        |                    ----/
+     |                       /                ----/
+     |                       |           ----/  Domain Model w/ Repository Pattern
+     |                      /       ----/
+     |                      |  ----/
+     |                    ----/
+     |               ----/ /
+     |          ----/     /
+     |     ----/        -/
+     |----/          --/
+     |           ---/
+     |       ----/
+     |------/
+     |
+     +--------------------------------------------------------------->
+                      Complexity of Business Domain/Logic
+....
+
+Our example code isn't really complex enough to give more than a hint of what
+the right-hand side of the graph looks like, but the hints are there.  Think
+about what our domain model would look like if we were using the Django ORM
+for example.  the `._allocations` attribute on `Batch` would have to change from
+being a set to being some sort of foreign key / related field, and Django would
+start demanding that any objects we add to it have a valid id/pk field, making
+unit testing that little bit more tedious.
 
 
 You'll be wondering, how do we actually instantiate these repositories, fake or
@@ -862,5 +922,3 @@ real? What will our flask app actually look like?  We'll find out in the next
 exciting instalment!
 
 But first, a word from our sponsors...
-
-
