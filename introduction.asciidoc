@@ -263,6 +263,9 @@ hard to imagine. How can we have an abstraction that doesn't depend on the
 details it's abstracting?  We'll discuss this in detail, using a concrete
 example in <<chapter_04_service_layer>>.
 
+
+=== A Place for all our Business Logic: the Domain Model
+
 But before we can turn our three-layered architecture inside out, we need to
 talk more about that middle layer, the business logic. One of the most common
 reasons that our designs go wrong is that business logic becomes spread out
@@ -270,6 +273,6 @@ throughout the layers of our application, hard to identify, understand and
 change.
 
 In <<chapter_01_domain_model>>, we'll show how to build a business
-layer called a "domain model", and the rest of the patterns in Part 1 will show
+layer using a _Domain Model_, and the rest of the patterns in Part 1 will show
 how we can keep the domain model easy to change and free of low-level concerns,
 by choosing the right abstractions and continuously applying the DIP.
