@@ -319,12 +319,6 @@ when we give it input from the outside world.
 Let's start off by splitting the code up to separate the stateful parts from
 the logic.
 
-// (ej)
-// Referring to the "Coupling" diagram comment previously, the snippet below
-// would look like:
-//
-// determine_actions <- sync -> read_paths_and_hashes
-//
 
 [[three_parts]]
 .Split our code into three  (sync.py)
