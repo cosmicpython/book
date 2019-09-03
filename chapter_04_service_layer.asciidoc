@@ -25,7 +25,7 @@ diagram showing where we're heading.
 image::images/chapter_03_class_diagram.png[]
 
 [role="image-source"]
-....
+----
 [plantuml, chapter_03_class_diagram]
 @startuml
 
@@ -79,7 +79,7 @@ Flask --> services : invokes
 
 BatchRepository ---> Session : abstracts
 @enduml
-....
+----
 
 
 
