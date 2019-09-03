@@ -8,8 +8,8 @@ abstraction?  What do we want from them?  And how do they relate to testing?
 
 A key theme in this book, hidden among the fancy patterns, is that we can use
 simple abstractions to hide messy details. When we're writing code for fun, or
-in a kata, footnote:[We'll talk about TDD kata soon, but if you're new to the
-idea check out http://www.peterprovost.org/blog/2012/05/02/kata-the-only-way-to-learn-tdd/]
+in a kata,footnote:[A code kata is a small contained programming challenge often
+used to practice TDD.  See http://www.peterprovost.org/blog/2012/05/02/kata-the-only-way-to-learn-tdd/]
 we get to play with ideas freely, hammering things out and refactoring
 aggressively. In a large-scale system, though, we become constrained by the
 decisions made elsewhere in the system.
@@ -17,17 +17,15 @@ decisions made elsewhere in the system.
 When we're unable to change component A for fear of breaking component B, we say
 that the components have become coupled. Locally, coupling is a good thing: it's
 a sign that our code is working together, each component supporting the others,
-fitting in place like the gears of a watch.
+fitting in place like the gears of a watch.  In jargon, we say this works when
+there is high _cohesion_ between the coupled elements.
 
 Globally, coupling is a nuisance: it increases the risk and the cost of changing
 our code, sometimes to the point where we feel unable to make some changes at
 all. This is the problem with the ball of mud pattern: as the application grows,
-the coupling increases superlinearly until we are no longer able to effectively
-change our systems.
-
-// (ej) I'm reading the preceding two paragraphs as essentially describing coupling vs. cohesion,
-//      where "local" coupling implies high cohesion, "global coupling" implies low cohesion.
-//      using those terms specifically will let readers google for more info.
+if we're unable to prevent coupling between elements that have no cohesion, that
+coupling increases superlinearly until we are no longer able to effectively
+change our systems.  
 
 We can reduce the degree of coupling within a system
 (<<coupling_illustration1>>) by abstracting away the details
