@@ -201,7 +201,14 @@ design: Single responsibility, Open for extension but
 closed for modification, Liskov substitution, Interface segregation, and
 Dependency Inversion.  There's a good overview, with examples, at
 https://scotch.io/bar-talk/s-o-l-i-d-the-first-five-principles-of-object-oriented-design]
-mnemonic. Formally, the DIP says:
+mnemonic.
+
+Unfortunately we can't illustrate the DIP using three tiny code listings like
+we did for encapsulation, but since the whole of Part 1 is essentially a worked
+example of implementing the DIP throughout an application, hopefully you'll get
+your fill of concrete examples from those.
+
+In the meantime, we can talk about the formal definition of the DIP, which is:
 
 1.  High-level modules should not depend on low-level modules. Both should
     depend on abstractions.
@@ -260,17 +267,17 @@ other.
 The second part is even more mysterious. "Abstractions should not depend on
 details" seems clear enough, but "Details should depend on abstractions" is
 hard to imagine. How can we have an abstraction that doesn't depend on the
-details it's abstracting?  We'll discuss this in detail, using a concrete
-example in <<chapter_04_service_layer>>.
+details it's abstracting?  By the time we get to <<chapter_04_service_layer>>,
+we'll have a concrete example which should make this all a bit more clear.
 
 
 === A Place for all our Business Logic: the Domain Model
 
 But before we can turn our three-layered architecture inside out, we need to
-talk more about that middle layer, the business logic. One of the most common
-reasons that our designs go wrong is that business logic becomes spread out
-throughout the layers of our application, hard to identify, understand and
-change.
+talk more about that middle layer, the "high-level modules", the business
+logic. One of the most common reasons that our designs go wrong is that
+business logic becomes spread out throughout the layers of our application,
+hard to identify, understand and change.
 
 In <<chapter_01_domain_model>>, we'll show how to build a business
 layer using a _Domain Model_, and the rest of the patterns in Part 1 will show
