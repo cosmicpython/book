@@ -2,7 +2,7 @@
 == A Brief Interlude: On Coupling and Abstractions
 
 Allow us a brief digression on the subject of abstractions, dear reader.
-We've talked about _abstractions_ quite a lot.  The repository is an
+We've talked about _abstractions_ quite a lot.  The Repository is an
 abstraction over permanent storage for example.  But what makes a good
 abstraction?  What do we want from them?  And how do they relate to testing?
 
@@ -25,7 +25,7 @@ our code, sometimes to the point where we feel unable to make some changes at
 all. This is the problem with the ball of mud pattern: as the application grows,
 if we're unable to prevent coupling between elements that have no cohesion, that
 coupling increases superlinearly until we are no longer able to effectively
-change our systems.  
+change our systems.
 
 We can reduce the degree of coupling within a system
 (<<coupling_illustration1>>) by abstracting away the details
@@ -268,7 +268,7 @@ the current state of the filesystem.
     dest_files = {'hash1': 'path1', 'hash2': 'pathX'}
 
 What about moving from step (2) to step (3)?  How can we abstract out the
-actual move/copy/delete filesystem interaction? 
+actual move/copy/delete filesystem interaction?
 
 We're going to apply a trick here that we'll employ on a grand scale later in
 the book. We're going to separate _what_ we want to do from _how_ to do it.
@@ -506,7 +506,7 @@ def test_when_a_file_has_been_renamed_in_the_source():
 ====
 
 <1> Bob _loves_ using lists to build simple test doubles, even though his
-    co-workers get mad. It means we can write tests like 
+    co-workers get mad. It means we can write tests like
     ++assert 'foo' not in database++
 
 <2> Each method in our `FakeFileSystem` just appends something to the list so we
@@ -550,7 +550,7 @@ of the codebase. That's because mock tests verify the interactions between
 things: did I call `shutil.copy` with the right arguments? This coupling between
 code and test _tends_ to make tests more brittle in our experience.
 +
-Martin Fowler wrote about this in his 2007 blog post 
+Martin Fowler wrote about this in his 2007 blog post
 https://www.martinfowler.com/articles/mocksArentStubs.html[Mocks Aren't Stubs]
 
 3.  Over-use of mocks leads to complicated test suites that fail to explain the
@@ -597,7 +597,7 @@ a few heuristics and questions to ask yourself:
 
 * Can I choose a familiar Python datastructure to represent the state of the
   messy system, and try to imagine a single function that can return that
-  state? 
+  state?
 
 // TODO (DS): These are great heuristics... Maybe they deserve more attention?
 
