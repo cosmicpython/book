@@ -99,7 +99,7 @@ enough.
 BLOCKSIZE = 65536
 
 def hash_file(path):
-    hasher = hashlib.sha1()  #<2>
+    hasher = hashlib.sha1()
     with path.open("rb") as file:
         buf = file.read(BLOCKSIZE)
         while buf:
@@ -109,12 +109,12 @@ def hash_file(path):
 ----
 ====
 
-Now we need to write the interesting business logic. When we have to tackle a
-problem from first principles, we usually try to write a simple implementation,
-and then refactor towards better design. We'll use this approach throughout the
-book, because it's how we write code in the real world: start with a solution
-to the smallest part of the problem, and then iteratively make the solution
-richer and better designed.
+Now we need to write the bit that makes decisions about what to do. When we
+have to tackle a problem from first principles, we usually try to write a
+simple implementation, and then refactor towards better design. We'll use this
+approach throughout the book, because it's how we write code in the real world:
+start with a solution to the smallest part of the problem, and then iteratively
+make the solution richer and better designed.
 
 Our first hackish approach looks something like this:
 
@@ -134,7 +134,7 @@ def sync(source, dest):
     source_hashes = {}
     for folder, _, files in os.walk(source):
         for fn in files:
-            source_hashes[hash_file(Path(folder) / fn)] = fn  #<1>
+            source_hashes[hash_file(Path(folder) / fn)] = fn
 
     seen = set()  # Keep track of the files we've found in the target
 
@@ -564,7 +564,9 @@ Tests that use too many mocks get overwhelmed with setup code that hides the
 story we care about.
 
 Steve Freeman has a great example of over-mocked tests in his talk
-https://www.youtube.com/watch?v=B48Exq57Zg8[Test Driven Development: That's Not What We Meant]
+https://www.youtube.com/watch?v=B48Exq57Zg8[Test Driven Development: That's Not What We Meant].
+You should also check out this https://www.youtube.com/watch?v=Ldlz4V-UCFw[Pycon talk on Mocking Pitfalls]
+by our esteemed tech reviewer, Ed Jung, which also addresses mocking and its alternatives.
 
 
 
