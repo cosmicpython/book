@@ -8,7 +8,93 @@ discuss the concept of a _consistency boundary_, and show how making it
 explicit can help us to build high-performance software without compromising
 maintainability.
 
-//TODO DIAGRAM GOES HERE
+Here's a preview of where we're headed: we're going to move from a model where
+we need to retrieve all the batches and pass them to the `allocate()` domain
+service (<<chapter_08_before_diagram>>):
+
+
+[[before_aggregates_diagram]]
+.Before: allocate against all batches using domain service
+image::images/before_aggregates_diagram.png[]
+[role="image-source"]
+....
+[plantuml, before_aggregates_diagram]
+@startuml
+
+class services {
+    allocate()
+}
+
+
+package domain_model {
+
+  class Batch {
+  }
+
+  class allocate {
+  }
+}
+
+
+package repositories {
+
+  class BatchRepository {
+    list()
+  }
+
+}
+
+services -> BatchRepository: list all batches
+services --> allocate: allocate(orderline, batches)
+
+@enduml
+....
+
+...to a world in which there is a new _Aggregate_ class named `Product`
+that will be in charge of allocation, and choosing which batches to
+allocate against (<<after_aggregates_diagram>>):
+
+[[after_aggregates_diagram]]
+.After: ask Product to allocate against its batches
+image::images/after_aggregates_diagram.png[]
+[role="image-source"]
+....
+[plantuml, after_aggregates_diagram]
+@startuml
+
+class services {
+    allocate()
+}
+
+
+package domain_model {
+
+  class Product {
+    allocate()
+  }
+
+  class Batch {
+  }
+}
+
+
+package repositories {
+
+  class ProductRepository {
+    get()
+  }
+
+}
+
+services -> ProductRepository: get me the product for this sku
+services --> Product: allocate(orderline)
+Product -o Batch: has
+
+@enduml
+....
+
+Why?  Let's find out.
+
 
 === Why Not Just Run Everything in a Spreadsheet?
 
