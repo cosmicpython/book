@@ -27,7 +27,11 @@ have domain knowledge, and send emails and perform logging; "business logic"
 classes that perform no calculations but do perform IO; and everything coupled
 to everything else so that changing any part of the system becomes fraught with
 danger. This is so common that software engineers have their own term for
-chaos: The Big Ball of Mud anti-pattern.
+chaos: The Big Ball of Mud anti-pattern (<<bbom_image>>)footnote:[Big Ball of Mud illustration from https://thedailywtf.com/articles/Enterprise-Dependency-Big-Ball-of-Yarn].
+
+[[bbom_image]]
+.A real-life class dependency diagram
+image::images/big_ball_of_yarn.jpg[]
 
 Big ball of mud is the natural state of software in the same way that wilderness
 is the natural state of your garden. It takes energy and direction to
