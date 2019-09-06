@@ -123,15 +123,20 @@ an operation.
 
 === Invariants, Constraints and Consistency
 
-If we were writing a hotel booking system, we might have the constraint that no
-two bookings can exist for the same hotel room on the same night. This supports
-the invariant that no room is double booked.
+The two words are somewhat interchangeable, but a _constraint_ is some kind of
+rule that restricts the possible states our model can get into. An _invariant_
+is defined a little more precisely, as a condition that is always true.
+
+If we were writing a hotel booking system, we might have the constraint that double
+bookings are not allowed.  This supports the constraint that a room cannot have more
+than one booking for the same night.
 
 Of course, sometimes we might need to temporarily _bend_ the rules. Perhaps we
-need to shuffle the rooms around due to a VIP booking. While we're moving people
-around, we might be double booked, but our domain model should ensure that, when
-we're finished, we end up in a final consistent state, where the invariants are
-met.  Either that, or we raise an error and refuse to complete the operation.
+need to shuffle the rooms around due to a VIP booking. While we're moving
+bookings around in memory we might be double booked, but our domain model
+should ensure that, when we're finished, we end up in a final consistent state,
+where the invariants are met.  Either that, or we raise an error and refuse to
+complete the operation.
 
 Let's look at a couple of concrete examples from our business requirements
 
@@ -140,43 +145,16 @@ ____
 * An order line can only be allocated to one batch at a time.
 ____
 
-This is a business rule that implements a constraint. The constraint is that an
+This is a business rule that imposes an invariant. The invariant is that an
 order line is allocated to either zero or one batches, but never more than one.
 We need to make sure that our code never accidentally calls `Batch.allocate()`
 on two different batches for the same line, and currently, there's nothing
-there to explicitly stop us doing that.  By nominating an aggregate to be
+there to explicitly stop us doing that.  By nominating an Aggregate to be
 "in charge of" all batches, we'll have a single place where we can enforce
 this constraint.
 
-//TODO (DS): I'm unclear on the distinction between invariant and constraint.
 
-////
-TODO // (ej):
-         I'm not sure that "constraint" has any specific definition beyond
-         just being some kind of rule, so maybe just saying rule will be
-         clearer.
-
-         I would say that an invariant has a narrower definition
-         in that it defines some condition that must always be true.
-
-         Under that definition, instead of saying "The invariant is that we never oversell stock
-         by allocating two customers to the same physical cushion", you might say
-         "The invariant is that no batch may have a negative available quantity."
-
-         As another toy example, in the Account class, the invariant is that balance is always > 0,
-         and the constraint is that no debits are allowed that would make the balance negative.
-
-         class Account:
-            def balance(self):
-                return self.money
-
-            def debit(self, amount):
-                if amount > money:
-                    raise NoMoney()
-                self.money -= amount
-////
-
-==== Invariants and Concurrency
+==== Invariants, Concurrency and Locks
 
 Let's look at another one of our business rules:
 
@@ -187,9 +165,10 @@ ____
 ____
 
 Here the constraint is that we can't allocate more stock than is available to a
-batch. The invariant is that we never oversell stock by allocating two
-customers to the same physical cushion. Every time we update the state of the
-system, our code needs to ensure that we don't break the invariants.
+batch, so we never oversell stock by allocating two customers to the same
+physical cushion. Every time we update the state of the system, our code needs
+to ensure that we don't break the invariant, which is that the available
+quantity must be greater than or equal to zero.
 
 In a single threaded single user application it's relatively easy for us to
 maintain this invariant. We can just allocate stock one line at a time, and
@@ -213,7 +192,7 @@ As we start to think about scaling up our app, we realise that our model
 of allocating lines against all available batches may not scale.  If we've
 got tens of thousands of orders per hour, and hundreds of thousands of
 order lines, we can't hold a lock over the whole `batches` table for
-every single one.
+every single one--we'll get deadlocks or performance problems at the very least.
 
 
 In the rest of this chapter, we'll first discuss choosing an aggregate
