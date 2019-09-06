@@ -235,29 +235,31 @@ TIP: Just like we sometimes use `_leading_underscores` to mark methods or functi
     as "private", you can think of aggregates as being the "public" classes of our
     model, and the rest of the Entities and Value Objects are "private".
 
+So what shall we choose as our aggregate? 
+
 Some sort of `Order` object might suggest itself, but that's more about order lines,
 and we're more concerned about something that provides some sort of conceptual unity
 for collections of batches.
 
-//TODO (DS): I don't really understand this para.
-
-////
- TODO (ej): The preceding and following paragraph are a bit confusing until you get to the actual code examples.
-         A visual picture would help clarify here (e.g. a cartoon piece of paper with lines, and
-         a warehouse with chairs, a truck with chairs in it).
-////
+An object to represent a `Warehouse` or a `Shipment` can represent a collection of
+batches, but it wouldn't really slice the batches up in a useful way for the purposes
+of allocating an individual order line.
 
 When we allocate an order line, we're actually only interested in batches
-that have the same SKU as the order line.  Some sort of concept of `GlobalSkuStock`
-or perhaps just simply `Product` -- after all, that was the first concept we
-came across in our exploration of the domain language back in <<chapter_01_domain_model>>.
+that have the same SKU as the order line.  Some sort of concept like `GlobalSkuStock`
+could work: a collection of all the batches for a given SKU.
 
-//TODO (DS): Why not just use product from the beginning? Switching to using
-// the product now makes it harder to remember what's going on. It might be
-// clearer at this point to look into *why* product makes a good aggregate root
-// and compare it with some worse alternatives.
+It's an unwieldy name though, so after some bikeshedding via `SkuStock`, `Stock`, 
+`ProductStock`, and so on, we decided to simply call it `Product` --
+after all, that was the first concept we came across in our exploration of the
+domain language back in <<chapter_01_domain_model>>.
 
-Let's go with that for now, and see how it looks
+So the plan is: when we want to allocate an order line, rather than looking up
+all the `Batch` objects in the world and allocating against them, we will identify
+a single `Product` object for the SKU in our order line, and it will be in charge
+of all the batches _for that sku_, and it will be in charge of allocation.
+
+Let's see how that looks, concretely:
 
 
 [[product_aggregate]]
@@ -286,29 +288,31 @@ class Product:
 //TODO (DS): I think a diagram illustrating the product as the aggregate root might make the message land more clearly.
 
 <1> `Product`'s main identifier is the `sku`
+
 <2> It holds a reference to a collection of `batches` for that sku
-<3> And finally, we can move the `allocate()` domain service to
-    being a method on `Product`.
+
+<3> And finally, we can move the `allocate()` Domain Service to
+    being a method on the `Product` aggregate.
+
 
 NOTE: This `Product` might not look like what you'd expect a `Product`
     model to look like.  No price, no description, no dimensions...
     Our allocation service doesn't care about any of those things.
-    This is the power of microservices and bounded contexts, the concept
+    This is the power of and bounded contexts, the concept
     of Product in one app can be very different from another.footnote:[Well, either
-    that, or it's just a bad name.  but `SKUStock` would be so _awkward_!]
+    that, or it's just a bad name.  but `SKUStock` would be so _awkward_!].
+    See <<bounded_contexts_sidebar,the sidebar on bounded contexts>> for more
+    discussion.
 
-
-
-//TODO: AA prompted the note above, he said "Product" was a confusing name at first.
-// maybe we should just go for something like `ProductStock`, or just `Stock`?
 
 //TODO: talk about magic methods on aggregates maybe?  ie, a non-aggregate entity
 //      might have a __hash__ so that we can put it into a set, but because you
 //      are never supposed to have a collection of aggregates, they could return
 //      an error for __has__. or sumfink.
 
-//TODO (DS): What if there was one really popular product? Would we load all the batches when we instantiate?
 
+
+[[bounded_contexts_sidebar]].
 .Aggregates, Bounded Contexts and Microservices
 *******************************************************************************
 One of the most important contributions from Evans and the DDD community
@@ -348,10 +352,6 @@ thoughts.  They may be too much of a digression from the text though.
 I recall someone specifically asking about "how you get everyone to use the same domain model".
 Putting in a mention of the "Canonical Model" pattern would be a good breadcrumb.
 
-* Re AA's Note, and SkuStock vs Product vs ProductStock,
-the literal conversations might be worth placing somewhere, maybe at the end of the chapter.
-Putting in an example of a messy conversation like the one with AA would help demonstrate.
-
 *  Re: BoundedContexts, my experience with explaining BoundedContexts is that
 people don't understand it without a concrete example.
 
@@ -378,24 +378,30 @@ In our case, we'll switch from `BatchRepository` to `ProductRepository`:
 [source,python]
 [role="skip"]
 ----
-class _UnitOfWork:
-    def __init__(self, session):
-        self.session = session
-        self.products = repository.ProductRepository(session)
+class AbstractUnitOfWork:
+    ...
+
+    def init_repositories(self, products: repository.AbstractProductRepository):
+        self._products = products
+
+    @property
+    def products(self) -> repository.AbstractProductRepository:
+        return self._products
 
 
 #...
 
-class ProductRepository:
-    #...
+class AbstractProductRepository:
 
-    def get(self, sku):
-        return self.session.query(model.Product).filter_by(sku=sku).first()
+    @abc.abstractmethod
+    def add(self, product):
+        ...
+
+    @abc.abstractmethod
+    def get(self, sku) -> model.Product:
+        ...
 ----
 ====
-//TODO (DS): I still wonder if it would be clearer to leave sqlalchemy
-//implementations until later and stick to in-memory implementations for the
-//biz logic.
 
 //TODO (DS): How do the batches get loaded?
 
@@ -433,12 +439,7 @@ def allocate(
     return batchref
 ----
 ====
-//TODO (DS): A general comment that i felt at this point...i feel increasingly
-//vague about what the system is doing, considering we keep changing it. A
-//diagram (maybe a sequence diagram?) That serves as a reference point would
-//help me orientate and what's changing.
 
-//TODO (DS): Another way you could present it is as a diff side by side.
 
 // TODO: discuss, should repository raise `InvalidSku`?
 
@@ -446,6 +447,7 @@ def allocate(
 //handling exceptions in a layered architecture...
 
 //TODO: mention link between aggregates and foreign keys
+
 
 .Exercise for the Reader
 ******************************************************************************
