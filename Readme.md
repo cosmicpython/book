@@ -14,8 +14,8 @@ In the meantime, pull requests, typofixes, and more substantial feedback + sugge
 | ------- | ----- |
 | [Preface](preface.asciidoc) | |
 | [Acknowledgements](acknowledgements.asciidoc) | |
+| [Introduction: Why do our designs go wrong?](introduction.asciidoc)| ||
 | [**Part 1 Intro**](part1.asciidoc) | |
-| [Prologue: Why do our designs go wrong?](prologue.asciidoc)| |
 | [Chapter 1: Domain Model](chapter_01_domain_model.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_01_domain_model)](https://travis-ci.org/python-leap/code) |
 | [Chapter 2: Repository](chapter_02_repository.asciidoc) | [![Build Status](https://travis-ci.org/python-leap/code.svg?branch=chapter_02_repository)](https://travis-ci.org/python-leap/code) |
 | [Chapter 3: Interlude: Abstractions](chapter_03_abstractions.asciidoc) | |
