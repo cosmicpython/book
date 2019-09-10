@@ -526,7 +526,7 @@ Model -> Transaction2: Product(version=4)
 Transaction1 -> Database: commit Product(version=4)
 Database -[#green]> Transaction1: OK
 Transaction2 -> Database: commit Product(version=4)
-Database -[#red]>x Transaction1: Error! version is already 4
+Database -[#red]>x Transaction2: Error! version is already 4
 
 @enduml
 ....
