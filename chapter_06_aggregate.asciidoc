@@ -235,7 +235,7 @@ TIP: Just like we sometimes use `_leading_underscores` to mark methods or functi
     as "private", you can think of aggregates as being the "public" classes of our
     model, and the rest of the Entities and Value Objects are "private".
 
-So what shall we choose as our aggregate? 
+So what shall we choose as our aggregate?
 
 Some sort of `Order` object might suggest itself, but that's more about order lines,
 and we're more concerned about something that provides some sort of conceptual unity
@@ -249,7 +249,7 @@ When we allocate an order line, we're actually only interested in batches
 that have the same SKU as the order line.  Some sort of concept like `GlobalSkuStock`
 could work: a collection of all the batches for a given SKU.
 
-It's an unwieldy name though, so after some bikeshedding via `SkuStock`, `Stock`, 
+It's an unwieldy name though, so after some bikeshedding via `SkuStock`, `Stock`,
 `ProductStock`, and so on, we decided to simply call it `Product` --
 after all, that was the first concept we came across in our exploration of the
 domain language back in <<chapter_01_domain_model>>.
@@ -285,7 +285,6 @@ class Product:
             raise OutOfStock(f'Out of stock for sku {line.sku}')
 ----
 ====
-//TODO (DS): I think a diagram illustrating the product as the aggregate root might make the message land more clearly.
 
 <1> `Product`'s main identifier is the `sku`
 
@@ -299,8 +298,7 @@ NOTE: This `Product` might not look like what you'd expect a `Product`
     model to look like.  No price, no description, no dimensions...
     Our allocation service doesn't care about any of those things.
     This is the power of and bounded contexts, the concept
-    of Product in one app can be very different from another.footnote:[Well, either
-    that, or it's just a bad name.  but `SKUStock` would be so _awkward_!].
+    of Product in one app can be very different from another.
     See <<bounded_contexts_sidebar,the sidebar on bounded contexts>> for more
     discussion.
 
@@ -332,6 +330,10 @@ explicitly.
 This concept translates very well to the world of microservices, where each
 microservice is free to have its own concept of "customer", and rules for
 translating that to and from other microservices it integrates with.
+
+In our example, the allocation service has `Product(sku, batches)`,
+whereas the ecommerce will have `Product(sku, description, price, image_url,
+dimensions, etc...)`
 
 Whether or not you've got a microservices architecture, a key consideration
 in choosing your aggregates is also choosing the bounded context that they
@@ -403,9 +405,11 @@ class AbstractProductRepository:
 ----
 ====
 
-//TODO (DS): How do the batches get loaded?
-
-And our service layer evolves to use `Product` as its main entrypoint:
+The ORM layer will need some tweaks so that the right batches automatically get
+loaded and associated with `Product` objects.  The nice thing is, Repository
+pattern means we don't actually have to worry about that yet, we can just use
+our `FakeRepository` and then feed through the new model into our service
+layer, to see how it looks with `Product` as its main entrypoint:
 
 [[service_layer_uses_products]]
 .Service layer  (src/allocation/services.py)
@@ -473,18 +477,61 @@ do them for you by magic!
 
 ******************************************************************************
 
+
 === Version Numbers
 
-We've got our new aggregate and we're using it in all the right places, the remaining
-question is:  how will we actually enforce our data integrity rules?  We don't want
-to hold a lock over the entire batches table, but how will we implement holding a
-lock over just the rows for a particular sku?  The answer is to have a single
-attribute on the Product model which acts as a marker for the whole state change
-being complete, and we use it as the single resource that concurrent workers
-can fight over:  if two transactions both read the state of the world for `batches`
-at the same time, and they both want to update the `allocations` tables, we force
-both of them to also try and update the `version_number` in the `products` table,
-in such a way that only one of them can win and the world stays consistent.
+We've got our new aggregate so we've solved the conceptual problem of choosing
+an object to be in charge of consistency boundaries.  Let's now spend a little
+time talking about how to enforce data integrity at the database level.
+
+We don't want to hold a lock over the entire batches table, but how will we
+implement holding a lock over just the rows for a particular sku?  The answer
+is to have a single attribute on the Product model which acts as a marker for
+the whole state change being complete, and we use it as the single resource
+that concurrent workers can fight over:  if two transactions both read the
+state of the world for `batches` at the same time, and they both want to update
+the `allocations` tables, we force both of them to also try and update the
+`version_number` in the `products` table, in such a way that only one of them
+can win and the world stays consistent.
+
+<<version_numbers_sequence_diagram>> shows an illustration: two concurrent
+transactions do their read operations at the same time, so they see
+a Product with (eg) `version=3`.  They both call `Product.allocate()`
+in order to modify some state.  But we set up our database integrity
+rules such that only one of them is allowed to `commit` the new Product
+with `version=4`, and the other update will be rejected.
+
+[[version_numbers_sequence_diagram]]
+.Sequence Diagram: Two Transactions Attempt a Concurrent Update on Product
+image::images/version_numbers_sequence_diagram.png[]
+[role="image-source"]
+....
+[plantuml, version_numbers_sequence_diagram]
+@startuml
+
+entity Model
+collections Transaction1
+collections Transaction2
+database Database
+
+
+Transaction1 -> Database: get product
+Database -> Transaction1: Product(version=3)
+Transaction2 -> Database: get product
+Database -> Transaction2: Product(version=3)
+Transaction1 -> Model: Product.allocate()
+Model -> Transaction1: Product(version=4)
+Transaction2 -> Model: Product.allocate()
+Model -> Transaction2: Product(version=4)
+Transaction1 -> Database: commit Product(version=4)
+Database -[#green]> Transaction1: OK
+Transaction2 -> Database: commit Product(version=4)
+Database -[#red]>x Transaction1: Error! version is already 4
+
+@enduml
+....
+
+==== Implementation Options for Version Numbers
 
 There are essentially 3 options for implementing version numbers:
 
@@ -500,9 +547,6 @@ There are essentially 3 options for implementing version numbers:
    could do it by magic.  The repository has access to version numbers for any
    products it retrieves, and when the UoW does a commit, it can increment the
    version number for any products it knows about, assuming them to have changed.
-
-//TODO (DS): I wonder if the version number stuff needs to be a bit clearer...
-//I'm skimming a bit. A sequence diagram might help.
 
 Option 3 isn't ideal, because there's no real way of doing it without having to
 assume that _all_ products have changed, so we'll be incrementing version numbers
@@ -543,19 +587,41 @@ class Product:
 
 <1> There it is!
 
-// TODO: more discussion of version number -- actual numebr doesn't matter,
+// TODO: more discussion of version number -- actual number doesn't matter,
 //   we're just setting _something_ so the db complains, could use uids,
 //   also discuss similarity with eventsourcing version numbers.
 
-//TODO (DS): I guess it's just pragmatism, but it seems like the concurrency
-//protection isn't really in the abstraction, it just happens to be in the
-//implementation - know what i mean?
 
 === Testing for our Data Integrity Rules
 
 Now to actually make sure we can get the behavior we want: if we have two
 concurrent attempts to do allocation against the same `Product`, one of them
-should fail, because they can't both update the version number:
+should fail, because they can't both update the version number.
+
+First let's simulate a "slow" transaction using a function that does
+allocation, and then does an explicit sleep:
+
+[[time_sleep_thread]]
+.time.sleep can reliably produce concurrency behavior (tests/integration/test_uow.py)
+====
+[source,python]
+----
+def try_to_allocate(orderid, sku, exceptions):
+    line = model.OrderLine(orderid, sku, 10)
+    try:
+        with unit_of_work.SqlAlchemyUnitOfWork() as uow:
+            product = uow.products.get(sku=sku)
+            product.allocate(line)
+            time.sleep(0.2)
+            uow.commit()
+    except Exception as e:
+        print(traceback.format_exc())
+        exceptions.append(e)
+----
+====
+
+Then we have our test invoke this slow allocation twice, concurrently, using
+threads:
 
 [[data_integrity_test]]
 .An integration test for concurrency behavior (tests/integration/test_uow.py)
@@ -600,38 +666,16 @@ def test_concurrent_updates_to_version_are_not_allowed(postgres_session_factory)
 ----
 ====
 
-<1> We set up two threads that will reliably produce the concurrency behavior we
-    want:  `read1, read2, write1, write2`. (see below for the code being run in
-    each thread).
+<1> We start two threads that will reliably produce the concurrency behavior we
+    want:  `read1, read2, write1, write2`.
 
 <2> We assert that the version number has only been incremented once.
 
 <3> We can also check on the specific exception if we like
 
-<4> And we can make sure that only one allocation has gotten through.
+<4> And we double-check that only one allocation has gotten through.
 
 
-[[time_sleep_thread]]
-.time.sleep can reliably produce concurrency behavior (tests/integration/test_uow.py)
-====
-[source,python]
-----
-def try_to_allocate(orderid, sku, exceptions):
-    line = model.OrderLine(orderid, sku, 10)
-    try:
-        with unit_of_work.SqlAlchemyUnitOfWork() as uow:
-            product = uow.products.get(sku=sku)
-            product.allocate(line)
-            time.sleep(0.2)
-            uow.commit()
-    except Exception as e:
-        print(traceback.format_exc())
-        exceptions.append(e)
-----
-====
-
-//TODO (DS): I wonder if it would read better to introduce this function first,
-//then show the test?
 
 ==== Enforcing Concurrency Rules by Using Database Transaction Isolation Levels
 
@@ -699,18 +743,13 @@ having more of an "optimistic locking" approach and might lead to more failures,
 but the failures might be more recoverable.  So, as usual, the right solution
 will depend on circumstances.
 
+NOTE: Some people refer to this as the "read-modify-write" failure mode.
+    https://www.2ndquadrant.com/en/blog/postgresql-anti-patterns-read-modify-write-cycles/[This page has a good overview].
+
+
 //TODO (DS): Maybe worth explaining the difference between optimistic and
 //pessimistic locking in more detail, and earlier in the chapter?
 
-////
-TODO (ej):
-+1 to (DS) comment. The jump in the middle to talking about version numbers is a little abrupt.
-   Maybe introduce the section by talking about integrity and concurrency, then read-modify-write cycles,
-   and optimistic concurrency control?  Ch7 of "Desiging Data Intensive Applications" is i
-   a good reference.
-
-   I also like this treatemnt: https://www.2ndquadrant.com/en/blog/postgresql-anti-patterns-read-modify-write-cycles/
-////
 
 .Recap: Aggregates and Consistency Boundaries
 *****************************************************************
@@ -729,11 +768,11 @@ Something something transactions::
 |===
 |Pros|Cons
 a|
-* Python might not have "official" public and private methods, but the underscores
-  convention belies the fact that it's useful to try and separate what's for "internal"
-  use and what's for "outside code" to use.  Choosing aggregates is just the next level
-  up: it lets you decide which of your domain model classes are the public ones, and which
-  aren't.
+* Python might not have "official" public and private methods, but we do have
+  the underscores convention, because it's often useful to try and what's for
+  "internal" use and what's for "outside code" to use.  Choosing aggregates is
+  just the next level up: it lets you decide which of your domain model classes
+  are the public ones, and which aren't.
 
 * Modelling our operations around explicit consistency boundaries helps to avoid
   performance problems with our ORM.
@@ -743,10 +782,11 @@ a|
 
 a|
 * Yet another new concept for new developers to take on.  Explaining Entities vs
-  Value Objects was already a mental load, now there's a third type of domain model object? 
- 
+  Value Objects was already a mental load, now there's a third type of domain
+  model object?
+
 * Sticking rigidly to the rule that we only modify one aggregate at a time is a
-  big mental shift. 
+  big mental shift.
 
 * Dealing with eventual consistency between aggregates can be complex.
 |===
