@@ -59,7 +59,7 @@ Our new flow will look like this:
 .Sequence diagram for reallocation flow
 image::images/reallocation_sequence_diagram.png[]
 [role="image-source"]
-....
+----
 [plantuml, reallocation_sequence_diagram]
 @startuml
 Redis -> MessageBus : BatchQuantityChanged event
@@ -77,7 +77,7 @@ end
 
 MessageBus -> Redis : publish to line_allocated channel
 @enduml
-....
+----
 
 
 === Test-driving It All Using An End-to-end Test

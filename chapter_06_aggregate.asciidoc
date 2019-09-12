@@ -17,7 +17,7 @@ service (<<chapter_08_before_diagram>>):
 .Before: allocate against all batches using domain service
 image::images/before_aggregates_diagram.png[]
 [role="image-source"]
-....
+----
 [plantuml, before_aggregates_diagram]
 @startuml
 
@@ -48,7 +48,7 @@ services -> BatchRepository: list all batches
 services --> allocate: allocate(orderline, batches)
 
 @enduml
-....
+----
 
 ...to a world in which there is a new _Aggregate_ class named `Product`
 that will be in charge of allocation, and choosing which batches to
@@ -58,7 +58,7 @@ allocate against (<<after_aggregates_diagram>>):
 .After: ask Product to allocate against its batches
 image::images/after_aggregates_diagram.png[]
 [role="image-source"]
-....
+----
 [plantuml, after_aggregates_diagram]
 @startuml
 
@@ -91,7 +91,7 @@ services --> Product: allocate(orderline)
 Product -o Batch: has
 
 @enduml
-....
+----
 
 Why?  Let's find out.
 
@@ -505,7 +505,7 @@ with `version=4`, and the other update will be rejected.
 .Sequence Diagram: Two Transactions Attempt a Concurrent Update on Product
 image::images/version_numbers_sequence_diagram.png[]
 [role="image-source"]
-....
+----
 [plantuml, version_numbers_sequence_diagram]
 @startuml
 
@@ -529,7 +529,7 @@ Transaction2 -> Database: commit Product(version=4)
 Database -[#red]>x Transaction2: Error! version is already 4
 
 @enduml
-....
+----
 
 ==== Implementation Options for Version Numbers
 

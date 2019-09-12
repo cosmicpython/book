@@ -388,7 +388,7 @@ back out to Redis.
 .Sequence diagram for reallocation flow
 image::images/reallocation_sequence_diagram.png[]
 [role="image-source"]
-....
+----
 [plantuml, reallocation_sequence_diagram]
 @startuml
 API -> MessageBus : BatchQuantityChanged event
@@ -405,7 +405,7 @@ group AllocationRequired Handler + Unit of Work 2 (or more)
 end
 
 @enduml
-....
+----
 
 
 

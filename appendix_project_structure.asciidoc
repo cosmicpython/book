@@ -90,7 +90,7 @@ TIP:  The https://docs.pytest.org/en/latest/goodpractices.html#choosing-a-test-l
     are really good on test layout and importability.
 
 // TODO (DS): Might be good to structure it according to the layers you've
-// talked about....e.g. where is the service layer?
+// talked about... e.g. where is the service layer?
 
 Let's look at a few of these in more detail.
 
@@ -192,7 +192,7 @@ def get_api_url():
 
 // TODO (DS): Say something about mutability of config here? I tend to think
 // it's good for it to be immutable in runtime environments, but mutable in
-// tests.... Not sure though
+// tests... Not sure though
 
 === Docker-Compose and Containers Config
 
