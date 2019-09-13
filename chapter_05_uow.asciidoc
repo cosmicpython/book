@@ -18,17 +18,15 @@ And we'll do it using a lovely piece of Python syntax, a context manager.
 
 === The Unit of Work Collaborates with Repository(-Ies)
 
-The unit of work will give us access to our repository(-ies), and then keep
-track of what objects were loaded and what the latest state is.footnote:[
-You may have come across the word _collaborators_, which is what
-responsibility-driven design would use to describe the relationship between
-the unit of work and the repository. In the terminology, clusters of objects
-that collaborate in their roles are called _object neighborhoods_ which
-is, in our professional opinion, totally adorable.]
-This gives us two useful things:
-
-//TODO (DS): Maybe the fact that it provides access to repositories needs more
-//emphasis.
+The unit of work acts as a single entry point to our persistent storage, and
+keeps track of what objects were loaded and what the latest state is.footnote:[
+You may have come across the word _collaborators_, to describe objects that work
+together to achieve a goal. The unit of work and the repository are a great
+example of collaborators in the object modelling sense.
+In responsibility-driven design, clusters of objects that collaborate in their
+roles are called _object neighborhoods_ which is, in our professional opinion,
+totally adorable.]
+This gives us three useful things:
 
 1) It gives us a stable snapshot of the database to work with, so that the
 objects we use aren't changing halfway through an operation.
@@ -36,8 +34,10 @@ objects we use aren't changing halfway through an operation.
 2) It gives us a way to persist all of our changes at once so that if something
 goes wrong, we don't end up in an inconsistent state.
 
-In other words, it allows us to manage concurrency and atomicity.
+3) It offers a simple API to our persistence concerns and gives us a handy place
+to get a repository.
 
+<<<<<<< Updated upstream:chapter_05_uow.asciidoc
 For now, that translates straight into a database transaction, but by giving
 ourselves our own abstraction, we can make it mean more things, as we'll see
 when we get to <<chapter_07_events_and_message_bus>>.
@@ -48,15 +48,26 @@ session object, so we'll fix that.
 But we'll also use be giving ourself a tool for explicitly saying that some
 work needs to work as an atomic unit.  We either do all of it, or none of it.
 An error part of the way along should lead to any interim work being reverted.
-
-What's a nice, Pythonic way of expressing that a block of code should run
-as a coherent whole, with some setup at the beginning, and some tidy-up at
-the end, some different handling for error and success cases?  Something like
-`try/except/finally`?
-
-A context manager.
-
+=======
 //TODO (DS): Could be a good moment to revisit the diagram at the beginning of the book.
+>>>>>>> Stashed changes:chapter_04_uow.asciidoc
+
+Here's how it'll look when it's finished
+
+====
+[source,python]
+----
+def allocate(line: OrderLine, start_uow) -> str:
+    with start_uow() as uow: #<1>
+        batches = uow.batches.list() #<2>
+        model.allocate(line, batches)
+        uow.commit() #<3>
+----
+====
+
+<1> The `start_uow` function will return us a new unit of work.
+<2> The unit of work provides us access to our repositories.
+<3> When we're done, we commit or roll back our work on the uow
 
 === Test-Driving a UoW with Integration Tests
 
@@ -254,15 +265,10 @@ def test_allocate_returns_allocation():
 ----
 ====
 
-////
-TODO:
-This is another good opportunity to drive home the idea of roles and collaborations. UOW and Repository are collaborators.
-
-https://github.com/python-leap/book/issues/44
-////
-
 <1> `FakeUnitOfWork` and `FakeRepository` are tightly coupled,
-    just like the real Unit of Work and Repository classes
+    just like the real Unit of Work and Repository classes.
+    That's fine because we recognise that the objects collaborate as part of
+    the same neighbourhood.
 
 <2> Notice the similarity with the fake `commit()` function
     from `FakeSession` (which we can now get rid of).  But it's
@@ -274,6 +280,7 @@ https://github.com/python-leap/book/issues/44
     our service layer, instead of a repository and a session,
     which is considerably less cumbersome.
 
+TODO: Defend the mocking point
 
 
 ////
@@ -434,6 +441,8 @@ As to the option of using `session.close()`, we have played with that in the
 past, but we always end up having to look up the SQLAlchemy docs to find out
 exactly what it does.   And besides, why not leave the session open for the
 next time?  But you should experiment and figure out your own preferences here.
+
+TODO: This is terrible advice. Fix it :)
 
 // TODO: Ponder this some more ^ I'm not convinced that we shouldn't close the
 // session.

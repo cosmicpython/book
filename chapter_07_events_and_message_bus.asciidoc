@@ -31,6 +31,12 @@ In practice, though, we find that it's not the obvious features that make a mess
 of our codebases: it's the goop around the edge. It's reporting, and permissions
 and workflows that touch a zillion objects.
 
+In our experience, a system written this way tends not to become harder to
+understand as it gets larget. We add more complexity at the start of the project
+in exchange for lower complexity over time.
+
+// TODO: Add complexity curves here.
+
 Let's see how our architecture holds up once we need to plug in some of the
 mundane stuff that makes up so much of our systems.
 
@@ -38,7 +44,7 @@ Another day, another new requirement:  when we can't allocate an order because
 we're out of stock, we should alert the buying team. They'll go and fix the
 problem by buying more stock, and all will be well.
 
-For a first version, our product owner says we can just send the alert by email.
+For the first version, our product owner says we can send an alert by email.
 
 === Avoiding Making a Mess.
 
@@ -75,64 +81,9 @@ def allocate_endpoint():
 ----
 ====
 
-//TODO (DS): I wonder if the code snippets for the messy ways are really
-//necessary. Reading code takes up a fair amount of mental energy and really
-//all you're talking about is, who's responsible? Perhaps sequence diagrams
-//would be a better way of showing the different options...
-
-////
- TODO (ej): I like the messy examples here, because they are exactly
-       like things that happen in practice, and some people will do better 
-       with a concrete example over a sequence diagram.
-
-       The transitions/flow between the snippets is a bit confusing though.  
-
-       Right now it reads like:
-         ex1. whack it in the endpoint
-         ex2. mocky test for send_email (after implicility whacking it into the service?)
-         ex3. whack it into the model
-         ex4. whack it into the service (to match the mocky test)
-////
-
 As a one-off hack, this might be okay, but it's easy to see how we can quickly
 end up in a mess by patching things in this way. Sending emails isn't the job of
 our HTTP layer, and we'd like to be able to unit test this new feature.
-
-Let's start with a unit test written against our service layer.
-
-[[mocky_test_for_send_email]]
-.A Mocky test at the service layer (tests/unit/test_services.py)
-====
-[source,python]
-[role="non-head"]
-----
-def test_sends_email_on_out_of_stock_error():
-    uow = FakeUnitOfWork()
-    services.add_batch("b1", "POPULAR-CURTAINS", 9, None, uow)
-
-    with mock.patch("allocation.email.send_mail") as mock_send_mail:  #<1>
-        with pytest.raises(exceptions.OutOfStock):
-            services.allocate("o1", "POPULAR-CURTAINS", 10, uow)
-        assert mock_send_mail.call_args == mock.call(  #<1>
-            "stock@made.com",
-            f"Out of stock for POPULAR-CURTAINS",
-        )
-----
-====
-
-<1> We use `unittest.mock.patch` to monkeypatch out our "real" email-sending
-    function, which lives at _src/allocation/email.py_.  This may not be the best
-    pattern for testing dependencies like email. In the next chapter we'll discuss
-    alternative ways of approaching this.
-
-
-NOTE: If you find yourself using `mock.patch` to test external dependencies
-    at the service layer, you should be aware that Other Testing Options Are
-    Available (TM).  See <<chapter_12_dependency_injection>>.
-
-
-//TODO (DS): Do we *really* need to see this mocky test? Why not skip straight
-//to the good practice?
 
 ==== ... And Let's Not Make a Mess of our Model Either
 
@@ -161,13 +112,27 @@ the source, in the model:
 But that's even worse!  We don't want our model to have any dependencies on
 infrastructure concerns like `email.send_mail`.
 
+This email sending thing is unwelcome *goop* messing up the nice clean flow
+of our system. What we'd like is to keep our domain model focused on the rule
+"You can't allocate more stuff than is actually available."
 
-==== Or the Service Layer!
+The domain model's job is to know that we're out of stock, but the
+responsibility of sending an alert belongs elsewhere. We should be able to turn
+this feature on or off, or to switch to SMS notifications instead, without
+needing to change the rules of our domain model.
 
-In the service layer it's a little better, but it's still not lovely:
+
+==== ... Or the Service Layer!
+
+The requirement "Try to allocate some stock, and send an email if it fails" is
+an example of workflow orchestration: it's a set of steps that the system has
+to follow to achieve a goal.
+
+We've written a service layer to manage orchestration for us, but even here
+the feature feels out of place:
 
 [[email_in_services]]
-.And in the services layer it's no better (src/allocation/services.py)
+.And in the services layer it's out of place (src/allocation/services.py)
 ====
 [source,python]
 [role="non-head"]
@@ -192,8 +157,8 @@ def allocate(
 ====
 
 Catching an exception and re-raising it?  I mean, it could be worse, but it's
-definitely making us unhappy.
-
+definitely making us unhappy. Why is it so hard to find a suitable home for
+this code?
 
 === Single Responsibility Principle
 
@@ -202,34 +167,20 @@ the S from https://scotch.io/bar-talk/s-o-l-i-d-the-first-five-principles-of-obj
 Our use case is allocation. Our endpoint, service function, and domain methods
 are all called `allocate`, not `allocate_and_send_mail_if_out_of_stock`.
 
+One formulation of the SRP is that each class should only have a single reason
+to change. When we switch from email to SMS, we shouldn't have to update our
+"allocate" function, because that's clearly a separate responsibility.
+
 TIP: Rule of thumb: if you can't describe what your function does without using
     words like "then" or "and," you might be violating the SRP.
 
+To solve the problem, we're going to split the orchestration into separate
+steps, so that the different concerns don't get tangled up. We're also going
+to  apply the Dependency Inversion Principle to notifications, so that our
+service layer depends on an abstraction. This will decouple our responsibilities
+again in the same way that we decoupled our system from the database with a
+_unit of work_ and _repository_.
 
-This email sending thing is unwelcome *goop* messing up the nice clean flow
-of our system. What we'd like is to keep our domain model focused on the rule
-"You can't allocate more stuff than is actually available."
-
-
-The domain model's job is to know that we're out of stock, but the
-responsibility of sending an alert belongs elsewhere. We should be able to turn
-this feature on or off, or to switch to SMS notifications instead, without
-needing to change the rules of our domain model.
-
-We'd also like to keep the service layer free of implementation details. We
-want to apply the Dependency Inversion Principle to notifications, so that our
-service layer depends on an abstraction, in the same way as we avoid depending
-on the database by using a UnitOfWork.
-
-
-////
-TODO (ej) *Maybe "weed" instead of "goop" to match the "gardening" metaphor?
-     * "[F]ree of implementation details" is ambiguous and could be a confusing phrase.  
-     Something like "free of volatile concerns" or "decoupled from details that are likely to change"
-     would be clearer.
-     *  I'm not sure that this (using events) is actaully "Dependency Inversion", strictly speaking.
-        Safest thing here would be to just say "decoupling".
-////
 
 === All Aboard the Message Bus!
 
@@ -239,10 +190,46 @@ First, rather than being concerned about emails, our model will be in charge of
 recording "events"--facts about things that have happened. We'll use a Message
 Bus to respond to events, and invoke some new operation.
 
+==== Events Are Simple Dataclasses
+
+An Event is a kind of _value object_. They don't have any behaviour, because
+they're pure data structures. We always name events in the language of the
+domain, and we think of them as part of our domain model.
+
+We could store them in _model.py_, but we may as well keep them in their own file.
+(this might be a good time to consider refactoring out a directory called
+"domain," so we have _domain/model.py_ and _domain/events.py_).
+
+[[events_dot_py]]
+.Event classes (src/allocation/events.py)
+====
+[source,python]
+----
+from dataclasses import dataclass
+
+class Event:  #<1>
+    pass
+
+@dataclass
+class OutOfStock(Event):  #<2>
+    sku: str
+----
+====
+
+
+<1> Once we have a number of events we'll find it useful to have a parent
+    class that can store common attributes.  It's also useful for type
+    hints in our message bus, as we'll see shortly.
+
+<2> `dataclasses` are great for domain events too.
+
+
 ==== The Model Records Events
 
+When our domain model records a fact that happened, we say it "raises" an event.
+
 [[domain_event]]
-.The model records a domain event (src/allocation/model.py)
+.The model raises a domain event (src/allocation/model.py)
 ====
 [source,python]
 [role="non-head"]
@@ -274,56 +261,14 @@ class Product:
 <3> We're also going to stop raising an exception for the out-of-stock
     case.  The event will do the job the exception was doing.
 
-TIP: Exceptions and Events don't mix.  If you're implementing domain
-    events, don't raise exceptions to describe the same domain concept.
-    As we'll see later when we handle events in the Unit of Work, it's
-    confusing to have to reason about events and exceptions together.
-
-TODO: This ^^^ is true, but I think the real problem is that you shouldn't use
-exceptions for control-of-flow. It's like a classic design smell.
-
-
-==== Events Are Simple Dataclasses
-
-//TODO (DS): Maybe worth moving this code above the previous snippet.
-
-Events are part of our domain.  We could store them in _model.py_, but we
-may as well keep them in their own file.  (this might be a good time to
-consider refactoring out a directory called "domain," so we have _domain/model.py_
-and _domain/events.py_).
-
-[[events_dot_py]]
-.Event classes (src/allocation/events.py)
-====
-[source,python]
-----
-from dataclasses import dataclass
-
-class Event:  #<1>
-    pass
-
-@dataclass
-class OutOfStock(Event):  #<2>
-    sku: str
-----
-====
-
-
-<1> Once we have a number of events we'll find it useful to have a parent
-    class that can store common behavior.  It's also useful for type
-    hints in our message bus, as we'll see shortly.
-
-<2> `dataclasses` are great for domain events too.
-
+// TODO: Imclude a unit test here so people can see the model raising an event
 
 
 ==== The Message Bus Maps Events to Handlers
 
-A message bus essentially says: when I see this event, I should
-invoke the following handlers.  Here's a minimal implementation:
-
-//TODO (DS): Maybe mention pub sub? I also think a system diagram is a good way
-//of illustrating the point.
+Our _message bus_ is a simple in-memory publish-subscribe system. Handlers are
+_subscribed_ to receive events, which we publish to the bus. It sounds harder
+than it is, and we usually implement it with a dict:
 
 [[messagebus]]
 .Simple message bus (src/allocation/messagebus.py)
@@ -352,12 +297,16 @@ HANDLERS = {
 ====
 
 //TODO: maybe handle should just take one event?
+//TODO: definitely.
 
 
 ==== One Simple Option: The Service Layer Puts Events on the Message Bus
 
-Now we need something to catch events from the model and pass them to the
-message bus.  The service layer is one place you can do it...
+Our domain model raises events, and our message bus will call the right
+handlers whenever an event happens. Now all we need is to connect the two. We
+need something to catch events from the model and pass them to the message bus.
+
+The simplest way to do this is by adding some code into our service layer.
 
 [[service_talks_to_messagebus]]
 .The service layer with an explicit message bus (src/allocation/services.py)
@@ -408,6 +357,8 @@ TODO (ej)
      Depending on how the "messagebus" is implemented, couldn't there be latency and re-ordering
      of events between the time when an event is "raised" vs. "handled"?  I'm finding the name 
      `messagebus.handle` to be a little bit confusing, as a consequence.
+TODO (bob)
+     agreed, that note doesn't make much sense to me. How does the bus raise events?
 ////
 
 === The Unit of Work Can Pass Events to the Message Bus
