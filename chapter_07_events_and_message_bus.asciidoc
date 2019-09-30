@@ -556,6 +556,8 @@ class SqlAlchemyRepository(AbstractRepository):
 ----
 ====
 
+// TODO: for consistency the "p" in get() should probably be "product"
+
 <1> We initialise a set to store objects seen.  That means our implementations
     need to call `super().__init__()`
 
