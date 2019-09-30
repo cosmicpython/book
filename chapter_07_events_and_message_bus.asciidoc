@@ -234,12 +234,16 @@ TODO (ej) *Maybe "weed" instead of "goop" to match the "gardening" metaphor?
 === All Aboard the Message Bus!
 
 The patterns we're going to introduce here are _Domain Events_ and the _Message Bus_.
+There's a few different ways you can implement them, so we'll show a couple of different
+ones before settling on the one we most like.
+
+
+==== The Model Records Events
 
 First, rather than being concerned about emails, our model will be in charge of
 recording "events"--facts about things that have happened. We'll use a Message
 Bus to respond to events, and invoke some new operation.
 
-==== The Model Records Events
 
 [[domain_event]]
 .The model records a domain event (src/allocation/model.py)
@@ -274,13 +278,12 @@ class Product:
 <3> We're also going to stop raising an exception for the out-of-stock
     case.  The event will do the job the exception was doing.
 
-TIP: Exceptions and Events don't mix.  If you're implementing domain
+NOTE: We're actually addressing a code smell we had until now, which is that we were
+    https://softwareengineering.stackexchange.com/questions/189222/are-exceptions-as-control-flow-considered-a-serious-antipattern-if-so-why[using
+    exceptions for control flow]. In general, if you're implementing domain
     events, don't raise exceptions to describe the same domain concept.
     As we'll see later when we handle events in the Unit of Work, it's
     confusing to have to reason about events and exceptions together.
-
-TODO: This ^^^ is true, but I think the real problem is that you shouldn't use
-exceptions for control-of-flow. It's like a classic design smell.
 
 
 ==== Events Are Simple Dataclasses
@@ -383,7 +386,8 @@ def allocate(
 ----
 ====
 
-<1> We keep the `try/finally` from our ugly earlier implementation,
+<1> We keep the `try/finally` from our ugly earlier implementation (we haven't
+    got rid of _all_ exceptions yet, just `OutOfStock`).
 
 <2> But now instead of depending directly on some email infrastructure,
     the service layer is just in charge of passing events from the model
