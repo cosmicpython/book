@@ -82,10 +82,10 @@ def allocate_endpoint():
 
 ////
  TODO (ej): I like the messy examples here, because they are exactly
-       like things that happen in practice, and some people will do better 
+       like things that happen in practice, and some people will do better
        with a concrete example over a sequence diagram.
 
-       The transitions/flow between the snippets is a bit confusing though.  
+       The transitions/flow between the snippets is a bit confusing though.
 
        Right now it reads like:
          ex1. whack it in the endpoint
@@ -224,7 +224,7 @@ on the database by using a UnitOfWork.
 
 ////
 TODO (ej) *Maybe "weed" instead of "goop" to match the "gardening" metaphor?
-     * "[F]ree of implementation details" is ambiguous and could be a confusing phrase.  
+     * "[F]ree of implementation details" is ambiguous and could be a confusing phrase.
      Something like "free of volatile concerns" or "decoupled from details that are likely to change"
      would be clearer.
      *  I'm not sure that this (using events) is actaully "Dependency Inversion", strictly speaking.
@@ -357,7 +357,7 @@ HANDLERS = {
 //TODO: maybe handle should just take one event?
 
 
-==== One Simple Option: The Service Layer Puts Events on the Message Bus
+==== Option 1 : The Service Layer Takes Events from the Model and Puts them on the Message Bus
 
 Now we need something to catch events from the model and pass them to the
 message bus.  The service layer is one place you can do it...
@@ -398,21 +398,42 @@ implementation, and we have several systems that work like this,
 in which the service layer explicitly collects events from aggregates,
 and passes them to the messagebus.
 
-NOTE: Another variant on this is that you can have the message bus in charge of
-    raising events directly, rather than having them raised by the
-    domain model.
 
-We'd like to show you another solution, in which we put the unit of
-work in charge of collecting and raising events.
+==== Option 2: The Service Layer Raises its own Events
 
-////
-TODO (ej) 
-     * I'm unsure what the NOTE: about message bus raising events means.
-     * Some of the language/names around  "raising" vs "handling" events is fuzzy.
-     Depending on how the "messagebus" is implemented, couldn't there be latency and re-ordering
-     of events between the time when an event is "raised" vs. "handled"?  I'm finding the name 
-     `messagebus.handle` to be a little bit confusing, as a consequence.
-////
+Another variant on this which we've used is that you can have the message bus
+in charge of creating and raising events directly, rather than having them
+raised by the domain model.
+
+
+[[service_layer_raises_events]]
+.Listing title
+====
+[source,python]
+[role="skip"]
+----
+def allocate(
+        orderid: str, sku: str, qty: int,
+        uow: unit_of_work.AbstractUnitOfWork
+) -> str:
+    line = OrderLine(orderid, sku, qty)
+    with uow:
+        product = uow.products.get(sku=line.sku)
+        if product is None:
+            raise exceptions.InvalidSku(f'Invalid sku {line.sku}')
+        batchref = product.allocate(line)
+        if batchref is None:
+            messagebus.handle(events.OutOfStock(line.sku))
+        uow.commit()
+        return batchref
+----
+====
+
+Again, we have applications that implement the pattern in this way.  What works
+for you will depend on the particular trade-offs you face, but we'd like to
+show you what we think is the most elegant solution, in which we put the unit
+of work in charge of collecting and raising events.
+
 
 === The Unit of Work Can Pass Events to the Message Bus
 
@@ -448,7 +469,7 @@ class AbstractRepository(abc.ABC):
 class AbstractUnitOfWork(abc.ABC):
     def commit(self):
         self._commit()
-        messagebus.handle(self.products.unprocessed_events) 
+        messagebus.handle(self.products.unprocessed_events)
 
 ////
 
@@ -549,7 +570,7 @@ track of live objects and process their events, the service layer can now be
 totally free of event-handling concerns:
 
 ////
-(TODO ej) FWIW, my instinct on the above changes would be to do something like below. 
+(TODO ej) FWIW, my instinct on the above changes would be to do something like below.
      This would avoid cascading changes to add _underscorey methods. (This
      might be a language idiom thing, though.  I don't think it's possible in Java/C#.)
 
@@ -667,7 +688,7 @@ a|
 * Events = quite a nice way to model real life
 
 a|
-* message bus is weird.  
+* message bus is weird.
 * the one we've presented is not async, so it can still, eg, hang your web
   responses, which prolly isn't what you're expecting.
 * celery is _fine_.
