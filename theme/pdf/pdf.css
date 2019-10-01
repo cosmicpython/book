@@ -7,6 +7,31 @@
     display: none !important;
 }
 
+/* Removing labels from formal code blocks */
+section[data-type="chapter"] div[data-type="example"] h5:before {
+  content: none;
+}
+
+section[data-type="appendix"] div[data-type="example"] h5:before {
+  content: none;
+}
+
+section[data-type="preface"] div[data-type="example"] h5:before {
+  content: none;
+}
+
+div[data-type="part"] div[data-type="example"] h5:before {
+  content: none;
+}
+
+div[data-type="part"] section[data-type="chapter"] div[data-type="example"] h5:before {
+  content: none;
+}
+
+div[data-type="part"] section[data-type="appendix"] div[data-type="example"] h5:before {
+  content: none;
+}
+
 /*--- This oneoff overrides the code in https://github.com/oreillymedia/<name_of_theme>/blob/master/pdf/pdf.css---*/
 
 
