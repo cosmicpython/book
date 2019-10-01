@@ -9,9 +9,9 @@
 
   <!-- Override to print example captions without labels-->
   <xsl:template match="h:div[@data-type='example']/h:h5" mode="process-heading">
-    <p>
+    <p><em>
       <xsl:apply-templates/>
-    </p>
+    </em></p>
   </xsl:template>
                                                                               
 </xsl:stylesheet>
