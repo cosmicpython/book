@@ -8,7 +8,7 @@
   <xsl:param name="add.title.heading.for.admonitions" select="1"/>  
 
   <!-- Override to print example captions without labels-->
-  <xsl:template match="h:div[@data-type='example' and contains(@class, 'sourcecode')]/h:h5" mode="process-heading">
+  <xsl:template match="h:div[@data-type='example']/h:h5" mode="process-heading">
     <p>
       <xsl:apply-templates/>
     </p>
