@@ -309,7 +309,7 @@ def add_batch(
         uow: unit_of_work.AbstractUnitOfWork  #<1>
 ):
     with uow:
-        uow.batches.add(model.Batch(ref, sku, qty, eta))  #<2>
+        uow.batches.add(model.Batch(ref, sku, qty, eta))
         uow.commit()
 
 
@@ -319,7 +319,7 @@ def allocate(
 ) -> str:
     line = OrderLine(orderid, sku, qty)
     with uow:
-        batches = uow.batches.list()  #<2>
+        batches = uow.batches.list()
         if not is_valid_sku(line.sku, batches):
             raise InvalidSku(f'Invalid sku {line.sku}')
         batchref = model.allocate(line, batches)
@@ -545,7 +545,7 @@ it's doing are covered in _test_repository.py_.  That last you might keep around
 but we could certainly see an argument for just keeping everything at the highest
 possible level of abstraction (just as we did for the unit tests).
 
-TODO: expand on this a bit?
+// TODO: expand on this a bit?
 
 
 .Exercise for the Reader
@@ -632,3 +632,34 @@ SqlAlchemy already implements this pattern::
     to keep us loosely coupled.
 
 *****************************************************************
+
+
+[[chapter_05_uow_tradeoffs]]
+[options="header"]
+.Unit of Work: The Trade-Offs
+|===
+|Pros|Cons
+a|
+* We've got a nice abstraction over the concept of atomic operations, and the
+  context manager makes it very easy to see, visually, what blocks of code are
+  grouped together atomically.
+
+* We have explicit control over when a transaction starts and finishes, and our
+  application fails in a way that is safe by default. We never have to worry
+  that an operation is partially committed.
+
+* It's a nice place to put all your repositories so client code can access it
+
+* And we'll see in later chapters, atomicity isn't only about transactions, it
+  can help us to work with events and the message bus.
+
+a|
+* Your ORM probably already has some perfectly good abstractions around
+  atomicity.  SQLAlchemy even has context managers. You can go a long way
+  just passing a Session around.
+
+* We've made it look easy, but you actually have to think quite carefully about
+  things like rollbacks, multithreading, and nested transactions.  Perhaps just
+  sticking to what Django or Flask-SQLAlchemy gives you will keep your life
+  simpler.
+|===

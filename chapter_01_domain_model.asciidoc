@@ -10,7 +10,7 @@ domains: Entities, Value Objects, and Domain Services.
 
 === What is a Domain Model?
 
-In the <<prologue>>, we used the term _business logic layer_ to describe the
+In the <<introduction>>, we used the term _business logic layer_ to describe the
 central layer of a three-layered architecture. For the rest of the book, we're
 going to use the term _Domain Model_ instead. This is a term from the DDD
 community that does a better job of capturing our intended meaning (see the
@@ -48,7 +48,7 @@ and it's been a hugely successful movement in transforming the way people
 design software by focusing on the core business domain.  Many of the
 architecture patterns that we cover in this book, like Entity, Aggregate
 and Value Objects (see <<chapter_05_uow>>), and Repository pattern (in
-<<chapter_02,the next chapter>>) all come from the DDD tradition.
+<<chapter_02_repository,the next chapter>>) all come from the DDD tradition.
 
 In a nutshell, DDD says that the most important thing about software is that it
 provides a useful model of some problem.  If we get that model right, then our
@@ -449,6 +449,7 @@ TODO (EJ)
 [[model_diagram]]
 .Our Model
 image::images/model_diagram.png[]
+[role="image-source"]
 ----
 [ditaa, model_diagram]
 +=====================+
@@ -456,11 +457,13 @@ image::images/model_diagram.png[]
 +---------------------+
 | reference           |
 | sku                 |
+| eta                 |
 | _purchased_quantity |       +=============+
-| allocations -------------->>| OrderLine   |
+| _allocations ------------->>| OrderLine   |
 +---------------------+       +-------------+
                               | order_id    |
                               | sku         |
+                              | eta         |
                               | qty         |
                               +-------------+
 ----

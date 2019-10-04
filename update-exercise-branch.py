@@ -33,5 +33,4 @@ def main(chapter):
     run(['git', 'cherry-pick', *commits])
 
 if __name__ == '__main__':
-    chapter = sys.argv[1]
-    main(chapter)
+    main(sys.argv[1])

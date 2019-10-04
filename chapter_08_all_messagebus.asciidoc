@@ -131,7 +131,7 @@ Refactoring] workflow, AKA "make the change easy, then make the easy change":
 
 === Refactoring Service Functions To Message Handlers
 
-We start by defining the two events that capture our current API inputs: 
+We start by defining the two events that capture our current API inputs:
 `AllocationRequired` and `BatchCreated`:
 
 [[two_new_events]]
@@ -214,8 +214,8 @@ The change might be clearer as a diff:
 -        product = uow.products.get(sku=sku)
 +        product = uow.products.get(sku=event.sku)
      ...
- 
- 
+
+
  def allocate(
 -        orderid: str, sku: str, qty: int,
 -        uow: unit_of_work.AbstractUnitOfWork
@@ -403,7 +403,7 @@ back out to Redis.
 .Sequence diagram for reallocation flow
 image::images/reallocation_sequence_diagram.png[]
 [role="image-source"]
-....
+----
 [plantuml, reallocation_sequence_diagram]
 @startuml
 API -> MessageBus : BatchQuantityChanged event
@@ -420,7 +420,7 @@ group AllocationRequired Handler + Unit of Work 2 (or more)
 end
 
 @enduml
-....
+----
 
 
 
@@ -697,6 +697,7 @@ much a topic for another book though).
   events.  This allows us to be very granular about what a handler does,
   and really stick to the SRP.
 
+
 === Why have we achieved?
 
 TODO: talk about the fact that we've implemented quite a complicated use case
@@ -706,3 +707,24 @@ TODO: talk about the fact that we've implemented quite a complicated use case
     of work.  it's easy to reason about, and easy to explain.  Possibly
     show a hacky version for comparison?
 
+
+[[chapter_08_all_messagebus_tradeoffs]]
+[options="header"]
+.Whole app is a Message Bus: The Trade-Offs
+|===
+|Pros|Cons
+a|
+* handlers and services are the same thing, so that's simpler
+* we have a nice datastructure for inputs to the system
+
+a|
+* messagebus is still a slighly unpredicatable way of doing things from
+  a web pov.  don't know in advance when things are going to end
+
+* we've gone from domain objects in service layer calls, to primitives,
+  and now to domain events, which feels flip-floppey.
+
+* duplication / maintenance cost of having model objects _and_ events
+  now.  adding a field to one usually means adding a field to at least
+  on of the others
+|===
