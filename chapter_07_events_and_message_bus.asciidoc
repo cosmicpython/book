@@ -27,7 +27,42 @@ based on those events.  We'll show a few different options for creating
 those events and how to pass them to the message bus, and finally we'll show
 how the Unit of Work can be modified to connect the two together elegantly.
 
-TODO: DIAGRAM GOES HERE
+
+
+
+[[message_bus_diagram]]
+.Message bus diagram
+image::images/message_bus_diagram.png[]
+[role="image-source"]
+----
+[plantuml, message_bus_diagram]
+@startuml
+
+class service {
+}
+class UoW {
+    repository
+}
+class ModelObjects {
+}
+class DomainEvents {
+}
+class MessageBus {
+}
+
+
+service --> UoW: starts
+UoW -> ModelObjects: provides (via repository)
+service -> ModelObjects: uses
+ModelObjects -> DomainEvents: raise
+UoW -.> DomainEvents: tracks (via repository)
+DomainEvents --> MessageBus: sent by UoW
+
+@enduml
+----
+
+TODO: Improve this diagram
+
 
 === Avoiding Making a Mess.
 
