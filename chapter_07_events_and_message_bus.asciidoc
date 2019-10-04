@@ -28,16 +28,6 @@ based on those events.  We'll show a few different options for creating
 those events and how to pass them to the message bus, and finally we'll show
 how the Unit of Work can be modified to connect the two together elegantly.
 
-In our experience, a system written this way tends not to become harder to
-understand as it gets larget. We add more complexity at the start of the project
-in exchange for lower complexity over time.
-
-// TODO: Add complexity curves here.
-
-
-
-For the first version, our product owner says we can send an alert by email.
-
 
 [[message_bus_diagram]]
 .Message bus diagram
@@ -70,7 +60,7 @@ DomainEvents --> MessageBus: sent by UoW
 @enduml
 ----
 
-TODO: Improve this diagram
+TODO: Improve this diagram (try graphviz?)
 
 
 === Avoiding Making a Mess.
@@ -195,25 +185,19 @@ the S from https://scotch.io/bar-talk/s-o-l-i-d-the-first-five-principles-of-obj
 Our use case is allocation. Our endpoint, service function, and domain methods
 are all called `allocate`, not `allocate_and_send_mail_if_out_of_stock`.
 
+TIP: Rule of thumb: if you can't describe what your function does without using
+    words like "then" or "and," you might be violating the SRP.
+
 One formulation of the SRP is that each class should only have a single reason
 to change. When we switch from email to SMS, we shouldn't have to update our
 "allocate" function, because that's clearly a separate responsibility.
 
-TIP: Rule of thumb: if you can't describe what your function does without using
-    words like "then" or "and," you might be violating the SRP.
-
 To solve the problem, we're going to split the orchestration into separate
-steps, so that the different concerns don't get tangled up. We're also going
-to  apply the Dependency Inversion Principle to notifications, so that our
-service layer depends on an abstraction. This will decouple our responsibilities
-again in the same way that we decoupled our system from the database with a
-_unit of work_ and _repository_.
-
-
-The domain model's job is to know that we're out of stock, but the
-responsibility of sending an alert belongs elsewhere. We should be able to turn
-this feature on or off, or to switch to SMS notifications instead, without
-needing to change the rules of our domain model.
+steps, so that the different concerns don't get tangled up. The domain model's
+job is to know that we're out of stock, but the responsibility of sending an
+alert belongs elsewhere. We should be able to turn this feature on or off, or to
+switch to SMS notifications instead, without needing to change the rules of our
+domain model.
 
 We'd also like to keep the service layer free of implementation details. We
 want to apply the Dependency Inversion Principle to notifications, so that our
@@ -320,9 +304,10 @@ NOTE: We're actually addressing a code smell we had until now, which is that we 
 
 ==== The Message Bus Maps Events to Handlers
 
-Our _message bus_ is a simple in-memory publish-subscribe system. Handlers are
-_subscribed_ to receive events, which we publish to the bus. It sounds harder
-than it is, and we usually implement it with a dict:
+A message bus basically says "when I see this event, I should invoke the following
+handler function". In other words, it's a simple publish-subscribe system.
+Handlers are _subscribed_ to receive events, which we publish to the bus. It
+sounds harder than it is, and we usually implement it with a dict:
 
 [[messagebus]]
 .Simple message bus (src/allocation/messagebus.py)
@@ -350,8 +335,7 @@ HANDLERS = {
 ----
 ====
 
-//TODO: maybe handle should just take one event?
-//TODO: definitely.
+//TODO: Handle should just take one event, fo' sho
 
 
 ==== Option 1 : The Service Layer Takes Events from the Model and Puts them on the Message Bus
