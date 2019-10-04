@@ -18,6 +18,24 @@ And we'll do it using a lovely piece of Python syntax, a context manager.
 
 === The Unit of Work Collaborates with Repository(-Ies)
 
+
+Here's how it'll look in use, when it's finished:
+
+====
+[source,python]
+----
+def allocate(line: OrderLine, start_uow) -> str:
+    with start_uow() as uow: #<1>
+        batches = uow.batches.list() #<2>
+        model.allocate(line, batches)
+        uow.commit() #<3>
+----
+====
+
+<1> The `start_uow` function will return us a new unit of work.
+<2> `uow.batches` is the batches repository, so the unit of work provides us access to our repositories.
+<3> When we're done, we commit or roll back our work, using the UOW
+
 The unit of work acts as a single entry point to our persistent storage, and
 keeps track of what objects were loaded and what the latest state is.footnote:[
 You may have come across the word _collaborators_, to describe objects that work
@@ -37,37 +55,9 @@ goes wrong, we don't end up in an inconsistent state.
 3) It offers a simple API to our persistence concerns and gives us a handy place
 to get a repository.
 
-<<<<<<< Updated upstream:chapter_05_uow.asciidoc
-For now, that translates straight into a database transaction, but by giving
-ourselves our own abstraction, we can make it mean more things, as we'll see
-when we get to <<chapter_07_events_and_message_bus>>.
 
-In the last chapter, the service layer was tightly coupled to the SQLAlchemy
-session object, so we'll fix that.
-
-But we'll also use be giving ourself a tool for explicitly saying that some
-work needs to work as an atomic unit.  We either do all of it, or none of it.
-An error part of the way along should lead to any interim work being reverted.
-=======
 //TODO (DS): Could be a good moment to revisit the diagram at the beginning of the book.
->>>>>>> Stashed changes:chapter_04_uow.asciidoc
 
-Here's how it'll look when it's finished
-
-====
-[source,python]
-----
-def allocate(line: OrderLine, start_uow) -> str:
-    with start_uow() as uow: #<1>
-        batches = uow.batches.list() #<2>
-        model.allocate(line, batches)
-        uow.commit() #<3>
-----
-====
-
-<1> The `start_uow` function will return us a new unit of work.
-<2> The unit of work provides us access to our repositories.
-<3> When we're done, we commit or roll back our work on the uow
 
 === Test-Driving a UoW with Integration Tests
 
