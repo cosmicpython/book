@@ -21,18 +21,25 @@ And we'll do it using a lovely piece of Python syntax, a context manager.
 
 Here's how it'll look in use, when it's finished:
 
+[[uow_preview]]
+.Preview of unit of work in action (src/allocation/services.py)
 ====
 [source,python]
 ----
-def allocate(line: OrderLine, start_uow) -> str:
-    with start_uow() as uow: #<1>
-        batches = uow.batches.list() #<2>
-        model.allocate(line, batches)
-        uow.commit() #<3>
+def allocate(
+        orderid: str, sku: str, qty: int,
+        uow: unit_of_work.AbstractUnitOfWork
+) -> str:
+    line = OrderLine(orderid, sku, qty)
+    with uow:  #<1>
+        batches = uow.batches.list()  #<2>
+        ...
+        batchref = model.allocate(line, batches)
+        uow.commit()  #<3>
 ----
 ====
 
-<1> The `start_uow` function will return us a new unit of work.
+<1> We'll start a unit of work as a context manager
 <2> `uow.batches` is the batches repository, so the unit of work provides us access to our repositories.
 <3> When we're done, we commit or roll back our work, using the UOW
 
