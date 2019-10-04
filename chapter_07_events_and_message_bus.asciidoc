@@ -36,25 +36,19 @@ image::images/message_bus_diagram.png[]
 [plantuml, message_bus_diagram]
 @startuml
 
-class service {
+class Domain {
 }
 class UoW {
-    repository
 }
-class ModelObjects {
+class Bus {
 }
-class DomainEvents {
-}
-class MessageBus {
+class Handlers {
 }
 
 
-service --> UoW: starts
-UoW -> ModelObjects: provides (via repository)
-service -> ModelObjects: uses
-ModelObjects -> DomainEvents: raise
-UoW -.> DomainEvents: tracks (via repository)
-DomainEvents --> MessageBus: sent by UoW
+Domain -> UoW: raises events
+UoW -> Bus: publishes events
+Bus -> Handlers: handle events
 
 @enduml
 ----
