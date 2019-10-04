@@ -1,52 +1,41 @@
 [[chapter_07_events_and_message_bus]]
 == Events and the Message Bus
 
-.In this chapter
-********************************************************************************
-
-//TODO get rid of bullets
-
-* We'll examine the kind of requirement that leads to a _big ball of mud_.
-* We'll see how we can use Domain Events to separate side-effects from our
-  use-cases.
-* We'll show how to build a simple Message Bus for triggering behavior in
-  your codebase.
-* We'll see how our Unit of Work can be extended to cover multi-step processes.
-
-TODO: DIAGRAM GOES HERE
-
-********************************************************************************
-
 
 So far we've spent a lot of time and energy on a simple problem that we could
 easily have solved with Django. You might be asking if the increased testability
 and expressiveness are _really_ worth all the effort.
 
-////
-TODO (ej) This chart PoEA has been helpful to me in justifying the value of modeling:
-https://www.reflektis.com/blog/global-complexity-local-simplicity/
-////
-
 In practice, though, we find that it's not the obvious features that make a mess
 of our codebases: it's the goop around the edge. It's reporting, and permissions
 and workflows that touch a zillion objects.
 
-Let's see how our architecture holds up once we need to plug in some of the
-mundane stuff that makes up so much of our systems.
-
-Another day, another new requirement:  when we can't allocate an order because
-we're out of stock, we should alert the buying team. They'll go and fix the
-problem by buying more stock, and all will be well.
+Our example will be a typical notification requirement:  when we can't allocate
+an order because we're out of stock, we should alert the buying team. They'll
+go and fix the problem by buying more stock, and all will be well.
 
 For a first version, our product owner says we can just send the alert by email.
+
+Let's see how our architecture holds up once we need to plug in some of the
+mundane stuff that makes up so much of our systems.  
+
+We'll start by doing the simplest, most expeditious thing, and talk about
+why it's exactly this kind of decision that leads us to Big Ball of Mud.
+Then we'll show how to use _Domain Events_ to separate side-effects from our
+use cases, and how to build a simple _Message Bus_ for triggering behaviour
+based on those events.  We'll show a few different options for creating
+those events and how to pass them to the message bus, and finally we'll show
+how the Unit of Work can be modified to connect the two together elegantly.
+
+TODO: DIAGRAM GOES HERE
 
 === Avoiding Making a Mess.
 
 ==== First, Avoid Making a Mess of of our Web Controllers
 
-When we have a new requirement like this, that's not _really_ to do with the
-core domain, it's all too easy to start dumping these things into our web
-controllers:
+So.  Email alerts when we run out of stock. When we have a new requirement like
+this, that's not _really_ to do with the core domain, it's all too easy to
+start dumping these things into our web controllers:
 
 [[email_in_flask]]
 .Just whack it in the endpoint, what could go wrong? (src/allocation/flask_app.py)
