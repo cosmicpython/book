@@ -35,9 +35,10 @@ structures and we can handle them in much the same way.
 
 The differences between them, though, are important.
 
-Commands are sent by one actor to another specific actor. When I post a form
-to an API handler, I am sending a command. We name commands with imperative
-tense verb phrases like "allocate stock," or "delay shipment."
+Commands are sent by one actor to another specific actor with the expectation that
+a particular thing will happen as a result. When I post a form to an API handler,
+I am sending a command. We name commands with imperative tense verb phrases like
+"allocate stock," or "delay shipment."
 
 Commands capture _intent_. They express our wish for the system to do something.
 As a result, when they fail, the sender needs to receive error information.
@@ -172,9 +173,24 @@ COMMAND_HANDLERS = {
 
 //TODO: consider using a dispatcher thingie from functools?
 
+=== Events, Commands, and Error Handling
+
+Many developers get uncomfortable at this point, and ask "what happens when an
+event fails to process. How am I supposed to make sure the system is in a
+consistent state?"
+
+It's a fair question but it takes some time to answer, so let's run through
+some scenarios.
+
+You are building a stock lookup service that answers the question "is this
+product available in store". You expect thousands, or millions of requests
+per day to the API, so you use an HTTP cache to reduce load on servers. How can
+you clear the cache when new stock becomes available?
+
+
+
 Why does `handle_command` have a `return`, but `handle_events` doesn't, we hear
 you ask?  It's so that we can return the batchref from the API.  
-
 
 [[flask_uses_command]]
 .Flask gets a response from the command handler (src/allocation/flask_app.py)

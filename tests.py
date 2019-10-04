@@ -5,9 +5,17 @@ from dataclasses import dataclass
 from pathlib import Path
 from lxml import html
 import pytest
-from chapters import CHAPTERS, BRANCHES, STANDALONE
+from chapters import CHAPTERS, BRANCHES, STANDALONE, NO_EXERCISE
 
 
+
+def all_branches():
+    return subprocess.run(
+        ['git', 'branch', '-a'],
+        cwd=Path(__file__).parent / 'code',
+        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        check=True
+    ).stdout.decode().split()
 
 def git_log(chapter):
     return subprocess.run(
@@ -26,6 +34,19 @@ def test_master_has_all_chapters_in_its_history(master_log, chapter):
     if chapter in BRANCHES:
         return
     assert f'{chapter})' in master_log
+
+@pytest.mark.parametrize('chapter', CHAPTERS)
+def test_exercises_for_reader(chapter):
+    exercise_branch = f'{chapter}_exercise'
+    branches = all_branches()
+    if chapter in NO_EXERCISE:
+        if exercise_branch in branches:
+            pytest.fail(f'looks like there is an exercise for {chapter} after all!')
+        else:
+            pytest.xfail(f'{chapter} has no exercise yet')
+        return
+    assert exercise_branch in branches
+    assert f'{chapter})' in git_log(exercise_branch), f'Exercise for {chapter} not up to date'
 
 def previous_chapter(chapter):
     chapter_no = CHAPTERS.index(chapter)
