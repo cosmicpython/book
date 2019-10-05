@@ -18,9 +18,24 @@ TODO: DIAGRAM GOES HERE
 
 === A New Requirement Leads Us To Consider A New Architecture
 
-We learn about the need to change batch quantities when they're already
-in the system.  Perhaps someone made a mistake on the number in the manifest,
-or perhaps some sofas fell off a truck. Following a conversation with the
+Rich Hickey talks about "situated software", meaning software that runs for
+extended periods of time, managing some real world process. Examples include
+warehouse-management systems, logistics schedulers, and payroll systems.
+
+This software is tricky to write because unexpected things happen all the time
+in the real world of physical objects and unreliable humans. For example:
+
+* during a stock-take, we discover that three SPRINGY-MATTRESSes have been
+water damaged by a leaky roof.
+* a consignment of RELIABLE-FORKs is missing the required documentation and is
+held in customs for several weeks. Three RELIABLE-FORKs subsequently fail safety
+testing, and are destroyed.
+* a global shortage of sequins means we're unable to manufacture our next batch
+of SPARKLY-BOOKCASE.
+
+In all of these situations,  we learn about the need to change batch quantities
+when they're already in the system.  Perhaps someone made a mistake on the number
+in the manifest, or perhaps some sofas fell off a truck. Following a conversation with the
 business,footnote:[https://en.wikipedia.org/wiki/Event_storming[Event storming]
 is a common technique], we model the situation as in
 <<batch_changed_events_flow_diagram>>:
@@ -104,9 +119,8 @@ Refactoring] workflow, AKA "make the change easy, then make the easy change":
   system.  In particular, the existing `services.allocate()` function will
   become the handler for an event called `AllocationRequired`.
 
-* Then we'll build an end-to-end test that uses Redis to put
-  `BatchQuantityChanged` events into the system, and look for `Allocated` events
-  coming out.
+* Then we'll build an end-to-end test that puts `BatchQuantityChanged` events
+  into the system, and looks for `Allocated` events coming out.
 
 * And then our actual implementation will be conceptually very simple: a new
   handler for `BatchQuantityChanged` events, whose implementation will emit
@@ -116,7 +130,7 @@ Refactoring] workflow, AKA "make the change easy, then make the easy change":
 
 === Refactoring Service Functions To Message Handlers
 
-We start by defining the two events that capture our current API inputs: 
+We start by defining the two events that capture our current API inputs:
 `AllocationRequired` and `BatchCreated`:
 
 [[two_new_events]]
@@ -199,8 +213,8 @@ The change might be clearer as a diff:
 -        product = uow.products.get(sku=sku)
 +        product = uow.products.get(sku=event.sku)
      ...
- 
- 
+
+
  def allocate(
 -        orderid: str, sku: str, qty: int,
 -        uow: unit_of_work.AbstractUnitOfWork
@@ -268,6 +282,8 @@ class AbstractUnitOfWork(abc.ABC):
 ====
 
 <1> The UoW passes itself to the messagebus.
+    This pattern is called double-dispatch and it's a common trick for
+    managing a circular dependency.
 
 
 ==== Our tests are all written in terms of events too:
@@ -388,7 +404,7 @@ back out to Redis.
 .Sequence diagram for reallocation flow
 image::images/reallocation_sequence_diagram.png[]
 [role="image-source"]
-....
+----
 [plantuml, reallocation_sequence_diagram]
 @startuml
 API -> MessageBus : BatchQuantityChanged event
@@ -405,7 +421,7 @@ group AllocationRequired Handler + Unit of Work 2 (or more)
 end
 
 @enduml
-....
+----
 
 
 
@@ -682,6 +698,7 @@ much a topic for another book though).
   events.  This allows us to be very granular about what a handler does,
   and really stick to the SRP.
 
+
 === Why have we achieved?
 
 TODO: talk about the fact that we've implemented quite a complicated use case
@@ -705,8 +722,8 @@ a|
 * messagebus is still a slighly unpredicatable way of doing things from
   a web pov.  don't know in advance when things are going to end
 
-* we've gone from domain objects in service layer calls, to primities,
-  and now to domain events, which feels flip-floppey.  
+* we've gone from domain objects in service layer calls, to primitives,
+  and now to domain events, which feels flip-floppey.
 
 * duplication / maintenance cost of having model objects _and_ events
   now.  adding a field to one usually means adding a field to at least

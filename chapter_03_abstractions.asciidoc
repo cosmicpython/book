@@ -2,14 +2,14 @@
 == A Brief Interlude: On Coupling and Abstractions
 
 Allow us a brief digression on the subject of abstractions, dear reader.
-We've talked about _abstractions_ quite a lot.  The repository is an
+We've talked about _abstractions_ quite a lot.  The Repository is an
 abstraction over permanent storage for example.  But what makes a good
 abstraction?  What do we want from them?  And how do they relate to testing?
 
 A key theme in this book, hidden among the fancy patterns, is that we can use
 simple abstractions to hide messy details. When we're writing code for fun, or
-in a kata, footnote:[We'll talk about TDD kata soon, but if you're new to the
-idea check out http://www.peterprovost.org/blog/2012/05/02/kata-the-only-way-to-learn-tdd/]
+in a kata,footnote:[A code kata is a small contained programming challenge often
+used to practice TDD.  See http://www.peterprovost.org/blog/2012/05/02/kata-the-only-way-to-learn-tdd/]
 we get to play with ideas freely, hammering things out and refactoring
 aggressively. In a large-scale system, though, we become constrained by the
 decisions made elsewhere in the system.
@@ -17,17 +17,15 @@ decisions made elsewhere in the system.
 When we're unable to change component A for fear of breaking component B, we say
 that the components have become coupled. Locally, coupling is a good thing: it's
 a sign that our code is working together, each component supporting the others,
-fitting in place like the gears of a watch.
+fitting in place like the gears of a watch.  In jargon, we say this works when
+there is high _cohesion_ between the coupled elements.
 
 Globally, coupling is a nuisance: it increases the risk and the cost of changing
 our code, sometimes to the point where we feel unable to make some changes at
 all. This is the problem with the ball of mud pattern: as the application grows,
-the coupling increases superlinearly until we are no longer able to effectively
+if we're unable to prevent coupling between elements that have no cohesion, that
+coupling increases superlinearly until we are no longer able to effectively
 change our systems.
-
-// (ej) I'm reading the preceding two paragraphs as essentially describing coupling vs. cohesion,
-//      where "local" coupling implies high cohesion, "global coupling" implies low cohesion.
-//      using those terms specifically will let readers google for more info.
 
 We can reduce the degree of coupling within a system
 (<<coupling_illustration1>>) by abstracting away the details
@@ -57,11 +55,11 @@ image::images/coupling_illustration2.png[]
 ----
 [ditaa,coupling_illustration2]
 +--------+                           +--------+
-| System | ---> /-------------\      | System |
-|   A    | ---> |             |      |   B    |
+| System |      /-------------\      | System |
+|   A    |      |             | ---> |   B    |
 |        | ---> | Abstraction | ---> |        |
-|        | ---> |             |      |        |
-|        | ---> \-------------/      |        |
+|        |      |             | ---> |        |
+|        |      \-------------/      |        |
 +--------+                           +--------+
 ----
 
@@ -76,22 +74,6 @@ In the second, though, we have reduced the degree of coupling by inserting a
 new, simpler, abstraction. This abstraction serves to protect us from change by
 hiding away the complex details of whatever system B does.
 
-// (ej)
-//       I'm a bit of a stickler on semantics of diagrams, but I'm not
-//       sure how to interpret the pictures, as they're too abstract.
-//
-//       In ASCII form, these are:
-//       - A <-> B
-//       - A <-> Abstraction <-> B
-//
-//        The double-ended arrow to me implies circular dependency, which means A and B are still
-//        coupled in the above diagrams.
-//
-//       For A and B to be decoupled, the pictures I see in my mind are one of these dependency relationships:
-//       - A -> Abstraction -> B
-//       - A <- Abstraction <- B
-//       - A -> Abstraction <- B
-//       - A <- Abstraction -> B
 
 === Abstracting State Aids Testability
 
@@ -117,7 +99,7 @@ enough.
 BLOCKSIZE = 65536
 
 def hash_file(path):
-    hasher = hashlib.sha1()  #<2>
+    hasher = hashlib.sha1()
     with path.open("rb") as file:
         buf = file.read(BLOCKSIZE)
         while buf:
@@ -127,12 +109,12 @@ def hash_file(path):
 ----
 ====
 
-Now we need to write the interesting business logic. When we have to tackle a
-problem from first principles, we usually try to write a simple implementation,
-and then refactor towards better design. We'll use this approach throughout the
-book, because it's how we write code in the real world: start with a solution
-to the smallest part of the problem, and then iteratively make the solution
-richer and better designed.
+Now we need to write the bit that makes decisions about what to do. When we
+have to tackle a problem from first principles, we usually try to write a
+simple implementation, and then refactor towards better design. We'll use this
+approach throughout the book, because it's how we write code in the real world:
+start with a solution to the smallest part of the problem, and then iteratively
+make the solution richer and better designed.
 
 Our first hackish approach looks something like this:
 
@@ -152,7 +134,7 @@ def sync(source, dest):
     source_hashes = {}
     for folder, _, files in os.walk(source):
         for fn in files:
-            source_hashes[hash_file(Path(folder) / fn)] = fn  #<1>
+            source_hashes[hash_file(Path(folder) / fn)] = fn
 
     seen = set()  # Keep track of the files we've found in the target
 
@@ -286,7 +268,7 @@ the current state of the filesystem.
     dest_files = {'hash1': 'path1', 'hash2': 'pathX'}
 
 What about moving from step (2) to step (3)?  How can we abstract out the
-actual move/copy/delete filesystem interaction? 
+actual move/copy/delete filesystem interaction?
 
 We're going to apply a trick here that we'll employ on a grand scale later in
 the book. We're going to separate _what_ we want to do from _how_ to do it.
@@ -337,12 +319,6 @@ when we give it input from the outside world.
 Let's start off by splitting the code up to separate the stateful parts from
 the logic.
 
-// (ej)
-// Referring to the "Coupling" diagram comment previously, the snippet below
-// would look like:
-//
-// determine_actions <- sync -> read_paths_and_hashes
-//
 
 [[three_parts]]
 .Split our code into three  (sync.py)
@@ -530,7 +506,7 @@ def test_when_a_file_has_been_renamed_in_the_source():
 ====
 
 <1> Bob _loves_ using lists to build simple test doubles, even though his
-    co-workers get mad. It means we can write tests like 
+    co-workers get mad. It means we can write tests like
     ++assert 'foo' not in database++
 
 <2> Each method in our `FakeFileSystem` just appends something to the list so we
@@ -574,7 +550,7 @@ of the codebase. That's because mock tests verify the interactions between
 things: did I call `shutil.copy` with the right arguments? This coupling between
 code and test _tends_ to make tests more brittle in our experience.
 +
-Martin Fowler wrote about this in his 2007 blog post 
+Martin Fowler wrote about this in his 2007 blog post
 https://www.martinfowler.com/articles/mocksArentStubs.html[Mocks Aren't Stubs]
 
 3.  Over-use of mocks leads to complicated test suites that fail to explain the
@@ -588,7 +564,13 @@ Tests that use too many mocks get overwhelmed with setup code that hides the
 story we care about.
 
 Steve Freeman has a great example of over-mocked tests in his talk
-https://www.youtube.com/watch?v=B48Exq57Zg8[Test Driven Development: That's Not What We Meant]
+https://www.youtube.com/watch?v=B48Exq57Zg8[Test Driven Development: That's Not What We Meant].
+You should also check out this https://www.youtube.com/watch?v=Ldlz4V-UCFw[Pycon talk on Mocking Pitfalls]
+by our esteemed tech reviewer, Ed Jung, which also addresses mocking and its alternatives.
+
+And while we're recommending talks, don't miss
+https://www.youtube.com/watch?v=PBQN62oUnN8[Brandon Rhodes talking about "hoisting" I/O"],
+which really nicely covers the issues we're talking about, using another simple example.
 
 
 
@@ -615,7 +597,7 @@ a few heuristics and questions to ask yourself:
 
 * Can I choose a familiar Python datastructure to represent the state of the
   messy system, and try to imagine a single function that can return that
-  state? 
+  state?
 
 // TODO (DS): These are great heuristics... Maybe they deserve more attention?
 

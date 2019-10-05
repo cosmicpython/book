@@ -194,7 +194,9 @@ class OrderLine(models.Model):
 ====
 
 <1> For value objects, `objects.get_or_create` can work, but for Entities,
-    you need an explict try-get/except to handle the upsert.
+    you probably need an explicit try-get/except to handle the upsert.footnote:[
+    `@mr-bo-jangles` suggested you might be able to use https://docs.djangoproject.com/en/2.2/ref/models/querysets/#update-or-create[update_or_create]
+    but that's beyond our Django-fu.]
 
 <2> I've shown the most complex example here.  If you do decide to do this,
     be aware that there will be boilerplate!  Thankfully it's not very
