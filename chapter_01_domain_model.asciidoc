@@ -307,7 +307,14 @@ class Batch:
 
 ////
 
-[SG] Maybe worth pointing out that you are implementing the simplest solution to pass this first test -
+[SG]
+ I sort of get why you are not putting imports in, because then you would have to start defining a project
+ structure (would that be so awful) but maybe put in
+ from dataclasses import dataclass
+ from typing import Optional
+ from datetime import date
+ or am I missing something obvious.
+ Maybe worth pointing out that you are implementing the simplest solution to pass this first test -
  I presume that is what you are doing anyway as this allocate method is not checking for sku. When I
  first read this I thought that the lack of check for sku was a mistake.
 
@@ -363,6 +370,13 @@ def test_cannot_allocate_if_skus_do_not_match():
 ----
 ====
 
+///
+[SG] so is why you are not putting imports in like
+ from datetime import date
+ because now you need to import Batch and OrderLine and you do not want to tell people where to put these
+ in their project structure?
+ from yourproject.domain.models import Batch, OrderLine
+///
 
 There's nothing too unexpected here. We've refactored our test suite so that we
 don't keep repeating the same lines of code to create a batch and a line for
@@ -853,7 +867,17 @@ def test_returns_allocated_batch_ref():
 ----
 ====
 
+///
+[SG] Deliberate ommission of imports?
+from datetime import datetime, timedelta
+from yourproject.domain.models import Batch, OrderLine
+from yourproject.domain.services import allocate
 
+today = datetime.now()
+tomorrow = today + timedelta(days=1)
+later = today + timedelta(days=7)
+
+///
 And our service might look like this:
 
 
@@ -871,7 +895,6 @@ def allocate(line: OrderLine, batches: List[Batch]) -> str:
     return batch.reference
 ----
 ====
-
 
 ==== Python's Magic Methods Let Us Use our Models with Idiomatic Python
 
