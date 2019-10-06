@@ -411,16 +411,8 @@ for you will depend on the particular trade-offs you face, but we'd like to
 show you what we think is the most elegant solution, in which we put the unit
 of work in charge of collecting and raising events.
 
-////
-TODO (ej) 
-     * Some of the language/names around  "raising" vs "handling" events is fuzzy.
-     Depending on how the "messagebus" is implemented, couldn't there be latency and re-ordering
-     of events between the time when an event is "raised" vs. "handled"?  I'm finding the name 
-     `messagebus.handle` to be a little bit confusing, as a consequence.
-////
 
-
-=== The Unit of Work Can Pass Events to the Message Bus
+=== The Unit of Work Can Publish Events to the Message Bus
 
 The UoW already has a `try/finally`, and it knows about all the aggregates
 currently in play because it provides access to the Repository.  So it's
@@ -496,6 +488,7 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 
 // TODO (ej) Devil's Advocate question: What happens if one of the handlers in the message bus fails?
 //      How should you handle that?
+// (HP) put a  link to chapter 9 discussion on error handling here.
 
 [[repository_tracks_seen]]
 .Repository tracks aggregates seen (src/allocation/repository.py)
@@ -556,20 +549,6 @@ Once the UoW and repository collaborate in this way to automatically keep
 track of live objects and process their events, the service layer can now be
 totally free of event-handling concerns:
 
-////
-(TODO ej) FWIW, my instinct on the above changes would be to do something like below.
-     This would avoid cascading changes to add _underscorey methods. (This
-     might be a language idiom thing, though.  I don't think it's possible in Java/C#.)
-
-class AbstractRepository():
-    def add(self, product):
-        self.seen.append(product)
-
-class SqlAlchemyRepository(AbstractRepository):
-    def add(self, product):
-        super().add(product)
-        self.session.add(product)
-////
 
 
 [[services_clean]]
@@ -596,13 +575,8 @@ def allocate(
 We do also have to remember to change the fakes in the service layer and make them
 call `super()` in the right places, and implement underscorey methods, but the
 changes are minimal:
-////
-TODO
-In Example 12 we have to go back and update our FakeRepository object.
-In a large project with many contributors, it feels to me that keeping these fakes in sync with the real objects might become an issue.
-Do you guys have any strategies for dealing with that?
-https://github.com/python-leap/book/issues/35
-////
+
+
 [[services_tests_ugly_fake_messagebus]]
 .Service-layer fakes need tweaking. (tests/unit/test_services.py)
 ====
@@ -631,11 +605,18 @@ class FakeUnitOfWork(unit_of_work.AbstractUnitOfWork):
 ----
 ====
 
+You may be starting to worry that maintaining these fakes is going to be a
+maintenance burden.  There's no doubt that it is work, but in our experience
+it's not a lot of work.  Once your project is up and running, the interface for
+your repository and UoW abstractions really don't change much.  And if you're
+using ABC's, they'll help remind you when things get out of sync.
+
 
 === Unit Testing with a Fake Message Bus
 
-TODO: discuss replacing @mock test with `FakeMessageBus`
-
+TODO: discuss replacing @mock test with `FakeMessageBus`, and the idea
+that once you have a messagebus and handlers, you can test each handler
+separately.  pros and cons of each.  maybe not in this chapter tho?
 
 
 

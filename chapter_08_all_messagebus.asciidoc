@@ -605,17 +605,6 @@ class FakeRepository(repository.AbstractRepository):
 ====
 
 
-You may be starting to worry that maintaining these fakes is going to be a
-maintenance burden.  There's no doubt that it is work, but in our experience
-it's not a lot of work.  Once your project is up and running, the interface for
-your repository and UoW abstractions really don't change much.  And if you're
-using ABC's, they'll help remind you when things get out of sync.
-
-////
-TODO (ej)  This will be a comon question, I'm sure.  The other option
-      would be to use a mock or patch, which have their own burdens.
-////
-
 TODO: discuss finder methods on repository.
 
 
