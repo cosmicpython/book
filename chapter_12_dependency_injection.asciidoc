@@ -214,29 +214,23 @@ class MessageBus:  #<1>
         self.uow = uow
         self.dependencies = dict(uow=uow, send_mail=send_mail, publish=publish)  #<3>
 
-    def handle(self, message_queue: List[Message]):
-        while message_queue:
-            m = message_queue.pop(0)
-            print('handling message', m, flush=True)
-            if isinstance(m, events.Event):
-                self.handle_event(m)
-            elif isinstance(m, commands.Command):
-                self.handle_command(m)
-            else:
-                raise Exception(f'{m} was not an Event or Command')
-            message_queue.extend(self.uow.collect_events())  #<4>
+    def handle(self, message: Message):
+        if isinstance(message, events.Event):
+            self.handle_event(message)
+        elif isinstance(message, commands.Command):
+            self.handle_command(message)
+        else:
+            raise Exception(f'{message} was not an Event or Command')
 ----
 ====
 
 <1> The messagebus becomes a class...
 <2> ...which asks for all our dependencies in one place
 <3> and stores them into a dict
-<4> We also make a small change to the relationship between bus and UoW -- the bus
-    asks the UoW for new events after it's finished running each handler,
-    and adds them to its own queue (details to follow)
 
 What else changes in the bus? 
 
+// TODO: print -> logging.debug
 
 [[messagebus_handlers_change]]
 .Event and Command handler logic stays the same (src/allocation/messagebus.py)
@@ -302,37 +296,6 @@ functions and event handlers and other entrypoints, our dependencies would be
 all over the place.
 
 
-==== The Messagebus Takes Ownership of Adding New Events to Its Queue
-
-We've seen that the messagebus now has responsibility for collecting
-any new events raised by a handler, and adding them to the end of the queue.
-Consequently, in the Uow, we no longer raise events on commit, instead we offer
-a way of retrieving them:
-
-[[uow_collects_events]]
-.UoW just collects events rather than putting them on the bus (src/allocation/unit_of_work.py)
-====
-[source,python]
-----
-class AbstractUnitOfWork(abc.ABC):
-    ...
-
-    def commit(self):
-        self._commit()
-
-
-    @abc.abstractmethod
-    def _commit(self):
-        ...
-
-    def collect_events(self):
-        for product in self.products.seen:
-            while product.events:
-                yield product.events.pop(0)
-----
-====
-
-
 === Initialising DI in our App Entrypoints
 
 In our flask app, we can just initialise the messagebus inline with
@@ -352,11 +315,13 @@ from allocation import (
 
 app = Flask(__name__)
 orm.start_mappers()
+uow = unit_of_work.SqlAlchemyUnitOfWork()
 bus = messagebus.MessageBus(
-    uow=unit_of_work.SqlAlchemyUnitOfWork(),
+    uow=uow,
     send_mail=email.send,
     publish=redis_pubsub.publish
 )
+uow.set_bus(bus)
 ----
 ====
 
@@ -369,11 +334,14 @@ bus = messagebus.MessageBus(
 [role="non-head"]
 ----
 def get_bus():  #<1>
-    return messagebus.MessageBus(
-        uow=unit_of_work.SqlAlchemyUnitOfWork(),
-        send_mail=email.send,
+    uow = unit_of_work.SqlAlchemyUnitOfWork()
+    bus = messagebus.MessageBus(
+        uow=uow,
+        notifications=email.send,
         publish=publish
     )
+    uow.set_bus(bus)
+    return bus
 
 
 def main():
@@ -405,11 +373,13 @@ def handle_change_batch_quantity(m, bus: messagebus.MessageBus):
 ----
 class FakeBus(messagebus.MessageBus):
     def __init__(self):
+        uow = FakeUnitOfWork()
         super().__init__(
-            uow=FakeUnitOfWork(),
+            uow=uow,
             send_mail=mock.Mock(),
             publish=mock.Mock(),
         )
+        uow.set_bus(self)
 
 ...
 
@@ -418,7 +388,7 @@ class TestAddBatch:
     @staticmethod
     def test_for_new_product():
         bus = FakeBus()
-        bus.handle([commands.CreateBatch("b1", "CRUNCHY-ARMCHAIR", 100, None)])
+        bus.handle(commands.CreateBatch("b1", "CRUNCHY-ARMCHAIR", 100, None))
         assert bus.uow.products.get("CRUNCHY-ARMCHAIR") is not None
         assert bus.uow.committed
 ----
@@ -537,11 +507,13 @@ class FakeNotifications(notifications.AbstractNotifications):
 
 class FakeBus(messagebus.MessageBus):
     def __init__(self):
+        uow = FakeUnitOfWork()
         super().__init__(
-            uow=FakeUnitOfWork(),
+            uow=uow,
             notifications=FakeNotifications(),
             publish=mock.Mock(),
         )
+        uow.set_bus(self)
 ----
 ====
 
@@ -554,10 +526,8 @@ we can use it in our tests:
 ----
     def test_sends_email_on_out_of_stock_error():
         bus = FakeBus()
-        bus.handle([
-            commands.CreateBatch("b1", "POPULAR-CURTAINS", 9, None),
-            commands.Allocate("o1", "POPULAR-CURTAINS", 10),
-        ])
+        bus.handle(commands.CreateBatch("b1", "POPULAR-CURTAINS", 9, None))
+        bus.handle(commands.Allocate("o1", "POPULAR-CURTAINS", 10))
         assert bus.dependencies['notifications'].sent['stock@made.com'] == [
             f"Out of stock for POPULAR-CURTAINS",
         ]
@@ -580,14 +550,17 @@ cfg = config.get_email_host_and_port()
 
 @pytest.fixture
 def bus(sqlite_session_factory):
-    return messagebus.MessageBus(
-        uow=unit_of_work.SqlAlchemyUnitOfWork(sqlite_session_factory),
+    uow = unit_of_work.SqlAlchemyUnitOfWork(sqlite_session_factory)
+    bus = messagebus.MessageBus(
+        uow=uow,
         notifications=notifications.EmailNotifications(
             smtp_host=cfg['host'],
             port=cfg['port'],
         ),
         publish=lambda *_, **__: None
     )
+    uow.set_bus(bus)
+    return bus
 
 
 def random_sku():
@@ -596,10 +569,8 @@ def random_sku():
 
 def test_out_of_stock_email(bus):
     sku = random_sku()
-    bus.handle([
-        commands.CreateBatch('batch1', sku, 9, None),
-        commands.Allocate('order1', sku, 10),
-    ])
+    bus.handle(commands.CreateBatch('batch1', sku, 9, None))
+    bus.handle(commands.Allocate('order1', sku, 10))
     messages = requests.get(
         f'http://{cfg["host"]}:{cfg["http_port"]}/api/v2/messages'
     ).json()

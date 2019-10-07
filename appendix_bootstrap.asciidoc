@@ -44,8 +44,8 @@ like logging.
 
 Defaults are maybe feeling a bit messy, but so are some other aspects of the
 initial setup or "bootsrapping" of our application; `orm.start_mappers()` for
-example. We call it in various places in our tests, and at twice in our "real"
-application...
+example, or `uow.set_bus()`. We call them in various places in our tests, and at
+least twice in our "real" application...
 
 
 [[flask_calls_start_mappers]]
@@ -56,8 +56,14 @@ application...
 ----
 app = Flask(__name__)
 orm.start_mappers()
+uow = unit_of_work.SqlAlchemyUnitOfWork()
 bus = messagebus.MessageBus(
-...
+    uow=uow,
+    ...
+)
+uow.set_bus(bus)
+
+
 
 @app.route("/add_batch", methods=['POST'])
 def add_batch():
@@ -89,6 +95,7 @@ def bootstrap(
     if notifications is None:
         notifications = EmailNotifications(smtp_host=EMAIL_HOST, port=EMAIL_PORT)
     bus = messagebus.MessageBus(uow=uow, notifications=notifications, publish=publish)
+    uow.set_bus(bus)
     return bus
 ----
 ====
@@ -115,7 +122,7 @@ bus = bootstrap.bootstrap()
 @app.route("/add_batch", methods=['POST'])
 def add_batch():
     ...
-    bus.handle([cmd])
+    bus.handle(cmd)
     return 'OK', 201
 ----
 ====
@@ -131,22 +138,22 @@ to get a custom messagebus:
 [source,python]
 ----
 @pytest.fixture
-def sqlite_bus(in_memory_sqlite_db):
-    yield bootstrap.bootstrap(
-        session_factory=sessionmaker(bind=in_memory_sqlite_db),
+def sqlite_bus(sqlite_session_factory):
+    bus = bootstrap.bootstrap(
+        start_orm=lambda: None,
+        session_factory=sqlite_session_factory,
         notifications=mock.Mock(),
         publish=mock.Mock(),
     )
+    yield bus
     clear_mappers()
 
 
 def test_allocations_view(sqlite_bus):
-    sqlite_bus.handle([
-        commands.CreateBatch('b1', 'sku1', 50, None),
-        commands.CreateBatch('b2', 'sku2', 50, date.today()),
-        commands.Allocate('o1', 'sku1', 20),
-        commands.Allocate('o1', 'sku2', 20),
-    ])
+    sqlite_bus.handle(commands.CreateBatch('b1', 'sku1', 50, None))
+    sqlite_bus.handle(commands.CreateBatch('b2', 'sku2', 50, date.today()))
+    sqlite_bus.handle(commands.Allocate('o1', 'sku1', 20))
+    sqlite_bus.handle(commands.Allocate('o1', 'sku2', 20))
 
     assert views.allocations('o1', sqlite_bus.uow) == [
         {'sku': 'sku1', 'batchref': 'b1'},
