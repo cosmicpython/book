@@ -50,7 +50,12 @@ and contains all required information.
 
 One option is to put your validation logic on the message type itself:
 
+
+[[validation_on_message]]
+.Validation on the message class (src/allocation/commands.py)
 ====
+[source,python]
+----
 from schema import And, Schema, Use
 
 
@@ -71,20 +76,24 @@ class Allocate(Command):
     def from_json(cls, data): #<2>
        data = json.loads(data)
        return cls(**__schema.validate(data))
+----
 ====
 
 <1> The 'schema'.footnote[https://pypi.org/project/schema/] library lets us
-describe the structure and validation of our messages in a nice declarative way.
+    describe the structure and validation of our messages in a nice declarative way.
+
 <2> The 'from_json' method reads a string as json, and turns it into our message
-type.
+    type.
 
 This can get repetitive, though,  since we need to specify our fields twice,
 so we might want to introduce a helper library that can unify the validation and
 declaration of our message types.
 
+
+[[command_factory]]
+.A command factory with schema (src/allocation/commdands.py)
 ====
 [source,python]
-[role="non-head"]
 ----
 def command(name, **fields): #<1>
     schema = Schema(And(Use(json.loads), fields)) #<2>
@@ -135,9 +144,11 @@ Back in Chapter 6 we said that the message bus was a great place to put
 cross-cutting concerns, and validation is a perfect example of that. Here's how
 we might change our bus to perform validation for us.
 
+
+[[validation_on_bus]]
+.Validation 
 ====
 [source,python]
-[role="non-head"]
 ----
 class MessageBus:
 
@@ -158,28 +169,33 @@ class MessageBus:
 
 Here's how we might use that method from our Flask API endpoint.
 
+
+[[validation_bubbles_up]]
+.API bubbles up validation errors (src/allocation/flask_app.py)
 ====
 [source,python]
-[role="non-head"]
 ----
 @app.route("/change_quantity", methods=['POST'])
 def change_batch_quantity():
     try: 
         bus.handle_message('ChangeBatchQuantity', request.body)
     except ValidationError as e:
-       return bad_request(e)
+        return bad_request(e)
     except exceptions.InvalidSku as e:
         return jsonify({'message': str(e)}), 400
 
 def bad_request(e: ValidationError):
     return e.code, 400 
 ----
+====
 
 And here's how we might plug it in to our asynchronous message processor
 
+
+[[validation_pubsub]]
+.Validation errors when handling redis messages (src/allocation/redis_pubsub.py)
 ====
 [source,python]
-[role="non-head"]
 ----
 def handle_change_batch_quantity(m, bus: messagebus.MessageBus):
     try:
@@ -189,19 +205,26 @@ def handle_change_batch_quantity(m, bus: messagebus.MessageBus):
     except exceptions.InvalidSku as e:
         print(f'Unable to change stock for missing sku {e}')
 ----
+====
 
 Notice that our entry points are solely concerned with how to get a message from
 the outside world, and how to report success or failure. Our mesage bus takes
 care of validating our requests, and routing them to the correct handler, and
 our handlers are exclusively focused on the logic of our use case.
 
-=== Validating Sematics
+
+=== Validating Semantics
 
 While syntax is concerned with the structure of messages, semantics is the study
 of _meaning_ in messages. The sentence "allocate no dogs from ellipsis hat" is
 syntactically valid, and has the same structure as the sentence "allocate one
 teapot to order five", but it's meaningless.
 
+
+[[invalid_order]]
+.A meaningless message
+====
+[source,python]
 ----
 {
   "orderid": "superman",
@@ -209,6 +232,7 @@ teapot to order five", but it's meaningless.
   "qty": -1
 }
 ----
+====
 
 We can read this json blob as an Allocate command but we can't successfully
 execute it, because it's _nonsense_.
@@ -216,12 +240,12 @@ execute it, because it's _nonsense_.
 We tend to validate semantic concerns at the message handler layer with a kind
 of contract-based programming.
 
+
+[[ensure_dot_py]]
+.Preconditions (src/allocation/ensure.py)
 ====
 [source,python]
-[role="non-head"]
 ----
-# ensure.py
-
 """
 This module contains pre-conditions that we apply to our handlers.
 """
@@ -244,20 +268,8 @@ class ProductNotFound(MessageUnprocessable): #<2>
 def product_exists(event, uow): #<3>
     product = uow.products.get(event.sku)
     if product is None:
-        raise ProductNotFound(sku)
-
-# services.py
-
-from allocation import ensure
-
-def allocate(event, uow):
-    line = mode.OrderLine(event.orderid, event.sku, event.qty)
-    with uow:
-         ensure.sku_exists(uow, event) #<4>
-
-        product = uow.products.get(line.sku)
-        product.allocate(line)
-        uow.commit()
+        raise ProductNotFound(event)
+----
 ====
 
 <1> We use a common base class for errors that mean a message is invalid
@@ -266,7 +278,31 @@ def allocate(event, uow):
     in Flask.
 <3> `product_exists` is a precondition. If the condition is False, we raise an
     error.
-<4> This keeps the main flow of our logic clean and declarative.
+
+
+This keeps the main flow of our logic in the service layer clean and declarative:
+
+[[ensure_in_services]]
+.ensure in use in services (src/allocation/services.py)
+====
+[source,python]
+----
+
+# services.py
+
+from allocation import ensure
+
+def allocate(event, uow):
+    line = mode.OrderLine(event.orderid, event.sku, event.qty)
+    with uow:
+        ensure.product_exists(uow, event) #<4>
+
+        product = uow.products.get(line.sku)
+        product.allocate(line)
+        uow.commit()
+----
+====
+
 
 We can extend this technique to make sure that we apply messages idempotently.
 For example, we want to make sure that we don't insert a batch of stock more
@@ -275,7 +311,11 @@ than once.
 If we get asked to create a batch that already exists, we'll log a warning and
 continue to the next message.
 
+[[skipmessage]]
+.Listing title
 ====
+[source,python]
+----
 class SkipMessage (Exception):
     """"
     This exception is raised when a message can't be processed, but there's no
@@ -290,13 +330,17 @@ def batch_is_new(self, event, uow):
     batch = uow.batches.get(event.batchid)
     if batch is not None:
         raise SkipMessage(f"Batch with id {event.batchid} already exists")
-    
+----
 ====
 
 Introducing a `SkipMessage` exception lets us handle these cases in a generic
 way in our message bus. 
 
+[[skip_in_bus]]
+.The Bus Now Knows How To Skip (src/allocation/messagebus.py)
 ====
+[source,python]
+----
 class MessageBus:
 
     def handle_message(self, message):
@@ -304,7 +348,9 @@ class MessageBus:
            ...
        except SkipMessage as e:
            logging.warn(f"Skipping message {message.id} because {e.reason}")
+----
 ====
+
 
 There are a couple of pit-falls to be aware of here. Firstly, we need to be sure
 that we're using the same unit of work that we use for the main logic of our
@@ -318,8 +364,10 @@ domain model, then it _should_ be tested in the domain model.
 
 Pragmatics is the study of how we understand language in context. After we have
 parsed a message and grasped it's meaning, we still need to process it in
-context. For example[INSERT
-HUMOROUS BRITISH IDIOM HERE, yo - not my cup of tea?]
+context. For example, if you get a comment on a pull request saying "I think
+this is very brave", it may mean that the reviewer admires your courage, unless
+they're British, in which case they're trying to tell you that what you're doing
+is insanely risky, and only a fool would attempt it.  Context is everything.
 
 Places we can do validation, and different types of validation:
 
