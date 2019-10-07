@@ -16,7 +16,7 @@ go and fix the problem by buying more stock, and all will be well.
 For a first version, our product owner says we can just send the alert by email.
 
 Let's see how our architecture holds up once we need to plug in some of the
-mundane stuff that makes up so much of our systems.  
+mundane stuff that makes up so much of our systems.
 
 We'll start by doing the simplest, most expeditious thing, and talk about
 why it's exactly this kind of decision that leads us to Big Ball of Mud.
@@ -29,31 +29,35 @@ how the Unit of Work can be modified to connect the two together elegantly.
 
 
 [[message_bus_diagram]]
-.Message bus diagram
+.Events flowing through the system
 image::images/message_bus_diagram.png[]
 [role="image-source"]
 ----
-[plantuml, message_bus_diagram]
-@startuml
+[ditaa, message_bus_diagram]
 
-class Domain {
-}
-class UoW {
-}
-class Bus {
-}
-class Handlers {
-}
-
-
-Domain -> UoW: raises events
-UoW -> Bus: publishes events
-Bus -> Handlers: handle events
-
-@enduml
++----------+            +--------+
+|          |  raises    |  Unit  |
+|  Domain  |--events--> |   of   |
+|          |            |  Work  |
++----------+            +--------+
+                            |
+                        publishes
+                          events
+                            |
+                            V
+        +----------------------+
+        |     Message Bus      |
+        +----------------------+
+           |
+        dispatches
+        events
+           |     +-----------------+
+           +---> |     Handlers    |-+
+                 | (handle events) | |-+
+                 +-----------------+ | |
+                   +-----------------+ |
+                     +-----------------+
 ----
-
-TODO: Improve this diagram (try graphviz?)
 
 
 === Avoiding Making a Mess.
