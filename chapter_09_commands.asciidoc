@@ -116,15 +116,13 @@ message bus changes somewhat.
 Message = Union[commands.Command, events.Event]
 
 
-def handle(message_queue: List[Message], uow: unit_of_work.AbstractUnitOfWork):  #<1>
-    while message_queue:
-        m = message_queue.pop(0)
-        if isinstance(m, events.Event):
-            handle_event(m, uow)
-        elif isinstance(m, commands.Command):
-            handle_command(m, uow)
-        else:
-            raise Exception(f'{m} was not an Event or Command')
+def handle(message: Message, uow: unit_of_work.AbstractUnitOfWork):  #<1>
+    if isinstance(message, events.Event):
+        handle_event(message, uow)
+    elif isinstance(message, commands.Command):
+        return handle_command(message, uow)
+    else:
+        raise Exception(f'{message} was not an Event or Command')
 
 
 def handle_event(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):  #<2>
@@ -204,7 +202,7 @@ def allocate_endpoint():
             request.json['orderid'], request.json['sku'], request.json['qty'],
         )
         uow = unit_of_work.SqlAlchemyUnitOfWork()
-        batchref = messagebus.handle_command(cmd, uow)
+        batchref = messagebus.handle(cmd, uow)
     except exceptions.InvalidSku as e:
         return jsonify({'message': str(e)}), 400
 
@@ -215,5 +213,10 @@ def allocate_endpoint():
 It's the same wart we've drawn attention to before.  In <<chapter_11_cqrs>>
 we'll look at a way of separating out command handling from read requests.
 
+////
+TODO (ej) Devil's advocate:  If your messagebus.handle processes half the events
+     in the list, then drops the rest on the floor due to a db network outage
+     or being OOM killed, how do you mitigate problems cause by the lost messages?
+////
 
 TODO: discussion, can events raise commands?

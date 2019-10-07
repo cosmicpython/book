@@ -207,7 +207,7 @@ def handle_change_batch_quantity(m):
     logging.debug('handling %s', m)
     data = json.loads(m['data'])  #<2>
     cmd = commands.ChangeBatchQuantity(ref=data['batchref'], qty=data['qty'])
-    messagebus.handle_command(cmd, uow=unit_of_work.SqlAlchemyUnitOfWork())
+    messagebus.handle(cmd, uow=unit_of_work.SqlAlchemyUnitOfWork())
 
 
 def publish(channel, event: events.Event):  #<3>

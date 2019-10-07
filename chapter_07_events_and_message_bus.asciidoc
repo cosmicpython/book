@@ -49,12 +49,11 @@ image::images/message_bus_diagram.png[]
         |     Message Bus      |
         +----------------------+
            |
-        dispatches
+        handles
         events
            |     +-----------------+
            +---> |     Handlers    |-+
-                 | (handle events) | |-+
-                 +-----------------+ | |
+                 +-----------------+ | +
                    +-----------------+ |
                      +-----------------+
 ----
@@ -311,11 +310,9 @@ sounds harder than it is, and we usually implement it with a dict:
 ====
 [source,python]
 ----
-def handle(events_: List[events.Event]):
-    while events_:
-        event = events_.pop(0)
-        for handler in HANDLERS[type(event)]:
-            handler(event)
+def handle(event: events.Event):
+    for handler in HANDLERS[type(event)]:
+        handler(event)
 
 
 def send_out_of_stock_notification(event: events.OutOfStock):
@@ -332,7 +329,6 @@ HANDLERS = {
 ----
 ====
 
-//TODO: Handle should just take one event, fo' sho
 
 
 ==== Option 1 : The Service Layer Takes Events from the Model and Puts them on the Message Bus
@@ -464,8 +460,13 @@ class AbstractUnitOfWork(abc.ABC):
 
     def commit(self):
         self._commit()  #<1>
-        for obj in self.products.seen:  #<2><3>
-            messagebus.handle(obj.events)
+        self.publish_events()  #<2>
+
+    def publish_events(self):  #<2>
+        for product in self.products.seen:  #<3>
+            while product.events:
+                event = product.events.pop(0)
+                messagebus.handle(event)
 
     @abc.abstractmethod
     def _commit(self):
@@ -487,12 +488,12 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 <2> After committing, we run through all the objects that our
     repository has seen and pass their events to the message bus.
 
-<3> That relies on the repository keeping track of aggregates that it's seen,
-    as we'll see in the next listing.
+<3> That relies on the repository keeping track of aggregates that have been loaded
+    using a new attribute, `.seen`, as we'll see in the next listing.
 
-// TODO (ej) Devil's Advocate question: What happens if one of the handlers in the message bus fails?
-//      How should you handle that?
-// (HP) put a  link to chapter 9 discussion on error handling here.
+NOTE: Are you wondering about error-handling, what happens if one of the
+    handlers fails?  We'll discuss that in detail in <<chapter_09_commands>>.
+
 
 [[repository_tracks_seen]]
 .Repository tracks aggregates seen (src/allocation/repository.py)
