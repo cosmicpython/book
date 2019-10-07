@@ -126,7 +126,7 @@ the source, in the model:
 But that's even worse!  We don't want our model to have any dependencies on
 infrastructure concerns like `email.send_mail`.
 
-This email sending thing is unwelcome *goop* messing up the nice clean flow
+This email sending thing is unwelcome _goop_ messing up the nice clean flow
 of our system. What we'd like is to keep our domain model focused on the rule
 "You can't allocate more stuff than is actually available."
 
@@ -329,6 +329,9 @@ HANDLERS = {
 ----
 ====
 
+NOTE: Note that the messagebus as implemented is entirely synchronous--our
+    objective isn't to create an async/nonblocking task queue to defer
+    execution in time, we're only aiming to separate tasks conceptually.
 
 
 ==== Option 1 : The Service Layer Takes Events from the Model and Puts them on the Message Bus
