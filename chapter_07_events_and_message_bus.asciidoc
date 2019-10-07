@@ -338,7 +338,8 @@ NOTE: Note that the messagebus as implemented is entirely synchronous--our
 
 Our domain model raises events, and our message bus will call the right
 handlers whenever an event happens. Now all we need is to connect the two. We
-need something to catch events from the model and pass them to the message bus.
+need something to catch events from the model and pass them to the message bus--
+the "publishing" step.
 
 The simplest way to do this is by adding some code into our service layer.
 
@@ -374,14 +375,14 @@ def allocate(
     up to the message bus.
 
 That already avoids some of the ugliness that we had in our naive
-implementation, and we have several systems that work like this,
-in which the service layer explicitly collects events from aggregates,
-and passes them to the messagebus.
+implementation, and we have several systems that work like this, in which the
+service layer explicitly collects events from aggregates, and passes them to
+the messagebus.
 
 
 ==== Option 2: The Service Layer Raises its own Events
 
-Another variant on this which we've used is that you can have the message bus
+Another variant on this which we've used is that you can have the service layer
 in charge of creating and raising events directly, rather than having them
 raised by the domain model.
 
@@ -409,10 +410,10 @@ def allocate(
 ----
 ====
 
-Again, we have applications that implement the pattern in this way.  What works
-for you will depend on the particular trade-offs you face, but we'd like to
-show you what we think is the most elegant solution, in which we put the unit
-of work in charge of collecting and raising events.
+Again, we have applications in production that implement the pattern in this
+way.  What works for you will depend on the particular trade-offs you face, but
+we'd like to show you what we think is the most elegant solution, in which we
+put the unit of work in charge of collecting and raising events.
 
 
 === The Unit of Work Can Publish Events to the Message Bus
