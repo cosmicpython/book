@@ -40,7 +40,8 @@ def allocate(
 ====
 
 <1> We'll start a unit of work as a context manager
-<2> `uow.batches` is the batches repository, so the unit of work provides us access to our repositories.
+<2> `uow.batches` is the batches repo, so the unit of work provides us
+    access to our permanent storage.
 <3> When we're done, we commit or roll back our work, using the UOW
 
 The unit of work acts as a single entry point to our persistent storage, and
@@ -199,10 +200,14 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
         self.session = session_factory()  # type: Session  #<2>
         self.init_repositories(repository.SqlAlchemyRepository(self.session))  #<2>
 
-    def commit(self):  #<3>
+    def __exit__(self, *args):
+        super().__exit__(*args)
+        self.session.close()  #<3>
+
+    def commit(self):  #<4>
         self.session.commit()
 
-    def rollback(self):  #<3>
+    def rollback(self):  #<4>
         self.session.rollback()
 
 ----
@@ -215,7 +220,9 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 <2> The init is responsible for starting a database session, and starting
     a real repository that can use that session
 
-<3> Finally, we provide concrete `commit()` and `rollback()` methods that
+<3> We close the session on exit.
+
+<4> Finally, we provide concrete `commit()` and `rollback()` methods that
     use our database session.
 
 //TODO: why not swap out db using os.environ?
@@ -396,13 +403,11 @@ class AbstractUnitOfWork(abc.ABC):
             self.commit()  #<1>
         else:
             self.rollback()  #<2>
-        self.session.close()  #<3>
 ----
 ====
 
 <1> should we have an implicit commit in the happy path?
 <2> and roll back only on exception?
-<3> and maybe close sessions too?
 
 It would allow us to save a line of code, and remove the explicit commit from our
 client code:
@@ -433,22 +438,6 @@ Similarly, we prefer "always-rollback" to "only-rollback-on-error,"  because
 the former feels easier to understand;  rollback rolls back to the last commit,
 so either the user did one, or we blow their changes away.  Harsh but simple.
 
-As to the option of using `session.close()`, we have played with that in the
-past, but we always end up having to look up the SQLAlchemy docs to find out
-exactly what it does.   And besides, why not leave the session open for the
-next time?  But you should experiment and figure out your own preferences here.
-
-TODO: This is terrible advice. Fix it :)
-
-// TODO: Ponder this some more ^ I'm not convinced that we shouldn't close the
-// session.
-// HP - i wonder if maybe we'd run into trouble with long-running scripts?
-// also - if you close the session, the current uow design won't reopen it
-// on next use, so the repo will try and work on a closed session and fail
-// hard, presumably.
-// TODO: Fix the UnitOfWork such that it can be opened idempotently. This might
-// force us to close things properly instead of just hoping it's all gonna be
-// okay
 
 
 === Examples: Using UoW to Group Multiple Operations Into an Atomic Unit

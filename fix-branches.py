@@ -14,7 +14,6 @@ for chapter in CHAPTERS:
         cwd=Path(__file__).parent / 'code'
     )
     subprocess.run(
-        ['git', 'diff', chapter, f'origin/{chapter}'],
+        ['git', 'diff', f'origin/{chapter}', chapter],
         cwd=Path(__file__).parent / 'code'
     )
-
