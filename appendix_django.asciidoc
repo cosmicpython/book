@@ -271,10 +271,8 @@ would work:
 ----
 class DjangoUnitOfWork(AbstractUnitOfWork):
 
-    def __init__(self):
-        self.init_repositories(repository.DjangoRepository())
-
     def __enter__(self):
+        self.init_repositories(repository.DjangoRepository())
         transaction.set_autocommit(False)  #<1>
         return super().__enter__()
 

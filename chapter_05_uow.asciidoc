@@ -197,8 +197,12 @@ DEFAULT_SESSION_FACTORY = sessionmaker(bind=create_engine(  #<1>
 class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 
     def __init__(self, session_factory=DEFAULT_SESSION_FACTORY):
-        self.session = session_factory()  # type: Session  #<2>
+        self.session_factory = session_factory  #<1>
+
+    def __enter__(self):
+        self.session = self.session_factory()  # type: Session  #<2>
         self.init_repositories(repository.SqlAlchemyRepository(self.session))  #<2>
+        return super().__enter__()
 
     def __exit__(self, *args):
         super().__exit__(*args)
@@ -217,7 +221,7 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
     but we allow that to be overriden in our integration tests, so that we
     can use SQLite instead.
 
-<2> The init is responsible for starting a database session, and starting
+<2> The dunder-enter is responsible for starting a database session, and starting
     a real repository that can use that session
 
 <3> We close the session on exit.

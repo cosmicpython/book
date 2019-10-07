@@ -74,7 +74,7 @@ The UoW itself declares an explicit dependency on the session factory:
 class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 
     def __init__(self, session_factory=DEFAULT_SESSION_FACTORY):
-        self.session = session_factory()  # type: Session
+        self.session_factory = session_factory
         ...
 ----
 ====
