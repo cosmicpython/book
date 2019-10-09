@@ -31,6 +31,7 @@ def main(chapter):
     ]).split()))
     run(['git', 'reset', '--hard', chapter])
     run(['git', 'cherry-pick', *commits])
+    run(['git', 'checkout', 'master'])
 
 if __name__ == '__main__':
     main(sys.argv[1])
