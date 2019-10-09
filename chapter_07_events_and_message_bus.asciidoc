@@ -422,37 +422,6 @@ The UoW already has a `try/finally`, and it knows about all the aggregates
 currently in play because it provides access to the Repository.  So it's
 a good place to spot events and pass them to the message bus:
 
-////
-TODO
-In Example 9. The UoW meets the Message Bus (src/allocation/unit_of_work.py), I
-got stuck trying to figure out where the .seen attribute had come from.
-It might be helpful to add a line explicitly introducing it before Example 9.
-Once I read on to Example 10 everything cleared up immediately.
-
-https://github.com/python-leap/book/issues/35
-////
-
-////
-TODO (ej) +1 to the above comment.  Adding a little bit of indirection to make it more self-documenting
-     could help, like below.  (Will require some changes to messagebus.handle, but it looks like you
-     are re-considering that as well anyway?)
-
-     Also, the `seen` variable is never purged.  Is that something to be concerned about, either
-     for performance or correctness?
-
-class AbstractRepository(abc.ABC):
-    @property
-    def unprocessed_events(self):
-        for p in self.seen:
-             evt = p.events.pop(0)
-             yield evt
-
-class AbstractUnitOfWork(abc.ABC):
-    def commit(self):
-        self._commit()
-        messagebus.handle(self.products.unprocessed_events)
-
-////
 
 [[uow_with_messagebus]]
 .The UoW meets the message bus (src/allocation/unit_of_work.py)
