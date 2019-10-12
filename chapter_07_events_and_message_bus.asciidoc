@@ -600,26 +600,61 @@ separately.  pros and cons of each.  maybe not in this chapter tho?
 
 === Wrap-Up
 
-TODO - wrap up for domain events chapter
+Domain events give us a way to handle workflows in our system. We often find,
+listening to our domain experts, that they express requirements in a causal or
+temporal way, for example "When we try to allocate stock, but there's none
+available, then we should send an email to the buying team".
 
+The magic words "When X then Y" often tell us about an event that we can make
+concrete in our system. Treating events as first-class things in our model helps
+us to make our code more testable and observable, and helps to isolate concerns.
+
+Events are useful for more than just sending emails, though. In Chapter 5 we
+spent a lot of time convincing you that you should define aggregates, or
+boundaries where we guarantee consistency. People often ask "what
+should I do if I need to change multiple aggregates as part of a request?" Now
+we have the tools we need to answer the question.
+
+If we have two things that can be transactionally isolated (eg. an Order and a
+Product) then we can make them *eventually consistent* by using events. When an
+Order is cancelled, then we should find the products that were allocated to it,
+and remove the allocations.
+
+In Chapter 8, we'll look at this idea in more detail as we build a more complex
+workflow with our new message bus.
 
 
 .Recap: Domain Events and the Message Bus
 *****************************************************************
 Events can help with SRP::
-    bla
+    Code gets tangled up when we mix multiple concerns in one place. Events can
+    help us to keep things tidy by separating primary use-cases from secondary
+    ones.
+    We also use events for communicating between aggregates so that we don't
+    need to run long-running transactions that lock against multiple tables.
 
-A Message Bus maps Events to Handlers::
-    bla
+A Message Bus routes messages to handlers::
+    You can think of a message bus as a dict that maps from events to their
+    consumers. It doesn't "know" anything about the meaning of events, it's just
+    a piece of dumb infrastructure for getting messages around the system.
 
-Option 1: Domain Model raises events, Service Layer passes them to Message Bus::
-    bla
+Option 1: Service Layer raises events and passes them to Message Bus::
+    The simplest way to start using events in your system is to raise them from
+    handlers, by calling `bus.handle(some_new_event)` after you commit your
+    unit of work.
 
-Option 2: Service Layer raises events and passes them to Message Bus::
-    bla
+Option 2: Domain Model raises events, Service Layer passes them to Message Bus::
+    The logic about when to raise an event really should live with the model, so
+    we can improve our system's design and testability by raising events from
+    the domain model. It's easy for our handlers to collect events off the model
+    objects after `commit` and pass them to the bus.
 
 Option 3: Unit of Work collects events from Aggregates and passes them to Message Bus::
-    bla
+    Adding `bus.handle(aggregate.events)` to every handler is annoying, so we
+    can tidy up by making our unit of work responsible for raising events that
+    were raised by loaded objects.
+    This is the most complex design and might rely on ORM magic, but it's clean
+    and easy to use once it's set up.
 
 *****************************************************************
 
