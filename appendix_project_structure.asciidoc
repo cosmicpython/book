@@ -334,7 +334,7 @@ you'll expect to see:
 ====
 [source,dockerfile]
 ----
-FROM python:3.7-alpine
+FROM python:3.8-alpine
 
 <1>
 RUN apk add --no-cache --virtual .build-deps gcc postgresql-dev musl-dev python3-dev
