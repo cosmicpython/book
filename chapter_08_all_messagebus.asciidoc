@@ -662,26 +662,31 @@ much a topic for another book though).
 
 === What Have We Achieved?
 
-* events are simple dataclasses that define the data structures for inputs,
-  and internal messages within our system.  this is quite powerful from a DDD
-  standpoint, since events often translate really well into business language;
-  cf. "event storming" (TODO: link)
+* Events are simple dataclasses that define the data structures for inputs,
+  and internal messages within our system.  This is quite powerful from a DDD
+  standpoint, since events often translate really well into business language (
+  in fact an entire practice know as "Event Storming" has evolved around it).
 
-* handlers are the way we react to events.   They can call down to our
+* Handlers are the way we react to events.   They can call down to our
   model, or they can call out to external services.  We can define multiple
-  handlers for a single event if we want to.  handlers can also raise other
+  handlers for a single event if we want to.  Handlers can also raise other
   events.  This allows us to be very granular about what a handler does,
   and really stick to the SRP.
 
 
 === Why have we achieved?
 
-TODO: talk about the fact that we've implemented quite a complicated use case
-    (change quantity, deallocate, start new transaction, reallocate,
-    publish external notification), but thanks to our architecture the
-    _complexity_ stays constant.  we just have events, handlers, and a unit
-    of work.  it's easy to reason about, and easy to explain.  Possibly
-    show a hacky version for comparison?
+Our ongoing objective with these architectural patterns is to try and have
+the complexity of our application grow more slowly than its size.  Here
+we've added quite a complicated use case (change quantity, deallocate, start
+new transaction, reallocate, publish external notification), but architecturally,
+there's been no cost in terms of complexity.  We've added new events, new handlers,
+and a new external adapter (for email), all of which are existing categories
+of _things_ in our architecture that we understand and know how to reason about,
+and that are easy to explain to newcomers.  Our moving parts each have one job,
+they're connected to each other in well-defined ways, and there are no unexpected
+side-effects.
+
 
 
 [[chapter_08_all_messagebus_tradeoffs]]
