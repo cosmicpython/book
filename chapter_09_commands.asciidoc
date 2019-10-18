@@ -101,6 +101,8 @@ class ChangeBatchQuantity(Command):  #<3>
 <2> `commands.CreateBatch` will replace `events.BatchCreated`
 <3> `commands.ChangeBatchQuantity` will replace `events.BatchQuantityChanged``
 
+//TODO: consider keeping BatchQuantityChanged as an event?
+
 Each of the use-cases that we discussed earlier in the book is really a command,
 an instruction for the system to try and do a thing. To unify the two halves of
 the domain, we're going to make a simple change: instead of directly invoking
