@@ -664,13 +664,18 @@ Option 3: Unit of Work collects events from Aggregates and passes them to Messag
 |===
 |Pros|Cons
 a|
-* SRP
-
-* Events = quite a nice way to model real life
+* A message bus gives us a nice way to separate responsibilities when we have
+  to take multiple actions in response to a request.
+* Domain events are a great way to model the real world, and we can use them
+  as part of the business language we use when modelling with stakeholders.
 
 a|
-* message bus is weird.
-* the one we've presented is not async, so it can still, eg, hang your web
-  responses, which prolly isn't what you're expecting.
-* celery is _fine_.
+* Event-driven workflows can be confusing because there's often no single place
+  in the system where you can understand how a request will be fulfilled.
+* The message bus implementation here is synchronous, so our event handlers will
+  run in-band with web requests. Adding asynchronous processing is possible but
+  makes things even *more* confusing.
+* The unit of work raises events for us which is _neat_ but also magic. It's not
+  obvious when we call 'commit' that we're also going to go and send emails to
+  people.
 |===
