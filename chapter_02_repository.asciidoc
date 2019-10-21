@@ -298,6 +298,7 @@ https://docs.sqlalchemy.org/en/latest/orm/mapping_styles.html#classical-mappings
 ====
 [source,python]
 ----
+from sqlalchemy import MetaData, Table, Column, Integer, String
 from sqlalchemy.orm import mapper, relationship
 
 import model  #<1>
