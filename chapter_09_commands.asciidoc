@@ -169,22 +169,6 @@ COMMAND_HANDLERS = {
     are raised, they fail hard and will bubble up.
 
 
-//TODO: consider using a dispatcher thingie from functools?
-
-=== Events, Commands, and Error Handling
-
-Many developers get uncomfortable at this point, and ask "what happens when an
-event fails to process. How am I supposed to make sure the system is in a
-consistent state?"
-
-It's a fair question but it takes some time to answer, so let's run through
-some scenarios.
-
-You are building a stock lookup service that answers the question "is this
-product available in store". You expect thousands, or millions of requests
-per day to the API, so you use an HTTP cache to reduce load on servers. How can
-you clear the cache when new stock becomes available?
-
 
 
 Why does `handle_command` have a `return`, but `handle_events` doesn't, we hear
@@ -220,3 +204,37 @@ TODO (ej) Devil's advocate:  If your messagebus.handle processes half the events
 ////
 
 TODO: discussion, can events raise commands?
+=== Events, Commands, and Error Handling
+
+Many developers get uncomfortable at this point, and ask "what happens when an
+event fails to process. How am I supposed to make sure the system is in a
+consistent state?"
+
+If we manage to process half of the events during `messagebus.handle` before an
+out-of-memory error kills our process, how do we mitigate problems caused by the
+lost messages?
+
+Let's start with the worst case: we fail to handle and event, and the system is
+left in an inconsistent state. What kind of error would cause this? Often in our
+systems we can end up in an inconsistent state when only half an operation is
+completed.
+
+In our allocation service, though, we've already taken steps to prevent that
+happening. We've carefully identified _Aggregates_ which act as consistency
+boundaries, and we've introduced a _Unit of Work_ that manages the atomic
+success or failure of an update to an aggregate.
+
+By definition, we don't require two aggregates to be immediately consistent, so
+if we fail to process an event, and only update a single aggregate, our system
+can still be made eventually consistent. We shouldn't violate any constraints of
+the system.
+
+For example, when we allocate stock to an order, our consistency boundary is the
+Product aggregate. This means that we can't accidentally over-allocate: either
+a particular order line is allocated to the product, or it is not - there's no
+room for inconsistent states.
+
+ 
+* Sending an email shouldn't stop us taking your money
+* Recovering from logs
+* Using a job queue
