@@ -77,9 +77,8 @@ be of interest to outline the moving parts.
     (_conftest.py_) in the main tests folder, and nest more specific ones if we
     wish. This is also the place to keep _pytest.ini_.
 
-// TODO (DS): All this seems sensible.
-// It would be nice to include a dependency graph so we can see the layering
-// within src/allocation.
+// TODO (DS): All this seems sensible. It would be nice to include a dependency
+// graph so we can see the layering within src/allocation.
 // Maybe should include message bus too?
 
 // TODO (DS): Could mention invoke as an alternative to makefiles
@@ -104,17 +103,15 @@ Let's look at a few of these in more detail.
 
 === Env Vars, 12-Factor, and Config, Inside and Outside Containers.
 
-// TODO (DS): Bit of a verbose subtitle...
-
 The basic problem we're trying to solve here is that we need different
 config settings for:
 
-- running code or tests directly from your own dev machine, perhaps
+- Running code or tests directly from your own dev machine, perhaps
   talking to mapped ports from docker containers
 
-- running on the containers themselves, with "real" ports and hostnames
+- Running on the containers themselves, with "real" ports and hostnames
 
-- and different settings for different container environments, dev,
+- And different settings for different container environments, dev,
   staging, prod, and so on.
 
 // TODO (DS): Not totally clear on the specifics of what you're saying in these
