@@ -125,7 +125,7 @@ Refactoring] workflow, AKA "make the change easy, then make the easy change":
 * And then our actual implementation will be conceptually very simple: a new
   handler for `BatchQuantityChanged` events, whose implementation will emit
   `AllocationRequired` events, which in turn will be handled by the exact same
-  handler for allocation's used by the API.
+  handler for allocations that the API uses.
 
 
 === Refactoring Service Functions To Message Handlers
