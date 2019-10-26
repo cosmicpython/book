@@ -115,7 +115,7 @@ Refactoring] workflow, AKA "make the change easy, then make the easy change":
 
 
 * We'll start by refactoring our service layer into event handlers.  We can
-  get used to the idea of events being the way we describe inputs to our
+  get used to the idea of events being the way we describe inputs to the
   system.  In particular, the existing `services.allocate()` function will
   become the handler for an event called `AllocationRequired`.
 
@@ -125,7 +125,7 @@ Refactoring] workflow, AKA "make the change easy, then make the easy change":
 * And then our actual implementation will be conceptually very simple: a new
   handler for `BatchQuantityChanged` events, whose implementation will emit
   `AllocationRequired` events, which in turn will be handled by the exact same
-  handler for allocation that in use in the API.
+  handler for allocations that the API uses.
 
 
 === Refactoring Service Functions To Message Handlers
