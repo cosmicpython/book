@@ -1,30 +1,32 @@
 [[chapter_11_cqrs]]
 == Command-Query Responsibility Separation (CQRS)
 
-//TODO get rid of bullets
+In this chapter we're going to take a fairly uncontroversial insight--the
+fact that reads (commands) and writes (queries) are different, and so they
+should be treated differently--and we're going to push that insight out way
+beyond the bounds of sanity and into full boomtown architecture-astronaut
+crazyland.  We may provide a few justifications along the way of when you
+might or might not want to do it, bla-bla-bla-performance and so forth, but,
+honestly, it's just because we want to see the world burn.  In a decoupled way.
 
-.In this chapter
-********************************************************************************
+NOTE: Chapter under construction.  More sober and coherent treatment of the subject
+    may be found at https://io.made.com/commands-and-queries-handlers-and-views/
 
-* We'll discuss the different needs of _reads_ and _writes_ in our system.
-* We'll show how separating readers and writes can simplify our code and improve
-  performance.
-* We'll talk about advanced patterns for building scalable applications.
-
-  // DIAGRAM GOES HERE
-
-********************************************************************************
-
-NOTE: placeholder chapter, under construction
-
-Just, honestly, read this for now: https://io.made.com/commands-and-queries-handlers-and-views/
+So strap in, and see if you can spot the moment where the madness descends,
+because you'll need to be able to spot that moment in your own life.
 
 
-=== Always Redirect After a POST?
+=== Always Redirect After a POST
 
-The API returns information from the post request and that's bad, arguably.
+If you've been doing web development, you're probably familiar with the convention
+to return a 302-redirect from a POST request.  That's an example of
+Command-Query Separation (CQS), which is at the sane end of the CQRS spectrum.
 
-Let's have an endpoint to go and get the updated state instead:
+For an API, redirects don't apply, but the principle of POST-Redirect-GET
+is still a good one, and we're currently breaking that rule, because our
+`allocate` endpoint currently returns the batch ID.  Let's change it
+to return a simple OK message, and instead provide a new read-only
+endpoint to retrieve allocation state:
 
 
 [[api_test_does_get_after_post]]
@@ -78,6 +80,9 @@ OK what might the flask app look like?
 ====
 [source,python]
 ----
+from allocation import views
+...
+
 @app.route("/allocations/<orderid>", methods=['GET'])
 def allocations_view_endpoint(orderid):
     uow = unit_of_work.SqlAlchemyUnitOfWork()
@@ -88,11 +93,14 @@ def allocations_view_endpoint(orderid):
 ----
 ====
 
+All right, a _views.py_, fair enough, we can keep read-only stuff in there,
+and it'll be a real views.py, not like Django's...
+
 
 === Hold on to Your Lunch Folks.
 
-All right, a _views.py_, fair enough, we can keep read-only stuff in there,
-and it'll be a real views.py, not like Django's...
+So we can probably just add a list method to our existing repository
+obj-...
 
 
 [[views_dot_py]]
@@ -120,7 +128,7 @@ def allocations(orderid: str, uow: unit_of_work.SqlAlchemyUnitOfWork):
 
 WHAT THE ACTUAL F?  ARE YOU GUYS TRIPPING F-ING BALLS?
 
-Yes.  yes we are.  Obviously don't do this.  Unless you really need to.  Now,
+Yes.  Yes we are.  Obviously don't do this.  Unless you really need to.  Now,
 allow us to explain some possible places where this total insanity might make
 a shred of sense.
 
