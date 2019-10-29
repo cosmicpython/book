@@ -590,14 +590,6 @@ your repository and UoW abstractions really don't change much.  And if you're
 using ABC's, they'll help remind you when things get out of sync.
 
 
-=== Unit Testing with a Fake Message Bus
-
-TODO: discuss replacing @mock test with `FakeMessageBus`, and the idea
-that once you have a messagebus and handlers, you can test each handler
-separately.  pros and cons of each.  maybe not in this chapter tho?
-
-
-
 === Wrap-Up
 
 Domain events give us a way to handle workflows in our system. We often find,

@@ -371,7 +371,8 @@ We'll come back to fix this wart in <<chapter_09_cqrs>>.
 
 
 
-And we should be back to a fully functional application.
+And we should be back to a fully functional application, but one that's now
+fully event-driven.
 
 TODO: recap?
 
@@ -646,26 +647,101 @@ HANDLERS = {
 ====
 
 
-And our system is now entirely event-driven!
+And our new requirement is fully implemented.
 
 
-.Internal vs External events
+
+.Unit Testing Event Handlers in Isolation with a Fake Message Bus
 *******************************************************************************
-It's a good idea to keep the distinction between internal and external events
-clear.  Some events may come from the outside, and some events may get upgraded
-and published externally, but not all of them.  This is particularly important
-if you get into [event sourcing](https://io.made.com/blog/2018-04-28-eventsourcing-101.html) (very
-much a topic for another book though).
+
+Our main test for the reallocation workflow
+(<<test_change_batch_quantity_handler>>) is "edge-to-edge".  It uses
+the real messagebus, and it tests the whole flow, where the `BatchQuantityChanged`,
+event handler triggers deallocation, emits new `AllocationRequired` events, which in
+turn are handled by their own handlers.  One test covers a chain of multiple
+events and handlers.
+
+Depending on the complexity of your chains of events, you may decide that you
+want to test some handlers in isolation from one another.  You can do this
+using a "fake" messagebus.
+
+In our case, we actually intervene by modifying the `publish_events()` method
+on `FakeUnitOfWork`, and decouple it from the real messagebus, instead making
+it record what events it sees:
+
+
+[[fake_messagebus]]
+.Fake MessageBus implemented in UoW (tests/test_handlers.py)
+====
+[source,python]
+[role="non-head"]
+----
+class FakeUnitOfWorkWithFakeMessageBus(FakeUnitOfWork):
+
+    def __init__(self):
+        super().__init__()
+        self.events_published = []  # type: List[events.Event]
+
+    def publish_events(self):
+        for product in self.products.seen:
+            while product.events:
+                self.events_published.append(product.events.pop(0))
+----
+====
+
+Now when we invoke `messagebus.handle()` using the `FakeUnitOfWorkWithFakeMessageBus`,
+it only does one event/handler at a time.  So we can write a more isolated unit
+test: instead of checking all the side effects, we just check that
+`BatchQuantityChanged` leads to `AllocationRequired` if the quantity drops
+below the total already allocated:
+
+
+[[test_handler_in_isolation]]
+.Testing reallocation in isolation (tests/test_handlers.py)
+====
+[source,python]
+[role="non-head"]
+----
+def test_reallocates_if_necessary_isolated():
+    uow = FakeUnitOfWorkWithFakeMessageBus()
+
+    # test setup as before
+    messagebus.handle(events.BatchCreated("batch1", "INDIFFERENT-TABLE", 50, None), uow)
+    messagebus.handle(events.BatchCreated("batch2", "INDIFFERENT-TABLE", 50, date.today()), uow)
+    messagebus.handle(events.AllocationRequired("order1", "INDIFFERENT-TABLE", 20), uow)
+    messagebus.handle(events.AllocationRequired("order2", "INDIFFERENT-TABLE", 20), uow)
+    [batch1, batch2] = uow.products.get(sku="INDIFFERENT-TABLE").batches
+    assert batch1.available_quantity == 10
+
+    messagebus.handle(events.BatchQuantityChanged("batch1", 25), uow)
+
+    # assert on new events emitted rather than downstream side-effects
+    [reallocation_event] = uow.events_published
+    assert isinstance(reallocation_event, events.AllocationRequired)
+    assert reallocation_event.orderid in {'order1', 'order2'}
+    assert reallocation_event.sku == 'INDIFFERENT-TABLE'
+----
+====
+
+// TODO: this whole section would just be much nicer if we had an
+// AbstractMessageBus and messagebus was a class. Come on Harry, bite the bullet.
+
+Whether you want to do this or not depends on the complexity of your chain of
+events.  We'd say, start out with edge-to-edge testing, and only resort to
+this if necessary.
 
 *******************************************************************************
+
+
+
 
 
 === What Have We Achieved?
 
 * Events are simple dataclasses that define the data structures for inputs,
   and internal messages within our system.  This is quite powerful from a DDD
-  standpoint, since events often translate really well into business language (
-  in fact an entire practice know as "Event Storming" has evolved around it).
+  standpoint, since events often translate really well into business language 
+  (in fact an entire practice know as "Event Storming" has evolved around it).
 
 * Handlers are the way we react to events.   They can call down to our
   model, or they can call out to external services.  We can define multiple
