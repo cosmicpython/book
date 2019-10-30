@@ -78,21 +78,22 @@ OK what might the flask app look like?
 ====
 [source,python]
 ----
-from allocation import views
+from allocation import commands, exceptions, messagebus, orm, unit_of_work, views
 ...
 
 @app.route("/allocations/<orderid>", methods=['GET'])
 def allocations_view_endpoint(orderid):
     uow = unit_of_work.SqlAlchemyUnitOfWork()
-    result = views.allocations(orderid, uow)
+    result = views.allocations(orderid, uow)  #<1>
     if not result:
         return 'not found', 404
     return jsonify(result), 200
 ----
 ====
 
-All right, a _views.py_, fair enough, we can keep read-only stuff in there,
-and it'll be a real views.py, not like Django's...
+<1> All right, a _views.py_, fair enough, we can keep read-only stuff in there,
+    and it'll be a real views.py, not like Django's, something that knows how
+    to build read-only views of our data...
 
 
 === Hold on to Your Lunch Folks.
@@ -119,20 +120,89 @@ def allocations(orderid: str, uow: unit_of_work.SqlAlchemyUnitOfWork):
             ' WHERE ol.orderid = :orderid',
             dict(orderid=orderid)
         ))
-        print('results', results, flush=True)
     return [{'sku': sku, 'batchref': batchref} for sku, batchref in results]
 ----
 ====
 
 WHAT THE ACTUAL F?  ARE YOU GUYS TRIPPING F-ING BALLS?
 
-Yes.  Yes we are.  Obviously don't do this.  Unless you really need to.  Now,
+Yes.  Yes we are.  Obviously don't do this.  Unless you have Reasons (TM). Let's come
+back to that and assume you don't.  You probably don't.  Go ahead and do
+something sane instead:
+
+
+[[view_using_repo]]
+.A simple view that uses the repository (src/allocation/views.py)
+====
+[source,python]
+[role="skip"]
+----
+from allocation impor  standalone:
+    build:
+      context: standalone
+    image: docker.made.com/selenium/selenium-standalone:${GIT_COMMIT:-snapshot}
+    shm_size: 1G
+t unit_of_work
+
+def allocations(orderid: str, uow: unit_of_work.AbstractUnitOfWork):
+    with uow:
+        products = unit_of_work.products.for_order(orderid=orderid)
+        batches = [b for p in products for b in p.batches]
+    return [{'sku': b.sku, 'batchref': b.batchref} for b in batches]
+----
+====
+
+And we're sure you can figure out how to write a query on your UoW
+that can find all the products for an order.
+
+Note that splitting out a _views.py` module and enforcing a clear
+distinction between reads and writes in your application is still
+probably a good idea.  We apply the CQS principle (with no R it's
+Command-Query-Separation), and it's easy to see which code modifies
+state (the event handlers) and which code just retrieves read-only
+state (the views).
+
+TIP: Split out your read-only views from your state-modifying
+    command and event handlers.
+
+
+=== Why On Earth Would You Write Raw SQL In Your Views?
+
+OK Bob and Harry, let's get back to that SQL monstrosity though.  Why
+on earth would you show us that?  Don't think we're about to forget, the
+sheer horror has been permanently burned into our memories.  Why on
+earth would you want to do that? _Ever?_
+
+Broadly speaking there are two reasons:
+
+* Performance
+* And keeping your Domain Model free of spurious concerns.
+
+
+==== SELECT N+1
+
+The so-called
+https://secure.phabricator.com/book/phabcontrib/article/n_plus_one/[SELECT N+1]
+problem is a common performance issues with ORMs: when retrieving a list of
+objects, your ORM will often perform an initial query to, say, get all the IDs
+of the objects it needs, and then issue individual queries for each object to
+retrieve their attributes.  This is especially likely if there are any foreign
+key relationships on your objects.
+
+
+
+=== Performance reasons
+
+Now,
 allow us to explain some possible places where this total insanity might make
 a shred of sense.
 
 * Link to CQRS paper
 * SELECT N+1
 
+
+
+=== Testing CQRS views
 
 btw you can test this stuff. note that it can't be unit tested, because it
 needs a real db, it's an integration test!  Just another anti-feather in the
