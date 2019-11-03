@@ -1,4 +1,4 @@
-[[chapter_09_commands]]
+  [[chapter_09_commands]]
 == Commands and Command Handler
 
 //TODO get rid of bullets
@@ -219,22 +219,136 @@ left in an inconsistent state. What kind of error would cause this? Often in our
 systems we can end up in an inconsistent state when only half an operation is
 completed.
 
+For example, we could allocate 3 units of DESIRABLE_BEANBAG to a customer's
+order but somehow fail to reduce the amount of remaining stock. This would
+cause an inconsistent state: the 3 units of stock are both allocated and
+available depending on how you look at it. Later on, we might allocate those
+same beanbags to another customer, causing a headache for customer support.
+
 In our allocation service, though, we've already taken steps to prevent that
 happening. We've carefully identified _Aggregates_ which act as consistency
 boundaries, and we've introduced a _Unit of Work_ that manages the atomic
 success or failure of an update to an aggregate.
-
-By definition, we don't require two aggregates to be immediately consistent, so
-if we fail to process an event, and only update a single aggregate, our system
-can still be made eventually consistent. We shouldn't violate any constraints of
-the system.
 
 For example, when we allocate stock to an order, our consistency boundary is the
 Product aggregate. This means that we can't accidentally over-allocate: either
 a particular order line is allocated to the product, or it is not - there's no
 room for inconsistent states.
 
- 
+By definition, we don't require two aggregates to be immediately consistent, so
+if we fail to process an event, and only update a single aggregate, our system
+can still be made eventually consistent. We shouldn't violate any constraints of
+the system.
+
+With this example in mind, we can better understand the reason for splitting
+messages into Commands and Events: When a user wants to make the system do
+something, we represent their request as a _Command_. That command should modify
+a single _Aggregate_ and either succeed or fail in totality. Any other book
+keeping, clean up, and notification we need to do can happen via an _Event_. We
+don't require the event handlers to succeed in order for the command to be
+successful.
+
+Let's take another example to see why not.
+
+Imagine we are building an e-commerce website that sells expensive luxury goods.
+Our marketing department want to reward customers for repeat visits. We will
+flag customers as VIPs once they make their third purchase, and this will
+entitle them to priority treatment and special offers. Our acceptance criteria
+for this story read as follows:
+
+Given a customer with two orders in their history,
+when the customer places a third order,
+they should be flagged as a VIP.
+
+When a customer first becomes a VIP
+we should send them an email to congratulate them
+
+Using the techniques we've already discussed in this book, we decide that we
+want to build a new History aggregate that records orders and can raise domain
+events when rules are met. We will structure the code like this:
+
+[[new_messagebus]]
+.VIP Customer
+====
+[source,python]
+----
+
+class History (Aggregate):
+
+    def __init__(self, customer_id: int):
+        self.orders = Set() # Set[HistoryEntry]
+        self.customer_id = customer_id
+
+    def record_order(self, order_id: str, order_amount: int): #<1>
+        entry = HistoryEntry(order_id, order_amount)
+
+        if entry in self.orders:
+            return
+
+        self.orders.add(entry)
+
+        if len(self.orders) == 3:
+            self.events.append(
+                CustomerBecameVIP(self.customer_id)
+            )
+
+
+def create_order_from_basket(uow, cmd: CreateOrder): #<2>
+    with uow:
+        order = Order.from_basket(cmd.customer_id, cmd.basket)
+        uow.orders.add(
+        uow.commit() # raises OrderCreated
+
+
+def update_customer_history(uow, event: OrderCreated): #<3>
+    with uow:
+        history = uow.order_history.get(event.customer_id)
+        history.record_order(event.order_id, event.order_amount)
+        uow.commit() # raises CustomerBecameVIP
+
+
+def congratulate_vip_customer(uow, event: CustomerBecameVip): #<4>
+    with uow:
+        customer = uow.customers.get(event.customer_id)
+        email.send(
+            customer.email_address,
+            f'Congratulations {customer.first_name}!'
+        )
+        
+----
+====
+
+<1> The History aggregate captures the rules for when a customer becomes a VIP.
+<2> Our first handler creates an order for the customer and raises a domain
+    event 'OrderCreated'.
+<3> Our second handler updates the History object to record that an order was
+    created.
+<4> Finally we send an email to the customer when they become a VIP using the
+    same email system we used for the OutOfStock event.
+
+//TODO: Sequence diagram here?
+
+Using this code we can gain some intuition about error handling in an
+event-driven system.
+
+In our current implementation, we raise events about an aggregate _after_ we
+persist our state to the database. What if we raised those events _before_ we
+persisted, and committed all our changes at the same time? That way we could be
+sure that all the work was complete. Wouldn't that be safer?
+
+What happens, though if the email server is slightly overloaded? If all the work
+has to complete at the same time, a busy email server can stop us taking money
+for orders.
+
+What happens if there is a bug in the implementation of the History aggregate?
+Should we fail to take your money just because we can't recognise you as a VIP?
+
+By separating these concerns out, we have made it possible for things to fail
+in isolation, which improves the overall reliability of the system. The only
+part of this code that *has* to complete is the Command Handler that creates an
+order. This is the only part that a customer cares about, and it's the part that
+our business stakeholders should prioritise.
+
 * Sending an email shouldn't stop us taking your money
 * Recovering from logs
 * Using a job queue
