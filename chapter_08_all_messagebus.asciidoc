@@ -592,7 +592,7 @@ class FakeRepository(repository.AbstractRepository):
 ====
 
 
-TODO: discuss finder methods on repository.
+// TODO: discuss finder methods on repository.
 
 
 ==== A New Method on the Domain Model
@@ -723,12 +723,50 @@ def test_reallocates_if_necessary_isolated():
 ----
 ====
 
-// TODO: this whole section would just be much nicer if we had an
-// AbstractMessageBus and messagebus was a class. Come on Harry, bite the bullet.
-
 Whether you want to do this or not depends on the complexity of your chain of
 events.  We'd say, start out with edge-to-edge testing, and only resort to
 this if necessary.
+
+
+If you do decide you want to get into isolating the testing for your handlers,
+you might be better of implementing an ABC for your messagebus:
+
+
+[[abc_for_fake_messagebus]]
+.An Abstract MessageBus and its real and fake versions
+====
+[source,python]
+[role="skip"]
+----
+class AbstractMessageBus:
+    HANDLERS: Dict[Type[events.Event], List[Callable]]
+
+    def handle(self, event: events.Event):
+        for handler in self.HANDLERS[type(event)]:
+            handler(event)
+
+
+class MessageBus(AbstractMessageBus):
+    HANDLERS = {
+        events.OutOfStock: [send_out_of_stock_notification],
+
+    }
+
+
+class FakeMessageBus(messagebus.AbstractMessageBus):
+    def __init__(self):
+        self.events_published = []  # type: List[events.Event]
+        self.handlers = {
+            events.OutOfStock: [lambda e: self.events_published.append(e)]
+        }
+----
+====
+
+We use a class-based messagebus in <<chapter_12_dependency_injection>>,
+if you need more inspiration.  The "simple" implementation in this
+chapter essentially uses the `messagebus.py` module itself to implement
+Singleton Pattern.
+
 
 *******************************************************************************
 
