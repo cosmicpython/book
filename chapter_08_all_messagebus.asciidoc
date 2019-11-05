@@ -565,7 +565,7 @@ We realise we'll need a new query type on our repository:
 class AbstractRepository(abc.ABC):
     ...
 
-    def get(self, sku):
+    def get(self, sku) -> model.Product:
         ...
 
     def get_by_batchref(self, batchref):
@@ -575,11 +575,11 @@ class AbstractRepository(abc.ABC):
         return p
 
     @abc.abstractmethod
-    def _add(self, product):
+    def _add(self, product: model.Product):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def _get(self, sku):
+    def _get(self, sku) -> model.Product:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -602,6 +602,8 @@ class SqlAlchemyRepository(AbstractRepository):
 
 ----
 ====
+
+//TODO: type hints on get_by_batchref
 
 And on our fakerepository too:
 
@@ -705,7 +707,7 @@ it record what events it sees:
 
 
 [[fake_messagebus]]
-.Fake MessageBus implemented in UoW (tests/test_handlers.py)
+.Fake MessageBus implemented in UoW (tests/unit/test_handlers.py)
 ====
 [source,python]
 [role="non-head"]

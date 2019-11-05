@@ -489,15 +489,14 @@ Here's what an abstract base class for our repository would look like:
 ====
 [source,python]
 ----
-
 class AbstractRepository(abc.ABC):
 
     @abc.abstractmethod  #<1>
-    def add(self, batch):
+    def add(self, batch: model.Batch):
         raise NotImplementedError  #<2>
 
     @abc.abstractmethod
-    def get(self, reference):
+    def get(self, reference) -> model.Batch:
         raise NotImplementedError
 ----
 ====

@@ -478,22 +478,22 @@ class AbstractRepository(abc.ABC):
     def __init__(self):
         self.seen = set()  # type: Set[model.Product]  #<1>
 
-    def add(self, product):  #<2>
+    def add(self, product: model.Product):  #<2>
         self._add(product)
         self.seen.add(product)
 
-    def get(self, sku):  #<3>
-        p = self._get(sku)
-        if p:
-            self.seen.add(p)
-        return p
+    def get(self, sku) -> model.Product:  #<3>
+        product = self._get(sku)
+        if product:
+            self.seen.add(product)
+        return product
 
     @abc.abstractmethod
-    def _add(self, product):  #<2>
+    def _add(self, product: model.Product):  #<2>
         raise NotImplementedError
 
     @abc.abstractmethod  #<3>
-    def _get(self, sku):
+    def _get(self, sku) -> model.Product:
         raise NotImplementedError
 
 
@@ -512,7 +512,6 @@ class SqlAlchemyRepository(AbstractRepository):
 ----
 ====
 
-// TODO: for consistency the "p" in get() should probably be "product"
 
 <1> We initialise a set to store objects seen.  That means our implementations
     need to call `super().__init__()`

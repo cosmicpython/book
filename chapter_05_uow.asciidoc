@@ -250,7 +250,7 @@ Here's how we use a fake Unit of Work in our service layer tests
 class FakeUnitOfWork(unit_of_work.AbstractUnitOfWork):
 
     def __init__(self):
-        self.init_repositories(FakeRepository([]))  #<1>
+        self.batches = FakeRepository([])  #<1>
         self.committed = False  #<2>
 
     def commit(self):

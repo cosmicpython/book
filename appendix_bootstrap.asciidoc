@@ -44,7 +44,7 @@ like logging.
 
 Defaults are maybe feeling a bit messy, but so are some other aspects of the
 initial setup or "bootsrapping" of our application; `orm.start_mappers()` for
-example, or `uow.set_bus()`. We call them in various places in our tests, and at
+example, or `uow.bus = bus`. We call them in various places in our tests, and at
 least twice in our "real" application...
 
 
@@ -61,7 +61,7 @@ bus = messagebus.MessageBus(
     uow=uow,
     ...
 )
-uow.set_bus(bus)
+uow.bus = bus
 
 
 
@@ -89,13 +89,13 @@ def bootstrap(
         session_factory=DEFAULT_SESSION_FACTORY,
         notifications=None,
         publish=redis_pubsub.publish,
-):
+) -> messagebus.MessageBus:
     start_orm()
     uow = unit_of_work.SqlAlchemyUnitOfWork(session_factory=session_factory)
     if notifications is None:
         notifications = EmailNotifications(smtp_host=EMAIL_HOST, port=EMAIL_PORT)
     bus = messagebus.MessageBus(uow=uow, notifications=notifications, publish=publish)
-    uow.set_bus(bus)
+    uow.bus = bus
     return bus
 ----
 ====
