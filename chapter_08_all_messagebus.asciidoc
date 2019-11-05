@@ -2,36 +2,35 @@
 == Going to Town on the Message Bus
 
 In this chapter we'll start to make events more fundamental to the internal
-structure of our application, by transforming it into a message-processor;
-everything will go via the message bus.
+structure of our application. We'll move from the current state in
+<<all_in_on_messagebus_before_diagram>> where events are an optional
+side-effect...
 
-* We'll integrate a new requirement that introduces new events, and re-uses
-  some of our existing logic
-
-* We'll show the increasing similarity between functions at the service layer
-  and functions for event handling
-
-* We'll merge the two, and use events to represent the external inputs to our
-  system, as well as internal events
 
 [[all_in_on_messagebus_before_diagram]]
-.Everything goes via the messagebus
+.Before: Service Layer, with optional events, bus and handlers
 image::images/all_in_on_messagebus_before_diagram.png[]
 [role="image-source"]
 ----
 [graphviz, all_in_on_messagebus_before_diagram]
 digraph G {
 rankdir=LR;
-params [label="params as primitives"];
 service [label="service-layer function"];
+handlers [label="handler functions"];
 
-flask ->  params -> service -> model -> events -> messagebus
+flask -> service [label="request params\n(as primitives)"]
+service -> model 
+model -> events -> messagebus -> handlers [style=dotted]
 
 }
 ----
 
+...to the situation in <<all_in_on_messagebus_after_diagram>> where
+everything goes via the message bus, and our app has been transformed
+fundamentally into a message-processor.
+
 [[all_in_on_messagebus_after_diagram]]
-.Everything goes via the messagebus
+.After: everything goes via the Message Bus
 image::images/all_in_on_messagebus_after_diagram.png[]
 [role="image-source"]
 ----
