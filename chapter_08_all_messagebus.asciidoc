@@ -568,11 +568,11 @@ class AbstractRepository(abc.ABC):
     def get(self, sku) -> model.Product:
         ...
 
-    def get_by_batchref(self, batchref):
-        p = self._get_by_batchref(batchref)
-        if p:
-            self.seen.add(p)
-        return p
+    def get_by_batchref(self, batchref) -> model.Product:
+        product = self._get_by_batchref(batchref)
+        if product:
+            self.seen.add(product)
+        return product
 
     @abc.abstractmethod
     def _add(self, product: model.Product):
@@ -583,13 +583,10 @@ class AbstractRepository(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def _get_by_batchref(self, batchref):
+    def _get_by_batchref(self, batchref) -> model.Product:
         raise NotImplementedError
 
 
-
-
-class SqlAlchemyRepository(AbstractRepository):
     ...
 
     def _get(self, sku):
@@ -733,7 +730,7 @@ below the total already allocated:
 
 
 [[test_handler_in_isolation]]
-.Testing reallocation in isolation (tests/test_handlers.py)
+.Testing reallocation in isolation (tests/unit/test_handlers.py)
 ====
 [source,python]
 [role="non-head"]

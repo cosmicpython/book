@@ -272,7 +272,7 @@ would work:
 class DjangoUnitOfWork(AbstractUnitOfWork):
 
     def __enter__(self):
-        self.init_repositories(repository.DjangoRepository())
+        self.batches = repository.DjangoRepository()
         transaction.set_autocommit(False)  #<1>
         return super().__enter__()
 
