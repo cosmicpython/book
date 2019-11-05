@@ -14,7 +14,42 @@ everything will go via the message bus.
 * We'll merge the two, and use events to represent the external inputs to our
   system, as well as internal events
 
-TODO: DIAGRAM GOES HERE
+[[all_in_on_messagebus_before_diagram]]
+.Everything goes via the messagebus
+image::images/all_in_on_messagebus_before_diagram.png[]
+[role="image-source"]
+----
+[graphviz, all_in_on_messagebus_before_diagram]
+digraph G {
+rankdir=LR;
+params [label="params as primitives"];
+service [label="service-layer function"];
+
+flask ->  params -> service -> model -> events -> messagebus
+
+}
+----
+
+[[all_in_on_messagebus_after_diagram]]
+.Everything goes via the messagebus
+image::images/all_in_on_messagebus_after_diagram.png[]
+[role="image-source"]
+----
+[graphviz, all_in_on_messagebus_after_diagram]
+digraph G {
+rankdir=LR;
+flask [pos="0,0!"];
+handler [label="handler function"];
+
+flask -> event  [weight=10]
+event -> messagebus  [weight=10]
+messagebus -> handler  [weight=10]
+handler -> model [weight=10]
+model -> event [style=dotted, len=100]
+
+}
+----
+
 
 === A New Requirement Leads Us To Consider A New Architecture
 
@@ -813,7 +848,7 @@ a|
 * we have a nice datastructure for inputs to the system
 
 a|
-* messagebus is still a slighly unpredicatable way of doing things from
+* messagebus is still a slightly unpredictable way of doing things from
   a web pov.  don't know in advance when things are going to end
 
 * we've gone from domain objects in service layer calls, to primitives,
