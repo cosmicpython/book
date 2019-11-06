@@ -150,15 +150,14 @@ def sqlite_bus(sqlite_session_factory):
 
 
 def test_allocations_view(sqlite_bus):
-    sqlite_bus.handle(commands.CreateBatch('b1', 'sku1', 50, None))
-    sqlite_bus.handle(commands.CreateBatch('b2', 'sku2', 50, date.today()))
-    sqlite_bus.handle(commands.Allocate('o1', 'sku1', 20))
-    sqlite_bus.handle(commands.Allocate('o1', 'sku2', 20))
-
-    assert views.allocations('o1', sqlite_bus.uow) == [
-        {'sku': 'sku1', 'batchref': 'b1'},
-        {'sku': 'sku2', 'batchref': 'b2'},
+    sqlite_bus.handle(commands.CreateBatch('sku1batch', 'sku1', 50, None))
+    sqlite_bus.handle(commands.CreateBatch('sku2batch', 'sku2', 50, date.today()))
+    ...
+    assert views.allocations('order1', sqlite_bus.uow) == [
+        {'sku': 'sku1', 'batchref': 'sku1batch'},
+        {'sku': 'sku2', 'batchref': 'sku2batch'},
     ]
+
 ----
 ====
 

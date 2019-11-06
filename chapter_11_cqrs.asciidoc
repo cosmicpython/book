@@ -4,16 +4,19 @@
 In this chapter we're going to take a fairly uncontroversial insight--the
 fact that reads (commands) and writes (queries) are different, and so they
 should be treated differently--and we're going to push that insight out way
-beyond the bounds of sanity and into full boomtown architecture-astronaut
+beyond the bounds of sanity and into fullblown boomtown architecture-astronaut
 crazyland.  We may provide a few justifications along the way of when you
 might or might not want to do it, bla-bla-bla-performance and so forth, but,
 honestly, it's just because we want to see the world burn.  In a decoupled way.
 
 NOTE: Chapter under construction.  More sober and coherent treatment of the subject
-    may be found at https://io.made.com/commands-and-queries-handlers-and-views/
+    may be found at
+    https://io.made.com/blog/2017-09-13-commands-and-queries-handlers-and-views.html
 
-So strap in, and see if you can spot the moment where the madness descends,
-because you'll need to be able to spot that moment in your own life.
+// TODO: replace with cosmicpython.com url
+
+So strap in, and see if you can spot the moment where the madness descends.
+Because you need to be on the lookout for that moment in your own life.
 
 
 === Always Redirect After a POST
@@ -137,25 +140,25 @@ something sane instead:
 [source,python]
 [role="skip"]
 ----
-from allocation impor  standalone:
-    build:
-      context: standalone
-    image: docker.made.com/selenium/selenium-standalone:${GIT_COMMIT:-snapshot}
-    shm_size: 1G
-t unit_of_work
+from allocation import unit_of_work
 
 def allocations(orderid: str, uow: unit_of_work.AbstractUnitOfWork):
     with uow:
-        products = unit_of_work.products.for_order(orderid=orderid)
+        products = uow.products.for_order(orderid=orderid)
         batches = [b for p in products for b in p.batches]
-    return [{'sku': b.sku, 'batchref': b.batchref} for b in batches]
+        return [
+            {'sku': b.sku, 'batchref': b.reference}
+            for b in batches
+            if orderid in b.orderids
+        ]
 ----
 ====
 
-And we're sure you can figure out how to write a query on your UoW
-that can find all the products for an order.
+We're sure you can figure out how to write a query called `.for_order()`
+on your repository that can find all the products for an order.
 
-Note that splitting out a _views.py` module and enforcing a clear
+
+Note that splitting out a _views.py_ module and enforcing a clear
 distinction between reads and writes in your application is still
 probably a good idea.  We apply the CQS principle (with no R it's
 Command-Query-Separation), and it's easy to see which code modifies
@@ -176,37 +179,116 @@ earth would you want to do that? _Ever?_
 Broadly speaking there are two reasons:
 
 * Performance
-* And keeping your Domain Model free of spurious concerns.
+* And keeping your Domain Model free of Spurious Concerns.
 
 
 ==== SELECT N+1
 
 The so-called
 https://secure.phabricator.com/book/phabcontrib/article/n_plus_one/[SELECT N+1]
-problem is a common performance issues with ORMs: when retrieving a list of
+problem is a common performance problem with ORMs: when retrieving a list of
 objects, your ORM will often perform an initial query to, say, get all the IDs
 of the objects it needs, and then issue individual queries for each object to
 retrieve their attributes.  This is especially likely if there are any foreign
 key relationships on your objects.
 
+//TODO: set echo=True and show SQL query logs in our own app?
 
 
-=== Performance reasons
+==== General Database Read Performance
 
-Now,
-allow us to explain some possible places where this total insanity might make
-a shred of sense.
+Beyond `SELECT N+1`, you may have other reasons that you want to decouple the
+way you persist state changes from the way that you retrieve current state.
+A set of fully normalised relational tables is a good way to make sure that
+write operations never cause data corruption.  But retrieving data using lots
+of JOINs can be slow.  It's common in such cases to add some denormalised views
+(we'll see an example of that later), build read replicas, or even add caching
+layers.
 
-* Link to CQRS paper
-* SELECT N+1
+
+==== Your Domain Model is not Optimised for Read Operations
+
+Now here's the chinstrokey-architect justification.  As we've said before,
+a Domain Model is not a data model -- we're trying to capture the way the
+business works: workflow, rules around state changes, messages exchanged;
+most of these are concerned with how the system reacts to external events
+and user input. _Most of this stuff is totally irrelevant for read-only
+operations_.
+
+At a facile level, your domain classes will have a number of methods for
+modifying state, and you won't need any of them for read-only operations.
+Now that is very, very, very far away from a justification for using raw
+SQL instead of reusing our domain objects for queries, but you can at
+least see how the two are conceptually different.
+
+As the complexity of your domain model grows though, you may find yourself
+making more and more choices about how to structure that model, which make
+it more and more awkward to use for read operations.
+
+Even in our simple example, we've chosen to use `Product` as our aggregate,
+but for our "show me the allocations for this order id" endpoint, going
+via Product isn't really the most obvious way of doing things.  First we
+retrieve all the products for the skus in the order, then we find all the
+batches for those products, and _then_ we iterate (slowly, in Python) through
+all of them finding the ones that have allocations for that order id?  It's
+clunky.  And we didn't mention it at the time, but we had to add a new
+`@property` to the domain model to be able to get the order ids allocated
+to a batch:
+
+[[orderids_on_batch]]
+.An argubably-uneccessary property on our model (src/allocation/model.py)
+====
+[source,python]
+[role="skip"]
+----
+class Batch:
+    ...
+
+    @property
+    def orderids(self):
+        return {l.orderid for l in self._allocations}
+----
+====
 
 
+=== Using the ORM is Probably Simpler.  Probably.
 
-=== Testing CQRS views
+You may be thinking, OK, if our repository is clunky, then I can just use my
+ORM.  That's what it's for!
 
-btw you can test this stuff. note that it can't be unit tested, because it
-needs a real db, it's an integration test!  Just another anti-feather in the
-anti-cap of this total anti-pattern.
+[[view_using_orm]]
+.A simple view that uses the ORM (src/allocation/views.py)
+====
+[source,python]
+[role="skip"]
+----
+from allocation import unit_of_work, model
+
+def allocations(orderid: str, uow: unit_of_work.AbstractUnitOfWork):
+    with uow:
+        batches = uow.session.query(model.Batch).join(
+            model.OrderLine, model.Batch._allocations
+        ).filter(
+            model.OrderLine.orderid == orderid
+        )
+        return [
+            {'sku': b.sku, 'batchref': b.batchref}
+            for b in batches
+        ]
+----
+====
+
+But is that _actually_ any easier to write or understand than the raw SQL version?
+
+
+=== Testing CQRS Views
+
+Let's talk about testing.  Whichever of the approaches you decide to go for,
+the most obvious kind of test to write is an integration test, one that goes
+to a real database. 
+
+This test will pass for all the approaches we've shown so far:
+
 
 
 [[integration_testing_views]]
@@ -220,28 +302,65 @@ from allocation import commands, unit_of_work, messagebus, views
 
 def test_allocations_view(sqlite_session_factory):
     uow = unit_of_work.SqlAlchemyUnitOfWork(sqlite_session_factory)
-    messagebus.handle(commands.CreateBatch('b1', 'sku1', 50, None), uow)
-    messagebus.handle(commands.CreateBatch('b2', 'sku2', 50, date.today()), uow)
-    messagebus.handle(commands.Allocate('o1', 'sku1', 20), uow)
-    messagebus.handle(commands.Allocate('o1', 'sku2', 20), uow)
+    messagebus.handle(commands.CreateBatch('sku1batch', 'sku1', 50, None), uow)
+    messagebus.handle(commands.CreateBatch('sku2batch', 'sku2', 50, date.today()), uow)
+    messagebus.handle(commands.Allocate('order1', 'sku1', 20), uow)
+    messagebus.handle(commands.Allocate('order1', 'sku2', 20), uow)
+    # add a spurious batch and order to make sure we're getting the right ones
+    messagebus.handle(commands.CreateBatch('sku1batch-later', 'sku1', 50, date.today()), uow)
+    messagebus.handle(commands.Allocate('otherorder', 'sku1', 30), uow)
+    messagebus.handle(commands.Allocate('otherorder', 'sku2', 10), uow)
 
-    assert views.allocations('o1', uow) == [
-        {'sku': 'sku1', 'batchref': 'b1'},
-        {'sku': 'sku2', 'batchref': 'b2'},
+    assert views.allocations('order1', uow) == [
+        {'sku': 'sku1', 'batchref': 'sku1batch'},
+        {'sku': 'sku2', 'batchref': 'sku2batch'},
     ]
 ----
 ====
 
+Before you dismiss the need to use integration tests as just another
+anti-feather in the anti-cap of this total anti-pattern, it's worth thinking
+through the alternatives.
+
+- If you're going via the `Products` repository, then you'll need integration
+    tests for the `.for_order()` helper method
+
+- If you're going via the ORM, you'll still need integration tests
+
+- And if you decide to build a read-only `BatchRepository`, ignoring
+  the purists that tell you you're not allowed to have a Repository for
+  a non-Aggregate model class, call it `BatchDAL` if you want, in any case,
+  you'll still need integration tests for _that_.
+
+So the choice is about whether or not you want a layer of abstraction between
+your permanent storage and the logic of your read-only views.
+
+* If the views are relatively simple (all the logic in our case is in filtering
+  down to the right batch references), then adding another layer doesn't seem
+  worth it.
+
+* If your views do more complex calculations, or need to invoke some business rules
+  to decide what to display... If, in short, you find yourself writing a lot of
+  integration tests for a single view, then it may be worth building that
+  intermediary layer, so that you can test the SQL and the display/calculation/view
+  logic separately
+
+
 
 === Doubling Down on the Madness.
 
-that hardcoded sql query is pretty ugly right?  what if we made it nicer
-by keeping a totally separate, denormalised datastore for our view model?
+Perhaps you're starting to think our raw SQL version isn't so crazy as it
+first seemed?  Perhaps Bob and Harry are exaggerating for effect?  JUST
+YOU WAIT.
 
-Horrifying, right? wait 'til we tell you we're not even going to use postgres
-or triggers or anything known and reliable and boring like that to keep it
+So. Crazy or not, that hardcoded SQL query is pretty ugly right?  What if we
+made it nicer by keeping a totally separate, denormalised datastore for our
+view model?
+
+Horrifying, right? Wait 'til we tell you we're not even going to use Postgres
+views or triggers or anything known and reliable and boring like that to keep it
 up to date.  We're going to use our amazing event-driven architecture!
-That's right!  may as well join the cult and start drinking folks, the ship
+That's right!  May as well join the cult and start drinking folks, the ship
 is made of cardboard and the captains are crazy and there's nothing you can
 do to stop them.
 
