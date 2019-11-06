@@ -183,11 +183,6 @@ We usually solve this problem by applying locks to our database tables. This
 prevents two operations happening simultaneously on the same row or same
 table.
 
-////
-TODO (ej) In a miscroservices architecture This gets even harder when there's distributed state
-    and locking tables is either not possible or advisable. (Not sure how this comment fits in the text.)
-////
-
 As we start to think about scaling up our app, we realise that our model
 of allocating lines against all available batches may not scale.  If we've
 got tens of thousands of orders per hour, and hundreds of thousands of
@@ -306,7 +301,7 @@ NOTE: This `Product` might not look like what you'd expect a `Product`
 //TODO: talk about magic methods on aggregates maybe?  ie, a non-aggregate entity
 //      might have a __hash__ so that we can put it into a set, but because you
 //      are never supposed to have a collection of aggregates, they could return
-//      an error for __has__. or sumfink.
+//      an error for __hash__. or sumfink.
 
 
 
@@ -353,12 +348,6 @@ thoughts.  They may be too much of a digression from the text though.
 * IIRC from the PyCon open space, many people wanted to know "How do you build a model??"
 I recall someone specifically asking about "how you get everyone to use the same domain model".
 Putting in a mention of the "Canonical Model" pattern would be a good breadcrumb.
-
-*  Re: BoundedContexts, my experience with explaining BoundedContexts is that
-people don't understand it without a concrete example.
-
-Literally having a second, `Product` class  in psuedo-code
-(for warehousing or shipping or something) would be helpful.
 ////
 
 *******************************************************************************
@@ -444,8 +433,6 @@ def allocate(
 ----
 ====
 
-
-// TODO: discuss, should repository raise `InvalidSku`?
 
 //TODO (DS): More generally I'd be interested in some general principles about
 //handling exceptions in a layered architecture...
