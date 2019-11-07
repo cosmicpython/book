@@ -8,6 +8,12 @@ jumbled. When you think of the word _order_ perhaps you think of an empty room,
 serene and calm. For scientists, though, chaos is characterized by homogeneity,
 and order by complexity.
 
+////
+[SG] Found previous paragraph a bit confusing.  It seems to suggest that a scientist would
+say that a noisy stock exchange is ordered. I feel like you want to talk about Entropy
+but do not want to go down that rabbit hole.
+////
+
 For example, a well-tended garden is a highly ordered system. Gardeners define
 boundaries with paths and fences, and they mark out flower beds or vegetable
 patches.
@@ -169,6 +175,7 @@ image::images/layered_architecture.png[]
 ----
 
 
+// [SG] do you really mean layers and not tiers, maybe we do not care.
 
 Layered architecture is perhaps the most common pattern for building business
 software. In this model we have user-interface components, which could be a web
@@ -186,7 +193,11 @@ model inside out by obeying one simple principle.
 
 ////
 TODO:
-You can explain DI more easily once you have introduced layers by noting that
+You can explain DI
+
+[SG] DI? Is this still Dependency Inversion?  Not Dependency Injection right?
+
+more easily once you have introduced layers by noting that
 as we depend downwards, it becomes impossible to use something from a higher
 layer. To correct this, you need to create an interface in your layer, and have
 something in the higher layer implement that. The DI is when you provide the
@@ -213,6 +224,8 @@ example of implementing the DIP throughout an application, hopefully you'll get
 your fill of concrete examples from those.
 
 In the meantime, we can talk about the formal definition of the DIP, which is:
+
+// [SG] reference?
 
 1.  High-level modules should not depend on low-level modules. Both should
     depend on abstractions.

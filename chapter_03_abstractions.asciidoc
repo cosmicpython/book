@@ -20,6 +20,11 @@ a sign that our code is working together, each component supporting the others,
 fitting in place like the gears of a watch.  In jargon, we say this works when
 there is high _cohesion_ between the coupled elements.
 
+////
+[SG] This locally coupled code is often refered to as "strongly cohesive" right?  Is it worth
+using this existing term so that people can more easily recognise ideas they have heard about before
+////
+
 Globally, coupling is a nuisance: it increases the risk and the cost of changing
 our code, sometimes to the point where we feel unable to make some changes at
 all. This is the problem with the ball of mud pattern: as the application grows,
@@ -70,6 +75,11 @@ the other. In the first diagram, there is a high degree of coupling between the
 two because of reasons. If we need to change system B, there's a good
 chance that the change will ripple through to system A.
 
+////
+[SG] In the text "there is a high degree of coupling between the two because of reasons"
+are there some words missing?
+////
+
 In the second, though, we have reduced the degree of coupling by inserting a
 new, simpler, abstraction. This abstraction serves to protect us from change by
 hiding away the complex details of whatever system B does.
@@ -115,6 +125,20 @@ simple implementation, and then refactor towards better design. We'll use this
 approach throughout the book, because it's how we write code in the real world:
 start with a solution to the smallest part of the problem, and then iteratively
 make the solution richer and better designed.
+
+////
+[SG] this may just be my lack of Python experience but it would have helped me to see
+from pathlib import Path before this code snippet so that I might be able to guess
+the type of object "path" in hash_file(path)  - I guess a type hint would
+be too much to ask..
+////
+
+Now we need to write the interesting business logic. When we have to tackle a
+problem from first principles, we usually try to write a simple implementation,
+and then refactor towards better design. We'll use this approach throughout the
+book, because it's how we write code in the real world: start with a solution
+to the smallest part of the problem, and then iteratively make the solution
+richer and better designed.
 
 Our first hackish approach looks something like this:
 
@@ -215,6 +239,8 @@ def test_when_a_file_has_been_renamed_in_the_source():
 ----
 ====
 
+// [SG] missing import tempfile for these tests?
+
 Wowsers, that's a lot of setup for two very simple cases! The problem is that
 our domain logic, "figure out the difference between two directories," is tightly
 coupled to the IO code. We can't run our difference algorithm without calling
@@ -249,6 +275,10 @@ We can think of these as three distinct _responsibilities_ that the code has.
 
 3. We copy, move, or delete, files to match the source.
 
+////
+[SG] In my head this is you defining the interface, the contract that will have to be implemented
+////
+
 Remember that we want to find _simplifying abstractions_ for each of these
 responsibilities. That will let us hide the messy details so that we can
 focus on the interesting logic.
@@ -257,6 +287,11 @@ NOTE: In this chapter we're refactoring some gnarly code into a more testable
     structure by identifying the separate tasks that need to be done and giving
     each task to a clearly defined actor, along similar lines to the `duckduckgo`
     example from the introduction.
+
+////
+[SG] This makes it sound like your only motivation for refactoring is so that you
+can test more easily - maybe it is? Is TDD this extreme?
+////
 
 For (1) and (2), we've already intuitively started using an abstraction, a
 dictionary of hashes to paths, and you may already have been thinking, "why not
@@ -381,6 +416,8 @@ def determine_actions(src_hashes, dst_hashes, src_folder, dst_folder):  #<2>
     just an imperative series of steps: gather inputs, call our logic,
     apply outputs.
 
+// [SG] What is the top-level module - is this the sync funtion?
+
 
 Our tests now act directly on the `determine_actions()` function:
 
@@ -410,6 +447,11 @@ Our tests now act directly on the `determine_actions()` function:
 Because we've disentangled the logic of our program - the code for identifying
 changes - from the low-level details of IO, we can easily test the core of our code.
 
+////
+[SG] I can see this tests determine_actions() but what happened to the test of sync code?  Isn't sync the
+only real public method in the module?  Is determine_actions going to be public - I am consfused,
+are you throwing sync away...?
+///
 
 ==== Testing Edge-to-Edge with Fakes
 
@@ -450,6 +492,16 @@ def synchronise_dirs(reader, filesystem, source_root, dest_root): #<1>
 ----
 ====
 
+////
+[SG]  typos(?) in the code snippet above:
+source_hashes -> src_hashes (or vice versa)
+dest_hashes  ->  dst_hashes
+olddestpath -> oldestpath
+filesystem.del -> filesystem.delete(*)
+////
+
+//[SG] got to here...
+
 <1> Our top-level function now exposes two new dependencies, a `reader` and a
     `filesystem`
 
@@ -463,6 +515,7 @@ TIP: Notice that, although we're using dependency injection, there was no need
     abstraction is, but they're not necessary.  Python's dynamic nature means
     we can always rely on duck typing.
 
+\\[SG] how did we get to this implementation - what happened to the sync function
 
 [[bob_tests]]
 .Tests using DI
@@ -593,6 +646,7 @@ We'll see this idea come up again and again in the book: we can make our
 systems easier to test and maintain by simplifying the interface between our
 business logic and messy IO. Finding the right abstraction is tricky, but here's
 a few heuristics and questions to ask yourself:
+
 
 
 * Can I choose a familiar Python datastructure to represent the state of the

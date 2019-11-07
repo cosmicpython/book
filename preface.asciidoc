@@ -84,6 +84,13 @@ of the key architectural patterns that support domain-driven design
 for implementing them in a Pythonic way, and that it will serve as a
 first step for those who want to do further research  in this field.
 
+////
+[SG] Great preface. One niggle, until the last paragraph I thought what was being
+described was a book on designing enterprise software well in Python using established(?)
+techniques and patterns, more often seen in other languages. However in the last paragraph
+feels like event-driven microservices just suddenly pops in unannounced and the book changes
+direction a bit to be about DDD+event-driven microservices?
+////
 
 === Who Should Read This Book
 
@@ -133,6 +140,9 @@ Chapter 2, 4 and 5: Repository, Service Layer and Unit of Work Patterns::
     Layer_ to define the entrypoints to our system, and capture the
     primary use cases. We show how this layer makes it easy to build
     very thin entrypoints to our system, be it a Flask API or a CLI.
+
+[SG] Bit of pedantry - this is the first time you have used CLI acronym,
+should be spelled out?
 
 Chapter 3: An Aside on Coupling and Abstractions::
     After presenting the first abstraction (Repository pattern), we take the
