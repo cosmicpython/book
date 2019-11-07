@@ -272,7 +272,7 @@ system, and the names of the classes and variables that we use are taken from th
 business jargon. We could show this code to our non-technical co-workers, and
 they would agree that this correctly describes the behavior of the system.
 
-And here is a (minimal) domain model that meets our requirements:
+And here is a domain model that meets our requirements:
 
 [[domain_model_1]]
 .First cut of a domain model for batches (model.py)
@@ -280,7 +280,7 @@ And here is a (minimal) domain model that meets our requirements:
 [source,python]
 [role="non-head"]
 ----
-@dataclass(frozen=True)  #<1>
+@dataclass(frozen=True)  #<1><2>
 class OrderLine:
     orderid: str
     sku: str
@@ -305,6 +305,14 @@ class Batch:
     might have used a namedtuple.  You could also check out Hynek Schlawack's
     excellent https://pypi.org/project/attrs/[attrs].]
     with no behavior.
+
+<2> We're not showing imports in most code listings, in an attempt to keep them
+    clean. We're hoping you can guess
+    that this came via `from dataclasses import dataclass`, likewise
+    `typing.Optional` and `datetime.date`.  If you want to double-check
+    anything, you can see the full, working code for each chapter in
+    its branch, eg
+    https://github.com/python-leap/code/tree/chapter_01_domain_model[github.com/python-leap/code/tree/chapter_01_domain_model]
 
 <2> Type hints are still a matter of controversy in the Python world. For
     domain models, they can sometimes help to clarify or document what the
@@ -354,14 +362,6 @@ def test_cannot_allocate_if_skus_do_not_match():
     assert batch.can_allocate(different_sku_line) is False
 ----
 ====
-
-///
-[SG] so is why you are not putting imports in like
- from datetime import date
- because now you need to import Batch and OrderLine and you do not want to tell people where to put these
- in their project structure?
- from yourproject.domain.models import Batch, OrderLine
-///
 
 There's nothing too unexpected here. We've refactored our test suite so that we
 don't keep repeating the same lines of code to create a batch and a line for
