@@ -20,11 +20,6 @@ a sign that our code is working together, each component supporting the others,
 fitting in place like the gears of a watch.  In jargon, we say this works when
 there is high _cohesion_ between the coupled elements.
 
-////
-[SG] This locally coupled code is often refered to as "strongly cohesive" right?  Is it worth
-using this existing term so that people can more easily recognise ideas they have heard about before
-////
-
 Globally, coupling is a nuisance: it increases the risk and the cost of changing
 our code, sometimes to the point where we feel unable to make some changes at
 all. This is the problem with the ball of mud pattern: as the application grows,
@@ -72,13 +67,8 @@ image::images/coupling_illustration2.png[]
 
 In both diagrams, we have a pair of subsystems, with the one dependent on
 the other. In the first diagram, there is a high degree of coupling between the
-two because of reasons. If we need to change system B, there's a good
+two, because reasons. If we need to change system B, there's a good
 chance that the change will ripple through to system A.
-
-////
-[SG] In the text "there is a high degree of coupling between the two because of reasons"
-are there some words missing?
-////
 
 In the second, though, we have reduced the degree of coupling by inserting a
 new, simpler, abstraction. This abstraction serves to protect us from change by
@@ -238,8 +228,6 @@ def test_when_a_file_has_been_renamed_in_the_source():
         shutil.rmtree(dest)
 ----
 ====
-
-// [SG] missing import tempfile for these tests?
 
 Wowsers, that's a lot of setup for two very simple cases! The problem is that
 our domain logic, "figure out the difference between two directories," is tightly
