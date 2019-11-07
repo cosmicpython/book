@@ -7,7 +7,6 @@ code, in a way that's highly compatible with TDD.  We'll discuss _why_
 domain modelling matters, and we'll look at a few key patterns for modelling
 domains: Entities, Value Objects, and Domain Services.
 
-// [SG] I do like an overview - thank you.
 
 === What is a Domain Model?
 
@@ -101,9 +100,6 @@ complex ideas and processes are boiled down to a single word or phrase.
 When we hear our business stakeholders using unfamiliar words, or using terms
 in a specific way, we should listen to understand the deeper meaning and encode
 their hard-won experience into our software.
-
-
-// [SG] Lovely explanation .. go on say it ... say ubiquitous language
 
 We're going to use a real-world domain model throughout this book, specifically
 a model from our current employment. Made.com is a successful furniture
@@ -276,7 +272,7 @@ system, and the names of the classes and variables that we use are taken from th
 business jargon. We could show this code to our non-technical co-workers, and
 they would agree that this correctly describes the behavior of the system.
 
-And here is a domain model that meets our requirements:
+And here is a (minimal) domain model that meets our requirements:
 
 [[domain_model_1]]
 .First cut of a domain model for batches (model.py)
@@ -301,24 +297,9 @@ class Batch:
         self.available_quantity = qty
 
     def allocate(self, line: OrderLine):
-        self.available_quantity -= line.qty
+        self.available_quantity -= line.qty  #<3>
 ----
 ====
-
-////
-
-[SG]
- I sort of get why you are not putting imports in, because then you would have to start defining a project
- structure (would that be so awful) but maybe put in
- from dataclasses import dataclass
- from typing import Optional
- from datetime import date
- or am I missing something obvious.
- Maybe worth pointing out that you are implementing the simplest solution to pass this first test -
- I presume that is what you are doing anyway as this allocate method is not checking for sku. When I
- first read this I thought that the lack of check for sku was a mistake.
-
-////
 
 <1> `OrderLine` is an immutable dataclassfootnote:[In previous Python versions we
     might have used a namedtuple.  You could also check out Hynek Schlawack's
@@ -333,8 +314,12 @@ class Batch:
 
 Our implementation here is trivial: a `Batch` just wraps an integer
 `available_quantity` and we decrement that value on allocation. We've written
-quite a lot of code just to subtract one number from another, but we think that
-modelling our domain precisely will pay off.
+quite a lot of codefootnote:[
+Or perhaps you think there's not enough code?  What about some sort of check
+that the sku in the `OrderLine` matches `Batch.sku`?  We saved some thoughts on
+validation for <<appendix_validation>>]
+just to subtract one number from another, but we think that modelling our
+domain precisely will pay off.
 
 Let's write some new failing tests:
 
