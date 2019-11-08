@@ -2,17 +2,17 @@
 [preface]
 == Preface
 
-You may be wondering, who we are, and why we wrote this book.
+You may be wondering who we are and why we wrote this book.
 
 At the end of Harry's last book,
 http://www.obeythetestinggoat.com/pages/book.html[Test-Driven Development with Python],
-he found himself asking a bunch of questions about architecture -- what's the
-best way of structuring your application so that it's easy to test?  More
-specifically, so that your core business logic is covered by unit tests, and so
-that we minimise the number of integration and end-to-end tests we need?  He
-made vague references to "Hexagonal Architecture" and "Ports and Adapters" and
-"Functional Core, Imperative Shell," but if he was honest, he'd have to admit
-that these weren't things he really understood or had done in practice.
+he found himself asking a bunch of questions about architecture, such as:
+what's the best way of structuring your application so that it's easy to test?
+More specifically, so that your core business logic is covered by unit tests,
+and so that you minimize the number of integration and end-to-end tests you need?
+He made vague references to "Hexagonal Architecture" and "Ports and Adapters"
+and "Functional Core, Imperative Shell," but if he was honest, he'd have to
+admit that these weren't things he really understood or had done in practice.
 
 And then he was lucky enough to run into Bob, who has the answers to all these
 questions.
@@ -23,14 +23,14 @@ into Ian Cooper, who taught him new ways of writing and thinking about code.
 
 === Managing Complexity, Solving Business Problems
 
-We both work for MADE.com - a European e-commerce company who sell furniture
-online - where we apply the techniques in this book to build distributed systems
+We both work for MADE.com, a European e-commerce company that sells furniture
+online; there, we apply the techniques in this book to build distributed systems
 that model real world business problems. Our example domain is the first system
 Bob built for MADE, and this book is an attempt to write down all the _stuff_ we
 have to teach new programmers when they join one of our teams.
 
-MADE.com operate a global supply chain of freight partners and manufacturers.
-To try and keep costs low, we try to optimise the delivery of stock to our
+MADE.com operates a global supply chain of freight partners and manufacturers.
+To try and keep costs low, we try to optimize the delivery of stock to our
 warehouses so that we don't have unsold goods lying around the place.
 
 Ideally, the sofa that you want to buy will arrive in port on the very day
@@ -56,7 +56,7 @@ probably the world's fastest-growing programming language, and nearing the top
 of the absolute popularity tables, it's only just starting to take on the kinds
 of problems that the C# and Java world have been working on for years.
 Startups become real businesses, web apps and scripted automations are becoming
-(whisper it) enterprise software.
+(whisper it) _enterprise software_.
 
 In the Python world, we often quote the Zen of Python:footnote:[`python -c "import this"`]
 "there should be one--and preferably only one--obvious way to do it."
@@ -74,9 +74,10 @@ Enterprise Application Architecture_] (both of which we often refer to and
 encourage you to go and read).
 
 But all the classic code examples in the literature do tend to be written in
-Java or pass:[C++]/#, and if you're a Python person and haven't used either of those
-languages in a long time (or indeed ever), it can make them quite trying.
-There's a reason the latest edition of that other classic text, https://martinfowler.com/books/refactoring.html[Refactoring] is in JavaScript.
+Java or pass:[C++]/#, and if you're a Python person and haven't used either of
+those languages in a long time (or indeed ever), those code listings can be
+quite trying. There's a reason the latest edition of that other classic text,
+https://martinfowler.com/books/refactoring.html[Refactoring], is in JavaScript.
 
 So we hope this book will make for a lightweight introduction to some
 of the key architectural patterns that support domain-driven design
@@ -96,13 +97,13 @@ direction a bit to be about DDD+event-driven microservices?
 
 Here are a few things we assume about you, dear reader.
 
-We assume you've been close to some reasonably complex Python applications.
+* We assume you've been close to some reasonably complex Python applications.
 
-We assume you've seen some of the pain that comes with trying to manage
-that complexity.
+* We assume you've seen some of the pain that comes with trying to manage
+  that complexity.
 
-We do _not_ assume that you already know anything about DDD, or any of the
-classic application architecture patterns.
+* We do _not_ assume that you already know anything about DDD, or any of the
+  classic application architecture patterns.
 
 We structure our explorations of architectural patterns around an example app,
 building it up chapter by chapter.  We use test-driven development (TDD) at
@@ -145,16 +146,18 @@ while the book is still in its draft form!
 
 ==== Part 1: Dependency Inversion and Domain Modelling
 
-Chapter 1: Domain Modelling and DDD::
+Domain Modelling and DDD (Chapters 1 and 6)::
     At some level, everyone has learned the lesson that complex business
     problems need to be reflected in code, in the form of a model of the domain.
     But why does it always seem to be so hard to do it, without getting tangled
     up with infrastructure concerns, with our web frameworks, or whatever else?
     In this chapter we give a broad overview of _domain modelling_ and DDD, and
     show how to get started with a model that has no external dependencies, and
-    fast unit tests.
+    fast unit tests. Later we return to DDD patterns to discuss how to choose
+    the right _Aggregate_, and how this choice relates to questions of data
+    integrity.
 
-Chapter 2, 4 and 5: Repository, Service Layer and Unit of Work Patterns::
+Repository, Service Layer and Unit of Work Patterns (Chapter 2, 4 and 5)::
     In these three chapters we present three closely related and
     mutually reinforcing patterns that support our ambition to keep
     the model free of extraneous dependencies.  We build a layer of
@@ -166,15 +169,11 @@ Chapter 2, 4 and 5: Repository, Service Layer and Unit of Work Patterns::
 [SG] Bit of pedantry - this is the first time you have used CLI acronym,
 should be spelled out?
 
-Chapter 3: An Aside on Coupling and Abstractions::
+An Aside on Coupling and Abstractions (Chapter 3)::
     After presenting the first abstraction (Repository pattern), we take the
     opportunity for a general discussion of how to choose abstractions, and
     what their role is in choosing how our software is coupled together.
 
-Chapter 6: Aggregate Pattern::
-    A brief return to the world of DDD, where we discuss how to choose the
-    right _Aggregate_, and how this choice relates to questions of data
-    integrity
 
 
 ==== Part 2: Event-Driven Architecture
@@ -239,7 +238,7 @@ Here's three different ways you might code along with the book:
   hand you're likely to learn the most
 
 * For lower effort, in each chapter we'll outline an "exercise for the reader,"
-  and point you to a Github location where you can download some partially-finished
+  and point you to a GitHub location where you can download some partially-finished
   code for the chapter with a few missing parts to write yourself.
 
 
@@ -250,7 +249,7 @@ help you to get some safe practice.
 
 The code (and the online version of the book) is licensed under a Creative
 Commons CC-By-ND license. If you want to re-use any of the content from this
-book and you have any worries about the license terms you can contact O'Reilly
+book and you have any worries about the license, you can contact O'Reilly
 at pass:[<a class="email" href="mailto:permissions@oreilly.com"><em>permissions@oreilly.com</em></a>].
 
 
