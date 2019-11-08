@@ -269,7 +269,8 @@ We can think of these as three distinct _responsibilities_ that the code has.
 
 Remember that we want to find _simplifying abstractions_ for each of these
 responsibilities. That will let us hide the messy details so that we can
-focus on the interesting logic.
+focus on the interesting logic.footnote:[If you're used to thinking in terms of
+interfaces, that's what we're trying to define here.]
 
 NOTE: In this chapter we're refactoring some gnarly code into a more testable
     structure by identifying the separate tasks that need to be done and giving
@@ -279,13 +280,22 @@ NOTE: In this chapter we're refactoring some gnarly code into a more testable
 ////
 [SG] This makes it sound like your only motivation for refactoring is so that you
 can test more easily - maybe it is? Is TDD this extreme?
+
+(HP) this is a good question.  I don't _think_ that's quite what we're trying to
+do, or not quite the lens we want to put on it.  If the only tests we needed were
+the two above, then we'd be fine.  But the thing is, our current implementation
+is full of bugs, we need to write lots more tests to get it working, and doing
+so with the current cumbersome setup is a pain.  And it would be even more of a
+pain if we added new requirements like `--dry-run` or something.
+
+TODO: write this up somewhere.
 ////
 
 For (1) and (2), we've already intuitively started using an abstraction, a
-dictionary of hashes to paths, and you may already have been thinking, "why not
+dictionary of hashes to paths.  You may already have been thinking, "why not
 use build up a dictionary for the destination folder as well as the source,
 then we just compare two dicts?"  That seems like a very nice way to abstract
-the current state of the filesystem.
+the current state of the filesystem:
 
     source_files = {'hash1': 'path1', 'hash2': 'path2'}
     dest_files = {'hash1': 'path1', 'hash2': 'pathX'}
@@ -400,11 +410,9 @@ def determine_actions(src_hashes, dst_hashes, src_folder, dst_folder):  #<2>
     hashes and filenames, what should we copy/move/delete?"  takes simple
     data structures and returns simple data structures.
 
-<3> And our top-level module now contains almost no logic whatseover, it's
+<3> And our top-level function now contains almost no logic whatseover, it's
     just an imperative series of steps: gather inputs, call our logic,
     apply outputs.
-
-// [SG] What is the top-level module - is this the sync funtion?
 
 
 Our tests now act directly on the `determine_actions()` function:
@@ -415,14 +423,13 @@ Our tests now act directly on the `determine_actions()` function:
 ====
 [source,python]
 ----
-    @staticmethod
     def test_when_a_file_exists_in_the_source_but_not_the_destination():
         src_hashes = {'hash1': 'fn1'}
         dst_hashes = {}
         actions = list(determine_actions(src_hashes, dst_hashes, Path('/src'), Path('/dst')))
         assert actions == [('copy', Path('/src/fn1'), Path('/dst/fn1'))]
+...
 
-    @staticmethod
     def test_when_a_file_has_been_renamed_in_the_source():
         src_hashes = {'hash1': 'fn1'}
         dst_hashes = {'hash1': 'fn2'}
@@ -435,11 +442,14 @@ Our tests now act directly on the `determine_actions()` function:
 Because we've disentangled the logic of our program - the code for identifying
 changes - from the low-level details of IO, we can easily test the core of our code.
 
-////
-[SG] I can see this tests determine_actions() but what happened to the test of sync code?  Isn't sync the
-only real public method in the module?  Is determine_actions going to be public - I am consfused,
-are you throwing sync away...?
-///
+With this approach we've switched from testing our main entrypoint function,
+`sync()`, to testing a lower-level function, `determine_actions()`.  You might
+decide that's fine because `sunc()` is now so simple.  Or you might decide to
+keep some integration/acceptance tests to test that `sync()`.  But there's
+another option, which is to modify the `sync()` function so that it can
+be unit tested _and_ end-to-end tested;  it's an approach Bob calls
+"edge-to-edge testing".
+
 
 ==== Testing Edge-to-Edge with Fakes
 
@@ -458,37 +468,27 @@ system together, but fake the IO, sort of _edge-to-edge_.
 [source,python]
 [role="skip"]
 ----
-def synchronise_dirs(reader, filesystem, source_root, dest_root): #<1>
+def sync(reader, filesystem, source_root, dest_root): #<1>
 
     source_hashes = reader(source_root) #<2>
     dest_hashes = reader(dest_root)
 
     for sha, filename in src_hashes.items():
-        if sha not in dst_hashes:
+        if sha not in dest_hashes:
             sourcepath = source_root / filename
             destpath = dest_root / filename
             filesystem.copy(destpath, sourcepath) #<3>
 
-        elif dst_hashes[sha] != filename:
-            olddestpath = dest_root / dst_hashes[sha]
+        elif dest_hashes[sha] != filename:
+            olddestpath = dest_root / dest_hashes[sha]
             newdestpath = dest_root / filename
-            filesystem.move(oldestpath, newdestpath)
+            filesystem.move(olddestpath, newdestpath)
 
     for sha, filename in dst_hashes.items():
-        if sha not in src_hashes:
-            filesystem.del(dest_root/filename)
+        if sha not in source_hashes:
+            filesystem.delete(dest_root/filename)
 ----
 ====
-
-////
-[SG]  typos(?) in the code snippet above:
-source_hashes -> src_hashes (or vice versa)
-dest_hashes  ->  dst_hashes
-olddestpath -> oldestpath
-filesystem.del -> filesystem.delete(*)
-////
-
-//[SG] got to here...
 
 <1> Our top-level function now exposes two new dependencies, a `reader` and a
     `filesystem`
@@ -502,8 +502,6 @@ TIP: Notice that, although we're using dependency injection, there was no need
     book we often show ABCs because we hope they help to understand what the
     abstraction is, but they're not necessary.  Python's dynamic nature means
     we can always rely on duck typing.
-
-\\[SG] how did we get to this implementation - what happened to the sync function
 
 [[bob_tests]]
 .Tests using DI
