@@ -2,6 +2,9 @@
 [preface]
 == Introduction: Why Do Our Designs Go Wrong?
 
+// TODO (CC): remove "preface" marker from this chapter and check if they renumber correctly
+// with this as zero. figures in this chapter should be "Figure 0-1 etc"
+
 What comes to mind when you hear the word _chaos?_ Perhaps you think of a noisy
 stock exchange, or your kitchen in the morning - everything confused and
 jumbled. When you think of the word _order_ perhaps you think of an empty room,
@@ -26,32 +29,34 @@ system, we have grand ideas that our code will be clean and well-ordered, but
 over time we find that it gathers cruft and edge cases, and ends up a confusing
 morass of manager classes and utils modules. We find that our sensibly layered
 architecture has collapsed into itself like an over-soggy trifle. Chaotic
-software systems are characterised by a sameness of function: API handlers that
+software systems are characterized by a sameness of function: API handlers that
 have domain knowledge, and send emails and perform logging; "business logic"
 classes that perform no calculations but do perform IO; and everything coupled
 to everything else so that changing any part of the system becomes fraught with
 danger. This is so common that software engineers have their own term for
 chaos: The Big Ball of Mud anti-pattern (<<bbom_image>>)footnote:[Big Ball of Mud illustration from https://thedailywtf.com/articles/Enterprise-Dependency-Big-Ball-of-Yarn].
 
+//TODO: get permission for image reuse
+
 [[bbom_image]]
-.A real-life class dependency diagram
+.A real-life dependency diagram
 image::images/big_ball_of_yarn.jpg[]
 
-Big ball of mud is the natural state of software in the same way that wilderness
-is the natural state of your garden. It takes energy and direction to
-prevent the collapse. Fortunately, the techniques to avoid creating a big ball
-of mud aren't complex.
+TIP: Big ball of mud is the natural state of software in the same way that wilderness
+    is the natural state of your garden. It takes energy and direction to
+    prevent the collapse.
+
+Fortunately, the techniques to avoid creating a big ball of mud aren't complex.
 
 === Encapsulation and Abstractions
 
 The term _encapsulation_ covers two closely related ideas: simplifying
-behavior, and hiding data. In this book, when we say "encapsulation" we're
-using the first sense. We encapsulate behavior by identifying a task
-that needs to be done in our code, and giving that task to a well defined
-object or function; we call that an _abstraction_.
+behavior and hiding data. In this book, we're using the first sense. We
+encapsulate behavior by identifying a task that needs to be done in our code,
+and giving that task to a well defined object or function; we call that an
+_abstraction_.
 
-Take a look at the following two snippets of Python code, <<urllib_example>> and
-<<requests_example>>:
+Take a look at the following two snippets of Python code:
 
 
 [[urllib_example]]
@@ -112,21 +117,21 @@ for r in duckduckgo.query('Sausages').results:
 ====
 
 Encapsulating behavior using abstractions is a powerful tool for making
-our code more expressive, more testable, and easier to maintain.
+code more expressive, more testable, and easier to maintain.
 
-
-NOTE: This approach is inspired by the OO practice of
+NOTE: This approach is inspired by a classic approach from the Object-Oriented (OO)
+    world called
     http://www.wirfs-brock.com/Design.html[responsibility-driven design].
     which would use the words _roles_ and _responsibilities_ rather than tasks.
     The main point is to think about code in terms of behavior, rather than
     in terms of data or algorithms.  If you've come across CRC cards, they're
     driving at the same thing.
 
-In a traditional OO language you might use an abstract base class or an
-interface to define an abstraction.  In Python you can (and we sometimes do)
-use ABCs, but you can also rely on duck typing.  The abstraction can just mean,
-"the public API of the thing you're using"; a function name plus some
-arguments, for example.
+In a traditional OO language like Java or C#, you might use an abstract base
+class (ABC) or an interface to define an abstraction.  In Python you can (and we
+sometimes do) use ABCs, but you can also happily rely on duck typing.  The
+abstraction can just mean, "the public API of the thing you're using" --a
+function name plus some arguments, for example.
 
 Most of the patterns in this book involve choosing an abstraction, so you'll
 see plenty of examples in each chapter.  We also talk about some general
@@ -137,19 +142,19 @@ heuristics for choosing abstractions in <<chapter_03_abstractions>>.
 
 Encapsulation and abstraction help us by hiding details and protecting the
 consistency of our data, but we also need to pay attention to the interactions
-between our objects and functions. When one function, module or object uses
+between our objects and functions. When one function, module, or object uses
 another, we say that the one _depends on_ the other. These dependencies form a
 kind of network or graph.
 
-In a big ball of mud, the dependencies are out of control. Changing one node of
-the graph becomes difficult because it has the potential to affect many other
-parts of the system. Layered architectures are one way of tackling this
-problem. In a layered architecture, we divide our code into discrete categories
-or roles and we introduce rules about which categories of code can call each
-other.
+In a big ball of mud, the dependencies are out of control (as you saw in
+<<bbom_image>>). Changing one node of the graph becomes difficult because it
+has the potential to affect many other parts of the system. Layered
+architectures are one way of tackling this problem. In a layered architecture,
+we divide our code into discrete categories or roles and we introduce rules
+about which categories of code can call each other.
 
-For example most people are familiar with the three layered architecture (see
-<<layered_architecture1>>):
+For example most people are familiar with the three layered architecture shown
+in <<layered_architecture1>>:
 
 [[layered_architecture1]]
 .Layered architecture
@@ -177,7 +182,7 @@ image::images/layered_architecture.png[]
 
 Layered architecture is perhaps the most common pattern for building business
 software. In this model we have user-interface components, which could be a web
-page, or an API, or a command line; these user-interface components communicate
+page, an API, or a command line; these user-interface components communicate
 with a business logic layer that contains our business rules and our workflows;
 and finally we have a data layer that's responsible for storing and retrieving
 data.
@@ -208,12 +213,13 @@ adapter layer.
 https://github.com/cosmicpython/book/issues/49
 ////
 
-You might be familiar with the dependency inversion principle already, because
-it's the D in the SOLIDfootnote:[Uncle Bob's five principles of object-oriented
+You might be familiar with the dependency inversion principle (DIP) already, because
+it's the D in the SOLIDfootnote:["Uncle" Bob Martin's five principles of object-oriented
 design: Single responsibility, Open for extension but
 closed for modification, Liskov substitution, Interface segregation, and
-Dependency Inversion.  There's a good overview, with examples, at
-https://scotch.io/bar-talk/s-o-l-i-d-the-first-five-principles-of-object-oriented-design]
+Dependency Inversion.  Here's a
+https://scotch.io/bar-talk/s-o-l-i-d-the-first-five-principles-of-object-oriented-design][good overview],
+with examples.]
 mnemonic.
 
 Unfortunately we can't illustrate the DIP using three tiny code listings like
@@ -233,7 +239,7 @@ In the meantime, we can talk about the formal definition of the DIP, which is:
 
 But what does this mean? Let's take it bit by bit.
 
-_High level modules_ are the code that your organisation really cares about.
+_High level modules_ are the code that your organization really cares about.
 Perhaps you work for a pharmaceutical company, and your high-level modules deal
 with patients and trials. Perhaps you work for a bank, and your high level
 modules manage trades and exchanges. The high-level modules of a software
