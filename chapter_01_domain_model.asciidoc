@@ -7,7 +7,6 @@ code, in a way that's highly compatible with TDD.  We'll discuss _why_
 domain modelling matters, and we'll look at a few key patterns for modelling
 domains: Entities, Value Objects, and Domain Services.
 
-// [SG] I do like an overview - thank you.
 
 === What is a Domain Model?
 
@@ -101,9 +100,6 @@ complex ideas and processes are boiled down to a single word or phrase.
 When we hear our business stakeholders using unfamiliar words, or using terms
 in a specific way, we should listen to understand the deeper meaning and encode
 their hard-won experience into our software.
-
-
-// [SG] Lovely explanation .. go on say it ... say ubiquitous language
 
 We're going to use a real-world domain model throughout this book, specifically
 a model from our current employment. Made.com is a successful furniture
@@ -284,7 +280,7 @@ And here is a domain model that meets our requirements:
 [source,python]
 [role="non-head"]
 ----
-@dataclass(frozen=True)  #<1>
+@dataclass(frozen=True)  #<1><2>
 class OrderLine:
     orderid: str
     sku: str
@@ -301,31 +297,24 @@ class Batch:
         self.available_quantity = qty
 
     def allocate(self, line: OrderLine):
-        self.available_quantity -= line.qty
+        self.available_quantity -= line.qty  #<3>
 ----
 ====
-
-////
-
-[SG]
- I sort of get why you are not putting imports in, because then you would have to start defining a project
- structure (would that be so awful) but maybe put in
- from dataclasses import dataclass
- from typing import Optional
- from datetime import date
- or am I missing something obvious.
- Maybe worth pointing out that you are implementing the simplest solution to pass this first test -
- I presume that is what you are doing anyway as this allocate method is not checking for sku. When I
- first read this I thought that the lack of check for sku was a mistake.
-
-////
 
 <1> `OrderLine` is an immutable dataclassfootnote:[In previous Python versions we
     might have used a namedtuple.  You could also check out Hynek Schlawack's
     excellent https://pypi.org/project/attrs/[attrs].]
     with no behavior.
 
-<2> Type hints are still a matter of controversy in the Python world. For
+<2> We're not showing imports in most code listings, in an attempt to keep them
+    clean. We're hoping you can guess
+    that this came via `from dataclasses import dataclass`, likewise
+    `typing.Optional` and `datetime.date`.  If you want to double-check
+    anything, you can see the full, working code for each chapter in
+    its branch, eg
+    https://github.com/python-leap/code/tree/chapter_01_domain_model[github.com/python-leap/code/tree/chapter_01_domain_model]
+
+<3> Type hints are still a matter of controversy in the Python world. For
     domain models, they can sometimes help to clarify or document what the
     expected arguments are, and people with IDEs are often grateful for them.
     You may decide the price paid in terms of readability is too high.
@@ -333,8 +322,12 @@ class Batch:
 
 Our implementation here is trivial: a `Batch` just wraps an integer
 `available_quantity` and we decrement that value on allocation. We've written
-quite a lot of code just to subtract one number from another, but we think that
-modelling our domain precisely will pay off.
+quite a lot of codefootnote:[
+Or perhaps you think there's not enough code?  What about some sort of check
+that the sku in the `OrderLine` matches `Batch.sku`?  We saved some thoughts on
+validation for <<appendix_validation>>]
+just to subtract one number from another, but we think that modelling our
+domain precisely will pay off.
 
 Let's write some new failing tests:
 
@@ -369,14 +362,6 @@ def test_cannot_allocate_if_skus_do_not_match():
     assert batch.can_allocate(different_sku_line) is False
 ----
 ====
-
-///
-[SG] so is why you are not putting imports in like
- from datetime import date
- because now you need to import Batch and OrderLine and you do not want to tell people where to put these
- in their project structure?
- from yourproject.domain.models import Batch, OrderLine
-///
 
 There's nothing too unexpected here. We've refactored our test suite so that we
 don't keep repeating the same lines of code to create a batch and a line for
@@ -459,21 +444,6 @@ class Batch:
 ----
 ====
 
-////
-TODO (EJ)
-# e.j. I find the fact that allocate and deallocate can fail silently
-#      disconcerting, because it could hide bugs.
-# e.j. The allocated_quantity, avaliable_quantity, and can_allocate properties/methods
-#      might here would be a good opportunities to sidebar on encapsulation, information hiding and abstraction.
-#      I am unsure what audience you are targeting.
-////
-
-
-////
-[SG] If the batch cannot be allocated, the allocate method just returns without complaint.
-I would prefer to know if I tried to allocate to a batch and I was not able to.
-Was it because I targeted the wrong batch for my sku?  Was it because the batch was exhausted?
-////
 
 <<model_diagram>> shows the model in diagram form.
 
@@ -504,8 +474,14 @@ image::images/model_diagram.png[]
 Now we're getting somewhere! A batch now keeps track of a set of allocated
 OrderLine objects. When we allocate, if we have enough available quantity, we
 just add to the set. Our `available_quantity` is now a calculated property:
-purchased quantity - allocated quantity. Using a set here makes it simple for us
-to handle the last test, because items in a set are unique.
+purchased quantity - allocated quantity.
+
+Yes there's plenty more we could do, it's a little disconcerting that
+both `allocate()` and `deallocate()` can fail silently, but we've got the
+basics.
+
+Incidentally, using a set for `._allocations` makes it simple for us
+to handle the last test, because items in a set are unique:
 
 
 [[last_test]]
@@ -521,8 +497,20 @@ def test_allocation_is_idempotent():
 ----
 ====
 
-Perhaps you think this model is too trivial to bother with object-orientation,
-but throughout this book, we're going to extend our simple domain model, and
+At the moment, it's probably a valid criticism to say that the domain model is
+too trivial too bother with DDD (or even object-orientation!).  In real life,
+any number of business rules and edge cases crop up: customers can ask for
+delivery on specific future dates, which means we might not want to allocate
+them to the earliest batch.  Some skus aren't in batches, but ordered on
+demand directly from suppliers, so they have different logic.  Depending on the
+customer's location, we can only allocate to a subset of warehouses and shipments
+that are in their region... except for some skus we're happy to deliver from a
+warehouse in a different region if we're out of stock in the home region. And
+so on.  A real business in the real world knows how to pile on complexity faster
+than we can show on the page!
+
+But taking this simple domain model as a placeholder for something more complex,
+in the rest of the book, we're going to extend our simple domain model, and
 plug it into the real world of APIs and databases and spreadsheets, and we'll
 see how sticking rigidly to our principles of encapsulation and careful
 layering will help us to avoid a ball of mud.
@@ -554,18 +542,15 @@ class Batch:
         self.sku = sku
         self.reference = ref
         self.available_quantity = qty
-
 ----
 ====
 
 
-That would allow our type checker to make sure that we don't pass a Sku where a
-Reference is expected, for example.
+That would allow our type checker to make sure that we don't pass a `Sku` where a
+`Reference` is expected, for example.
 
 Whether you think this is wonderful or appallingfootnote:[It is appalling.
-Please, please don't do this. Harry.] is a matter of debate.
-
-// [SG] I love type hints but nooooooooo
+Please, please don't do this. --Harry.] is a matter of debate.
 
 *******************************************************************************
 
@@ -601,7 +586,7 @@ _line_ does not. (Even if we add the order reference to the `OrderLine` class,
 it's not something that uniquely identifies the line itself).
 
 Whenever we have a business concept that has some data but no identity, we
-often choose to represent it using a Value Object. A Value Object is any
+often choose to represent it using a _Value Object_. A Value Object is any
 domain object that is uniquely identified by the data it holds; we usually
 make them immutable.
 
@@ -621,7 +606,7 @@ class OrderLine:
 ----
 ====
 
-Introduced in Python 3.7, `Dataclasses` are a neat way to represent value objects;
+Introduced in Python 3.7, `dataclasses` are a neat way to represent value objects;
 if you're on Python 2, you could use `namedtuples` instead. Either technique
 will give you _value equality_ which is the fancy way of saying "two lines with
 the same orderid, sku and qty are equal."
@@ -867,17 +852,6 @@ def test_returns_allocated_batch_ref():
 ----
 ====
 
-///
-[SG] Deliberate ommission of imports?
-from datetime import datetime, timedelta
-from yourproject.domain.models import Batch, OrderLine
-from yourproject.domain.services import allocate
-
-today = datetime.now()
-tomorrow = today + timedelta(days=1)
-later = today + timedelta(days=7)
-
-///
 And our service might look like this:
 
 
@@ -954,6 +928,7 @@ def test_raises_out_of_stock_exception_if_cannot_allocate():
 then try to allocate one more to see the exception. This test makes me think
 for goodness sake you are just targeting the wrong batch.
 
+TODO: (HP): yes it would.
 ////
 
 We won't bore you too much with the implementation, but the main thing
@@ -1004,6 +979,8 @@ Not everything has to be an object::
     "Factory" are a code smell.
 
 // [SG] Why is a Factory a code smell?
+// [HP] A *class* called Factory is a code smell.  A function called
+// factory _might_ be fine.
 
 This is the time to apply your best OO design principles::
     revise SOLID.  has-a vs is-a.  composition over inheritance. etc etc.

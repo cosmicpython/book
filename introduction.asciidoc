@@ -175,8 +175,6 @@ image::images/layered_architecture.png[]
 ----
 
 
-// [SG] do you really mean layers and not tiers, maybe we do not care.
-
 Layered architecture is perhaps the most common pattern for building business
 software. In this model we have user-interface components, which could be a web
 page, or an API, or a command line; these user-interface components communicate
@@ -193,11 +191,11 @@ model inside out by obeying one simple principle.
 
 ////
 TODO:
-You can explain DI
 
 [SG] DI? Is this still Dependency Inversion?  Not Dependency Injection right?
+[HP yes]
 
-more easily once you have introduced layers by noting that
+You can explain DI more easily once you have introduced layers by noting that
 as we depend downwards, it becomes impossible to use something from a higher
 layer. To correct this, you need to create an interface in your layer, and have
 something in the higher layer implement that. The DI is when you provide the
