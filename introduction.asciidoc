@@ -255,8 +255,8 @@ whether the high-level concepts work correctly. If payroll runs on time, your
 business is unlikely to care whether that's a cron job or a transient function
 running on Kubernetes.
 
-_Depends on_ doesn't mean "imports" or "calls", necessarily, but more a more
-general idea that one module "knows about" or "needs" another module.
+_Depends on_ doesn't mean _imports_ or _calls_, necessarily, but more a more
+general idea that one module _knows about_ or _needs_ another module.
 
 And we've mentioned _abstractions_ already: they're simplified interfaces that
 encapsulate some behavior, in the way that our duckduckgo module encapsulated a
@@ -292,15 +292,15 @@ details it's abstracting?  By the time we get to <<chapter_04_service_layer>>,
 we'll have a concrete example which should make this all a bit more clear.
 
 
-=== A Place for all our Business Logic: the Domain Model
+=== A Place for All Our Business Logic: the Domain Model
 
 But before we can turn our three-layered architecture inside out, we need to
 talk more about that middle layer, the "high-level modules", the business
 logic. One of the most common reasons that our designs go wrong is that
 business logic becomes spread out throughout the layers of our application,
-hard to identify, understand and change.
+making it hard to identify, understand, and change.
 
-In <<chapter_01_domain_model>>, we'll show how to build a business
+<<chapter_01_domain_model>> shows how to build a business
 layer using a _Domain Model_, and the rest of the patterns in Part 1 will show
 how we can keep the domain model easy to change and free of low-level concerns,
 by choosing the right abstractions and continuously applying the DIP.
