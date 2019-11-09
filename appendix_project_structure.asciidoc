@@ -65,7 +65,7 @@ be of interest to outline the moving parts.
 
 <3> All the actual source code for our app, including the domain model, the
     flask app, and infrastructure code, lives in a Python package inside
-    _src_,footnote:[More on _src_ folders: https//hynek.me/articles/testing-packaging/]
+    _src_,footnote:[More on _src_ folders: https://hynek.me/articles/testing-packaging/]
     which we install using `pip install -e` and the _setup.py_ file.  This makes
     imports easy. Currently the structure within this module is totally flat,
     but for a more complex project you'd expect to grow a folder hierarchy
@@ -145,7 +145,7 @@ Ed:
 where the config just gets imported anywhere, and anything remotely related to
 configuration gets put in there.
 
-https://github.com/python-leap/book/issues/52
+https://github.com/cosmicpython/book/issues/52
 ////
 // TODO (DS): I reckon configuration patterns are an important part of the architecture your outlining, i wonder if they belong in the main book?
 

@@ -297,12 +297,12 @@ TODO: Defend the mocking point
 ////
 TODO:
 
-https://github.com/python-leap/book/blame/master/chapter_05_uow.asciidoc#L238
+https://github.com/cosmicpython/book/blame/master/chapter_05_uow.asciidoc#L238
 Maybe "Only mock your immediate neighbors" is more applicable?
 
 I think of "Don't mock what you don't own" as referring specifically to "mock verification" (e.g. assert mock_session.commit.assert_called_once()), with the reason for this advice being that you cannot change those interfaces. So the mock has no value in providing feedback to your design.
 
-https://github.com/python-leap/book/issues/44
+https://github.com/cosmicpython/book/issues/44
 ////
 
 === Using the UoW in the Service Layer
@@ -555,7 +555,7 @@ or rollback on exit.  If you feel like going all-functional rather than
 messing about with all these classes, you could use `@contextmanager` from
 `contextlib`.
 
-https://github.com/python-leap/code/tree/chapter_05_uow_exercise
+https://github.com/cosmicpython/code/tree/chapter_05_uow_exercise
 
 We've stripped out both the actual UoW and the fakes, as well as paring back
 the abstract UoW.  Why not send us a link to your repo if you come up with
