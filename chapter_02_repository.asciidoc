@@ -65,7 +65,7 @@ and maintain.
 Sadly, at some point we'll need to put our perfect little model in the hands of
 users and we'll need to contend with the real world of spreadsheets and web
 browsers and race conditions. For the next few chapters we're going to look at
-how we can connect our idealised domain model to external state.
+how we can connect our idealized domain model to external state.
 
 We expect to be working in an agile manner, so our priority is to get to an MVP
 
@@ -580,7 +580,7 @@ it very easy to make fundamental changes to the way we store things (see
 
 In addition, repository pattern is so common in the DDD world that, if you
 do collaborate with programmers that have come to Python from the Java and C#
-worlds, they're likely to recognise it.  <<repository_pattern_diagram>> shows
+worlds, they're likely to recognize it.  <<repository_pattern_diagram>> shows
 an illustration.
 
 [[repository_pattern_diagram]]
@@ -847,7 +847,7 @@ Repository pattern is a simple abstraction around permanent storage::
 *****************************************************************
 
 Bearing the Rich Hickey quote in mind, in each chapter we're going to try
-and summarise the costs and benefits of each architectural pattern we introduce.
+and summarize the costs and benefits of each architectural pattern we introduce.
 We want to be very clear that we're not saying every single application needs
 to be built this way; only sometimes does the complexity of the app and domain
 make it worth investing the time and effort in adding these extra layers of
@@ -948,6 +948,6 @@ needing to think about the database until later.
 
 You'll be wondering, how do we actually instantiate these repositories, fake or
 real? What will our flask app actually look like?  We'll find out in the next
-exciting instalment, <<chapter_04_service_layer,the Service Layer pattern>>.
+exciting installment, <<chapter_04_service_layer,the Service Layer pattern>>.
 
 But first, a brief digression.

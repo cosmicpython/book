@@ -151,7 +151,7 @@ def test_api_returns_allocation(add_stock):
 ====
 
 <1> `random_sku()`, `random_batchref()` etc are little helper functions that
-    add generate some randomised characters using the `uuid` module.  Because
+    add generate some randomized characters using the `uuid` module.  Because
     we're running against an actual database now, this is one way to prevent
     different tests and runs from interfering with each other.
 

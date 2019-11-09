@@ -22,7 +22,7 @@ We'll start by doing the simplest, most expeditious thing, and talk about
 why it's exactly this kind of decision that leads us to Big Ball of Mud.
 
 Then we'll show how to use _Domain Events_ to separate side-effects from our
-use cases, and how to build a simple _Message Bus_ for triggering behaviour
+use cases, and how to build a simple _Message Bus_ for triggering behavior
 based on those events.  We'll show a few different options for creating
 those events and how to pass them to the message bus, and finally we'll show
 how the Unit of Work can be modified to connect the two together elegantly.
@@ -216,7 +216,7 @@ Bus to respond to events, and invoke some new operation.
 
 ==== Events Are Simple Dataclasses
 
-An Event is a kind of _value object_. They don't have any behaviour, because
+An Event is a kind of _value object_. They don't have any behavior, because
 they're pure data structures. We always name events in the language of the
 domain, and we think of them as part of our domain model.
 
@@ -513,7 +513,7 @@ class SqlAlchemyRepository(AbstractRepository):
 ====
 
 
-<1> We initialise a set to store objects seen.  That means our implementations
+<1> We initialize a set to store objects seen.  That means our implementations
     need to call `super().__init__()`
 
 <2> The parent `add()` method adds things to `.seen`, and now requires subclasses

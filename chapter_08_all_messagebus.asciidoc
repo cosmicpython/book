@@ -555,7 +555,7 @@ def change_batch_quantity(
 // TODO (DS): Indentation looks off
 
 
-We realise we'll need a new query type on our repository:
+We realize we'll need a new query type on our repository:
 
 [[get_by_batchref]]
 .A new query type on our repository (src/allocation/repository.py)
@@ -602,7 +602,7 @@ class AbstractRepository(abc.ABC):
 
 //TODO: type hints on get_by_batchref
 
-And on our fakerepository too:
+And on our `FakeRepository` too:
 
 [[fakerepo_get_by_batchref]]
 .Updating the fake repo too (tests/unit/test_handlers.py)

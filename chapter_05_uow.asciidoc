@@ -96,7 +96,7 @@ def test_uow_can_retrieve_a_batch_and_allocate_to_it(session_factory):
 ----
 ====
 
-<1> We initialise the Unit of Work using our custom session factory,
+<1> We initialize the Unit of Work using our custom session factory,
     and get back a `uow` object to use in our `with` block.
 
 <2> The UoW gives us access to the batches repository via
@@ -279,7 +279,7 @@ def test_allocate_returns_allocation():
 
 <1> `FakeUnitOfWork` and `FakeRepository` are tightly coupled,
     just like the real Unit of Work and Repository classes.
-    That's fine because we recognise that the objects are collaborators.
+    That's fine because we recognize that the objects are collaborators.
 
 <2> Notice the similarity with the fake `commit()` function
     from `FakeSession` (which we can now get rid of).  But it's
@@ -343,7 +343,7 @@ def allocate(
     on an _abstract_ Unit of Work.
 
 
-=== Explicit Tests for Commit/Rollback Behaviour
+=== Explicit Tests for Commit/Rollback Behavior
 
 To convince ourselves that the commit/rollback behavior works, we wrote
 a couple of tests:
@@ -550,7 +550,7 @@ For this chapter, probably the best thing to do is try to implement a
 UoW from scratch.  You could either follow the model we have quite closely,
 or perhaps experiment with separating the UoW (whose responsibilities are
 `commit()`, `rollback()` and providing the `.batches` repository) from the
-context manager, whose job is to initialise things, and then do the commit
+context manager, whose job is to initialize things, and then do the commit
 or rollback on exit.  If you feel like going all-functional rather than
 messing about with all these classes, you could use `@contextmanager` from
 `contextlib`.
