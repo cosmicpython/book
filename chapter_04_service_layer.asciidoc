@@ -1,6 +1,6 @@
 [[chapter_04_service_layer]]
 
-== Our First Use Case: Flask API and Service Layer.
+== Our First Use Case: Flask API and Service Layer
 
 Back to our allocations project! 
 
@@ -83,7 +83,7 @@ BatchRepository ---> Session : abstracts
 
 
 
-=== Connecting our Application to the Real World
+=== Connecting Our Application to the Real World
 
 Like any good agile team, we're hustling to try and get an MVP out and
 in front of the users to start gathering feedback.  We have the core
@@ -686,7 +686,7 @@ stuff, which we implement end-to-end; and tests about orchestration stuff, which
 we can test against the service layer in memory.
 
 
-=== How is our Test Pyramid Looking?
+=== How Is Our Test Pyramid Looking?
 
 Let's see what this move to using a Service Layer, with its own service-layer tests,
 does to our test pyramid:

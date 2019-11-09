@@ -50,7 +50,7 @@ model -> event [style=dotted, len=100]
 ----
 
 
-=== A New Requirement Leads Us To Consider A New Architecture
+=== A New Requirement Leads Us to Consider a New Architecture
 
 Rich Hickey talks about "situated software", meaning software that runs for
 extended periods of time, managing some real world process. Examples include
@@ -106,7 +106,7 @@ enforce the single responsibility principle, and it allows us to make choices ab
 transactions and data integrity.
 
 
-==== Imagining an Architecture Change: Everything Will Be An Event Handler
+==== Imagining an Architecture Change: Everything Will Be an Event Handler
 
 But before we jump in, think about where we're headed.  There are two
 kinds of flows through our system:
@@ -162,7 +162,7 @@ Refactoring] workflow, AKA "make the change easy, then make the easy change":
   handler for allocations that the API uses.
 
 
-=== Refactoring Service Functions To Message Handlers
+=== Refactoring Service Functions to Message Handlers
 
 We start by defining the two events that capture our current API inputs:
 `AllocationRequired` and `BatchCreated`:
@@ -268,7 +268,7 @@ The change might be clearer as a diff:
 ====
 
 
-==== The MessageBus needs to pass a UoW to each handler
+==== The MessageBus Needs to Pass a UoW to Each Handler
 
 Our event handlers now need a UoW.  We make a small modification
 to the main `messagebus.handle()` function:
@@ -312,7 +312,7 @@ class AbstractUnitOfWork(abc.ABC):
     double-dispatch and it's a common trick for managing a circular dependency.
 
 
-==== Our tests are all written in terms of events too:
+==== Our Tests Are All Written in Terms of Events Too:
 
 
 [[handler_tests]]
@@ -347,7 +347,7 @@ class TestAllocate:
 // TODO: (DS) why staticmethod?
 
 
-==== A temporary ugly hack: the messagebus has to return results
+==== A Temporary Ugly Hack: The Messagebus Has to Return Results
 
 Our API and our service layer currently want to know the allocated batch ref
 when they invoke our `allocate()` handler.  This means we need to put in
@@ -372,7 +372,7 @@ a temporary hack on our messagebus to let it return events.
 It's because we're mixing the read and write responsibilities in our system.
 We'll come back to fix this wart in <<chapter_09_cqrs>>.
 
-==== Modifying our API to do Events
+==== Modifying Our API to Do Events
 
 [[flask_uses_messagebus]]
 .Flask changing to messagebus as a diff (src/allocation/flask_app.py)
@@ -411,7 +411,7 @@ fully event-driven.
 TODO: recap?
 
 
-=== Implementing our new requirement
+=== Implementing Our New Requirement
 
 We're done with our refactoring phase. Our application is a message processor,
 everything is driven by events and the message bus.
@@ -448,7 +448,7 @@ end
 
 
 
-==== Our new event
+==== Our New Event
 
 The event that tells us a batch quantity has changed is very simple, it just
 nees a batch reference and a new quantity:
@@ -467,7 +467,7 @@ class BatchQuantityChanged(Event):
 ====
 
 
-=== Test-driving A New Handler
+=== Test-Driving a New Handler
 
 Following the lessons learned in <<chapter_03_service_layer>>,
 we can operate in "high gear," and write our unit tests at the highest
@@ -821,7 +821,7 @@ Singleton Pattern.
   and really stick to the SRP.
 
 
-=== Why have we achieved?
+=== Why Have We Achieved?
 
 Our ongoing objective with these architectural patterns is to try and have
 the complexity of our application grow more slowly than its size.  Here

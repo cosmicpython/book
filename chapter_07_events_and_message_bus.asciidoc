@@ -61,7 +61,7 @@ image::images/message_bus_diagram.png[]
 
 === Avoiding Making a Mess.
 
-==== First, Avoid Making a Mess of of our Web Controllers
+==== First, Avoid Making a Mess of of Our Web Controllers
 
 So.  Email alerts when we run out of stock. When we have a new requirement like
 this, that's not _really_ to do with the core domain, it's all too easy to
@@ -99,7 +99,7 @@ end up in a mess by patching things in this way. Sending emails isn't the job of
 our HTTP layer, and we'd like to be able to unit test this new feature.
 
 
-==== ... And Let's Not Make a Mess of our Model Either
+==== ... And Let's Not Make a Mess of Our Model Either
 
 Assuming we don't want to put this code into our web controllers, because
 we want them to be as thin as possible, we may look at putting it right at
@@ -380,7 +380,7 @@ service layer explicitly collects events from aggregates, and passes them to
 the messagebus.
 
 
-==== Option 2: The Service Layer Raises its own Events
+==== Option 2: The Service Layer Raises Its Own Events
 
 Another variant on this which we've used is that you can have the service layer
 in charge of creating and raising events directly, rather than having them

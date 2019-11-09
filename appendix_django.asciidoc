@@ -140,7 +140,7 @@ You can see that the implementation relies on the Django models having
 some custom methods for translating to and from our domain model.
 
 
-==== Custom Methods on Django ORM Classes to Translate To/From our Domain Model
+==== Custom Methods on Django ORM Classes to Translate To/From Our Domain Model
 
 NOTE: As in <<chapter_02_repository>>, we use dependency inversion.
     The ORM (Django) depends on the model, and not the other way around

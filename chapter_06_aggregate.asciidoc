@@ -569,7 +569,7 @@ class Product:
 //   also discuss similarity with eventsourcing version numbers.
 
 
-=== Testing for our Data Integrity Rules
+=== Testing for Our Data Integrity Rules
 
 Now to actually make sure we can get the behavior we want: if we have two
 concurrent attempts to do allocation against the same `Product`, one of them

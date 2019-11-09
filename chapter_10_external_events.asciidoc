@@ -1,5 +1,5 @@
 [[chapter_10_external_events]]
-== Event-driven Architecture: Using Events To Integrate Microservices
+== Event-Driven Architecture: Using Events to Integrate Microservices
 
 NOTE: Chapter under construction.
 
@@ -12,7 +12,7 @@ In this chapter:
 TODO: DIAGRAM GOES HERE
 
 
-=== How Do We Talk To The Outside World?
+=== How Do We Talk to the Outside World?
 
 In the last chapter we never actually spoke about _how_ we would receive
 the "batch quantity changed" events, or indeed, how we might notify the
@@ -28,7 +28,7 @@ to encompass the way that we handle incoming and outgoing messages from the
 system.
 
 
-==== Using A Redis Pubsub Channel For Integration
+==== Using a Redis Pubsub Channel for Integration
 
 To avoid the "distributed BBOM" antipattern, instead of temporally coupled HTTP
 API calls, we want to use some sort of asynchronous messaging layer to
@@ -80,7 +80,7 @@ MessageBus -> Redis : publish to line_allocated channel
 ----
 
 
-=== Test-driving It All Using An End-to-end Test
+=== Test-Driving It All Using an End-To-End Test
 
 Here's how we might start with an end-to-end test.  We can use our existing
 API to create batches, and then we'll test both inbound and outbound messages:
@@ -227,7 +227,7 @@ def publish(channel, event: events.Event):  #<3>
 <3> We also provide a helper function to publish events back into Redis.
 
 
-==== Our new outgoing event
+==== Our New Outgoing Event
 
 Here's what the `Allocated` event will look like:
 
@@ -320,7 +320,7 @@ much a topic for another book though).
 *******************************************************************************
 
 
-=== Wrap-up
+=== Wrap-Up
 
 * events can come _from_ the outside, but they can also be published
   externally -- our `publish` handler converts an event to a message
