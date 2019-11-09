@@ -9,7 +9,7 @@ SPECIAL = {
 }
 
 LOWERCASE = {
-    'with', 'our', 'is',
+    'with',
 }
 
 
