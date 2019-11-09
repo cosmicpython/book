@@ -54,14 +54,14 @@ roles are called _object neighborhoods_ which is, in our professional opinion,
 totally adorable.]
 This gives us three useful things:
 
-1) It gives us a stable snapshot of the database to work with, so that the
-objects we use aren't changing halfway through an operation.
+1. It gives us a stable snapshot of the database to work with, so that the
+   objects we use aren't changing halfway through an operation.
 
-2) It gives us a way to persist all of our changes at once so that if something
-goes wrong, we don't end up in an inconsistent state.
+2. It gives us a way to persist all of our changes at once so that if something
+   goes wrong, we don't end up in an inconsistent state.
 
-3) It offers a simple API to our persistence concerns and gives us a handy place
-to get a repository.
+3. It offers a simple API to our persistence concerns and gives us a handy place
+   to get a repository.
 
 
 //TODO (DS): Could be a good moment to revisit the diagram at the beginning of the book.
@@ -188,6 +188,9 @@ class AbstractUnitOfWork(abc.ABC):
 
 
 ==== The Real Unit of Work Uses Sqlalchemy Sessions
+
+The main thing that our concrete implementation adds is the
+database session:
 
 [[unit_of_work]]
 .the real SQLAlchemy Unit of Work (src/allocation/unit_of_work.py)

@@ -4,7 +4,7 @@
 
 Back to our allocations project! 
 
-In this chapter, we'll discuss the difference between orchestration logic,
+In this chapter, we discuss the difference between orchestration logic,
 business logic, and interfacing code, and we introduce the _Service Layer_
 pattern to take care of orchestrating our workflows and defining the use
 cases of our system.
@@ -94,23 +94,23 @@ Let's try and plug all the moving parts together as quickly as we
 can, and then refactor towards a cleaner architecture.  Here's our
 plan:
 
-* Use Flask to put an API endpoint in front of our `allocate` domain service.
-  Wire up the database session and our repository.  Test it with
-  an end-to-end test and some quick and dirty SQL to prepare test
-  data.
+1. Use Flask to put an API endpoint in front of our `allocate` domain service.
+   Wire up the database session and our repository.  Test it with
+   an end-to-end test and some quick and dirty SQL to prepare test
+   data.
 
-* Refactor out a _Service Layer_ to serve as an abstraction to
-  capture the use case, and sit between Flask and our Domain Model.
-  Build some service-layer tests and show how they can use the
-  `FakeRepository`.
+2. Refactor out a _Service Layer_ to serve as an abstraction to
+   capture the use case, and sit between Flask and our Domain Model.
+   Build some service-layer tests and show how they can use the
+   `FakeRepository`.
 
-* Experiment with different types of parameters for our service layer
-  functions; show that using primitive data types allows the service-layer's
-  clients (our tests and our flask API) to be decoupled from the model layer.
+3. Experiment with different types of parameters for our service layer
+   functions; show that using primitive data types allows the service-layer's
+   clients (our tests and our flask API) to be decoupled from the model layer.
 
-* Add an extra service called `add_stock` so that our service-layer
-  tests and end-to-end tests no longer need to go directly to the
-  storage layer to set up test data.
+4. Add an extra service called `add_stock` so that our service-layer
+   tests and end-to-end tests no longer need to go directly to the
+   storage layer to set up test data.
 
 
 === A First End-To-End (E2E) Test
@@ -1297,10 +1297,13 @@ we'll introduce one more pattern that works closely with Repository and
 Service Layer, the Unit of Work pattern, and everything will be absolutely
 lovely. You'll see!
 
+But first, as is customary, a pause for <<chapter_04_service_layer_tradeoffs>>,
+in which we consider the pros and cons of having a Service Layer at all.
+
 
 [[chapter_04_service_layer_tradeoffs]]
 [options="header"]
-.Service Layer: The Trade-Offs
+.Service Layer: The Tradeoffs
 |===
 |Pros|Cons
 a|
