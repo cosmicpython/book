@@ -22,9 +22,9 @@ should come first, and drive our storage requirements._
 After all, our customers don't care about the data model. They care about what
 the system *does*, otherwise they'd just use a spreadsheet.
 
-In this first part we'll look at how to build a rich object model through TDD
-(in <<chapter_01_domain_model,Chapter 1>>), and then we'll see how to keep that
-model decoupled from technical concerns. We'll see how to build
+In this first part of the book we'll look at how to build a rich object model
+through TDD (in <<chapter_01_domain_model,Chapter 1>>), and then we'll see how
+to keep that model decoupled from technical concerns. We'll see how to build
 persistence-agnostic code and how to create stable APIs around our domain so
 that we can refactor aggressively.
 
@@ -43,13 +43,14 @@ To do that, we'll look at four key design patterns:
 
 If you'd like a picture of where we're going, take a look at
 <<part1_components_diagram>>, but don't worry if none of it makes any sense
-yet!  We'll introduce each box one by one.
+yet!  We'll introduce each box in the figure, one by one.
 
 [[part1_components_diagram]]
 .A component diagram for our app at the end of Part 1
 image::images/part1_components_diagram.png[]
 
 //TODO: inline this diagram's source.
+//TODO: font size too small?
 
 We'll also take a little time out to talk about
 <<chapter_03_abstractions,coupling and abstractions>>, illustrating the
@@ -69,4 +70,4 @@ Several of the appendices are further explorations of the content from Part 1:
   CSVs.
 
 * Finally, <<appendix_django>> may be of interest if you're wondering how these
-  patterns might look if using Django, instead of Flask+SQLAlchemy
+  patterns might look if using Django, instead of Flask+SQLAlchemy.
