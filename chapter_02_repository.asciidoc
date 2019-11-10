@@ -32,6 +32,7 @@ package allocation {
 
   class Batch {
     allocate ()
+    ...
   }
 
 
@@ -51,7 +52,6 @@ package SqlAlchemy {
 @enduml
 ----
 
-// [SG] what happenend to the other methods on Batch that came in in Chapter 1
 
 
 === Persisting Our Domain Model
@@ -67,13 +67,10 @@ users and we'll need to contend with the real world of spreadsheets and web
 browsers and race conditions. For the next few chapters we're going to look at
 how we can connect our idealized domain model to external state.
 
-We expect to be working in an agile manner, so our priority is to get to an MVP
-
-// [SG] Pedantry, Is this the first time we see acronym MVP
-
-as quickly as possible.  In our case, that's going to be a web API. In a real
-project, you might dive straight in with some end-to-end tests and start
-plugging in a web framework, test-driving things outside-in.
+We expect to be working in an agile manner, so our priority is to get to a
+minimum viable product as quickly as possible.  In our case, that's going to be
+a web API. In a real project, you might dive straight in with some end-to-end
+tests and start plugging in a web framework, test-driving things outside-in.
 
 But we know that, no matter what, we're going to need some form of persistent
 storage, and this is a textbook, so we can allow ourselves a tiny bit more
@@ -325,12 +322,6 @@ def start_mappers():
 ----
 ====
 
-////
-[SG] missing imports?  Don't you need from sqlalchemy import Table, MetaData, Column, Integer, String
-Also is 'relationship' used?  Are you not going to tell them that they need to create the table and how
-to get the session? Am I missing something, perhaps this is only a code snippet
-////
-
 <1> The ORM imports (or "depends on" or "knows about") the domain model, and
     not the other way around.
 
@@ -489,7 +480,6 @@ find them again. Our in memory data would let us add new objects, just like a
 list or a set, and since the objects are in memory we never need to call a
 "Save" method, we just fetch the object we care about, and modify it in memory.
 
-// [SG] lovely explanation!
 
 ==== The Repository in the Abstract
 

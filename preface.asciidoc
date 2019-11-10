@@ -91,6 +91,7 @@ described was a book on designing enterprise software well in Python using estab
 techniques and patterns, more often seen in other languages. However in the last paragraph
 feels like event-driven microservices just suddenly pops in unannounced and the book changes
 direction a bit to be about DDD+event-driven microservices?
+TODO
 ////
 
 === Who Should Read This Book
@@ -166,8 +167,8 @@ Repository, Service Layer and Unit of Work Patterns (Chapter 2, 4 and 5)::
     primary use cases. We show how this layer makes it easy to build
     very thin entrypoints to our system, be it a Flask API or a CLI.
 
-[SG] Bit of pedantry - this is the first time you have used CLI acronym,
-should be spelled out?
+// [SG] Bit of pedantry - this is the first time you have used CLI acronym,
+// should be spelled out?
 
 An Aside on Coupling and Abstractions (Chapter 3)::
     After presenting the first abstraction (Repository pattern), we take the
