@@ -648,7 +648,8 @@ complex:
 ----
 def insert_order_line(session):
     session.execute(  #<1>
-        'INSERT INTO order_lines (orderid, sku, qty) VALUES ("order1", "GENERIC-SOFA", 12)'
+        'INSERT INTO order_lines (orderid, sku, qty)'
+        ' VALUES ("order1", "GENERIC-SOFA", 12)'
     )
     [[orderline_id]] = session.execute(
         'SELECT id FROM order_lines WHERE orderid=:orderid AND sku=:sku',
