@@ -302,7 +302,6 @@ class DjangoUnitOfWork(AbstractUnitOfWork):
     objects that have been touched by every repository and manually
     updated them back to the ORM.
 
-// TODO: maybe `.seen()` should live on the uow not the repo
 
 
 === API: Django Views Are Adapters

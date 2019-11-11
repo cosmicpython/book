@@ -56,7 +56,10 @@ be of interest to outline the moving parts.
     ends up being more trouble than it's worth; the cost in terms of complexity
     and longer rebuild/CI times is too high. YMMV.]
 
-<2> A _Makefile_ provides the entrypoint for all the typical commands a developer
+<2> A __Makefile__footnote:[http://www.pyinvoke.org/[Invoke] is a pure-Python alternative to Makefiles,
+    worth checking out if everyone in your team knows Python (or at least knows
+    it better than Bash!)]
+    provides the entrypoint for all the typical commands a developer
     (or a CI server) might want to run during their normal workflow.  `make
     build`, `make test`, and so on.  This is optional, you could just use
     `docker-compose` and `pytest` directly, but if nothing else it's nice to
@@ -80,8 +83,6 @@ be of interest to outline the moving parts.
 // TODO (DS): All this seems sensible. It would be nice to include a dependency
 // graph so we can see the layering within src/allocation.
 // Maybe should include message bus too?
-
-// TODO (DS): Could mention invoke as an alternative to makefiles
 
 
 
@@ -396,7 +397,21 @@ Nothing particularly clever here, just some separation of different test types
 that you're likely to want to run separately, and some files for common fixtures,
 config and so on.
 
-We've not needed to make tests pip-installable, but if you have difficulties with
+There's no _src_ folder or _setup.py_ in the tests folders because we've not usually
+found we need to make tests pip-installable, but if you have difficulties with
 import paths, you might find it helps.
 
-// TODO (DS): Mysterious...
+
+=== Wrap-up
+
+Those are our basic building blocks:
+
+* Source code in an _src_ folder, pip-installable using setup.py
+* Some docker config for spinning up a local cluster that mirrors production as far as possible
+* Configuration via environment variables, centralised in a Python file called _config.py_, with
+  defaults allowing things to run _outside_ containers.
+* And a Makefile for useful command-line, um, commands.
+
+We doubt that anyone will end up with _exactly_ the same solutions we did, but we hope you
+found some inspiration here.
+
