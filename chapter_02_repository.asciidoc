@@ -46,7 +46,7 @@ package SqlAlchemy {
 
 }
 
-  BatchRepository *-- Session : abstracts >
+  BatchRepository *--- Session : abstracts >
   BatchRepository -> Batch : fetches >
 
 @enduml
@@ -577,13 +577,13 @@ image::images/repository_pattern_diagram.png[]
 ----
 [ditaa, repository_pattern_diagram]
   +-----------------------------+
-  |      Presentation Layer     |
+  |      Application Layer      |
   +-----------------------------+
                  |^
-                 ||          +------------------+
+                 ||          /------------------\
                  ||----------|   Domain Model   |
                  ||          |      objects     |
-                 ||          +------------------+
+                 ||          \------------------/
                  V|
   +------------------------------+
   |          Repository          |
@@ -673,7 +673,7 @@ def test_repository_can_retrieve_a_batch_with_allocations(session):
     assert retrieved == expected  # Batch.__eq__ only compares reference
     assert retrieved.sku == expected.sku
     assert retrieved._purchased_quantity == expected._purchased_quantity
-    assert retrieved._allocations == {model.OrderLine("order1", "GENERIC-SOFA", 12)}
+    assert retrieved._allocations == {model.OrderLine("order1", "GENERIC-SOFA", 12)}  #<3>
 ----
 ====
 
@@ -685,14 +685,9 @@ def test_repository_can_retrieve_a_batch_with_allocations(session):
     the point is to create a couple of different batches, and for the
     batch we're interested in to have one existing order line allocated to it.
 
-<3> And that's what we verify here.
-
-//TODO (DS): Picking a descriptive SKU (e.g. 'comfy-sofa') would make this a
-//bit more fun to read.
-// Worth explaining why we have to do a follow up query to get the id inserted?j
-// Why the underscore in _allocations here? It was already private in the definition
-// of the Batch class in chapter 1. Maybe for consistency we want to make them all
-// private ('_') and explain that we want to access them through properties for better control?
+<3> And that's what we verify here (including an explicit check on the
+    `._allocations` attribute of our domain model, which, if you remember,
+    is a Python set of `OrderLine` objects).
 
 Whether or not you painstakingly write tests for every model is a judgement
 call.  Once you have one class tested for create/modify/save, you might be
@@ -882,14 +877,12 @@ a|
 |===
 
 
-In a single diagramfootnote:[Diagram inspired by a post called
-https://www.reflektis.com/blog/global-complexity-local-simplicity/[Global
-complexity, local simplicity], by Rob Vens)]
-(<<domain_model_tradeoffs_diagram>>), the central conceit
-of is: yes, for simple cases, a decoupled domain model is harder work than
-a simple ORM / ActiveRecord pattern. But the more complex the domain, the more
-an investment in freeing yourself from infrastructure concerns will pay off,
-in terms of the ease of making changes:
+<<domain_model_tradeoffs_diagram>>footnote:[Diagram inspired by a post called
+https://www.reflektis.com/blog/global-complexity-local-simplicity/[Global complexity, local simplicity],
+by Rob Vens)] shows the basic thesis: yes, for simple cases, a decoupled domain
+model is harder work than a simple ORM / ActiveRecord pattern. But the more
+complex the domain, the more an investment in freeing yourself from
+infrastructure concerns will pay off, in terms of the ease of making changes:
 
 
 [[domain_model_tradeoffs_diagram]]
