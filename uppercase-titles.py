@@ -5,11 +5,11 @@ from titlecase import titlecase
 from chapters import CHAPTERS
 
 SPECIAL = {
-    'CSVs', 'To/From', 'UoW',
+    'CSVs', 'To/From', 'UoW', 'AKA', 'SELECT',
 }
 
 LOWERCASE = {
-    'with', 'our', 'is',
+    'with',
 }
 
 

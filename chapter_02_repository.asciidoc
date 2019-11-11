@@ -54,7 +54,7 @@ package SqlAlchemy {
 
 
 
-=== Persisting our Domain Model
+=== Persisting Our Domain Model
 
 In the previous chapter we built a simple domain model that can allocate orders
 to batches of stock. It's easy for us to write tests against this code because
@@ -65,7 +65,7 @@ and maintain.
 Sadly, at some point we'll need to put our perfect little model in the hands of
 users and we'll need to contend with the real world of spreadsheets and web
 browsers and race conditions. For the next few chapters we're going to look at
-how we can connect our idealised domain model to external state.
+how we can connect our idealized domain model to external state.
 
 We expect to be working in an agile manner, so our priority is to get to a
 minimum viable product as quickly as possible.  In our case, that's going to be
@@ -77,7 +77,7 @@ storage, and this is a textbook, so we can allow ourselves a tiny bit more
 bottom-up development, and start to think about storage and databases.
 
 
-==== Some Pseudocode: What Are We Going to Need?
+=== Some Pseudocode: What Are We Going to Need?
 
 When we build our first API endpoint, we know we're going to have
 some code that looks more or less like <<api_endpoint_pseudocode>>
@@ -139,7 +139,7 @@ Instead, as discussed in the introduction, we'll think of our model as being on 
 "onion architecture" (see <<onion_architecture>>.)
 
 [[onion_architecture]]
-.Onion Architecture
+.Onion architecture
 image::images/onion_architecture.png[]
 [role="image-source"]
 ----
@@ -174,14 +174,14 @@ pretty much names for the same thing, and they all boil down to the
 dependency inversion principle--high-level modules (the domain) should
 not depend on low-level ones (the infrastructure).footnote:[Mark Seeman has
 https://blog.ploeh.dk/2013/12/03/layers-onions-ports-adapters-its-all-the-same/[an excellent blog post]
-on the topic, which we recommend.]
+on the topic.]
 
 We'll get into some of the nitty-gritty around "depending on abstractions,"
 and whether there is a Pythonic equivalent of interfaces, later in the book.
 *******************************************************************************
 
 
-=== Reminder: our Model
+=== Reminder: Our Model
 
 Let's remind ourselves of our domain model (see <<model_diagram_reminder>>):
 An allocation is the concept of linking an `OrderLine` to a `Batch`.  We're
@@ -195,9 +195,9 @@ image::images/model_diagram.png[]
 Let's see how we might translate this to a relational database.
 
 
-==== The "Normal" ORM Way: Model Depends on ORM.
+==== The "Normal" ORM Way: Model Depends on ORM
 
-In 2019 it's unlikely that your team are hand-rolling their own SQL queries.
+These days it's unlikely that your team are hand-rolling their own SQL queries.
 Instead, you're almost certainly using some kind of framework to generate
 SQL for you based on your model objects.
 
@@ -205,7 +205,7 @@ These frameworks are called Object-Relational Mappers because they exist to
 bridge the conceptual gap between the world of objects and domain modelling, and
 the world of databases and relational algebra.
 
-The most important thing an ORM gives us is "persistence ignorance": the idea
+The most important thing an ORM gives us is _persistence ignorance_: the idea
 that our fancy domain model doesn't need to know anything about how data are
 loaded or persisted. This helps to keep our domain clean of direct dependencies
 on particular databases technologies.footnote:[In this sense, using an ORM is
@@ -249,11 +249,11 @@ Can we really say this model is ignorant of the database? How can it be
 separate from storage concerns when our model properties are directly coupled
 to database columns?
 
-.Django's ORM is Essentially the Same, but More Restrictive
+.Django's ORM Is Essentially the Same, but More Restrictive
 *******************************************************************************
 
-If you're more used to Django, the SQLAlchemy snippet above translates to
-something like this:
+If you're more used to Django, the preceding "declarative" SQLAlchemy snippet
+translates to something like this:
 
 [[django_orm_example]]
 .Django ORM example
@@ -286,13 +286,13 @@ inversion and the Repository pattern to Django.
 
 
 
-==== Inverting the Dependency: ORM Depends on Model.
+==== Inverting the Dependency: ORM Depends on Model
 
 Well, thankfully, that's not the only way to use SQLAlchemy.  The alternative is
 to define your schema separately, and an explicit _mapper_ for how to convert
-between the schema and our domain model:
+between the schema and our domain model, what SQLAlchemy calls a 
+https://docs.sqlalchemy.org/en/latest/orm/mapping_styles.html#classical-mappings[classical mapping].
 
-https://docs.sqlalchemy.org/en/latest/orm/mapping_styles.html#classical-mappings
 
 
 [[sqlalchemy_classical_mapper]]
@@ -446,7 +446,7 @@ allocate(line, batches) will raise OutOfStock.  Is it OK to let this bubble up? 
 add a try finally to close the session
 ////
 
-=== Introducing Repository Pattern.
+=== Introducing Repository Pattern
 
 The _Repository pattern_ is an abstraction over persistent storage. It hides the
 boring details of data access by pretending that all of our data is in memory.
@@ -534,13 +534,13 @@ NOTE: To really reap the benefits of ABCs (such as they may be) you'll want to
     be running some helpers like `pylint` and `mypy`.
 
 
-==== What is the Trade-Off?
+==== What Is the Trade-Off?
 
 
 [quote, Rich Hickey]
 ____
 You know they say economists know the price of everything and the value of
-nothing?  Well, Programmers know the benefits of everything and the tradeoffs
+nothing?  Well, programmers know the benefits of everything and the tradeoffs
 of nothing.
 ____
 
@@ -565,9 +565,9 @@ simple abstraction over our storage layer, which we control. It would make
 it very easy to make fundamental changes to the way we store things (see
 <<appendix_csvs>>), and as we'll see, it is very easy to fake out for unit tests.
 
-In addition, repository pattern is so common in the DDD world that, if you
+In addition, Repository Pattern is so common in the DDD world that, if you
 do collaborate with programmers that have come to Python from the Java and C#
-worlds, they're likely to recognise it.  <<repository_pattern_diagram>> shows
+worlds, they're likely to recognize it.  <<repository_pattern_diagram>> shows
 an illustration.
 
 [[repository_pattern_diagram]]
@@ -765,7 +765,7 @@ but the nice thing is--the rest of your application just doesn't care.
 ******************************************************************************
 
 
-=== Building a Fake Repository for Tests is Now Trivial!
+=== Building a Fake Repository for Tests Is Now Trivial!
 
 Here's one of the biggest benefits of Repository Pattern.
 
@@ -835,7 +835,7 @@ Repository pattern is a simple abstraction around permanent storage::
 *****************************************************************
 
 Bearing the Rich Hickey quote in mind, in each chapter we're going to try
-and summarise the costs and benefits of each architectural pattern we introduce.
+and summarize the costs and benefits of each architectural pattern we introduce.
 We want to be very clear that we're not saying every single application needs
 to be built this way; only sometimes does the complexity of the app and domain
 make it worth investing the time and effort in adding these extra layers of
@@ -893,7 +893,7 @@ in terms of the ease of making changes:
 
 
 [[domain_model_tradeoffs_diagram]]
-.Domain Model Tradeoffs as a Diagram
+.Domain Model tradeoffs as a diagram
 image::images/domain_model_tradeoffs_diagram.png[]
 [role="image-source"]
 ----
@@ -936,6 +936,6 @@ needing to think about the database until later.
 
 You'll be wondering, how do we actually instantiate these repositories, fake or
 real? What will our flask app actually look like?  We'll find out in the next
-exciting instalment, <<chapter_04_service_layer,the Service Layer pattern>>.
+exciting installment, <<chapter_04_service_layer,the Service Layer pattern>>.
 
 But first, a brief digression.

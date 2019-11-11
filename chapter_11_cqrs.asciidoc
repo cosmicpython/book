@@ -169,7 +169,7 @@ TIP: Split out your read-only views from your state-modifying
     command and event handlers.
 
 
-=== Why On Earth Would You Write Raw SQL In Your Views?
+=== Why on Earth Would You Write Raw SQL in Your Views?
 
 OK Bob and Harry, let's get back to that SQL monstrosity though.  Why
 on earth would you show us that?  Don't think we're about to forget, the
@@ -199,9 +199,9 @@ key relationships on your objects.
 
 Beyond `SELECT N+1`, you may have other reasons that you want to decouple the
 way you persist state changes from the way that you retrieve current state.
-A set of fully normalised relational tables is a good way to make sure that
+A set of fully normalized relational tables is a good way to make sure that
 write operations never cause data corruption.  But retrieving data using lots
-of JOINs can be slow.  It's common in such cases to add some denormalised views
+of JOINs can be slow.  It's common in such cases to add some denormalized views
 (we'll see an example of that later), build read replicas, or even add caching
 layers.
 
@@ -354,7 +354,7 @@ first seemed?  Perhaps Bob and Harry are exaggerating for effect?  JUST
 YOU WAIT.
 
 So. Crazy or not, that hardcoded SQL query is pretty ugly right?  What if we
-made it nicer by keeping a totally separate, denormalised datastore for our
+made it nicer by keeping a totally separate, denormalized datastore for our
 view model?
 
 Horrifying, right? Wait 'til we tell you we're not even going to use Postgres

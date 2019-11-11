@@ -1,5 +1,5 @@
 [[appendix_bootstrap]]
-== Bootstrap (aka Configuration Root)
+== Bootstrap (AKA Configuration Root)
 
 NOTE: placeholder chapter, under construction
 
@@ -40,7 +40,7 @@ dependencies are, and we haven't even spoken about cross-cutting concerns
 like logging.
 
 
-=== Other Setup Code: Initialisation
+=== Other Setup Code: Initialization
 
 Defaults are maybe feeling a bit messy, but so are some other aspects of the
 initial setup or "bootsrapping" of our application; `orm.start_mappers()` for
@@ -105,7 +105,7 @@ def bootstrap(
 * it gives us back the core of our app, the messagebus
 
 
-=== Using Bootstrap in our Entrypoints
+=== Using Bootstrap in Our Entrypoints
 
 In our application's entrypoints, we just call `bootstrap.bootstrap()`
 to get a messagebus, rather than configuring a UoW and the rest of it.

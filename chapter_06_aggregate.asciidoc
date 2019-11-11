@@ -183,7 +183,7 @@ We usually solve this problem by applying locks to our database tables. This
 prevents two operations happening simultaneously on the same row or same
 table.
 
-As we start to think about scaling up our app, we realise that our model
+As we start to think about scaling up our app, we realize that our model
 of allocating lines against all available batches may not scale.  If we've
 got tens of thousands of orders per hour, and hundreds of thousands of
 order lines, we can't hold a lock over the whole `batches` table for
@@ -569,7 +569,7 @@ class Product:
 //   also discuss similarity with eventsourcing version numbers.
 
 
-=== Testing for our Data Integrity Rules
+=== Testing for Our Data Integrity Rules
 
 Now to actually make sure we can get the behavior we want: if we have two
 concurrent attempts to do allocation against the same `Product`, one of them

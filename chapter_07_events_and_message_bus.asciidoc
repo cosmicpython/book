@@ -22,7 +22,7 @@ We'll start by doing the simplest, most expeditious thing, and talk about
 why it's exactly this kind of decision that leads us to Big Ball of Mud.
 
 Then we'll show how to use _Domain Events_ to separate side-effects from our
-use cases, and how to build a simple _Message Bus_ for triggering behaviour
+use cases, and how to build a simple _Message Bus_ for triggering behavior
 based on those events.  We'll show a few different options for creating
 those events and how to pass them to the message bus, and finally we'll show
 how the Unit of Work can be modified to connect the two together elegantly.
@@ -61,7 +61,7 @@ image::images/message_bus_diagram.png[]
 
 === Avoiding Making a Mess.
 
-==== First, Avoid Making a Mess of of our Web Controllers
+==== First, Avoid Making a Mess of of Our Web Controllers
 
 So.  Email alerts when we run out of stock. When we have a new requirement like
 this, that's not _really_ to do with the core domain, it's all too easy to
@@ -99,7 +99,7 @@ end up in a mess by patching things in this way. Sending emails isn't the job of
 our HTTP layer, and we'd like to be able to unit test this new feature.
 
 
-==== ... And Let's Not Make a Mess of our Model Either
+==== ... And Let's Not Make a Mess of Our Model Either
 
 Assuming we don't want to put this code into our web controllers, because
 we want them to be as thin as possible, we may look at putting it right at
@@ -216,7 +216,7 @@ Bus to respond to events, and invoke some new operation.
 
 ==== Events Are Simple Dataclasses
 
-An Event is a kind of _value object_. They don't have any behaviour, because
+An Event is a kind of _value object_. They don't have any behavior, because
 they're pure data structures. We always name events in the language of the
 domain, and we think of them as part of our domain model.
 
@@ -380,7 +380,7 @@ service layer explicitly collects events from aggregates, and passes them to
 the messagebus.
 
 
-==== Option 2: The Service Layer Raises its own Events
+==== Option 2: The Service Layer Raises Its Own Events
 
 Another variant on this which we've used is that you can have the service layer
 in charge of creating and raising events directly, rather than having them
@@ -513,7 +513,7 @@ class SqlAlchemyRepository(AbstractRepository):
 ====
 
 
-<1> We initialise a set to store objects seen.  That means our implementations
+<1> We initialize a set to store objects seen.  That means our implementations
     need to call `super().__init__()`
 
 <2> The parent `add()` method adds things to `.seen`, and now requires subclasses

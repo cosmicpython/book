@@ -296,14 +296,14 @@ functions and event handlers and other entrypoints, our dependencies would be
 all over the place.
 
 
-=== Initialising DI in our App Entrypoints
+=== Initializing DI in Our App Entrypoints
 
-In our flask app, we can just initialise the messagebus inline with
+In our flask app, we can just initialize the messagebus inline with
 the rest of our app config and setup, passing it in the actual
 dependencies we want to use:
 
 [[flask_initialises_bus]]
-.Flask initialises a bus with the production dependencies (src/allocation/flask_app.py)
+.Flask initializes a bus with the production dependencies (src/allocation/flask_app.py)
 ====
 [source,python]
 [role="non-head"]
@@ -357,12 +357,12 @@ def handle_change_batch_quantity(m, bus: messagebus.MessageBus):
 ----
 ====
 
-<1> In the redis case we can't do the initialisation at import-time,
+<1> In the redis case we can't do the initialization at import-time,
     because we have a circular dependency between flask and redis
     (we'll look at fixing that in <<appendix_bootstrap>>.
 
 
-=== Initialising DI in our Tests
+=== Initializing DI in Our Tests
 
 
 [[fakebus]]

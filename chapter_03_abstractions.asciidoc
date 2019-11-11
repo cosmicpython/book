@@ -29,7 +29,7 @@ change our systems.
 
 We can reduce the degree of coupling within a system
 (<<coupling_illustration1>>) by abstracting away the details
-(<<coupling_illustration2>>):
+(<<coupling_illustration2>>).
 
 
 [[coupling_illustration1]]
@@ -77,7 +77,7 @@ hiding away the complex details of whatever system B does.
 
 === Abstracting State Aids Testability
 
-Let's see an example. Imagine we want to write some code for synchronising two
+Let's see an example. Imagine we want to write some code for synchronizing two
 file directories which we'll call the source and the destination.
 
 * If a file exists in the source, but not the destination, copy the file over.
@@ -247,7 +247,7 @@ We can definitely refactor these tests (some of the cleanup could go into pytest
 fixtures for example) but as long as we're doing filesystem operations, they're
 going to stay slow and hard to read and write.
 
-=== Choosing the right abstraction(s)
+=== Choosing the Right Abstraction(s)
 
 What could we do to rewrite our code to make it more testable?
 
@@ -339,7 +339,7 @@ what _abstraction_ of filesystem actions will happen?"
 ====
 
 
-=== Implementing our chosen abstractions
+=== Implementing Our Chosen Abstractions
 
 That's all very well, but how do we _actually_ write those new
 tests, and how do we change our implementation to make it all work?
@@ -563,7 +563,7 @@ enumerating tests for all the edge cases is now much easier.
 
 ==== Why Not Just Patch It Out?
 
-At this point some of our readers will be scratching their heads and thinking
+At this point some of you will be scratching your head and thinking
 "Why don't you just use `mock.patch` and save yourself the effort?
 
 We avoid using mocks in this book, and in our production code, too. We're not
@@ -586,7 +586,7 @@ a little more complexity for a cleaner design that admits novel use-cases.
 
 2.  Tests that use mocks _tend_ to be more coupled to the implementation details
 of the codebase. That's because mock tests verify the interactions between
-things: did I call `shutil.copy` with the right arguments? This coupling between
+things: did we call `shutil.copy` with the right arguments? This coupling between
 code and test _tends_ to make tests more brittle in our experience.
 +
 Martin Fowler wrote about this in his 2007 blog post
@@ -623,10 +623,10 @@ and we use dependency injection to provide those services with stateful
 components, so we can still unit test them.
 
 See <<chapter_12_dependency_injection>> for more exploration of making our
-dependency injection more explicit and centralised.
+dependency injection more explicit and centralized.
 ******************************************************************************
 
-=== Wrap-up: "Depend on Abstractions."
+=== Wrap-up: "Depend on Abstractions"
 
 We'll see this idea come up again and again in the book: we can make our
 systems easier to test and maintain by simplifying the interface between our
