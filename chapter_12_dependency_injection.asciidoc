@@ -27,7 +27,8 @@ For our database dependency, we've built a careful framework of explicit
 dependencies and easy options for overriding them in tests:
 
 TIP: If you haven't already, it's worth reading <<chapter_03_abstractions>>
-    before continuing with this chapter.
+    before continuing with this chapter, particularly the discussion of
+    FCIS vs DI.
 
 
 === Implicit vs Explicit Dependencies
@@ -93,7 +94,8 @@ def test_rolls_back_uncommitted_work_by_default(sqlite_session_factory):
 ----
 ====
 
-<1> Integration tests swap out the default postgres session_factory for a sqlite one.
+<1> Integration tests swap out the default postgres session_factory for a
+    sqlite one.
 
 
 
@@ -163,8 +165,8 @@ more complex.  But in return, we'd get tests that are easier to write and
 manage.
 
 On top of which, declaring an explicit dependency is an implementation of
-the DIP -- rather than having an (implicit) dependency on a specific detail,
-we have an (explicit) dependency on an abstraction:
+the DIP -- rather than having an (implicit) dependency on a _specific_ detail,
+we have an (explicit) dependency on an _abstraction_:
 
 
 [[handler_with_explicit_dependency]]
