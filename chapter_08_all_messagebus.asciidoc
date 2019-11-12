@@ -454,11 +454,23 @@ end
 ----
 
 
+////
+TODO (ej)  There is a minor but important technical point here, I think, that
+could be a source of confusion.  The UOW and session commit are not exactly
+synonymous as the events are not actually emitted until after the UOW "ends".
+Otherwise you could end up with a race or skew on the persisted state. (Or
+would that be prevented by re-using the same uow+session instance in the event
+handlers?)
+
+I am unsure how to present that information without adding a lot of
+detail to the sequence diagram.
+////
+
 
 ==== Our New Event
 
 The event that tells us a batch quantity has changed is very simple, it just
-nees a batch reference and a new quantity:
+needs a batch reference and a new quantity:
 
 
 [[batch_quantity_changed_event]]
@@ -528,18 +540,6 @@ class TestChangeBatchQuantity:
     and we expect to reallocated it to a new batch
 
 
-
-////
-TODO (ej)  There is a minor but important technical point here, I think, that could be a source
-      of confusion.  The UOW and session commit are not exactly synonymous as the events are
-      not actually emitted until after the UOW "ends".  Otherwise you could end up with
-      a race or skew on the persisted state. (Or would that be prevented by re-using the same uow+session
-      instance in the event handlers?)
-
-      I am unsure how to present that information without adding a lot of detail to the sequence
-      diagram.
-
-////
 
 
 
