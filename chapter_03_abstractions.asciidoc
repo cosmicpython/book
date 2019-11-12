@@ -234,18 +234,23 @@ our domain logic, "figure out the difference between two directories," is tightl
 coupled to the IO code. We can't run our difference algorithm without calling
 the pathlib, shutil, and hashlib modules.
 
-// TODO: Dry run
-// (ej)
-//     As a motivating "what-if", at this point you could ask the following thought experiments:
-//       1) What if you wanted to re-use the same code so this also works synchronizing remote servers?
-//       2) What if you wanted to add a "dry-run" feature?
-//       What extra complexity would these scenarios create?
+And the trouble is, even with our current requirements, we haven't written
+enough tests: the current implementation actually has several bugs (the
+`shutil.move()` is wrong for example).  Getting decent coverage and revealing
+these bugs means writing more tests, but if they're all as unwieldy as the
+ones above, that's going to get real painful, real quick.
+
+On top of that, our code isn't very extensible.  Imagine trying to implement
+a `--dry-run` flag which gets our code to just print out what it's going to
+do, rather than actually do it.  Or what if we wanted to sync to a remote server,
+or to S3?
 
 Our high-level code is coupled to low-level details, and it's making life hard.
 As the scenarios we consider get more complex, our tests will get more unwieldy.
 We can definitely refactor these tests (some of the cleanup could go into pytest
 fixtures for example) but as long as we're doing filesystem operations, they're
-going to stay slow and hard to read and write.
+going to stay slow, and hard to read and write.
+
 
 === Choosing the Right Abstraction(s)
 
@@ -263,9 +268,6 @@ We can think of these as three distinct _responsibilities_ that the code has.
 
 3. We copy, move, or delete, files to match the source.
 
-////
-[SG] In my head this is you defining the interface, the contract that will have to be implemented
-////
 
 Remember that we want to find _simplifying abstractions_ for each of these
 responsibilities. That will let us hide the messy details so that we can
@@ -276,20 +278,6 @@ NOTE: In this chapter we're refactoring some gnarly code into a more testable
     structure by identifying the separate tasks that need to be done and giving
     each task to a clearly defined actor, along similar lines to the `duckduckgo`
     example from the introduction.
-
-////
-[SG] This makes it sound like your only motivation for refactoring is so that you
-can test more easily - maybe it is? Is TDD this extreme?
-
-(HP) this is a good question.  I don't _think_ that's quite what we're trying to
-do, or not quite the lens we want to put on it.  If the only tests we needed were
-the two above, then we'd be fine.  But the thing is, our current implementation
-is full of bugs, we need to write lots more tests to get it working, and doing
-so with the current cumbersome setup is a pain.  And it would be even more of a
-pain if we added new requirements like `--dry-run` or something.
-
-TODO: write this up somewhere.
-////
 
 For (1) and (2), we've already intuitively started using an abstraction, a
 dictionary of hashes to paths.  You may already have been thinking, "why not
