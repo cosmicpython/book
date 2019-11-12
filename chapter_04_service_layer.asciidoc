@@ -901,10 +901,6 @@ We still have some direct dependencies on the domain in our service-layer
 tests, because we use domain objects to set up our test data and to invoke
 our service-layer functions.
 
-//TODO (DS) While i think of it, it would be good to say something, somewhere
-//in the book, about how this general approach works with applications that
-//also handle presentation (i.e. don't just work via an api).
-
 To have a service layer that's fully decoupled from the domain, we need to
 rewrite its API to work in terms of primitives.
 
