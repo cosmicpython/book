@@ -249,9 +249,36 @@ class OutOfStock(Event):  #<2>
 
 
 
-==== The Model Records Events
+==== The Model Raises Events
+
 
 When our domain model records a fact that happened, we say it "raises" an event.
+
+Here's what it will look like from the outside: if we ask `Product` to allocate
+but it can't, it should _raise_ an event:
+
+
+[[test_raising_event]]
+.Test Our Aggregate Raises Events (tests/unit/test_product.py)
+====
+[source,python]
+----
+def test_records_out_of_stock_event_if_cannot_allocate():
+    batch = Batch("batch1", "HEAVY-SPOON", 100, eta=today)
+    different_sku_line = OrderLine("oref", "SMALL-FORK", 10)
+    product = Product(sku="HEAVY-SPOON", batches=[batch])
+
+    allocation = product.allocate(different_sku_line)
+    assert product.events[-1] == events.OutOfStock(sku="SMALL-FORK")  #<1>
+    assert allocation is None
+----
+====
+
+<1> Our Aggregate will expose a new attribute called  `.events` which will contain
+    a list of facts about what has happened, in the form of `Event` objects.
+
+Here's what it looks like on the inside:
+
 
 [[domain_event]]
 .The model raises a domain event (src/allocation/model.py)
@@ -277,8 +304,7 @@ class Product:
 ----
 ====
 
-<1> Our Aggregate grows a `.events` attribute, where it will store facts
-    about what has happened.
+<1> Here's our new `.events` attribute in use.
 
 <2> Rather than invoking some email-sending code directly, we record those
     events at the place they occur, using only the language of the domain.
@@ -286,7 +312,6 @@ class Product:
 <3> We're also going to stop raising an exception for the out-of-stock
     case.  The event will do the job the exception was doing.
 
-// TODO: Imclude a unit test here so people can see the model raising an event
 
 
 NOTE: We're actually addressing a code smell we had until now, which is that we were
