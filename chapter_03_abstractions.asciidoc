@@ -614,7 +614,7 @@ See <<chapter_12_dependency_injection>> for more exploration of making our
 dependency injection more explicit and centralized.
 ******************************************************************************
 
-=== Wrap-up: "Depend on Abstractions"
+=== Wrap-up: Some Heuristics for Choosing Abstractions
 
 We'll see this idea come up again and again in the book: we can make our
 systems easier to test and maintain by simplifying the interface between our
@@ -622,30 +622,18 @@ business logic and messy IO. Finding the right abstraction is tricky, but here's
 a few heuristics and questions to ask yourself:
 
 
-
 * Can I choose a familiar Python datastructure to represent the state of the
   messy system, and try to imagine a single function that can return that
   state?
 
-// TODO (DS): These are great heuristics... Maybe they deserve more attention?
+* Where can I draw a line between my systems, where can I carve out a
+  http://www.informit.com/articles/article.aspx?p=359417&seqNum=2[seam],
+  to stick that abstraction in?
 
-* Where can I draw a line between my systems, where can I carve out a seam, to
-  stick that abstraction in?
-
-// TODO (DS): Drawing lines and the dependencies between them is really
-// relevant to what you've done in this chapter, but i don't think you've
-// explicitly addressed them except in this bullet point.
-// BOB: This is another ry for clarity on responsibilities. Mayne foreshadow
-// in the introduction by explaining that our duckduckgo jobby is a responsibility
-
-// TODO (DS): I think the seam metaphor might need more explanation.
-// (I assume this is taken from Michael Feathers? I've always been confused
-// about whether it's a sewing seam, or a mining seam!)
-
-// TODO (DS): And maybe, which implicit concepts can i make explicit?
+* What is a sensible way of dividing things up into components with different
+  responsibilities?  What implicit concepts can I make explicit?
 
 * What are the dependencies and what is the core "business" logic?
-
 
 
 Practice makes less-imperfect!
