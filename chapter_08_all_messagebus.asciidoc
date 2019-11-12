@@ -226,11 +226,6 @@ def send_out_of_stock_notification(
 ====
 
 
-TODO: discuss moving from primitives (primitive obsession) to events as our
-    service-layer api, contrast with move in chatper 3 from domain model objects
-    to primitivecontrast with move in chatper 3 from domain model objects
-    to primitives
-
 The change might be clearer as a diff:
 
 [[services_to_handlers_diff]]
@@ -266,6 +261,41 @@ The change might be clearer as a diff:
      ...
 ----
 ====
+
+Along the way, we've our service-layer's API, which was a scattering of
+primitives, with some well-defined objects (see sidebar).
+
+.From Domain Objects, via Primitive Obsession, to Events as an Interface
+*******************************************************************************
+
+Some of you may may remember the <<decouple_service_layer_from_domain>> section
+from <<chapter_04_service_layer>>, in which we changed our service-layer API
+from being in terms of domain objects, to primitives.  And now we're moving
+back, but to different objects?  What gives?
+
+In OO circles, people talk about _primitive obsession_ as an antipattern: avoid
+primitives in public APIs, instead wrap them with custom value classes, they
+would say.  In the Python world, a lot of people would be quite skeptical of
+that as a rule of thumb. When mindlessly applied it's certainly a recipe for
+unnecessary complexity.  So that's not what we're doing _per se_.
+
+The move from domain objects to primitives bought us a nice bit of decoupling:
+our client code was no longer coupled directly to the domain, so the service
+layer could present an API that stay the same even if we decide to make changes
+to our model, and vice-versa.
+
+So have we gone backwards?  Well, our core domain model objects are still free to
+vary, but instead we've coupled the external world to our Event classes instead.
+They're part of the domain too, but the hope is that they vary less often, so
+they're a sensible artifact to couple on.
+
+And what have we bought ourselves?  Well, when invoking a use case in our application,
+we no longer need to remember a particular combination of primitives, just a single
+event class that represents the input to our application.  That's conceptually
+quite nice.  On top of that, as we'll see in <<appendix_validation>>, those
+events classes can be a nice place to do some input validation.
+
+*******************************************************************************
 
 
 ==== The MessageBus Needs to Pass a UoW to Each Handler
