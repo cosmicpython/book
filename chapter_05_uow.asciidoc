@@ -135,8 +135,6 @@ def get_allocated_batch_ref(session, orderid, sku):
 ----
 ====
 
-//TODO (DS): I'm not sure a test is the clearest way to begin this. I can't see the wood for the trees. Maybe first show some client code using the abstraction?
-
 
 === Unit of Work and Its Context Manager
 
@@ -294,11 +292,12 @@ def test_allocate_returns_allocation():
     our service layer, instead of a repository and a session,
     which is considerably less cumbersome.
 
-TODO: Defend the mocking point
 
 
 ////
-TODO:
+TODO (BOB): Defend the mocking point
+
+(EJ):
 
 https://github.com/cosmicpython/book/blame/master/chapter_05_uow.asciidoc#L238
 Maybe "Only mock your immediate neighbors" is more applicable?
