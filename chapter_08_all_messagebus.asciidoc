@@ -19,7 +19,7 @@ service [label="service-layer function"];
 handlers [label="handler functions"];
 
 flask -> service [label="request params\n(as primitives)"]
-service -> model 
+service -> model
 model -> events -> messagebus -> handlers [style=dotted]
 
 }
@@ -408,19 +408,27 @@ We'll come back to fix this wart in <<chapter_09_cqrs>>.
 And we should be back to a fully functional application, but one that's now
 fully event-driven.
 
-TODO: recap?
+* What used to be service-layer functions are now event handlers...
+
+* ...As are the functions we invoke for handling internal events raise by
+  our domain model
+
+* We use events as our datastructure for capturing inputs to the system,
+  as well as for handoff of internal work packages.
+
+* The entire app is now best described as a message processor (or event processor
+  if you prefer.  We'll talk about the distinction in the
+  <<chapter_09_commands, next chapter>>.
+
 
 
 === Implementing Our New Requirement
 
-We're done with our refactoring phase. Our application is a message processor,
-everything is driven by events and the message bus.
-
-Let's see if we really have "made the change easy".  Let's implement our new
-requirement: we'll listen to a Redis channel for `BatchQuantityChanged` events,
-pass them to a handler, which in turn might emit some `AllocationRequired`
-events, and those might emit some `Allocated` events which we want to publish
-back out to Redis.
+We're done with our refactoring phase. Let's see if we really have "made the
+change easy".  Let's implement our new requirement: we'll receive as our
+inputs some new `BatchQuantityChanged` events, pass them to a handler, which in
+turn might emit some `AllocationRequired` events, and those in turn will go
+back to our existing handler for allocation, to be re-allocated.
 
 
 [[reallocation_sequence_diagram]]
@@ -440,7 +448,6 @@ end
 
 group AllocationRequired Handler + Unit of Work 2 (or more)
     MessageBus -> Domain_Model : allocate
-    Domain_Model -> MessageBus : emit Allocated event(s)
 end
 
 @enduml
@@ -811,7 +818,7 @@ Singleton Pattern.
 
 * Events are simple dataclasses that define the data structures for inputs,
   and internal messages within our system.  This is quite powerful from a DDD
-  standpoint, since events often translate really well into business language 
+  standpoint, since events often translate really well into business language
   (in fact an entire practice know as "Event Storming" has evolved around it).
 
 * Handlers are the way we react to events.   They can call down to our
