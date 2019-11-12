@@ -680,15 +680,32 @@ Option 3: Unit of Work collects events from Aggregates and passes them to Messag
 |===
 |Pros|Cons
 a|
-* SRP
+* Events give us a really nice way of enforcing the Single Responsibility
+  Principle.
 
-* Events = quite a nice way to model real life
+* Event Handlers are nicely decoupled from the "core" application logic,
+  making it easy to change their implementation later.
+
+* Events are also a good way of modelling "real life".  They correspond
+  well to the way we think about the world and our business processes.
 
 a|
-* message bus is weird.
-* the one we've presented is not async, so it can still, eg, hang your web
-  responses, which prolly isn't what you're expecting.
-* celery is _fine_.
+* The Message Bus is an additional thing to wrap your head around.  A code
+  block which _looks like_ it ends when the Unit of Work context manager code
+  block ends, actually has side effects, and causes more code to execute.
+
+* What's more, that hidden event-handling code executes _synchronously_ (in
+  the current implementation at least), meaning your service-layer function
+  doesn't finish until all the handlers for any events are finished.  That
+  could potentially cause unexpected performance problems in your web endpoints.
+
+* The Python world is used to a tool called Celery, which may have its
+  shortcomingsfootnote:[Bob will tell you that Celery's decision to use
+  function names and arguments as the API for remote calls means that, whilst
+  it might be fine for a single application, it wouldn't be a good choice for
+  distributing messages and work between different microservices.  More in this
+  in <<chapter_10_external_events>>.], but does a very similar job and does it
+  asynchronously, so people's intuitions about what the message bus
+  and event handlers do will be all wrong.
 |===
 
-TODO: finish up pros + cons
