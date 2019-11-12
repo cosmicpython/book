@@ -266,21 +266,6 @@ def test_allocating_to_a_batch_reduces_the_available_quantity():
 ----
 ====
 
-++++
-<div data-type="example">
-<pre data-type="programlisting" data-code-language="python">
-def test_allocating_to_a_batch_reduces_the_available_quantity():
-    batch = Batch("batch-001", "SMALL-TABLE", qty=20, eta=date.today())
-    line = OrderLine('order-ref', "SMALL-TABLE", 2)
-
-    batch.allocate(line)
-
-    assert batch.available_quantity == 18
-</pre>
-<h5>A first test for allocation (test_batches.py)</h5>
-</div>
-++++
-
 The name of our unit test describes the behavior that we want to see from the
 system, and the names of the classes and variables that we use are taken from the
 business jargon. We could show this code to our non-technical co-workers, and
