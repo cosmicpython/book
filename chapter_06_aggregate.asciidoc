@@ -146,7 +146,7 @@ ____
 ____
 
 This is a business rule that imposes an invariant. The invariant is that an
-order line is allocated to either zero or one batches, but never more than one.
+order line is allocated to either zero or one batch, but never more than one.
 We need to make sure that our code never accidentally calls `Batch.allocate()`
 on two different batches for the same line, and currently, there's nothing
 there to explicitly stop us doing that.  By nominating an Aggregate to be
