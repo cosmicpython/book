@@ -599,7 +599,12 @@ And while we're recommending talks, don't miss
 https://www.youtube.com/watch?v=PBQN62oUnN8[Brandon Rhodes talking about "hoisting" I/O"],
 which really nicely covers the issues we're talking about, using another simple example.
 
-
+TIP: In this chapter we've spent a lot of time replacing end-to-end tests with
+    unit tests.  That doesn't mean we think you should never use E2E tests!
+    In this book we're trying to show techniques that get you to a decent test
+    pyramid, with as many unit tests as possible, and the minimum number of E2E
+    tests you need to feel confident. Read on to <<types_of_test_rules_of_thumb>>
+    for more detail.
 
 
 .So Which Do We Use in this Book? FCIS or DI?
