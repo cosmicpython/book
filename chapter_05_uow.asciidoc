@@ -500,7 +500,6 @@ def change_batch_quantity(batchref: str, new_qty: int, uow: AbstractUnitOfWork):
         batch.change_purchased_quantity(new_qty)
         while batch.available_quantity < 0:
             line = batch.deallocate_one()  #<1>
-        model.allocate(line)
         uow.commit()
 ----
 ====
