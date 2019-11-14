@@ -324,5 +324,27 @@ much a topic for another book though).
   externally -- our `publish` handler converts an event to a message
   on a Redis channel. We use events to talk to the outside world.
 
-
 TODO: more here
+
+[quote, Martin Fowler, https://martinfowler.com/articles/201701-event-driven.html[What do you mean by “Event-Driven”?]]
+____
+Event notification is nice because it implies a low level of coupling, and is
+pretty simple to set up. It can become problematic, however, if there is
+a logical flow that runs over various event notifications. [...] It can be hard to
+see as it's not explicit in any program text; this can make it hard to debug
+and modify.
+____
+
+[[chapter_10_external_events_tradeoffs]]
+[options="header"]
+.Event-Based Microservices Integration: The Trade-Offs
+|===
+|Pros|Cons
+a|
+* avoids distributed BBOM
+* decoupled, async - easier to change individual services, and add new ones
+
+a|
+* overall flows are harder to see
+
+|===
