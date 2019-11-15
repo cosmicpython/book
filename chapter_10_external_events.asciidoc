@@ -109,15 +109,15 @@ def test_change_batch_quantity_leading_to_reallocation():
 
     # wait until we see a message saying the order has been reallocated  #<1>
     messages = []
-    def assert_new_allocation_published():  #<4>
-        messages.append(wait_for(subscription.get_message))  #<4>
-        print(messages)
-        data = json.loads(messages[-1]['data'])
-        assert data['orderid'] == orderid
-        assert data['batchref'] == later_batch
-        return True
-
-    wait_for(assert_new_allocation_published)  #<4>
+    for attempt in Retrying(stop=stop_after_delay(3), reraise=True):  #<4>
+        with attempt:
+            message = subscription.get_message(timeout=1)
+            if message:
+                messages.append(message)
+                print(messages)
+            data = json.loads(messages[-1]['data'])
+            assert data['orderid'] == orderid
+            assert data['batchref'] == later_batch
 ----
 ====
 
@@ -135,10 +135,10 @@ def test_change_batch_quantity_leading_to_reallocation():
     batch, and we'll listen to another channel called `line_allocated` to
     look out for the expected reallocation.
 
-<4> The last little test helper is a `wait_for` function.  Because we're
-    moving to asynchronous model, we need our tests to be able to wait until
-    something happens.  To do that, we wrap our assertions inside a function.
-    We'll show the code for `wait_for` below, for the curious:
+<4> Because of the asynchronous nature of the system under test, we need to use
+    the `tenacity` library again to add a retry loop.  Firstly because it may
+    take some time for our new `line_allocated` message to arrive, but also
+    because it won't be the only message on that channel.
 
 ////
 TODO (ej) Minor comment: This e2e test might not be safe or repeatable as part of a
@@ -148,37 +148,6 @@ TODO (ej) Minor comment: This e2e test might not be safe or repeatable as part o
      be too much of a digression.
 ////
 
-[[wait_for]]
-.A helper function for testing asynchronous behavior (tests/e2e/wait_for.py)
-====
-[source,python]
-----
-def wait_for(fn):
-    """
-    Keep retrying a function, catching any exceptions, until it returns something truthy,
-    or we hit a timeout.
-    """
-    timeout = time.time() + 3
-    while time.time() < timeout:
-        try:
-            r = fn()
-            if r:
-                return r
-        except:
-            if time.time() > timeout:
-                raise
-        time.sleep(0.1)
-    pytest.fail(f'function {fn} never returned anything truthy')
-----
-====
-
-TIP: Check out the https://tenacity.readthedocs.io/en/latest/[tenacity] library
-    if you don't fancy hand-rolling your own retry helpers.
-////
-TODO (ej)  Not 100% sure of the necessity of wait_for. According to the source
-code, redis-py subscription.get_message already takes a timeout, and under what
-conditions would a re-triable exception be thrown?
-////
 
 
 ==== Redis Is Another Thin Adapter Around Our Message Bus

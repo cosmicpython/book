@@ -196,8 +196,8 @@ domain experts about allocation.
   order line to a batch, we will send stock from that specific batch to the
   customer's delivery address.
 
-* When we allocate 1 unit of stock to a batch, the _available quantity_ is
-  reduced.
+* When we allocate x units of stock to a batch, the _available quantity_ is
+  reduced by x.
 +
 .Example:
 ** We have a batch of 20 SMALL-TABLE, and we allocate an order line for 2
@@ -239,6 +239,8 @@ github.com/cosmicpython/code/tree/chapter_01_domain_model_exercise]
 
 You'll find some placeholder unit tests there, but you could just start from
 scratch, or combine/rewrite them however you like.
+
+//TODO: add test_cannot_allocate_same_line_twice ?
 
 ******************************************************************************
 
