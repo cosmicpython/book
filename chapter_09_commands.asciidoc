@@ -266,6 +266,7 @@ events when rules are met. We will structure the code like this:
 .VIP Customer
 ====
 [source,python]
+[role="skip"]
 ----
 
 class History (Aggregate):
@@ -368,7 +369,7 @@ Let's look again at the 'handle_event' method from our message bus.
 // if so, we should highlight the two prints.
 
 [[messagebus_logging_with_print]]
-.VIP Customer
+.Current handle function (src/allocation/messagebus.py)
 ====
 [source,python]
 ----
@@ -411,9 +412,10 @@ exponentially increasing back-off period".
 
 
 [[messagebus_handle_event_with_retry]]
-.VIP Customer
+.Handle with Retry
 ====
 [source,python]
+[role="skip"]
 ----
 from tenacity import Retrying, RetryError, stop_after_attempt, wait_exponential #<1>
 
