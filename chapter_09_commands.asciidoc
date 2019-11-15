@@ -365,13 +365,10 @@ usually rely on logs.
 
 Let's look again at the 'handle_event' method from our message bus.
 
-// TODO: Isn't there a way of highlighting particular lines?
-// if so, we should highlight the two prints.
-
 [[messagebus_logging_with_print]]
 .Current handle function (src/allocation/messagebus.py)
 ====
-[source,python]
+[source,python,highlight=4;7]
 ----
 def handle_event(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):
     for handler in EVENT_HANDLERS[type(event)]:
@@ -388,8 +385,8 @@ When we handle a message in our system, the first thing we do is write a log
 line to record what we're about to do. For our CustomerBecameVIP use case, the
 logs might read:
 
-"Handling event CustomerBecameVIP(customer_id=12345)
-with handler <function congratulate_vip_customer at 0x10ebc9a60>"
+    "Handling event CustomerBecameVIP(customer_id=12345)
+    with handler <function congratulate_vip_customer at 0x10ebc9a60>"
 
 Because we've chosen to use data classes (or named tuples) for our message types
 we get a neatly printed summary of the incoming data that we can copy and paste
