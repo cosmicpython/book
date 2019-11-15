@@ -357,6 +357,35 @@ HANDLERS = {
 NOTE: Note that the messagebus as implemented is entirely synchronous--our
     objective isn't to create an async/nonblocking task queue to defer
     execution in time, we're only aiming to separate tasks conceptually.
+    See <<celery_sidebar>>.
+
+
+[[celery_sidebar]]
+.Is this like Celery?
+*******************************************************************************
+Celery is a popular tool in the Python world for deferring self-contained
+chunks of work to an asynchronous task queue. The messagebus we're
+presenting here is very different, so the short answer is no.
+
+If you do have a requirement for moving work off the main thread, you
+can still use our event-based metaphors, but we would suggest you
+use _external events_ for that.  There's more discussion in
+<<chapter_10_external_events_tradeoffs>>, but essentially, if you
+implement a way of persisting events to a centralised store, then you
+can subscribe other containers or other microservices to them. Then
+you can extend the same concept of using events to separate responsibilities
+across units of work within a single process / service, to being across
+multiple processes--which may be different containers within the same
+service, or totally different microservices.
+
+If you follow us in this approach, then your API for distributing tasks
+is your event classes -- or a JSON representation of them.  This allows
+you a lot of flexibility in who you distribute tasks to, they need not
+necessarily be Python services. Celery's API for distributing tasks is
+essentially "function name plus arguments", which is more restrictive,
+and Python-only.
+
+*******************************************************************************
 
 
 ==== Option 1 : The Service Layer Takes Events from the Model and Puts them on the Message Bus
@@ -704,15 +733,6 @@ a|
   could potentially cause unexpected performance problems in your web endpoints 
   (adding asynchronous processing is possible but makes things even *more* confusing.)
   
-* The Python world is used to a tool called Celery, which may have its
-  shortcomingsfootnote:[Bob will tell you that Celery's decision to use
-  function names and arguments as the API for remote calls means that, whilst
-  it might be fine for a single application, it wouldn't be a good choice for
-  distributing messages and work between different microservices.  More in this
-  in <<chapter_10_external_events>>.], but does a very similar job and does it
-  asynchronously, so people's intuitions about what the message bus
-  and event handlers do will be all wrong.
-
 * More generally, event-driven workflows can be confusing because once things
   are split across a chain of multiple handlers, there no single place
   in the system where you can understand how a request will be fulfilled.
