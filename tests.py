@@ -195,20 +195,19 @@ def diff_for_tag(filename, chapter_name, tag):
     return output
 
 
-def tree_for_branch(chapter_name):
+from contextlib import contextmanager
+
+@contextmanager
+def checked_out(chapter):
     subprocess.run(
-        ['git', 'checkout', f'{chapter_name}'],
+        ['git', 'checkout', f'{chapter}'],
         cwd=Path(__file__).parent / 'code',
         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         check=True
     )
     try:
-        return subprocess.run(
-            ['tree', '-I', '__pycache__|*.egg-info'],
-            cwd=Path(__file__).parent / 'code',
-            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            check=True
-        ).stdout.decode()
+        yield
+
     finally:
         subprocess.run(
             ['git', 'checkout', '-'],
@@ -217,3 +216,34 @@ def tree_for_branch(chapter_name):
             check=True
         )
 
+def tree_for_branch(chapter_name):
+    with checked_out(chapter_name):
+        return subprocess.run(
+            ['tree', '-I', '__pycache__|*.egg-info'],
+            cwd=Path(__file__).parent / 'code',
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            check=True
+        ).stdout.decode()
+
+
+@pytest.mark.parametrize('chapter', CHAPTERS)
+def test_tests_pass(chapter):
+    with checked_out(chapter):
+        cwd = Path(__file__).parent / 'code'
+        pytest = cwd / '.venv/bin/pytest'
+        unit_tests_folder = cwd / 'tests/unit'
+        if unit_tests_folder.exists():
+            tests = [str(unit_tests_folder)]
+        elif '04' in chapter:
+            tests = ['test_batches.py', 'test_services.py']
+        else:
+            tests = []
+
+        if 'django' in chapter:
+            return  # TODO - pip install pytest-django, djanog, set DJANGO_SETTINGS_MODULE=djangoproject.django_project.settings 
+
+        subprocess.run(
+            [str(pytest), *tests],
+            cwd=cwd,
+            check=True,
+        )
