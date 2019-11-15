@@ -27,7 +27,8 @@ For our database dependency, we've built a careful framework of explicit
 dependencies and easy options for overriding them in tests:
 
 TIP: If you haven't already, it's worth reading <<chapter_03_abstractions>>
-    before continuing with this chapter.
+    before continuing with this chapter, particularly the discussion of
+    FCIS vs DI.
 
 
 === Implicit vs Explicit Dependencies
@@ -93,7 +94,8 @@ def test_rolls_back_uncommitted_work_by_default(sqlite_session_factory):
 ----
 ====
 
-<1> Integration tests swap out the default postgres session_factory for a sqlite one.
+<1> Integration tests swap out the default postgres session_factory for a
+    sqlite one.
 
 
 
@@ -163,8 +165,8 @@ more complex.  But in return, we'd get tests that are easier to write and
 manage.
 
 On top of which, declaring an explicit dependency is an implementation of
-the DIP -- rather than having an (implicit) dependency on a specific detail,
-we have an (explicit) dependency on an abstraction:
+the DIP -- rather than having an (implicit) dependency on a _specific_ detail,
+we have an (explicit) dependency on an _abstraction_:
 
 
 [[handler_with_explicit_dependency]]
@@ -296,14 +298,14 @@ functions and event handlers and other entrypoints, our dependencies would be
 all over the place.
 
 
-=== Initialising DI in our App Entrypoints
+=== Initializing DI in Our App Entrypoints
 
-In our flask app, we can just initialise the messagebus inline with
+In our flask app, we can just initialize the messagebus inline with
 the rest of our app config and setup, passing it in the actual
 dependencies we want to use:
 
 [[flask_initialises_bus]]
-.Flask initialises a bus with the production dependencies (src/allocation/flask_app.py)
+.Flask initializes a bus with the production dependencies (src/allocation/flask_app.py)
 ====
 [source,python]
 [role="non-head"]
@@ -321,7 +323,7 @@ bus = messagebus.MessageBus(
     send_mail=email.send,
     publish=redis_pubsub.publish
 )
-uow.set_bus(bus)
+uow.bus = bus
 ----
 ====
 
@@ -340,7 +342,7 @@ def get_bus():  #<1>
         notifications=email.send,
         publish=publish
     )
-    uow.set_bus(bus)
+    uow.bus = bus
     return bus
 
 
@@ -357,12 +359,12 @@ def handle_change_batch_quantity(m, bus: messagebus.MessageBus):
 ----
 ====
 
-<1> In the redis case we can't do the initialisation at import-time,
+<1> In the redis case we can't do the initialization at import-time,
     because we have a circular dependency between flask and redis
     (we'll look at fixing that in <<appendix_bootstrap>>.
 
 
-=== Initialising DI in our Tests
+=== Initializing DI in Our Tests
 
 
 [[fakebus]]
@@ -379,7 +381,7 @@ class FakeBus(messagebus.MessageBus):
             send_mail=mock.Mock(),
             publish=mock.Mock(),
         )
-        uow.set_bus(self)
+        uow.bus = self
 
 ...
 
@@ -513,7 +515,7 @@ class FakeBus(messagebus.MessageBus):
             notifications=FakeNotifications(),
             publish=mock.Mock(),
         )
-        uow.set_bus(self)
+        uow.bus = self
 ----
 ====
 
@@ -559,7 +561,7 @@ def bus(sqlite_session_factory):
         ),
         publish=lambda *_, **__: None
     )
-    uow.set_bus(bus)
+    uow.bus = bus
     return bus
 
 

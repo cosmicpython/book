@@ -2,21 +2,55 @@
 == Going to Town on the Message Bus
 
 In this chapter we'll start to make events more fundamental to the internal
-structure of our application, by transforming it into a message-processor;
-everything will go via the message bus.
+structure of our application. We'll move from the current state in
+<<all_in_on_messagebus_before_diagram>> where events are an optional
+side-effect...
 
-* We'll integrate a new requirement that introduces new events, and re-uses
-  some of our existing logic
 
-* We'll show the increasing similarity between functions at the service layer
-  and functions for event handling
+[[all_in_on_messagebus_before_diagram]]
+.Before: Service Layer, with optional events, bus and handlers
+image::images/all_in_on_messagebus_before_diagram.png[]
+[role="image-source"]
+----
+[graphviz, all_in_on_messagebus_before_diagram]
+digraph G {
+rankdir=LR;
+service [label="service-layer function"];
+handlers [label="handler functions"];
 
-* We'll merge the two, and use events to represent the external inputs to our
-  system, as well as internal events
+flask -> service [label="request params\n(as primitives)"]
+service -> model
+model -> events -> messagebus -> handlers [style=dotted]
 
-TODO: DIAGRAM GOES HERE
+}
+----
 
-=== A New Requirement Leads Us To Consider A New Architecture
+...to the situation in <<all_in_on_messagebus_after_diagram>> where
+everything goes via the message bus, and our app has been transformed
+fundamentally into a message-processor.
+
+[[all_in_on_messagebus_after_diagram]]
+.After: everything goes via the Message Bus
+image::images/all_in_on_messagebus_after_diagram.png[]
+[role="image-source"]
+----
+[graphviz, all_in_on_messagebus_after_diagram]
+digraph G {
+rankdir=LR;
+flask [pos="0,0!"];
+handler [label="handler function"];
+
+flask -> event  [weight=10]
+event -> messagebus  [weight=10]
+messagebus -> handler  [weight=10]
+handler -> model [weight=10]
+model -> event [style=dotted, len=100]
+
+}
+----
+
+
+=== A New Requirement Leads Us to Consider a New Architecture
 
 Rich Hickey talks about "situated software", meaning software that runs for
 extended periods of time, managing some real world process. Examples include
@@ -56,7 +90,7 @@ image::images/batch_changed_events_flow_diagram.png[]
                                 +------------+       +--------------------+
 ----
 
-An event we'll called _batch quantity changed_ should lead us to change the
+An event we'll call _batch quantity changed_ should lead us to change the
 quantity on the batch, yes, but also to apply a _business rule_: if the new
 quantity drops to less than the total already allocated, we need to
 _deallocate_  those orders from that batch. Then each one will require
@@ -72,7 +106,7 @@ enforce the single responsibility principle, and it allows us to make choices ab
 transactions and data integrity.
 
 
-==== Imagining an Architecture Change: Everything Will Be An Event Handler
+==== Imagining an Architecture Change: Everything Will Be an Event Handler
 
 But before we jump in, think about where we're headed.  There are two
 kinds of flows through our system:
@@ -115,7 +149,7 @@ Refactoring] workflow, AKA "make the change easy, then make the easy change":
 
 
 * We'll start by refactoring our service layer into event handlers.  We can
-  get used to the idea of events being the way we describe inputs to our
+  get used to the idea of events being the way we describe inputs to the
   system.  In particular, the existing `services.allocate()` function will
   become the handler for an event called `AllocationRequired`.
 
@@ -125,10 +159,10 @@ Refactoring] workflow, AKA "make the change easy, then make the easy change":
 * And then our actual implementation will be conceptually very simple: a new
   handler for `BatchQuantityChanged` events, whose implementation will emit
   `AllocationRequired` events, which in turn will be handled by the exact same
-  handler for allocation that in use in the API.
+  handler for allocations that the API uses.
 
 
-=== Refactoring Service Functions To Message Handlers
+=== Refactoring Service Functions to Message Handlers
 
 We start by defining the two events that capture our current API inputs:
 `AllocationRequired` and `BatchCreated`:
@@ -192,11 +226,6 @@ def send_out_of_stock_notification(
 ====
 
 
-TODO: discuss moving from primitives (primitive obsession) to events as our
-    service-layer api, contrast with move in chatper 3 from domain model objects
-    to primitivecontrast with move in chatper 3 from domain model objects
-    to primitives
-
 The change might be clearer as a diff:
 
 [[services_to_handlers_diff]]
@@ -233,8 +262,43 @@ The change might be clearer as a diff:
 ----
 ====
 
+Along the way, we've our service-layer's API, which was a scattering of
+primitives, with some well-defined objects (see sidebar).
 
-==== The MessageBus needs to pass a UoW to each handler
+.From Domain Objects, via Primitive Obsession, to Events as an Interface
+*******************************************************************************
+
+Some of you may may remember the <<decouple_service_layer_from_domain>> section
+from <<chapter_04_service_layer>>, in which we changed our service-layer API
+from being in terms of domain objects, to primitives.  And now we're moving
+back, but to different objects?  What gives?
+
+In OO circles, people talk about _primitive obsession_ as an antipattern: avoid
+primitives in public APIs, instead wrap them with custom value classes, they
+would say.  In the Python world, a lot of people would be quite skeptical of
+that as a rule of thumb. When mindlessly applied it's certainly a recipe for
+unnecessary complexity.  So that's not what we're doing _per se_.
+
+The move from domain objects to primitives bought us a nice bit of decoupling:
+our client code was no longer coupled directly to the domain, so the service
+layer could present an API that stay the same even if we decide to make changes
+to our model, and vice-versa.
+
+So have we gone backwards?  Well, our core domain model objects are still free to
+vary, but instead we've coupled the external world to our Event classes instead.
+They're part of the domain too, but the hope is that they vary less often, so
+they're a sensible artifact to couple on.
+
+And what have we bought ourselves?  Well, when invoking a use case in our application,
+we no longer need to remember a particular combination of primitives, just a single
+event class that represents the input to our application.  That's conceptually
+quite nice.  On top of that, as we'll see in <<appendix_validation>>, those
+events classes can be a nice place to do some input validation.
+
+*******************************************************************************
+
+
+==== The MessageBus Needs to Pass a UoW to Each Handler
 
 Our event handlers now need a UoW.  We make a small modification
 to the main `messagebus.handle()` function:
@@ -278,7 +342,7 @@ class AbstractUnitOfWork(abc.ABC):
     double-dispatch and it's a common trick for managing a circular dependency.
 
 
-==== Our tests are all written in terms of events too:
+==== Our Tests Are All Written in Terms of Events Too:
 
 
 [[handler_tests]]
@@ -313,7 +377,7 @@ class TestAllocate:
 // TODO: (DS) why staticmethod?
 
 
-==== A temporary ugly hack: the messagebus has to return results
+==== A Temporary Ugly Hack: The Messagebus Has to Return Results
 
 Our API and our service layer currently want to know the allocated batch ref
 when they invoke our `allocate()` handler.  This means we need to put in
@@ -338,10 +402,10 @@ a temporary hack on our messagebus to let it return events.
 It's because we're mixing the read and write responsibilities in our system.
 We'll come back to fix this wart in <<chapter_09_cqrs>>.
 
-==== Modifying our API to do Events
+==== Modifying Our API to Do Events
 
 [[flask_uses_messagebus]]
-.Flaks changing to messagebus as a diff (src/allocation/flask_app.py)
+.Flask changing to messagebus as a diff (src/allocation/flask_app.py)
 ====
 [source,diff]
 ----
@@ -371,21 +435,30 @@ We'll come back to fix this wart in <<chapter_09_cqrs>>.
 
 
 
-And we should be back to a fully functional application.
+And we should be back to a fully functional application, but one that's now
+fully event-driven.
 
-TODO: recap?
+* What used to be service-layer functions are now event handlers...
+
+* ...As are the functions we invoke for handling internal events raise by
+  our domain model
+
+* We use events as our datastructure for capturing inputs to the system,
+  as well as for handoff of internal work packages.
+
+* The entire app is now best described as a message processor (or event processor
+  if you prefer.  We'll talk about the distinction in the
+  <<chapter_09_commands, next chapter>>.
 
 
-=== Implementing our new requirement
 
-We're done with our refactoring phase. Our application is a message processor,
-everything is driven by events and the message bus.
+=== Implementing Our New Requirement
 
-Let's see if we really have "made the change easy".  Let's implement our new
-requirement: we'll listen to a Redis channel for `BatchQuantityChanged` events,
-pass them to a handler, which in turn might emit some `AllocationRequired`
-events, and those might emit some `Allocated` events which we want to publish
-back out to Redis.
+We're done with our refactoring phase. Let's see if we really have "made the
+change easy".  Let's implement our new requirement: we'll receive as our
+inputs some new `BatchQuantityChanged` events, pass them to a handler, which in
+turn might emit some `AllocationRequired` events, and those in turn will go
+back to our existing handler for allocation, to be re-allocated.
 
 
 [[reallocation_sequence_diagram]]
@@ -405,18 +478,29 @@ end
 
 group AllocationRequired Handler + Unit of Work 2 (or more)
     MessageBus -> Domain_Model : allocate
-    Domain_Model -> MessageBus : emit Allocated event(s)
 end
 
 @enduml
 ----
 
 
+////
+TODO (ej)  There is a minor but important technical point here, I think, that
+could be a source of confusion.  The UOW and session commit are not exactly
+synonymous as the events are not actually emitted until after the UOW "ends".
+Otherwise you could end up with a race or skew on the persisted state. (Or
+would that be prevented by re-using the same uow+session instance in the event
+handlers?)
 
-==== Our new event
+I am unsure how to present that information without adding a lot of
+detail to the sequence diagram.
+////
+
+
+==== Our New Event
 
 The event that tells us a batch quantity has changed is very simple, it just
-nees a batch reference and a new quantity:
+needs a batch reference and a new quantity:
 
 
 [[batch_quantity_changed_event]]
@@ -432,7 +516,7 @@ class BatchQuantityChanged(Event):
 ====
 
 
-=== Test-driving A New Handler
+=== Test-Driving a New Handler
 
 Following the lessons learned in <<chapter_03_service_layer>>,
 we can operate in "high gear," and write our unit tests at the highest
@@ -487,18 +571,6 @@ class TestChangeBatchQuantity:
 
 
 
-////
-TODO (ej)  There is a minor but important technical point here, I think, that could be a source
-      of confusion.  The UOW and session commit are not exactly synonymous as the events are
-      not actually emitted until after the UOW "ends".  Otherwise you could end up with
-      a race or skew on the persisted state. (Or would that be prevented by re-using the same uow+session
-      instance in the event handlers?)
-
-      I am unsure how to present that information without adding a lot of detail to the sequence
-      diagram.
-
-////
-
 
 
 ==== Implementation
@@ -520,7 +592,7 @@ def change_batch_quantity(
 // TODO (DS): Indentation looks off
 
 
-We realise we'll need a new query type on our repository:
+We realize we'll need a new query type on our repository:
 
 [[get_by_batchref]]
 .A new query type on our repository (src/allocation/repository.py)
@@ -530,31 +602,28 @@ We realise we'll need a new query type on our repository:
 class AbstractRepository(abc.ABC):
     ...
 
-    def get(self, sku):
+    def get(self, sku) -> model.Product:
         ...
 
-    def get_by_batchref(self, batchref):
-        p = self._get_by_batchref(batchref)
-        if p:
-            self.seen.add(p)
-        return p
+    def get_by_batchref(self, batchref) -> model.Product:
+        product = self._get_by_batchref(batchref)
+        if product:
+            self.seen.add(product)
+        return product
 
     @abc.abstractmethod
-    def _add(self, product):
+    def _add(self, product: model.Product):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def _get(self, sku):
+    def _get(self, sku) -> model.Product:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def _get_by_batchref(self, batchref):
+    def _get_by_batchref(self, batchref) -> model.Product:
         raise NotImplementedError
 
 
-
-
-class SqlAlchemyRepository(AbstractRepository):
     ...
 
     def _get(self, sku):
@@ -568,7 +637,9 @@ class SqlAlchemyRepository(AbstractRepository):
 ----
 ====
 
-And on our fakerepository too:
+//TODO: type hints on get_by_batchref
+
+And on our `FakeRepository` too:
 
 [[fakerepo_get_by_batchref]]
 .Updating the fake repo too (tests/unit/test_handlers.py)
@@ -591,7 +662,7 @@ class FakeRepository(repository.AbstractRepository):
 ====
 
 
-TODO: discuss finder methods on repository.
+// TODO: discuss finder methods on repository.
 
 
 ==== A New Method on the Domain Model
@@ -646,42 +717,160 @@ HANDLERS = {
 ====
 
 
-And our system is now entirely event-driven!
+And our new requirement is fully implemented.
 
 
-.Internal vs External events
+
+.Unit Testing Event Handlers in Isolation with a Fake Message Bus
 *******************************************************************************
-It's a good idea to keep the distinction between internal and external events
-clear.  Some events may come from the outside, and some events may get upgraded
-and published externally, but not all of them.  This is particularly important
-if you get into [event sourcing](https://io.made.com/eventsourcing-101/) (very
-much a topic for another book though).
+
+Our main test for the reallocation workflow
+(<<test_change_batch_quantity_handler>>) is "edge-to-edge".  It uses
+the real messagebus, and it tests the whole flow, where the `BatchQuantityChanged`,
+event handler triggers deallocation, emits new `AllocationRequired` events, which in
+turn are handled by their own handlers.  One test covers a chain of multiple
+events and handlers.
+
+Depending on the complexity of your chains of events, you may decide that you
+want to test some handlers in isolation from one another.  You can do this
+using a "fake" messagebus.
+
+In our case, we actually intervene by modifying the `publish_events()` method
+on `FakeUnitOfWork`, and decouple it from the real messagebus, instead making
+it record what events it sees:
+
+
+[[fake_messagebus]]
+.Fake MessageBus implemented in UoW (tests/unit/test_handlers.py)
+====
+[source,python]
+[role="non-head"]
+----
+class FakeUnitOfWorkWithFakeMessageBus(FakeUnitOfWork):
+
+    def __init__(self):
+        super().__init__()
+        self.events_published = []  # type: List[events.Event]
+
+    def publish_events(self):
+        for product in self.products.seen:
+            while product.events:
+                self.events_published.append(product.events.pop(0))
+----
+====
+
+Now when we invoke `messagebus.handle()` using the `FakeUnitOfWorkWithFakeMessageBus`,
+it only does one event/handler at a time.  So we can write a more isolated unit
+test: instead of checking all the side effects, we just check that
+`BatchQuantityChanged` leads to `AllocationRequired` if the quantity drops
+below the total already allocated:
+
+
+[[test_handler_in_isolation]]
+.Testing reallocation in isolation (tests/unit/test_handlers.py)
+====
+[source,python]
+[role="non-head"]
+----
+def test_reallocates_if_necessary_isolated():
+    uow = FakeUnitOfWorkWithFakeMessageBus()
+
+    # test setup as before
+    messagebus.handle(events.BatchCreated("batch1", "INDIFFERENT-TABLE", 50, None), uow)
+    messagebus.handle(events.BatchCreated("batch2", "INDIFFERENT-TABLE", 50, date.today()), uow)
+    messagebus.handle(events.AllocationRequired("order1", "INDIFFERENT-TABLE", 20), uow)
+    messagebus.handle(events.AllocationRequired("order2", "INDIFFERENT-TABLE", 20), uow)
+    [batch1, batch2] = uow.products.get(sku="INDIFFERENT-TABLE").batches
+    assert batch1.available_quantity == 10
+
+    messagebus.handle(events.BatchQuantityChanged("batch1", 25), uow)
+
+    # assert on new events emitted rather than downstream side-effects
+    [reallocation_event] = uow.events_published
+    assert isinstance(reallocation_event, events.AllocationRequired)
+    assert reallocation_event.orderid in {'order1', 'order2'}
+    assert reallocation_event.sku == 'INDIFFERENT-TABLE'
+----
+====
+
+Whether you want to do this or not depends on the complexity of your chain of
+events.  We'd say, start out with edge-to-edge testing, and only resort to
+this if necessary.
+
+
+If you do decide you want to get into isolating the testing for your handlers,
+you might be better of implementing an ABC for your messagebus:
+
+
+[[abc_for_fake_messagebus]]
+.An Abstract MessageBus and its real and fake versions
+====
+[source,python]
+[role="skip"]
+----
+class AbstractMessageBus:
+    HANDLERS: Dict[Type[events.Event], List[Callable]]
+
+    def handle(self, event: events.Event):
+        for handler in self.HANDLERS[type(event)]:
+            handler(event)
+
+
+class MessageBus(AbstractMessageBus):
+    HANDLERS = {
+        events.OutOfStock: [send_out_of_stock_notification],
+
+    }
+
+
+class FakeMessageBus(messagebus.AbstractMessageBus):
+    def __init__(self):
+        self.events_published = []  # type: List[events.Event]
+        self.handlers = {
+            events.OutOfStock: [lambda e: self.events_published.append(e)]
+        }
+----
+====
+
+We use a class-based messagebus in <<chapter_12_dependency_injection>>,
+if you need more inspiration.  The "simple" implementation in this
+chapter essentially uses the `messagebus.py` module itself to implement
+Singleton Pattern.
+
 
 *******************************************************************************
+
+
+
 
 
 === What Have We Achieved?
 
-* events are simple dataclasses that define the data structures for inputs,
-  and internal messages within our system.  this is quite powerful from a DDD
-  standpoint, since events often translate really well into business language;
-  cf. "event storming" (TODO: link)
+* Events are simple dataclasses that define the data structures for inputs,
+  and internal messages within our system.  This is quite powerful from a DDD
+  standpoint, since events often translate really well into business language
+  (in fact an entire practice know as "Event Storming" has evolved around it).
 
-* handlers are the way we react to events.   They can call down to our
+* Handlers are the way we react to events.   They can call down to our
   model, or they can call out to external services.  We can define multiple
-  handlers for a single event if we want to.  handlers can also raise other
+  handlers for a single event if we want to.  Handlers can also raise other
   events.  This allows us to be very granular about what a handler does,
   and really stick to the SRP.
 
 
-=== Why have we achieved?
+=== Why Have We Achieved?
 
-TODO: talk about the fact that we've implemented quite a complicated use case
-    (change quantity, deallocate, start new transaction, reallocate,
-    publish external notification), but thanks to our architecture the
-    _complexity_ stays constant.  we just have events, handlers, and a unit
-    of work.  it's easy to reason about, and easy to explain.  Possibly
-    show a hacky version for comparison?
+Our ongoing objective with these architectural patterns is to try and have
+the complexity of our application grow more slowly than its size.  Here
+we've added quite a complicated use case (change quantity, deallocate, start
+new transaction, reallocate, publish external notification), but architecturally,
+there's been no cost in terms of complexity.  We've added new events, new handlers,
+and a new external adapter (for email), all of which are existing categories
+of _things_ in our architecture that we understand and know how to reason about,
+and that are easy to explain to newcomers.  Our moving parts each have one job,
+they're connected to each other in well-defined ways, and there are no unexpected
+side-effects.
+
 
 
 [[chapter_08_all_messagebus_tradeoffs]]
@@ -694,7 +883,7 @@ a|
 * we have a nice datastructure for inputs to the system
 
 a|
-* messagebus is still a slighly unpredicatable way of doing things from
+* messagebus is still a slightly unpredictable way of doing things from
   a web pov.  don't know in advance when things are going to end
 
 * we've gone from domain objects in service layer calls, to primitives,

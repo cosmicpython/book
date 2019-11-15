@@ -54,14 +54,14 @@ roles are called _object neighborhoods_ which is, in our professional opinion,
 totally adorable.]
 This gives us three useful things:
 
-1) It gives us a stable snapshot of the database to work with, so that the
-objects we use aren't changing halfway through an operation.
+1. It gives us a stable snapshot of the database to work with, so that the
+   objects we use aren't changing halfway through an operation.
 
-2) It gives us a way to persist all of our changes at once so that if something
-goes wrong, we don't end up in an inconsistent state.
+2. It gives us a way to persist all of our changes at once so that if something
+   goes wrong, we don't end up in an inconsistent state.
 
-3) It offers a simple API to our persistence concerns and gives us a handy place
-to get a repository.
+3. It offers a simple API to our persistence concerns and gives us a handy place
+   to get a repository.
 
 
 //TODO (DS): Could be a good moment to revisit the diagram at the beginning of the book.
@@ -76,6 +76,41 @@ things from repos, and commit:
 
 [[test_unit_of_work]]
 .A basic "roundtrip" test for a Unit of Work (tests/integration/test_uow.py)
+====
+[source,python]
+----
+def test_uow_can_retrieve_a_batch_and_allocate_to_it(session_factory):
+    session = session_factory()
+    insert_batch(session, 'batch1', 'HIPSTER-WORKBENCH', 100, None)
+    session.commit()
+
+    uow = unit_of_work.SqlAlchemyUnitOfWork(session_factory)  #<1>
+    with uow:
+        batch = uow.batches.get(reference='batch1')  #<2>
+        line = model.OrderLine('o1', 'HIPSTER-WORKBENCH', 10)
+        batch.allocate(line)
+        uow.commit()  #<3>
+
+    batchref = get_allocated_batch_ref(session, 'o1', 'HIPSTER-WORKBENCH')
+    assert batchref == 'batch1'
+----
+====
+
+<1> We initialize the Unit of Work using our custom session factory,
+    and get back a `uow` object to use in our `with` block.
+
+<2> The UoW gives us access to the batches repository via
+    `uow.batches`
+
+<3> And we call `commit()` on it when we're done.
+
+
+
+For the curious, the `insert_batch` and `get_allocated_batch_ref` helpers
+look like this:
+
+[[id_here]]
+.Helpers for doing SQL stuff (tests/integration/test_uow.py)
 ====
 [source,python]
 ----
@@ -97,35 +132,8 @@ def get_allocated_batch_ref(session, orderid, sku):
         dict(orderlineid=orderlineid)
     )
     return batchref
-
-
-def test_uow_can_retrieve_a_batch_and_allocate_to_it(session_factory):
-    session = session_factory()
-    insert_batch(session, 'batch1', 'HIPSTER-WORKBENCH', 100, None)
-    session.commit()
-
-    uow = unit_of_work.SqlAlchemyUnitOfWork(session_factory)  #<1>
-    with uow:
-        batch = uow.batches.get(reference='batch1')  #<2>
-        line = model.OrderLine('o1', 'HIPSTER-WORKBENCH', 10)
-        batch.allocate(line)
-        uow.commit()  #<3>
-
-    batchref = get_allocated_batch_ref(session, 'o1', 'HIPSTER-WORKBENCH')
-    assert batchref == 'batch1'
 ----
 ====
-//TODO (DS): This example would be easier to understand if it had the test at the top.
-
-<1> We initialise the Unit of Work using our custom session factory,
-    and get back a `uow` object to use in our `with` block.
-
-<2> The UoW gives us access to the batches repository via
-    `uow.batches`
-
-<3> And we call `commit()` on it when we're done.
-
-//TODO (DS): I'm not sure a test is the clearest way to begin this. I can't see the wood for the trees. Maybe first show some client code using the abstraction?
 
 
 === Unit of Work and Its Context Manager
@@ -141,49 +149,46 @@ base class:
 [source,python]
 ----
 class AbstractUnitOfWork(abc.ABC):
+    batches: repository.AbstractRepository  #<1>
 
-    def __enter__(self):  #<1>
-        return self  #<2>
+    def __enter__(self) -> AbstractUnitOfWork:  #<2>
+        return self  #<3>
 
-    def __exit__(self, *args):  #<2>
+    def __exit__(self, *args):  #<3>
         self.rollback()
 
     @abc.abstractmethod
-    def commit(self):  #<3>
+    def commit(self):  #<4>
         raise NotImplementedError
 
     @abc.abstractmethod
-    def rollback(self):  #<4>
+    def rollback(self):  #<5>
         raise NotImplementedError
-
-    def init_repositories(self, batches: repository.AbstractRepository):  #<5>
-        self._batches = batches
-
-    @property
-    def batches(self) -> repository.AbstractRepository:  #<5>
-        return self._batches
 ----
 ====
 
-<1> If you've never seen a context manager, `__enter__` and `__exit__` are
+<1> The UoW provides an attribute called `.batches`, which will give us access
+    to the batches repository.
+
+<2> If you've never seen a context manager, `__enter__` and `__exit__` are
     the two magic methods that execute when we enter the `with` block and
     when we exit it.  They're our setup and teardown phases.
 
-<2> The enter returns `self`, because we want access to the `uow` instance
+<3> The enter returns `self`, because we want access to the `uow` instance
     and its attributes and methods, inside the `with` block.
 
-<3> It provides a way to explicitly commit our work
+<4> It provides a way to explicitly commit our work
 
-<4> If we don't commit, or if we exit the context manager by raising an error,
+<5> If we don't commit, or if we exit the context manager by raising an error,
     we do a `rollback`. (the rollback has no effect if `commit()` has been
     called.  Read on for more discussion of this).
 
-<5> The other thing we provide is an attribute called `.batches`, which will
-    give us access to the batches repository.  The `init_repositories()` method
-    is needed because different subclasses will want to initialise repositories
-    in slightly different ways, this just gives us a single place to do that.
+
 
 ==== The Real Unit of Work Uses Sqlalchemy Sessions
+
+The main thing that our concrete implementation adds is the
+database session:
 
 [[unit_of_work]]
 .the real SQLAlchemy Unit of Work (src/allocation/unit_of_work.py)
@@ -201,7 +206,7 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 
     def __enter__(self):
         self.session = self.session_factory()  # type: Session  #<2>
-        self.init_repositories(repository.SqlAlchemyRepository(self.session))  #<2>
+        self.batches = repository.SqlAlchemyRepository(self.session)  #<2>
         return super().__enter__()
 
     def __exit__(self, *args):
@@ -221,8 +226,8 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
     but we allow that to be overriden in our integration tests, so that we
     can use SQLite instead.
 
-<2> The dunder-enter is responsible for starting a database session, and starting
-    a real repository that can use that session
+<2> The dunder-enter is responsible for starting a database session, and instantiating
+    a real repository that can use that session.
 
 <3> We close the session on exit.
 
@@ -246,7 +251,7 @@ Here's how we use a fake Unit of Work in our service layer tests
 class FakeUnitOfWork(unit_of_work.AbstractUnitOfWork):
 
     def __init__(self):
-        self.init_repositories(FakeRepository([]))  #<1>
+        self.batches = FakeRepository([])  #<1>
         self.committed = False  #<2>
 
     def commit(self):
@@ -275,7 +280,7 @@ def test_allocate_returns_allocation():
 
 <1> `FakeUnitOfWork` and `FakeRepository` are tightly coupled,
     just like the real Unit of Work and Repository classes.
-    That's fine because we recognise that the objects are collaborators.
+    That's fine because we recognize that the objects are collaborators.
 
 <2> Notice the similarity with the fake `commit()` function
     from `FakeSession` (which we can now get rid of).  But it's
@@ -287,18 +292,19 @@ def test_allocate_returns_allocation():
     our service layer, instead of a repository and a session,
     which is considerably less cumbersome.
 
-TODO: Defend the mocking point
 
 
 ////
-TODO:
+TODO (BOB): Defend the mocking point
 
-https://github.com/python-leap/book/blame/master/chapter_05_uow.asciidoc#L238
+(EJ):
+
+https://github.com/cosmicpython/book/blame/master/chapter_05_uow.asciidoc#L238
 Maybe "Only mock your immediate neighbors" is more applicable?
 
 I think of "Don't mock what you don't own" as referring specifically to "mock verification" (e.g. assert mock_session.commit.assert_called_once()), with the reason for this advice being that you cannot change those interfaces. So the mock has no value in providing feedback to your design.
 
-https://github.com/python-leap/book/issues/44
+https://github.com/cosmicpython/book/issues/44
 ////
 
 === Using the UoW in the Service Layer
@@ -339,7 +345,7 @@ def allocate(
     on an _abstract_ Unit of Work.
 
 
-=== Explicit Tests for Commit/Rollback Behaviour
+=== Explicit Tests for Commit/Rollback Behavior
 
 To convince ourselves that the commit/rollback behavior works, we wrote
 a couple of tests:
@@ -494,7 +500,6 @@ def change_batch_quantity(batchref: str, new_qty: int, uow: AbstractUnitOfWork):
         batch.change_purchased_quantity(new_qty)
         while batch.available_quantity < 0:
             line = batch.deallocate_one()  #<1>
-        model.allocate(line)
         uow.commit()
 ----
 ====
@@ -546,12 +551,12 @@ For this chapter, probably the best thing to do is try to implement a
 UoW from scratch.  You could either follow the model we have quite closely,
 or perhaps experiment with separating the UoW (whose responsibilities are
 `commit()`, `rollback()` and providing the `.batches` repository) from the
-context manager, whose job is to initialise things, and then do the commit
+context manager, whose job is to initialize things, and then do the commit
 or rollback on exit.  If you feel like going all-functional rather than
 messing about with all these classes, you could use `@contextmanager` from
 `contextlib`.
 
-https://github.com/python-leap/code/tree/chapter_05_uow_exercise
+https://github.com/cosmicpython/code/tree/chapter_05_uow_exercise
 
 We've stripped out both the actual UoW and the fakes, as well as paring back
 the abstract UoW.  Why not send us a link to your repo if you come up with

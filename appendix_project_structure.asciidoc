@@ -56,7 +56,10 @@ be of interest to outline the moving parts.
     ends up being more trouble than it's worth; the cost in terms of complexity
     and longer rebuild/CI times is too high. YMMV.]
 
-<2> A _Makefile_ provides the entrypoint for all the typical commands a developer
+<2> A __Makefile__footnote:[http://www.pyinvoke.org/[Invoke] is a pure-Python alternative to Makefiles,
+    worth checking out if everyone in your team knows Python (or at least knows
+    it better than Bash!)]
+    provides the entrypoint for all the typical commands a developer
     (or a CI server) might want to run during their normal workflow.  `make
     build`, `make test`, and so on.  This is optional, you could just use
     `docker-compose` and `pytest` directly, but if nothing else it's nice to
@@ -65,7 +68,7 @@ be of interest to outline the moving parts.
 
 <3> All the actual source code for our app, including the domain model, the
     flask app, and infrastructure code, lives in a Python package inside
-    _src_,footnote:[More on _src_ folders: https//hynek.me/articles/testing-packaging/]
+    _src_,footnote:[More on _src_ folders: https://hynek.me/articles/testing-packaging/]
     which we install using `pip install -e` and the _setup.py_ file.  This makes
     imports easy. Currently the structure within this module is totally flat,
     but for a more complex project you'd expect to grow a folder hierarchy
@@ -77,44 +80,42 @@ be of interest to outline the moving parts.
     (_conftest.py_) in the main tests folder, and nest more specific ones if we
     wish. This is also the place to keep _pytest.ini_.
 
-// TODO (DS): All this seems sensible.
-// It would be nice to include a dependency graph so we can see the layering
-// within src/allocation.
-// Maybe should include message bus too?
-
-// TODO (DS): Could mention invoke as an alternative to makefiles
-
 
 
 TIP:  The https://docs.pytest.org/en/latest/goodpractices.html#choosing-a-test-layout-import-rules[pytest docs]
     are really good on test layout and importability.
 
-// TODO (DS): Might be good to structure it according to the layers you've
-// talked about... e.g. where is the service layer?
-
 Let's look at a few of these in more detail.
 
-// TODO: add more subfolders/structure inside our main source tree?
+////
+TODO: add more subfolders/structure inside our main source tree?
 
-// TODO: DS: Going a bit further, you could consider structuring the code with
-// subpackages according to each layer. This would make it a lot more obvious
-// what belongs where, and how they relate.
+(DS): Might be good to structure it according to the layers you've
+talked about... e.g. where is the service layer?
+
+DS: Going a bit further, you could consider structuring the code with
+subpackages according to each layer. This would make it a lot more obvious
+what belongs where, and how they relate.
+
+TODO (DS): All this seems sensible. It would be nice to include a dependency
+graph so we can see the layering within src/allocation.
+
+Maybe should include message bus too?
+////
 
 
 
 === Env Vars, 12-Factor, and Config, Inside and Outside Containers.
 
-// TODO (DS): Bit of a verbose subtitle...
-
 The basic problem we're trying to solve here is that we need different
 config settings for:
 
-- running code or tests directly from your own dev machine, perhaps
+- Running code or tests directly from your own dev machine, perhaps
   talking to mapped ports from docker containers
 
-- running on the containers themselves, with "real" ports and hostnames
+- Running on the containers themselves, with "real" ports and hostnames
 
-- and different settings for different container environments, dev,
+- And different settings for different container environments, dev,
   staging, prod, and so on.
 
 // TODO (DS): Not totally clear on the specifics of what you're saying in these
@@ -148,7 +149,7 @@ Ed:
 where the config just gets imported anywhere, and anything remotely related to
 configuration gets put in there.
 
-https://github.com/python-leap/book/issues/52
+https://github.com/cosmicpython/book/issues/52
 ////
 // TODO (DS): I reckon configuration patterns are an important part of the architecture your outlining, i wonder if they belong in the main book?
 
@@ -334,7 +335,7 @@ you'll expect to see:
 ====
 [source,dockerfile]
 ----
-FROM python:3.7-alpine
+FROM python:3.8-alpine
 
 <1>
 RUN apk add --no-cache --virtual .build-deps gcc postgresql-dev musl-dev python3-dev
@@ -399,7 +400,21 @@ Nothing particularly clever here, just some separation of different test types
 that you're likely to want to run separately, and some files for common fixtures,
 config and so on.
 
-We've not needed to make tests pip-installable, but if you have difficulties with
+There's no _src_ folder or _setup.py_ in the tests folders because we've not usually
+found we need to make tests pip-installable, but if you have difficulties with
 import paths, you might find it helps.
 
-// TODO (DS): Mysterious...
+
+=== Wrap-up
+
+Those are our basic building blocks:
+
+* Source code in an _src_ folder, pip-installable using setup.py
+* Some docker config for spinning up a local cluster that mirrors production as far as possible
+* Configuration via environment variables, centralised in a Python file called _config.py_, with
+  defaults allowing things to run _outside_ containers.
+* And a Makefile for useful command-line, um, commands.
+
+We doubt that anyone will end up with _exactly_ the same solutions we did, but we hope you
+found some inspiration here.
+

@@ -101,6 +101,8 @@ class ChangeBatchQuantity(Command):  #<3>
 <2> `commands.CreateBatch` will replace `events.BatchCreated`
 <3> `commands.ChangeBatchQuantity` will replace `events.BatchQuantityChanged``
 
+//TODO: consider keeping BatchQuantityChanged as an event?
+
 Each of the use-cases that we discussed earlier in the book is really a command,
 an instruction for the system to try and do a thing. To unify the two halves of
 the domain, we're going to make a simple change: instead of directly invoking
@@ -158,8 +160,8 @@ COMMAND_HANDLERS = {
 ====
 
 
-<1> It still has a main `handle()` entrypoint, that takes a list of messages,
-    that may be commands or events.
+<1> It still has a main `handle()` entrypoint, that takes a message, which may
+    be a command or an event.
 
 <2> We dispatch to a function for handling events.  It can delegate to multiple
     handlers per event, and it catches and logs any errors, but does not let them
@@ -350,6 +352,7 @@ the steps of our natural language acceptance criteria. This concordance of names
 and structure helps us to reason about our systems as they grow larger and more
 complex.
 
+
 === Recovering From Errors Synchronously
 
 Hopefully we've convinced you that it's okay for events to fail independently
@@ -442,6 +445,7 @@ the resilience of our software. Again, the unit of work and command handler
 patterns mean that each attempt starts from a consistent state, and won't leave
 things half-finished.
 
+
 [[chapter_09_commands_and_events_tradeoffs]]
 [options="header"]
 .Splitting commands and events: The trade-offs
@@ -463,3 +467,6 @@ a|
   we're choosing to handle that by making the failures smaller and more isolated.
   This can make the system harder to reason about, and requires better monitoring.
 |===
+
+
+TODO: discussion, can events raise commands?

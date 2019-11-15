@@ -1,10 +1,10 @@
 [[chapter_04_service_layer]]
 
-== our First Use Case: Flask API and Service Layer.
+== Our First Use Case: Flask API and Service Layer
 
 Back to our allocations project! 
 
-In this chapter, we'll discuss the difference between orchestration logic,
+In this chapter, we discuss the difference between orchestration logic,
 business logic, and interfacing code, and we introduce the _Service Layer_
 pattern to take care of orchestrating our workflows and defining the use
 cases of our system.
@@ -83,7 +83,7 @@ BatchRepository ---> Session : abstracts
 
 
 
-=== Connecting our Application to the Real World
+=== Connecting Our Application to the Real World
 
 Like any good agile team, we're hustling to try and get an MVP out and
 in front of the users to start gathering feedback.  We have the core
@@ -94,23 +94,23 @@ Let's try and plug all the moving parts together as quickly as we
 can, and then refactor towards a cleaner architecture.  Here's our
 plan:
 
-* Use Flask to put an API endpoint in front of our `allocate` domain service.
-  Wire up the database session and our repository.  Test it with
-  an end-to-end test and some quick and dirty SQL to prepare test
-  data.
+1. Use Flask to put an API endpoint in front of our `allocate` domain service.
+   Wire up the database session and our repository.  Test it with
+   an end-to-end test and some quick and dirty SQL to prepare test
+   data.
 
-* Refactor out a _Service Layer_ to serve as an abstraction to
-  capture the use case, and sit between Flask and our Domain Model.
-  Build some service-layer tests and show how they can use the
-  `FakeRepository`.
+2. Refactor out a _Service Layer_ to serve as an abstraction to
+   capture the use case, and sit between Flask and our Domain Model.
+   Build some service-layer tests and show how they can use the
+   `FakeRepository`.
 
-* Experiment with different types of parameters for our service layer
-  functions; show that using primitive data types allows the service-layer's
-  clients (our tests and our flask API) to be decoupled from the model layer.
+3. Experiment with different types of parameters for our service layer
+   functions; show that using primitive data types allows the service-layer's
+   clients (our tests and our flask API) to be decoupled from the model layer.
 
-* Add an extra service called `add_stock` so that our service-layer
-  tests and end-to-end tests no longer need to go directly to the
-  storage layer to set up test data.
+4. Add an extra service called `add_stock` so that our service-layer
+   tests and end-to-end tests no longer need to go directly to the
+   storage layer to set up test data.
 
 
 === A First End-To-End (E2E) Test
@@ -151,7 +151,7 @@ def test_api_returns_allocation(add_stock):
 ====
 
 <1> `random_sku()`, `random_batchref()` etc are little helper functions that
-    add generate some randomised characters using the `uuid` module.  Because
+    add generate some randomized characters using the `uuid` module.  Because
     we're running against an actual database now, this is one way to prevent
     different tests and runs from interfering with each other.
 
@@ -686,7 +686,7 @@ stuff, which we implement end-to-end; and tests about orchestration stuff, which
 we can test against the service layer in memory.
 
 
-=== How is our Test Pyramid Looking?
+=== How Is Our Test Pyramid Looking?
 
 Let's see what this move to using a Service Layer, with its own service-layer tests,
 does to our test pyramid:
@@ -705,7 +705,7 @@ test_services.py:3
 test_orm.py:6
 test_repository.py:2
 
-test_api.py:4
+test_api.py:2
 ----
 ====
 
@@ -895,15 +895,12 @@ hazard, we again drop down to a low gear until we can pick up speed again.
 ******************************************************************************
 
 
+[primitive_obsession]
 === Fully Decoupling the Service Layer Tests From the Domain
 
 We still have some direct dependencies on the domain in our service-layer
 tests, because we use domain objects to set up our test data and to invoke
 our service-layer functions.
-
-//TODO (DS) While i think of it, it would be good to say something, somewhere
-//in the book, about how this general approach works with applications that
-//also handle presentation (i.e. don't just work via an api).
 
 To have a service layer that's fully decoupled from the domain, we need to
 rewrite its API to work in terms of primitives.
@@ -1154,7 +1151,7 @@ We've now got services for `add_batch` and `allocate`, why not build out
 a service for `deallocate`?  We've added an E2E test and a few stub
 service-layer tests for you to get started here:
 
-https://github.com/python-leap/code/tree/chapter_04_service_layer_exercise
+https://github.com/cosmicpython/code/tree/chapter_04_service_layer_exercise
 
 If that's not enough, continue into the E2E tests and _flask_app.py_, and
 refactor the Flask adapter to be more RESTful.  Notice how doing so doesn't
@@ -1297,10 +1294,13 @@ we'll introduce one more pattern that works closely with Repository and
 Service Layer, the Unit of Work pattern, and everything will be absolutely
 lovely. You'll see!
 
+But first, as is customary, a pause for <<chapter_04_service_layer_tradeoffs>>,
+in which we consider the pros and cons of having a Service Layer at all.
+
 
 [[chapter_04_service_layer_tradeoffs]]
 [options="header"]
-.Service Layer: The Trade-Offs
+.Service Layer: The Tradeoffs
 |===
 |Pros|Cons
 a|

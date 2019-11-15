@@ -146,7 +146,7 @@ ____
 ____
 
 This is a business rule that imposes an invariant. The invariant is that an
-order line is allocated to either zero or one batches, but never more than one.
+order line is allocated to either zero or one batch, but never more than one.
 We need to make sure that our code never accidentally calls `Batch.allocate()`
 on two different batches for the same line, and currently, there's nothing
 there to explicitly stop us doing that.  By nominating an Aggregate to be
@@ -183,12 +183,7 @@ We usually solve this problem by applying locks to our database tables. This
 prevents two operations happening simultaneously on the same row or same
 table.
 
-////
-TODO (ej) In a miscroservices architecture This gets even harder when there's distributed state
-    and locking tables is either not possible or advisable. (Not sure how this comment fits in the text.)
-////
-
-As we start to think about scaling up our app, we realise that our model
+As we start to think about scaling up our app, we realize that our model
 of allocating lines against all available batches may not scale.  If we've
 got tens of thousands of orders per hour, and hundreds of thousands of
 order lines, we can't hold a lock over the whole `batches` table for
@@ -297,7 +292,7 @@ class Product:
 NOTE: This `Product` might not look like what you'd expect a `Product`
     model to look like.  No price, no description, no dimensions...
     Our allocation service doesn't care about any of those things.
-    This is the power of and bounded contexts, the concept
+    This is the power of bounded contexts, the concept
     of Product in one app can be very different from another.
     See <<bounded_contexts_sidebar,the sidebar on bounded contexts>> for more
     discussion.
@@ -306,7 +301,7 @@ NOTE: This `Product` might not look like what you'd expect a `Product`
 //TODO: talk about magic methods on aggregates maybe?  ie, a non-aggregate entity
 //      might have a __hash__ so that we can put it into a set, but because you
 //      are never supposed to have a collection of aggregates, they could return
-//      an error for __has__. or sumfink.
+//      an error for __hash__. or sumfink.
 
 
 
@@ -342,24 +337,8 @@ aggregates low and their size manageable.
 
 Once again we find ourselves forced to say that we can't give this issue
 the treatment it deserves here, and we can only encourage you to read up on it
-elsewhere.
-
-//TODO more links or suggestions on where to read about bounded context?
-
-////
-TODO (ej)   This section opens up a whole can of worms, but here are some
-thoughts.  They may be too much of a digression from the text though.
-
-* IIRC from the PyCon open space, many people wanted to know "How do you build a model??"
-I recall someone specifically asking about "how you get everyone to use the same domain model".
-Putting in a mention of the "Canonical Model" pattern would be a good breadcrumb.
-
-*  Re: BoundedContexts, my experience with explaining BoundedContexts is that
-people don't understand it without a concrete example.
-
-Literally having a second, `Product` class  in psuedo-code
-(for warehousing or shipping or something) would be helpful.
-////
+elsewhere.  The Fowler link earlier is a good starting point, and either
+(or indeed, any) DDD book will have a chapter or more on Bounded Contexts.
 
 *******************************************************************************
 
@@ -445,11 +424,6 @@ def allocate(
 ====
 
 
-// TODO: discuss, should repository raise `InvalidSku`?
-
-//TODO (DS): More generally I'd be interested in some general principles about
-//handling exceptions in a layered architecture...
-
 //TODO: mention link between aggregates and foreign keys
 
 
@@ -464,7 +438,7 @@ if you do that, you'll still have to solve a few challenges on your own,
 like adding the model to the ORM and making sure all the moving parts can
 talk to each other, which we hope will be instructive.
 
-https://github.com/python-leap/code/tree/chapter_06_aggregate_exercise
+https://github.com/cosmicpython/code/tree/chapter_06_aggregate_exercise
 
 We've put in a "cheating" implementation in that delegates to the existing
 `allocate()` function, so you should be able to evolve that towards the real
@@ -592,7 +566,7 @@ class Product:
 //   also discuss similarity with eventsourcing version numbers.
 
 
-=== Testing for our Data Integrity Rules
+=== Testing for Our Data Integrity Rules
 
 Now to actually make sure we can get the behavior we want: if we have two
 concurrent attempts to do allocation against the same `Product`, one of them

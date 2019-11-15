@@ -15,7 +15,7 @@ ____
 
 It's all very well being able to write _one_ domain model to manage a single bit
 of business process, but what happens when we need to write _many_ models? In
-the real world, our applications sit within an organisation and need to exchange
+the real world, our applications sit within an organization and need to exchange
 information with other parts of the system.
 
 
@@ -54,6 +54,9 @@ CQRS::
 
 Plus we'll introduce a dependency injection framework that uses type hints, just
 to annoy Harry.
+
+TODO: a bit of blurb about making events more central to our design thinking,
+    breadcrumps to eventstorming, etc.
 
 //TODO (DS): Doesn't seem much to do with event driven architecture?
 
