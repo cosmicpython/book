@@ -1,13 +1,22 @@
 [[chapter_10_external_events]]
 == Event-Driven Architecture: Using Events to Integrate Microservices
 
-NOTE: Chapter under construction.
+In the last chapter we never actually spoke about _how_ we would receive
+the "batch quantity changed" events, or indeed, how we might notify the
+outside world about reallocations.
 
-In this chapter:
+We've got a microservice with a web API, but what about other ways of talking
+to other systems?  How does it know if, say, a shipment is delayed or the
+quantity is amended?  How does it communicate to our warehouse system to say
+that an order has been allocated and needs to be sent to a customer?
 
-* We'll see how to use events to communicate between multiple microservices.
-
-* We'll use Redis as a publish-subscribe service
+In this chapter we'd like to show how the events metaphor can be extended
+to encompass the way that we handle incoming and outgoing messages from the
+system. Internally, the core of our application is now a message processor.
+Let follow through on that so it becomes a message processor _externally_ as
+well.  The application can receive events from external sources, via an
+external message bus (we'll use Redis pubsub queues as an example), and publish
+its outputs, in the form of events, back there as well.
 
 [[message_processor_diagram]]
 .Our application is a Message Processor
@@ -19,7 +28,8 @@ image::images/message_processor_diagram.png[]
 
 +-----------------------------------------------------------------------+
 |{s}                                                                    |
-|               Redis                                                   |
+|                         External Message Bus                          |
+|                         (eg Redis, Evenstore)                         |
 +-----------------------------------------------------------------------+
       |                                                      ^
       |                                                      |
@@ -32,8 +42,8 @@ events|in                                              events|out
 |  | Event    | commands   +---------------+                 |          |
 |  | Consumer |----------> |               |                 |          |
 |  \----------/            |               | internal   /-----------\   |
-|                          |  Message Bus  |----------> | Event     |   |
-|  /----------\            |               |  events    | Publisher |   |
+|                          |   Internal    |----------> | Event     |   |
+|  /----------\            |  Message Bus  |  events    | Publisher |   |
 |  | Flask    | commands   |               |            \-----------/   |
 |  | API      |----------> |               |                            |
 |  \----------/            +---------------+                            |
@@ -44,22 +54,6 @@ events|in                                              events|out
  HTTP requests
 ----
 
-
-
-=== How Do We Talk to the Outside World?
-
-In the last chapter we never actually spoke about _how_ we would receive
-the "batch quantity changed" events, or indeed, how we might notify the
-outside world about reallocations.
-
-We've got a microservice with a web API, but what about other ways of talking
-to other systems?  How does it know if, say, a shipment is delayed or the
-quantity is amended?  How does it communicate to our warehouse system to say
-that an order has been allocated and needs to be sent to a customer?
-
-In this chapter we'd like to show how the events metaphor can be extended
-to encompass the way that we handle incoming and outgoing messages from the
-system.
 
 
 ==== Using a Redis Pubsub Channel for Integration
