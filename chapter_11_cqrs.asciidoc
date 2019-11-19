@@ -285,7 +285,7 @@ But is that _actually_ any easier to write or understand than the raw SQL versio
 
 Let's talk about testing.  Whichever of the approaches you decide to go for,
 the most obvious kind of test to write is an integration test, one that goes
-to a real database. 
+to a real database.
 
 This test will pass for all the approaches we've shown so far:
 
@@ -346,12 +346,16 @@ your permanent storage and the logic of your read-only views.
   logic separately
 
 
+TODO: some example code showing a DAL layer in front of some read-only view code
+    with more complex business logic.
+
 
 === Doubling Down on the Madness.
 
-Perhaps you're starting to think our raw SQL version isn't so crazy as it
-first seemed?  Perhaps Bob and Harry are exaggerating for effect?  JUST
-YOU WAIT.
+Have we convinced you that our raw SQL version isn't so crazy as it first
+seemed?  Perhaps we were exaggerating the craziness for effect?
+
+Just you wait.
 
 So. Crazy or not, that hardcoded SQL query is pretty ugly right?  What if we
 made it nicer by keeping a totally separate, denormalized datastore for our
@@ -380,7 +384,7 @@ def allocations(orderid: str, uow: unit_of_work.SqlAlchemyUnitOfWork):
 ----
 ====
 
-Here's our table.  Hee hee hee, no foreign keys, just strings, yolo
+Here's our table.  Hee hee hee, no foreign keys, just strings, yolo.
 
 [[new_table]]
 .A very simple table (src/allocation/orm.py)
@@ -410,7 +414,6 @@ EVENT_HANDLERS = {
     ],
 ----
 ====
-
 
 
 Here's what our update-view-model code looks like:
@@ -465,21 +468,23 @@ def remove_allocation_from_read_model(
 ----
 ====
 
+TODO: diagram
+
 === But Whyyyyyyy?
 
-OK.  horrible, right? But also, kinda, surprisingly nice, considering? Our
+OK.  Horrible, right?  But also, kinda, surprisingly nice, considering?  Our
 events and message bus give us a really nice place to do this sort of stuff,
 _if we need to_.
 
-And think how easy it'd be to swap our read model from postgres to redis?
-super-simple.  _We don't even need to change the integration test_.
+And think how easy it'd be to swap our read model from Postgres to Redis or
+Memcached? Super-simple.  _We don't even need to change the integration test_.
 
 TODO: demo this.
 
 // TODO (EJ) Some explicit discussion of CRUD vs CQRS might be good. I'd guess
 // that there will be a lot readers coming to this book from Django.
 
-So definitely don't do this. ever.  But, if you do need to, see how easy
-the event-driven model makes it?
+So definitely don't do this. Ever.  Unless you really need to.  But, if you do
+need to, see how easy the event-driven model makes it?
 
 OK.  On that note, let's sally forth into our final chapter.
