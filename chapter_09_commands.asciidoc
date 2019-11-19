@@ -18,7 +18,6 @@ In the previous chapter we talked about using events as a way of representing
 the inputs to our system. This starts to turn our application into a message
 processing machine.
 
-TODO: DIAGRAM: Message processor
 
 To achieve that, we converted all our use-case functions to event-handlers.
 When the API receives a POST to create a new batch, it builds a new `BatchCreated`

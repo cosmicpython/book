@@ -9,7 +9,30 @@ In this chapter:
 
 * We'll use Redis as a publish-subscribe service
 
-TODO: DIAGRAM GOES HERE
+[[message_processor_diagram]]
+.Our application is a Message Processor
+image::images/message_processor_diagram.png[]
+[role="image-source"]
+----
+[ditaa, message_processor_diagram]
+
+
++--------------------------------+
+|{s}                             |
+|               Redis            |
++--------------------------------+
+  |                            ^
+  |                            |
+  |events in                   |events out
+  |                            |
+  |    +--------------------+  |
+  +--->| Allocation Service |--+
+       +--------------------+
+
+
+
+----
+
 
 
 === How Do We Talk to the Outside World?
