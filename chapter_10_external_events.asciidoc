@@ -56,7 +56,7 @@ events|in                                              events|out
 
 
 
-==== Using a Redis Pubsub Channel for Integration
+=== Using a Redis Pubsub Channel for Integration
 
 To avoid the "distributed BBOM" antipattern, instead of temporally coupled HTTP
 API calls, we want to use some sort of asynchronous messaging layer to
@@ -204,7 +204,7 @@ def main():
 def handle_change_batch_quantity(m):
     logging.debug('handling %s', m)
     data = json.loads(m['data'])  #<2>
-    cmd = commands.ChangeBatchQuantity(ref=data['batchref'], qty=data['qty'])
+    cmd = commands.ChangeBatchQuantity(ref=data['batchref'], qty=data['qty'])  #<2>
     messagebus.handle(cmd, uow=unit_of_work.SqlAlchemyUnitOfWork())
 
 
@@ -216,8 +216,9 @@ def publish(channel, event: events.Event):  #<3>
 
 <1> `main()` subscribes us to the `change_batch_quantity` channel on load
 
-<2> And our main job as an entrypoint to the system is to deserialize JSON, and
-    pass it to the service layer, much like the Flask adapter does.
+<2> And our main job as an entrypoint to the system is to deserialize JSON,
+    convert it to a `Command`, and pass it to the service layer--much like the
+    Flask adapter does.
 
 <3> We also provide a helper function to publish events back into Redis.
 
@@ -275,7 +276,7 @@ is a handler that publishes the outgoing event:
 [[another_handler]]
 .The messagebus grows (src/allocation/messagebus.py)
 ====
-[source,python]
+[source,python,highlight=2]
 ----
 HANDLERS = {
     events.Allocated: [handlers.publish_allocated_event],
