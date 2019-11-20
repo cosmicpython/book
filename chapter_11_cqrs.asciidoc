@@ -209,7 +209,7 @@ layers.
 ==== Your Domain Model is not Optimised for Read Operations
 
 Now here's the chinstrokey-architect justification.  As we've said before,
-a Domain Model is not a data model -- we're trying to capture the way the
+a Domain Model is not a data model--we're trying to capture the way the
 business works: workflow, rules around state changes, messages exchanged;
 most of these are concerned with how the system reacts to external events
 and user input. _Most of this stuff is totally irrelevant for read-only

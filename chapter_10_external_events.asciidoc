@@ -321,7 +321,7 @@ much a topic for another book though).
 === Wrap-Up
 
 * events can come _from_ the outside, but they can also be published
-  externally -- our `publish` handler converts an event to a message
+  externally--our `publish` handler converts an event to a message
   on a Redis channel. We use events to talk to the outside world.
 
 TODO: more here

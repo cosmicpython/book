@@ -215,7 +215,7 @@ def allocate_endpoint():
 So far so good.  No need for too much more of your "architecture astronaut"
 nonsense, Bob and Harry, you may be thinking.
 
-But hang on a minute -- there's no commit.  We're not actually saving our
+But hang on a minute--there's no commit.  We're not actually saving our
 allocation to the database. Now we need a second test, either one that will
 inspect the database state after (not very black-boxey), or maybe one that
 checks we can't allocate a second line if a first should have already depleted
@@ -347,7 +347,7 @@ inverted test pyramid (or "ice cream cone model" as Bob likes to call it).
 === Introducing a Service Layer, and Using Fakerepository to Unit Test It
 
 If we look at what our Flask app is doing, there's quite a lot of what we
-might call "orchestration" -- fetching stuff out of our repository, validating
+might call __orchestration__—fetching stuff out of our repository, validating
 our input against database state, handling errors, and committing in the
 happy path.  Most of these things aren't anything to do with having a
 web API endpoint (you'd need them if you were building a CLI for example, see
@@ -1185,7 +1185,7 @@ Adding the service layer has really bought us quite a lot:
   we can still deliver the same use cases, we can experiment with new
   designs without needing to rewrite a load of tests.
 
-* And our "test pyramid" is looking good -- the bulk of our tests
+* And our "test pyramid" is looking good--the bulk of our tests
   are fast/unit tests, with just the bare minimum of E2E and integration
   tests.
 

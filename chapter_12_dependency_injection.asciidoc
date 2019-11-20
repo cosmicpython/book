@@ -165,7 +165,7 @@ more complex.  But in return, we'd get tests that are easier to write and
 manage.
 
 On top of which, declaring an explicit dependency is an implementation of
-the DIP -- rather than having an (implicit) dependency on a _specific_ detail,
+the DIP--rather than having an (implicit) dependency on a _specific_ detail,
 we have an (explicit) dependency on an _abstraction_:
 
 
@@ -293,7 +293,7 @@ there's not much to it:
 //TODO: rename deps to kwargs?
 
 Note this is simple approach is only really possible because we've made the
-messagebus into the core of our app -- if we still had a mixture of service
+messagebus into the core of our app--if we still had a mixture of service
 functions and event handlers and other entrypoints, our dependencies would be
 all over the place.
 

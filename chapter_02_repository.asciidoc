@@ -273,7 +273,7 @@ class Allocation(models.Model):
 ----
 ====
 
-The point is the same -- our model classes inherit directly from ORM
+The point is the same--our model classes inherit directly from ORM
 classes, so our model depends on the ORM.  We want it to be the other
 way around.
 

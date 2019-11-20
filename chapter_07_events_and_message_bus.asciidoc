@@ -379,7 +379,7 @@ multiple processes--which may be different containers within the same
 service, or totally different microservices.
 
 If you follow us in this approach, then your API for distributing tasks
-is your event classes -- or a JSON representation of them.  This allows
+is your event classes--or a JSON representation of them.  This allows
 you a lot of flexibility in who you distribute tasks to, they need not
 necessarily be Python services. Celery's API for distributing tasks is
 essentially "function name plus arguments", which is more restrictive,
