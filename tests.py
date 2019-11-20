@@ -1,6 +1,7 @@
 # pylint: disable=redefined-outer-name
 import re
 import subprocess
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from lxml import html
@@ -71,6 +72,36 @@ def test_chapter(chapter):
         check_listing(listing, chapter)
 
 
+@contextmanager
+def checked_out(chapter):
+    subprocess.run(
+        ['git', 'checkout', f'{chapter}'],
+        cwd=Path(__file__).parent / 'code',
+        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        check=True
+    )
+    try:
+        yield
+
+    finally:
+        subprocess.run(
+            ['git', 'checkout', '-'],
+            cwd=Path(__file__).parent / 'code',
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            check=True
+        )
+
+
+def tree_for_branch(chapter_name):
+    with checked_out(chapter_name):
+        return subprocess.run(
+            ['tree', '-I', '__pycache__|*.egg-info'],
+            cwd=Path(__file__).parent / 'code',
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            check=True
+        ).stdout.decode()
+
+
 def check_listing(listing, chapter):
     if 'tree' in listing.classes:
         actual_contents = tree_for_branch(chapter)
@@ -128,6 +159,7 @@ class Listing:
     @property
     def lines(self):
         return self.fixed_contents.split('\n')
+
 
 def parse_listings(chapter_name):
     raw_contents = Path(f'{chapter_name}.html').read_text()
@@ -193,57 +225,3 @@ def diff_for_tag(filename, chapter_name, tag):
     ).stdout.decode()
     assert output.strip(), f'no commit found for [{tag}]'
     return output
-
-
-from contextlib import contextmanager
-
-@contextmanager
-def checked_out(chapter):
-    subprocess.run(
-        ['git', 'checkout', f'{chapter}'],
-        cwd=Path(__file__).parent / 'code',
-        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-        check=True
-    )
-    try:
-        yield
-
-    finally:
-        subprocess.run(
-            ['git', 'checkout', '-'],
-            cwd=Path(__file__).parent / 'code',
-            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            check=True
-        )
-
-def tree_for_branch(chapter_name):
-    with checked_out(chapter_name):
-        return subprocess.run(
-            ['tree', '-I', '__pycache__|*.egg-info'],
-            cwd=Path(__file__).parent / 'code',
-            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            check=True
-        ).stdout.decode()
-
-
-@pytest.mark.parametrize('chapter', CHAPTERS)
-def test_tests_pass(chapter):
-    with checked_out(chapter):
-        cwd = Path(__file__).parent / 'code'
-        pytest = cwd / '.venv/bin/pytest'
-        unit_tests_folder = cwd / 'tests/unit'
-        if unit_tests_folder.exists():
-            tests = [str(unit_tests_folder)]
-        elif '04' in chapter:
-            tests = ['test_batches.py', 'test_services.py']
-        else:
-            tests = []
-
-        if 'django' in chapter:
-            return  # TODO - pip install pytest-django, djanog, set DJANGO_SETTINGS_MODULE=djangoproject.django_project.settings 
-
-        subprocess.run(
-            [str(pytest), *tests],
-            cwd=cwd,
-            check=True,
-        )

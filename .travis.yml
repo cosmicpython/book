@@ -5,11 +5,10 @@ install:
 - gem install asciidoctor coderay
 - pip install -r requirements.txt
 script:
-- make html update-code code-venv test
+- make html update-code test
 git:
   submodules: false
 before_install:
 - sudo apt-get install -y tree python-pygments
-- python3.8 -m ensurepip
 - sed -i s_git@github.com:_https://github.com/_ .gitmodules
 - git submodule update --init --recursive
