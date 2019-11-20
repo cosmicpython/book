@@ -120,7 +120,9 @@ our main aims with this book is to build an architecture where specific
 technology choices become minor implementation details.
 
 
-=== A note to our Early Release readers
+=== A note to our Early Release Readers
+
+// TODO remove (or amend) before production
 
 If you're reading this book via the Early Release Programme, or if you've found
 your way to a free online version, we want to ask you one, hugely important favor.
@@ -144,6 +146,9 @@ while the book is still in its draft form!
 
 
 === A Brief Overview of What You'll Learn
+
+The book is divided into two parts; here's a look at the topics we'll cover,
+and which chapters they live in.
 
 ==== Part 1: Dependency Inversion and Domain Modelling
 
@@ -198,12 +203,13 @@ Chapter 11 Dependency Injection::
     simple dependency injection framework.
 
 
-==== Epilogue (Chapter 12): How Do I Get There From Here?
+==== Epilogue
 
-Implementing architectural patterns always looks easy when you show a simple
-example, starting from scratch, but many of you will probably be wondering how
-to apply these principles to existing software.  We'll attempt to provide a
-few pointers in this last chapter and some links to further reading.
+How Do I Get There From Here? (Chapter 12)::
+    Implementing architectural patterns always looks easy when you show a simple
+    example, starting from scratch, but many of you will probably be wondering how
+    to apply these principles to existing software.  We'll attempt to provide a
+    few pointers in this last chapter and some links to further reading.
 
 
 
@@ -221,10 +227,10 @@ we're explaining what we're doing and why at each step.
 
 But to really get to grips with these patterns, you need to mess about with the
 code and actually get a feel for how it works.  You'll find all the code on
-GitHub; each chapter has its own branch.  You can find a list of them at 
+GitHub; each chapter has its own branch.  You can find a list of them at
 https://github.com/cosmicpython/code/branches/all[github.com/cosmicpython/code/branches/all]
 
-Here's three different ways you might code along with the book:
+Here are three different ways you might code along with the book:
 
 * Start your own repo and try and build up the app as we do, following the
   examples from listings in the book, and occasionally looking to our repo
@@ -236,22 +242,22 @@ Here's three different ways you might code along with the book:
   small/toy) project, and see if you can make it work for your use case.  This
   is high-risk / high-reward (and high effort besides!).  It may take quite some
   work to get things working for the specifics of your project, but on the other
-  hand you're likely to learn the most
+  hand you're likely to learn the most.
 
-* For lower effort, in each chapter we'll outline an "exercise for the reader,"
+* For less effort, in each chapter we'll outline an "exercise for the reader,"
   and point you to a GitHub location where you can download some partially-finished
   code for the chapter with a few missing parts to write yourself.
 
-
-If you want to go all the way to town, why not try and build up the code
-as you read along?  Particularly if you're intending to apply some of these
-patterns in your own projects, then working through a simple example can really
-help you to get some safe practice.
+Particularly if you're intending to apply some of these patterns in your own
+projects, then working through a simple example is a great way to get some
+safe practice.
 
 The code (and the online version of the book) is licensed under a Creative
-Commons CC-By-ND license. If you want to re-use any of the content from this
-book and you have any worries about the license, you can contact O'Reilly
-at pass:[<a class="email" href="mailto:permissions@oreilly.com"><em>permissions@oreilly.com</em></a>].
+Commons CC-By-ND license, which means you are free to copy and share it with
+anyone you like, for non-commercial purposes, as long as you give attribution.
+If you want to re-use any of the content from this book and you have any
+worries about the license, contact O'Reilly at pass:[<a class="email"
+href="mailto:permissions@oreilly.com"><em>permissions@oreilly.com</em></a>].
 
 
 === Conventions Used in This Book
