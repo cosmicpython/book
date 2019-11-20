@@ -10,6 +10,6 @@ git:
   submodules: false
 before_install:
 - sudo apt-get install -y tree python-pygments
-- sudo python3.8 -m ensurepip
+- python3.8 -m ensurepip
 - sed -i s_git@github.com:_https://github.com/_ .gitmodules
 - git submodule update --init --recursive
