@@ -542,8 +542,9 @@ def test_when_a_file_has_been_renamed_in_the_source():
 
 The advantage of this approach is that your tests act on the exact same function
 that's used by your production code.  The disadvantage is that we have to make
-our stateful components explicit and we have to pass them around. DHH famously
-described this as "test damage".
+our stateful components explicit and we have to pass them around.
+DHHfootnote:[David Heinemeier Hansson, the creator of Ruby on Rails]
+famously described this as "test damage".
 
 In either case, we can now work on fixing all the bugs in our implementation;
 enumerating tests for all the edge cases is now much easier.
@@ -551,7 +552,7 @@ enumerating tests for all the edge cases is now much easier.
 
 ==== Why Not Just Patch It Out?
 
-At this point some of you will be scratching your head and thinking
+At this point you may be scratching your head and thinking
 "Why don't you just use `mock.patch` and save yourself the effort?
 
 We avoid using mocks in this book, and in our production code, too. We're not
@@ -562,7 +563,7 @@ Instead, we like to clearly identify the responsibilities in our codebase, and t
 separate those responsibilities out into small, focused objects that are easy to
 replace with a test double.
 
-There's a few, closely related reasons for that:
+There are three closely related reasons for that:
 
 1.  Patching out the dependency you're using makes it possible to unit test the
 code, but it does nothing to improve the design. Using mock.patch won't let your
