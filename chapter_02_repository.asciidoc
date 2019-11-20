@@ -1,9 +1,8 @@
 [[chapter_02_repository]]
 == Repository Pattern
 
-In this chapter, we'll start to make good on our promise to apply the
-dependency inversion principle as a way of decoupling our core logic from
-infrastructural concerns.
+It's time to make good on our promise to use the dependency inversion principle as
+a way of decoupling our core logic from infrastructural concerns.
 
 We'll introduce the _Repository_, a simplifying abstraction over data storage,
 allowing us to decouple our model layer from the data layer.  We'll see a
@@ -165,9 +164,9 @@ image::images/onion_architecture.png[]
 If you've been reading around about architectural patterns, you may be asking
 yourself questions like this:
 
-> "Is this Ports and Adapters?  Or is it Hexagonal Architecture?  Is it the same
-> as the Onion architecture?  What about the Clean architecture?  What's a Port
-> and what's an Adapter?  Why do you people have so many words for the same thing?
+> "Is this ports and adapters?  Or is it hexagonal architecture?  Is it the same
+> as the onion architecture?  What about the clean architecture?  What's a port
+> and what's an adapter?  Why do you people have so many words for the same thing?
 
 Although some people like to nitpick over the differences, all these are
 pretty much names for the same thing, and they all boil down to the
@@ -185,7 +184,7 @@ and whether there is a Pythonic equivalent of interfaces, later in the book.
 
 Let's remind ourselves of our domain model (see <<model_diagram_reminder>>):
 An allocation is the concept of linking an `OrderLine` to a `Batch`.  We're
-storing the allocations as a collection on our `Batch` object:
+storing the allocations as a collection on our `Batch` object.
 
 [[model_diagram_reminder]]
 .Our Model
@@ -197,11 +196,11 @@ Let's see how we might translate this to a relational database.
 
 ==== The "Normal" ORM Way: Model Depends on ORM
 
-These days it's unlikely that your team are hand-rolling their own SQL queries.
+These days it's unlikely that your team members are hand-rolling their own SQL queries.
 Instead, you're almost certainly using some kind of framework to generate
 SQL for you based on your model objects.
 
-These frameworks are called Object-Relational Mappers because they exist to
+These frameworks are called object-relational mappers (ORMs) because they exist to
 bridge the conceptual gap between the world of objects and domain modeling, and
 the world of databases and relational algebra.
 
@@ -280,7 +279,7 @@ way around.
 
 Django doesn't provide an equivalent for SQLAlchemy's "classical mapper,"
 but see <<appendix_django>> for some examples of how you apply dependency
-inversion and the Repository pattern to Django.
+inversion and Repository pattern to Django.
 
 *******************************************************************************
 
@@ -380,11 +379,14 @@ def test_orderline_mapper_can_save_lines(session):
     pytest will inject them to the tests that need them by looking at their
     function arguments.  In this case, it's a SQLAlchemy database session.
 
-///
-[SG] I set up the conftest to have a session, and could only get the tests to work if I dropped the
-(frozen=True) on the OrderLine dataclass, otherwise I would get dataclasses.FrozenInstanceError: cannot assign to field '_sa_instance_state'
-I feel I am having to work quite hard to follow along ;-(. Is not spelling everything out a deliberate tactic to make the reader learn
-///
+////
+[SG] I set up the conftest to have a session, and could only get the tests to
+work if I dropped the (frozen=True) on the OrderLine dataclass, otherwise I
+would get dataclasses.FrozenInstanceError: cannot assign to field
+'_sa_instance_state' I feel I am having to work quite hard to follow along ;-(.
+
+Is not spelling everything out a deliberate tactic to make the reader learn?
+////
 
 You probably wouldn't keep these tests around--as we'll see shortly, once
 you've taken the step of inverting the dependency of ORM and Domain Model, it's
@@ -478,7 +480,7 @@ def modify_a_batch(batch_id, new_quantity):
 Even though our objects are in memory, we need to put them _somewhere_ so we can
 find them again. Our in memory data would let us add new objects, just like a
 list or a set, and since the objects are in memory we never need to call a
-"Save" method, we just fetch the object we care about, and modify it in memory.
+`.save()` method, we just fetch the object we care about, and modify it in memory.
 
 
 ==== The Repository in the Abstract
@@ -488,7 +490,7 @@ repository, and `get` to return a previously added item.footnote:[
 You may be thinking, what about `list` or `delete` or `update`, but in the
 ideal world, we only modify our model objects one at a time, and delete is
 usually handled as a soft-delete, ie `batch.cancel()`. Finally, update is
-taken care of by the Unit of Work, as we'll see in <<chapter_05_uow>>.].
+taken care of by the Unit of Work, as we'll see in <<chapter_05_uow>>.]
 We stick rigidly to using these methods for data access in our domain and our
 service layer. This self-imposed simplicity stops us from coupling our domain
 model to the database.
@@ -815,7 +817,7 @@ TIP: Building fakes for your abstractions is an excellent way to get design
 
 .Repository Pattern: Recap
 *****************************************************************
-Apply Dependency Inversion to your ORM::
+Apply dependency inversion to your ORM::
     Our domain model should be free of infrastructure concerns,
     so your ORM should import your model, and not the other way
     around.

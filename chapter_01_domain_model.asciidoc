@@ -48,7 +48,7 @@ and it's been a hugely successful movement in transforming the way people
 design software by focusing on the core business domain.  Many of the
 architecture patterns that we cover in this book, like Entity, Aggregate,
 and Value Objects (see <<chapter_05_uow>>), and Repository pattern (in
-<<chapter_02_repository,the next chapter>>) all come from the DDD tradition.
+<<chapter_02_repository,the next chapter>>), all come from the DDD tradition.
 
 In a nutshell, DDD says that the most important thing about software is that it
 provides a useful model of some problem.  If we get that model right, then our
@@ -176,7 +176,7 @@ language_ in DDD terminology). We choose memorable identifiers for our objects
 so that the examples are easier to talk about.
 
 Here are some notes we might have taken while having a conversation with our
-domain experts about allocation.
+domain experts about allocation:
 
 * A _product_ is identified by a _sku_, pronounced "skew," which is short for
   "stock keeping unit."
@@ -449,7 +449,7 @@ class Batch:
 
 
 [[model_diagram]]
-.Our Model
+.Our model
 image::images/model_diagram.png[]
 [role="image-source"]
 ----
@@ -472,7 +472,7 @@ image::images/model_diagram.png[]
 
 
 Now we're getting somewhere! A batch now keeps track of a set of allocated
-OrderLine objects. When we allocate, if we have enough available quantity, we
+`OrderLine` objects. When we allocate, if we have enough available quantity, we
 just add to the set. Our `available_quantity` is now a calculated property:
 purchased quantity - allocated quantity.
 
@@ -609,7 +609,7 @@ class OrderLine:
 Introduced in Python 3.7, `dataclasses` are a neat way to represent value objects;
 if you're on Python 2, you could use `namedtuples` instead. Either technique
 will give you _value equality_ which is the fancy way of saying "two lines with
-the same orderid, sku and qty are equal."
+the same `orderid`, `sku` and `qty` are equal."
 
 
 [[more_value_objects]]
@@ -641,7 +641,7 @@ def test_equality():
 ====
 
 These Value Objects match our real-world intuitions about how their values work.
-It doesn't matter _which_ $10 note we're talking about, because they all have
+It doesn't matter _which_ £10 note we're talking about, because they all have
 the same value. Likewise two names are equal if both the first and last name
 match, and two lines are equivalent if they have the same customer order, product code and
 quantity. We can still have complex behavior on a Value Object, though. In
@@ -697,7 +697,7 @@ It should be clear that "Harry Percival" is not equal to "Barry Percival":
 
 
 [[test_equality]]
-.A name itself cannot change
+.A name itself cannot change...
 ====
 [source,python]
 [role="skip"]
@@ -715,7 +715,7 @@ _identity_.
 
 
 [[person_identity]]
-.But a person can...
+.But a person can!
 ====
 [source,python]
 [role="skip"]
