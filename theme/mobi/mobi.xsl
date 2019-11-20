@@ -5,7 +5,7 @@
                 exclude-result-prefixes="h">
 
   <!-- Add title heading elements for different admonition types that do not already have headings in markup -->
-  <xsl:param name="add.title.heading.for.admonitions" select="1"/>  
+  <xsl:param name="add.title.heading.for.admonitions" select="1"/>
 
   <!-- Override to print example captions without labels-->
   <xsl:template match="h:div[@data-type='example']/h:h5" mode="process-heading">
@@ -13,5 +13,5 @@
       <xsl:apply-templates/>
     </em></p>
   </xsl:template>
-                                                                              
+
 </xsl:stylesheet>

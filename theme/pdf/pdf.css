@@ -7,7 +7,7 @@
     display: none !important;
 }
 
-/* Removing labels from formal code blocks */
+/* Removing "Example X" labels from formal code block captions */
 section[data-type="chapter"] div[data-type="example"] h5:before {
   content: none;
 }
