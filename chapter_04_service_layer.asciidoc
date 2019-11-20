@@ -13,7 +13,7 @@ We'll also discuss testing: by combining the Service Layer with our Repository
 abstraction over the database, we're able to write fast tests, not just of
 our domain model, but the entire workflow for a use case.
 
-By the end of this chapter, we'll have added a Flask API, that will talk to
+By the end of this chapter, we'll have added a Flask API that will talk to
 the Service Layer, which will serve as the entrypoint to our Domain Model.
 By making the service layer depend on the `AbstractRepository`, we'll be
 able to unit test it using `FakeRepository`, and then run it in real life
@@ -99,7 +99,7 @@ plan:
    an end-to-end test and some quick and dirty SQL to prepare test
    data.
 
-2. Refactor out a _Service Layer_ to serve as an abstraction to
+2. Refactor out a Service Layer to serve as an abstraction to
    capture the use case, and sit between Flask and our Domain Model.
    Build some service-layer tests and show how they can use the
    `FakeRepository`.
@@ -116,10 +116,10 @@ plan:
 === A First End-To-End (E2E) Test
 
 No-one is interested in getting into a long terminology debate about what
-counts as an E2E test vs a functional test vs an acceptance test vs an
-integration test vs unit tests.  Different projects need different combinations
-of tests, and we've seen perfectly successful projects just split things into
-"fast tests" and "slow tests."
+counts as an E2E test versus a functional test versus an acceptance test versus
+an integration test versus unit tests.  Different projects need different
+combinations of tests, and we've seen perfectly successful projects just split
+things into "fast tests" and "slow tests."
 
 For now we want to write one or maybe two tests that are going to exercise
 a "real" API endpoint (using HTTP) and talk to a real database. Let's call
@@ -218,8 +218,8 @@ nonsense, Bob and Harry, you may be thinking.
 But hang on a minute--there's no commit.  We're not actually saving our
 allocation to the database. Now we need a second test, either one that will
 inspect the database state after (not very black-boxey), or maybe one that
-checks we can't allocate a second line if a first should have already depleted
-the batch:
+checks that we can't allocate a second line if a first should have already
+depleted the batch:
 
 [[second_api_test]]
 .Test allocations are persisted (test_api.py)
@@ -354,7 +354,7 @@ web API endpoint (you'd need them if you were building a CLI for example, see
 <<appendix_csvs>>), and they're not really things that need to be tested by
 end-to-end tests.
 
-It often makes sense to split out a _Service Layer_, sometimes called
+It often makes sense to split out a Service Layer, sometimes called
 _orchestration layer_ or _use case layer_.
 
 Do you remember the `FakeRepository` that we prepared in the last chapter?
@@ -409,8 +409,7 @@ def test_error_for_invalid_sku():
 ----
 ====
 
-<1> `FakeRepository` (code below) holds the `Batch` objects that will be used
-    by our test.
+<1> `FakeRepository` holds the `Batch` objects that will be used by our test.
 
 <2> Our services module (_services.py_) will define an `allocate()`
     function. It will sit between our `allocate_endpoint()` in the API
@@ -574,7 +573,8 @@ def allocate(line: OrderLine, repo: AbstractRepository, session) -> str:  #<1>
 ====
 
 It depends on a repository.  We've chosen to make the dependency explicit,
-and we've used the type hint to say that we depend on ``AbstractRepository``footnote:[
+and we've used the type hint to say that we depend on
+pass:[<code>AbstractRepository</code>]footnote:[
 Is this Pythonic?  Depending on who you ask, both abstract base classes and
 type hints are hideous abominations, and serve only to add useless, unreadable
 cruft to your code; beloved only by people who wish that Python was Haskell,
@@ -593,7 +593,8 @@ _high-level module_, the service layer, depends on the repository abstraction.
 And the _details_ of the implementation for our specific choice of persistent
 storage also depend on that same abstraction.
 
-See the diagram at the end of the chapter, <<service_layer_diagram_abstract>>.
+See the diagrams at the end of the chapter,
+<<service_layer_diagram_abstract_dependencies>>.
 
 See also <<appendix_csvs>> where we show a worked example of swapping out the
 _details_ of which persistent storage system to use, while leaving the
@@ -718,9 +719,9 @@ a healthy-looking test pyramid.
 
 === Should Domain Layer Tests Move to the Service Layer?
 
-We could take this a step further. Since we can test the our software against
+We could take this a step further. Since we can test our software against
 the service layer, we don't really need tests for the domain model any more.
-Instead, we could rewrite all of the domain-level tests from chapter one in
+Instead, we could rewrite all of the domain-level tests from Chapter 1 in
 terms of the service layer.
 
 
