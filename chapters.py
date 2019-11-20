@@ -27,6 +27,7 @@ STANDALONE = [
 ]
 
 NO_EXERCISE = [
+    "chapter_03_abstractions",
     "appendix_project_structure",
     'appendix_django',
     "appendix_csvs",
