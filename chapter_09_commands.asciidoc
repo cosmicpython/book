@@ -28,7 +28,7 @@ wart by introducing _Commands_.
 
 === Commands and Events
 
-Like events, commands are a type of message - instructions sent by one part of
+Like events, commands are a type of message--instructions sent by one part of
 a system to another. Like events, we usually represent commands with dumb data
 structures and we can handle them in much the same way.
 
@@ -226,7 +226,7 @@ success or failure of an update to an aggregate.
 
 For example, when we allocate stock to an order, our consistency boundary is the
 Product aggregate. This means that we can't accidentally over-allocate: either
-a particular order line is allocated to the product, or it is not - there's no
+a particular order line is allocated to the product, or it is not--there's no
 room for inconsistent states.
 
 By definition, we don't require two aggregates to be immediately consistent, so

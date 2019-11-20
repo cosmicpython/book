@@ -427,8 +427,8 @@ Our tests now act directly on the `determine_actions()` function:
 ====
 
 
-Because we've disentangled the logic of our program - the code for identifying
-changes - from the low-level details of IO, we can easily test the core of our code.
+Because we've disentangled the logic of our program--the code for identifying
+changes--from the low-level details of IO, we can easily test the core of our code.
 
 With this approach we've switched from testing our main entrypoint function,
 `sync()`, to testing a lower-level function, `determine_actions()`.  You might
