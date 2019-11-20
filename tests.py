@@ -230,12 +230,9 @@ def tree_for_branch(chapter_name):
 def code_venv():
     code = Path(__file__).parent / 'code'
     venv = code / '.venv'
-    if (venv / 'bin/pytest').exists():
-        return
-    subprocess.run(['python3.8', '-m', 'venv', venv], check=True)
     assert (venv / 'bin/pip').exists()
     subprocess.run([venv / 'bin/pip', 'install', '-r', code / 'requirements.txt'], check=True)
-    subprocess.run([venv / 'bin/pip', 'install', '-e', code / 'src'])
+    subprocess.run([venv / 'bin/pip', 'install', '-e', code / 'src'], check=True)
 
 
 @pytest.mark.usefixtures('code_venv')

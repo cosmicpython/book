@@ -3,9 +3,9 @@ language: python
 python: 3.8
 install:
 - gem install asciidoctor coderay
-- pip3 install -r requirements.txt
+- pip install -r requirements.txt
 script:
-- make html update-code test
+- make html update-code code-venv test
 git:
   submodules: false
 before_install:

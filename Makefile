@@ -9,6 +9,9 @@ update-code:
 	cd code && git fetch
 	./checkout-branches-for-ci.py
 
+code-venv:
+	cd code && python3.8 -m venv .venv
+
 count-todos:
 	ls *.asciidoc | xargs grep -c TODO | sed  s/:/\\t/
 
