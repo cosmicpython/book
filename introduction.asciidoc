@@ -22,7 +22,7 @@ boundaries with paths and fences, and they mark out flower beds or vegetable
 patches. Over time, the garden evolves, growing richer and thicker, but without
 deliberate effort, the garden will run wild. Weeds and grasses will choke out
 other plants, covering over the paths until, eventually, every part looks the
-same again - wild and unmanaged.
+same again--wild and unmanaged.
 
 Software systems, too, tend toward chaos. When we first start building a new
 system, we have grand ideas that our code will be clean and well-ordered, but
@@ -119,12 +119,19 @@ for r in duckduckgo.query('Sausages').results:
 Encapsulating behavior using abstractions is a powerful tool for making
 code more expressive, more testable, and easier to maintain.
 
-NOTE: This approach is inspired by a classic approach from the Object-Oriented (OO)
+// TODO (loosely based on SG feedback) there's a chance we're being a bit
+// patronising here.  Can we reword this a bit along the lines of "as programmers
+// we all recognise and try do this sort of thing at an intuitive level.  You
+// may never have heard it described in these words but..."
+// idk.  maybe even worse.
+
+NOTE: This approach is inspired by a classic approach from the object-oriented (OO)
     world called
     http://www.wirfs-brock.com/Design.html[responsibility-driven design].
     which would use the words _roles_ and _responsibilities_ rather than tasks.
     The main point is to think about code in terms of behavior, rather than
-    in terms of data or algorithms.  If you've come across CRC cards, they're
+    in terms of data or algorithms.  If you've come across
+    class-responsibility-collaborator (CRC) cards, they're
     driving at the same thing.
 
 In a traditional OO language like Java or C#, you might use an abstract base
@@ -134,8 +141,9 @@ abstraction can just mean, "the public API of the thing you're using" --a
 function name plus some arguments, for example.
 
 Most of the patterns in this book involve choosing an abstraction, so you'll
-see plenty of examples in each chapter.  We also talk about some general
-heuristics for choosing abstractions in <<chapter_03_abstractions>>.
+see plenty of examples in each chapter. In addition,
+<<chapter_03_abstractions>> specifically discusses some general heuristics
+for choosing abstractions.
 
 
 === Layering
@@ -154,7 +162,7 @@ we divide our code into discrete categories or roles and we introduce rules
 about which categories of code can call each other.
 
 For example most people are familiar with the three layered architecture shown
-in <<layered_architecture1>>:
+in <<layered_architecture1>>.
 
 [[layered_architecture1]]
 .Layered architecture
@@ -162,19 +170,19 @@ image::images/layered_architecture.png[]
 [role="image-source"]
 ----
 [ditaa,layered_architecture]
-+------------------------------------------------------------+
-|                  Presentation Layer                        |
-+------------------------------------------------------------+
++----------------------------------------------------+
+|                Presentation Layer                  |
++----------------------------------------------------+
                           |
                           V
-+------------------------------------------------------------+
-|                   Business Logic                           |
-+------------------------------------------------------------+
++----------------------------------------------------+
+|                 Business Logic                     |
++----------------------------------------------------+
                           |
                           V
-+------------------------------------------------------------+
-|                    Database Layer                          |
-+------------------------------------------------------------+
++----------------------------------------------------+
+|                  Database Layer                    |
++----------------------------------------------------+
 ----
 
 
@@ -237,7 +245,7 @@ In the meantime, we can talk about the formal definition of the DIP, which is:
 
 But what does this mean? Let's take it bit by bit.
 
-_High level modules_ are the code that your organization really cares about.
+_High-level modules_ are the code that your organization really cares about.
 Perhaps you work for a pharmaceutical company, and your high-level modules deal
 with patients and trials. Perhaps you work for a bank, and your high level
 modules manage trades and exchanges. The high-level modules of a software
@@ -246,7 +254,7 @@ concepts.
 
 By contrast, _low-level modules_ are the code that your organization doesn't
 care about. It's unlikely that your HR department gets excited about file
-systems, or network sockets. It's not often that you can discuss SMTP, or HTTP,
+systems, or network sockets. It's not often that you discuss SMTP, or HTTP,
 or AMQP with your finance team. For our non-technical stakeholders, these
 low-level concepts aren't interesting or relevant. All they care about is
 whether the high-level concepts work correctly. If payroll runs on time, your
@@ -260,15 +268,14 @@ And we've mentioned _abstractions_ already: they're simplified interfaces that
 encapsulate some behavior, in the way that our duckduckgo module encapsulated a
 search engine's API.
 
-So the first part of the DIP says that our business code shouldn't depend on
-technical details; instead they should both use abstractions.
-
-
 [quote,David Wheeler]
 ____
 All problems in computer science can be solved by adding another level of
 indirection
 ____
+
+So the first part of the DIP says that our business code shouldn't depend on
+technical details; instead they should both use abstractions.
 
 Why? Broadly, because we want to be able to change them independently of each
 other.  High-level modules should be easy to change in response to business
@@ -299,6 +306,6 @@ business logic becomes spread out throughout the layers of our application,
 making it hard to identify, understand, and change.
 
 <<chapter_01_domain_model>> shows how to build a business
-layer using a _Domain Model_, and the rest of the patterns in Part 1 will show
+layer using a _Domain Model_, and the rest of the patterns in Part 1 show
 how we can keep the domain model easy to change and free of low-level concerns,
 by choosing the right abstractions and continuously applying the DIP.
