@@ -233,7 +233,9 @@ def code_venv():
     if (venv / 'bin/pytest').exists():
         return
     subprocess.run(['python3.8', '-m', 'venv', venv], check=True)
+    assert (venv / 'bin/pip').exists()
     subprocess.run([venv / 'bin/pip', 'install', '-r', code / 'requirements.txt'], check=True)
+    subprocess.run([venv / 'bin/pip', 'install', '-e', code / 'src'])
 
 
 @pytest.mark.usefixtures('code_venv')
