@@ -226,16 +226,6 @@ def tree_for_branch(chapter_name):
         ).stdout.decode()
 
 
-@pytest.fixture(scope="session")
-def code_venv():
-    code = Path(__file__).parent / 'code'
-    venv = code / '.venv'
-    assert (venv / 'bin/pip').exists()
-    subprocess.run([venv / 'bin/pip', 'install', '-r', code / 'requirements.txt'], check=True)
-    subprocess.run([venv / 'bin/pip', 'install', '-e', code / 'src'], check=True)
-
-
-@pytest.mark.usefixtures('code_venv')
 @pytest.mark.parametrize('chapter', CHAPTERS)
 def test_tests_pass(chapter):
     with checked_out(chapter):
