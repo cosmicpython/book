@@ -3,8 +3,8 @@
 
 
 This chapter looks into how we can model business processes with code, in a way
-that's highly compatible with TDD.  We'll discuss _why_ domain modelling
-matters, and we'll look at a few key patterns for modelling domains: Entities,
+that's highly compatible with TDD.  We'll discuss _why_ domain modeling
+matters, and we'll look at a few key patterns for modeling domains: Entities,
 Value Objects, and Domain Services.
 
 
@@ -37,9 +37,9 @@ but it does mean that some predictions fall outside of its domain.
 .This is not a DDD Book.  You Should Read a DDD book.
 *****************************************************************
 
-Domain-driven design, or DDD, is where the concept of domain modelling was
+Domain-driven design, or DDD, is where the concept of domain modeling was
 popularized,footnote:[
-DDD did not originate domain modelling. Eric Evans refers to _Object Design_
+DDD did not originate domain modeling. Eric Evans refers to _Object Design_
 from Rebecca Whirfs-Brock and Alan McKean, which introduced Responsibility-Driven
 Design of which DDD is a special case, dealing with the domain. But even that is
 too late, and OO-enthusiasts will tell you to look further back to Ivar
@@ -159,7 +159,7 @@ can save money by keeping lower inventory in the domestic warehouse.
 
 But allocating orders is no longer a trivial matter of decrementing a single
 quantity in the warehouse system.  We need a more complex allocation mechanism.
-Time for some domain modelling.
+Time for some domain modeling.
 
 
 
@@ -326,7 +326,7 @@ quite a lot of codefootnote:[
 Or perhaps you think there's not enough code?  What about some sort of check
 that the sku in the `OrderLine` matches `Batch.sku`?  We saved some thoughts on
 validation for <<appendix_validation>>]
-just to subtract one number from another, but we think that modelling our
+just to subtract one number from another, but we think that modeling our
 domain precisely will pay off.
 
 Let's write some new failing tests:
@@ -960,7 +960,7 @@ first use case.   But first we'll need a database.
 
 .Domain Modelling Wrap-Up
 *****************************************************************
-Domain modelling::
+Domain modeling::
     This is the part of your code that is closest to the business,
     the most likely to change, and the place where you deliver the
     most value to the business.  Make it easy to understand and modify
