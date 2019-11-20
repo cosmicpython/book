@@ -914,22 +914,13 @@ we can capture that using a _domain exception_:
 [source,python]
 ----
 def test_raises_out_of_stock_exception_if_cannot_allocate():
-    batch = Batch('batch1', 'HEAVY-SPOON', 100, eta=today)
-    different_sku_line = OrderLine('oref', 'SMALL-FORK', 10)
+    batch = Batch('batch1', 'SMALL-FORK', 10, eta=today)
+    allocate(OrderLine('order1', 'SMALL-FORK', 10), [batch])
 
     with pytest.raises(OutOfStock, match='SMALL-FORK'):
-        allocate(different_sku_line, [batch])
+        allocate(OrderLine('order2', 'SMALL-FORK', 1), [batch])
 ----
 ====
-
-////
-
-[SG] Wouldn't it be nicer to create a batch of SMALL-FORK then allocate them all
-then try to allocate one more to see the exception. This test makes me think
-for goodness sake you are just targeting the wrong batch.
-
-TODO: (HP): yes it would.
-////
 
 We won't bore you too much with the implementation, but the main thing
 to note is that we take care in naming our exceptions in the ubiquitous
