@@ -13,7 +13,6 @@ In the meantime, pull requests, typofixes, and more substantial feedback + sugge
 | Chapter |       |
 | ------- | ----- |
 | [Preface](preface.asciidoc) | |
-| [Acknowledgements](acknowledgements.asciidoc) | |
 | [Introduction: Why do our designs go wrong?](introduction.asciidoc)| ||
 | [**Part 1 Intro**](part1.asciidoc) | |
 | [Chapter 1: Domain Model](chapter_01_domain_model.asciidoc) | [![Build Status](https://travis-ci.org/cosmicpython/code.svg?branch=chapter_01_domain_model)](https://travis-ci.org/cosmicpython/code) |
