@@ -50,8 +50,12 @@ Fortunately, the techniques to avoid creating a big ball of mud aren't complex.
 
 === Encapsulation and Abstractions
 
+Encapsulation and Abstraction are tools that we all instinctively reach for,
+as programmers, even if we don't all use these exact words.  Allow us to dwell
+on them for a moment, since they are a recurring background them of the book.
+
 The term _encapsulation_ covers two closely related ideas: simplifying
-behavior and hiding data. In this book, we're using the first sense. We
+behavior and hiding data. In this discussion, we're using the first sense. We
 encapsulate behavior by identifying a task that needs to be done in our code,
 and giving that task to a well defined object or function; we call that an
 _abstraction_.
@@ -119,26 +123,24 @@ for r in duckduckgo.query('Sausages').results:
 Encapsulating behavior using abstractions is a powerful tool for making
 code more expressive, more testable, and easier to maintain.
 
-// TODO (loosely based on SG feedback) there's a chance we're being a bit
-// patronising here.  Can we reword this a bit along the lines of "as programmers
-// we all recognise and try do this sort of thing at an intuitive level.  You
-// may never have heard it described in these words but..."
-// idk.  maybe even worse.
-
-NOTE: This approach is inspired by a classic approach from the object-oriented (OO)
-    world called
-    http://www.wirfs-brock.com/Design.html[responsibility-driven design].
-    which would use the words _roles_ and _responsibilities_ rather than tasks.
+NOTE: In the literature of the object-oriented (OO) world, one of the classic
+    characterisations of this approach is called
+    http://www.wirfs-brock.com/Design.html[responsibility-driven design];
+    it would use the words _roles_ and _responsibilities_ rather than _tasks_.
     The main point is to think about code in terms of behavior, rather than
-    in terms of data or algorithms.  If you've come across
+    in terms of data or algorithms.footnote:[If you've come across
     class-responsibility-collaborator (CRC) cards, they're
-    driving at the same thing.
+    driving at the same thing: thinking about _responsibilities_ helps you decide how to split things up.]
 
+.Abstractions and ABCs
+*******************************************************************************
 In a traditional OO language like Java or C#, you might use an abstract base
 class (ABC) or an interface to define an abstraction.  In Python you can (and we
-sometimes do) use ABCs, but you can also happily rely on duck typing.  The
-abstraction can just mean, "the public API of the thing you're using" --a
+sometimes do) use ABCs, but you can also happily rely on duck typing.
+
+The abstraction can just mean, "the public API of the thing you're using" --a
 function name plus some arguments, for example.
+*******************************************************************************
 
 Most of the patterns in this book involve choosing an abstraction, so you'll
 see plenty of examples in each chapter. In addition,
