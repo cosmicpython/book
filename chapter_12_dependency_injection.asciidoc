@@ -16,15 +16,12 @@
 
 ********************************************************************************
 
-NOTE: placeholder chapter, under construction
+NOTE: chapter under construction
 
 Depending on your particular brain type, you may have a slight feeling of
 unease at the back of your mind at this point.  Let's bring it out into the
 open. We've currently shown two different ways of managing dependencies, and
 testing them.
-
-For our database dependency, we've built a careful framework of explicit
-dependencies and easy options for overriding them in tests:
 
 TIP: If you haven't already, it's worth reading <<chapter_03_abstractions>>
     before continuing with this chapter, particularly the discussion of
@@ -33,8 +30,9 @@ TIP: If you haven't already, it's worth reading <<chapter_03_abstractions>>
 
 === Implicit vs Explicit Dependencies
 
-Our main handler functions declare an explicit dependency on the unit
-of work:
+For our database dependency, we've built a careful framework of explicit
+dependencies and easy options for overriding them in tests. Our main handler
+functions declare an explicit dependency on the unit of work:
 
 [[existing_handler]]
 .Our handlers have an explicit dependency on the UoW (src/allocation/handlers.py)
@@ -537,9 +535,50 @@ we can use it in our tests:
 ====
 
 
-Now we test the real thing, usally with an end-to-end or integration
+Now we test the real thing, usually with an end-to-end or integration
 test.  We've used https://github.com/mailhog/MailHog[MailHog] as a
 real-ish email server for our docker dev environment.
+
+
+[[docker_compose_with_mailhog]]
+.Docker-compose config with real fake email server (docker-compose.yml)
+====
+[source,yaml]
+----
+version: "3"
+
+services:
+
+  redis_pubsub:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: allocation-image
+    ...
+
+  api:
+    image: allocation-image
+    ...
+
+  postgres:
+    image: postgres:9.6
+    ...
+
+  redis:
+    image: redis:alpine
+    ...
+
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - "11025:1025"
+      - "18025:8025"
+----
+====
+
+
+In our integration tests, we use the real `EmailNotifications` class,
+talking to the MailHog server in the docker cluster:
 
 
 
@@ -610,3 +649,17 @@ Oh yeah, step 4 is a bit challenging...
 
 Or, do the same thing for redis.  You'll need to split pub from sub.
 ******************************************************************************
+
+
+=== DI wrap-up
+
+* messagebus is a nice place to do DI. it becomes a composition root
+* but you don't have to.  it is a violation of the SRP after all. if you use
+  a <<appendix_bootstrap,bootstrap script>>, that can be a good place to
+  initialise some alternative DI tools
+* off-the-shelf, you could try https://pypi.org/project/Inject/[Inject]
+  (it's fine, we use it at MADE, it makes pylint complain) or 
+  https://pypi.org/project/punq/[Punq] (as written by Bob himself).
+
+TODO: expand on wrap-up
+
