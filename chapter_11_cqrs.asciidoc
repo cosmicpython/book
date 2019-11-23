@@ -468,7 +468,10 @@ def remove_allocation_from_read_model(
 ----
 ====
 
-TODO: diagram
+
+<<read_model_sequence_diagram>> shows the flow across the two requests: two
+transactions in the POST/write operation, one to update the write model and one
+to update the read model, which the GET/read operation can use.
 
 [[read_model_sequence_diagram]]
 .Sequence diagram for read model
@@ -487,10 +490,15 @@ database DB order 10
 User -> Flask: POST to allocate Endpoint
 Flask -> MessageBus : Allocate Command
 
-MessageBus -> Domain : allocate()
-MessageBus -> DB: commit write model
-Domain -> MessageBus : raise Allocated event(s)
-MessageBus -> DB : update view model
+group UoW/transaction 1
+    MessageBus -> Domain : allocate()
+    MessageBus -> DB: commit write model
+end
+
+group UoW/transaction 2
+    Domain -> MessageBus : raise Allocated event(s)
+    MessageBus -> DB : update view model
+end
 
 Flask -> User: 202 OK
 
@@ -516,10 +524,36 @@ Memcached? Super-simple.  _We don't even need to change the integration test_.
 
 TODO: demo this.
 
-// TODO (EJ) Some explicit discussion of CRUD vs CQRS might be good. I'd guess
-// that there will be a lot readers coming to this book from Django.
-
 So definitely don't do this. Ever.  Unless you really need to.  But, if you do
 need to, see how easy the event-driven model makes it?
+
+
+=== But Would You Really?  CRUD versus CQRS.
+
+As it happens, the allocation service at MADE.com does use "full blown" CQRS,
+with a read model that uses Redis, and even a second layer of cache provided
+by Varnish.  But its use cases are actually quite a bit different from what
+we've shown here.
+
+For the kind of allocation service we're building, it seems unlikely that
+you'd need to use a separate read model and event handlers for updating it.
+
+But once you commit to using a Domain Model rather than "just" building a
+CRUD app, then some level of CQS or CQRS does become more and more necessary.
+
+Often, your read operations will acting on the same conceptual objects as your
+write model, so using the ORM, adding some read methods to your repositories,
+and using Domain Model classes for your read operations is _just fine_.
+
+As it happens in our case, our read operations act on quite different
+conceptual entities to our Domain Model.  The allocation service thinks
+in terms of `Batches` for a single sku, but users care about allocations
+for a whole order, with multiple skus, so using the ORM ends up being a little
+awkward.  We'd be quite tempted to go with the raw-SQL view we showed right
+at the beginning of the chapter.
+
+
+// TODO (EJ) Some explicit discussion of CRUD vs CQRS might be good. I'd guess
+// that there will be a lot readers coming to this book from Django.
 
 OK.  On that note, let's sally forth into our final chapter.
