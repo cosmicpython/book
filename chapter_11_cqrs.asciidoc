@@ -101,7 +101,7 @@ def allocations_view_endpoint(orderid):
 
 === Hold on to Your Lunch Folks.
 
-So we can probably just add a list method to our existing repository
+...so we can probably just add a list method to our existing repository
 obj-...
 
 
@@ -160,10 +160,9 @@ on your repository that can find all the products for an order.
 
 Note that splitting out a _views.py_ module and enforcing a clear
 distinction between reads and writes in your application is still
-probably a good idea.  We apply the CQS principle (with no R it's
-Command-Query-Separation), and it's easy to see which code modifies
-state (the event handlers) and which code just retrieves read-only
-state (the views).
+probably a good idea.  We apply command-query separation, and it's easy to see
+which code modifies state (the event handlers) and which code just retrieves
+read-only state (the views).
 
 TIP: Split out your read-only views from your state-modifying
     command and event handlers.
@@ -178,8 +177,8 @@ earth would you want to do that? _Ever?_
 
 Broadly speaking there are two reasons:
 
-* Performance
-* And keeping your Domain Model free of Spurious Concerns.
+1. Performance.
+2. Keeping your Domain Model free of Spurious Concerns.
 
 
 ==== SELECT N+1
@@ -206,16 +205,15 @@ of JOINs can be slow.  It's common in such cases to add some denormalized views
 layers.
 
 
-==== Your Domain Model is not Optimised for Read Operations
+==== Your Domain Model is not Optimized for Read Operations
 
 Now here's the chinstrokey-architect justification.  As we've said before,
 a Domain Model is not a data model--we're trying to capture the way the
 business works: workflow, rules around state changes, messages exchanged;
-most of these are concerned with how the system reacts to external events
-and user input. _Most of this stuff is totally irrelevant for read-only
-operations_.
+concerns about how the system reacts to external events and user input.
+_Most of this stuff is totally irrelevant for read-only operations_.
 
-At a facile level, your domain classes will have a number of methods for
+Making a facile point, your domain classes will have a number of methods for
 modifying state, and you won't need any of them for read-only operations.
 Now that is very, very, very far away from a justification for using raw
 SQL instead of reusing our domain objects for queries, but you can at
@@ -227,13 +225,13 @@ it more and more awkward to use for read operations.
 
 Even in our simple example, we've chosen to use `Product` as our aggregate,
 but for our "show me the allocations for this order id" endpoint, going
-via Product isn't really the most obvious way of doing things.  First we
-retrieve all the products for the skus in the order, then we find all the
-batches for those products, and _then_ we iterate (slowly, in Python) through
-all of them finding the ones that have allocations for that order id?  It's
-clunky.  And we didn't mention it at the time, but we had to add a new
-`@property` to the domain model to be able to get the order ids allocated
-to a batch:
+via Product isn't really the most obvious way of doing things.  In
+<<view_using_repo>> we retrieve all the products for the skus in the order,
+then we find all the batches for those products, and _then_ we iterate (slowly,
+in Python) through all of them finding the ones that have allocations for that
+order id?  It's clunky.  And we didn't mention it at the time, but we had to
+add a new `@property` to the domain model to be able to get the order ids
+allocated to a batch:
 
 [[orderids_on_batch]]
 .An argubably-uneccessary property on our model (src/allocation/model.py)
@@ -278,7 +276,10 @@ def allocations(orderid: str, uow: unit_of_work.AbstractUnitOfWork):
 ----
 ====
 
-But is that _actually_ any easier to write or understand than the raw SQL version?
+But is that _actually_ any easier to write or understand than the raw SQL
+version from <<views_dot_py>>?  It may not look too bad up there, but we
+can tell you it took several attempts, and plenty of digging through the
+SQLAlchemy docs.  SQL is just SQL.
 
 
 === Testing CQRS Views
@@ -287,8 +288,7 @@ Let's talk about testing.  Whichever of the approaches you decide to go for,
 the most obvious kind of test to write is an integration test, one that goes
 to a real database.
 
-This test will pass for all the approaches we've shown so far:
-
+This test would work for any of the approaches we've shown so far:
 
 
 [[integration_testing_views]]
@@ -346,8 +346,8 @@ your permanent storage and the logic of your read-only views.
   logic separately
 
 
-TODO: some example code showing a DAL layer in front of some read-only view code
-    with more complex business logic.
+// TODO: some example code showing a DAL layer in front of some read-only view
+// code with more complex business logic.
 
 
 === Doubling Down on the Madness.
@@ -361,12 +361,12 @@ So. Crazy or not, that hardcoded SQL query is pretty ugly right?  What if we
 made it nicer by keeping a totally separate, denormalized datastore for our
 view model?
 
-Horrifying, right? Wait 'til we tell you we're not even going to use Postgres
-views or triggers or anything known and reliable and boring like that to keep it
-up to date.  We're going to use our amazing event-driven architecture!
-That's right!  May as well join the cult and start drinking folks, the ship
-is made of cardboard and the captains are crazy and there's nothing you can
-do to stop them.
+Horrifying, right?  Wait 'til we tell you we're not even going to use Postgres
+views, or triggers, or anything known and reliable and boring like that, to
+keep it up to date.  We're going to use our amazing event-driven architecture!
+That's right!  May as well join the cult and start drinking folks, the ship is
+made of cardboard and the captains are crazy and there's nothing you can do to
+stop them.
 
 
 [[much_nicer_query]]
@@ -384,7 +384,7 @@ def allocations(orderid: str, uow: unit_of_work.SqlAlchemyUnitOfWork):
 ----
 ====
 
-Here's our table.  Hee hee hee, no foreign keys, just strings, yolo.
+Here's our table.  Hee hee hee, no foreign keys, just strings, YOLO.
 
 [[new_table]]
 .A very simple table (src/allocation/orm.py)
