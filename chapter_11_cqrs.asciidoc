@@ -470,6 +470,45 @@ def remove_allocation_from_read_model(
 
 TODO: diagram
 
+[[read_model_sequence_diagram]]
+.Sequence diagram for read model
+image::images/read_model_sequence_diagram.png[]
+[role="image-source"]
+----
+[plantuml, read_model_sequence_diagram]
+@startuml
+actor User order 1
+boundary Flask order 2
+participant MessageBus order 3
+participant "Domain Model" as Domain order 4
+participant UoW order 8
+participant View order 9
+database DB order 10
+
+User -> Flask: POST to allocate Endpoint
+Flask -> MessageBus : Allocate Command
+
+MessageBus -> UoW : start unit of work
+MessageBus -> Domain : allocate()
+Domain -> UoW: raise Allocated events(s)
+MessageBus -> UoW: commit
+UoW -> DB: update write model
+UoW -> MessageBus : publish Allocated event(s)
+MessageBus -> DB : update view model
+
+Flask -> User: 202 OK
+
+User -> Flask: GET allocations endpoint
+Flask -> View: get allocations
+View -> DB: SELECT on view model
+DB -> View: some allocations
+View -> Flask: some allocations
+Flask -> User: some allocations
+
+@enduml
+----
+
+
 === But Whyyyyyyy?
 
 OK.  Horrible, right?  But also, kinda, surprisingly nice, considering?  Our
