@@ -813,7 +813,7 @@ image::images/test_spectrum_diagram.png[]
 
 
 
-Extreme Programming (XP) exhorts us to "listen to the code." When we're writing
+Extreme programming (XP) exhorts us to "listen to the code." When we're writing
 tests, we might find that the code is hard to use, or notice a code smell. This
 is a trigger for us to refactor, and reconsider our design.
 
@@ -867,7 +867,7 @@ When starting out a new project, or when we hit a particularly gnarly problem,
 we will drop back down to writing tests against the domain model, so that we
 get better feedback and executable documentation of our intent.
 
-The metaphor we use is that of shifting gears. When starting off a journey, the
+The metaphor we use is that of shifting gears. When starting a journey, the
 bicycle needs to be in a low gear so that it can overcome inertia. Once we're off
 and running, we can go faster and more efficiently by changing into a high gear;
 but if we suddenly encounter a steep hill, or we're forced to slow down by a
@@ -1196,7 +1196,7 @@ Adding the service layer has really bought us quite a lot:
 dependencies of our service layer:
 
 [[service_layer_diagram_abstract_dependencies]]
-.Abstract Dependencies of the service layer
+.Abstract dependencies of the service layer
 image::images/service_layer_diagram_abstract_dependencies.png[]
 [role="image-source"]
 ----
@@ -1268,10 +1268,10 @@ image::images/service_layer_diagram_runtime_dependencies.png[]
 +------------------+     +--------------------+     |
               ^                     ^               |
               |                     |               |
-              |          +----------------------+   |
-      imports |          | SqlAlchemyRepository |<--/
-              |          +----------------------+
-              |                | uses
+       gets   |          +----------------------+   |
+       model  |          | SqlAlchemyRepository |<--/
+   definitions|          +----------------------+
+       from   |                | uses
               |                V
            +-----------------------+
            |          ORM          |
