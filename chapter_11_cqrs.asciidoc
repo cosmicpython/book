@@ -481,19 +481,15 @@ actor User order 1
 boundary Flask order 2
 participant MessageBus order 3
 participant "Domain Model" as Domain order 4
-participant UoW order 8
 participant View order 9
 database DB order 10
 
 User -> Flask: POST to allocate Endpoint
 Flask -> MessageBus : Allocate Command
 
-MessageBus -> UoW : start unit of work
 MessageBus -> Domain : allocate()
-Domain -> UoW: raise Allocated events(s)
-MessageBus -> UoW: commit
-UoW -> DB: update write model
-UoW -> MessageBus : publish Allocated event(s)
+MessageBus -> DB: commit write model
+Domain -> MessageBus : raise Allocated event(s)
 MessageBus -> DB : update view model
 
 Flask -> User: 202 OK
