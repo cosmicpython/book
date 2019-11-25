@@ -310,7 +310,7 @@ TIP: Outbound events are one of the places it's important to apply some validati
 It's a good idea to keep the distinction between internal and external events
 clear.  Some events may come from the outside, and some events may get upgraded
 and published externally, but not all of them.  This is particularly important
-if you get into [event sourcing](https://io.made.com/eventsourcing-101/) (very
+if you get into [event sourcing](https://io.made.com/blog/2018-04-28-eventsourcing-101.html) (very
 much a topic for another book though).
 
 *******************************************************************************
@@ -326,7 +326,7 @@ much a topic for another book though).
 
 TODO: more here
 
-[quote, Martin Fowler, https://martinfowler.com/articles/201701-event-driven.html[What do you mean by “Event-Driven”?]]
+[quote, Martin Fowler, https://martinfowler.com/articles/201701-event-driven.html [What do you mean by “Event-Driven”?]]
 ____
 Event notification is nice because it implies a low level of coupling, and is
 pretty simple to set up. It can become problematic, however, if there is
