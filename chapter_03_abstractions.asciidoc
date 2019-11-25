@@ -335,7 +335,10 @@ tests, and how do we change our implementation to make it all work?
 Our goal is to isolate the clever part of our system, and to be able to test it
 thoroughly without needing to set up a real filesystem. We'll create a "core"
 of code that has no dependencies on external state, and then see how it responds
-when we give it input from the outside world.
+when we give it input from the outside world (this kind of approach was characterised
+by Gary Bernhardt as
+https://www.destroyallsoftware.com/screencasts/catalog/functional-core-imperative-shell[Functional
+Core, Imperative Shell] (FCIS).
 
 Let's start off by splitting the code up to separate the stateful parts from
 the logic.
@@ -439,7 +442,7 @@ be unit tested _and_ end-to-end tested;  it's an approach Bob calls
 "edge-to-edge testing".
 
 
-==== Testing Edge-to-Edge with Fakes
+==== Testing Edge-to-Edge with Fakes and Dependency Injection
 
 When we start writing a new system, we often focus on the core logic first,
 driving it with direct unit tests. At some point, though, we want to test bigger
