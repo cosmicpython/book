@@ -5,8 +5,8 @@ NOTE: TODO, chapter under construction
 
 OK, but how do I get there from here?
 
-* Option 1: carve out microservices one by one
-* Option 2: refactoring inside your monolith
+1. Option 1: carve out microservices one by one
+2. Option 2: refactoring inside your monolith
 
 In either case, you'll need to figure out what the correct
 https://martinfowler.com/bliki/BoundedContext.html[Bounded Context]
@@ -18,13 +18,18 @@ is.
 
 === What do you want to achieve?
 
-What's the problem with a monolith?  there's no domain model because
-everything is trying to be all things to all people
+What's the problem with a monolith?
+
+* Is it that there's no domain model because everything is trying to be all
+  things to all people?
 
 --> you need to carve out bounded contexts and probably microservices
 
-Is it that all the logic is hard to find because it's mixed between all the
-layers?
+
+* Is it that all the logic is hard to find because it's mixed between all the
+  layers?
+
+--> try to move towards Domain Model  and Service Layer.
 
 
 
@@ -50,7 +55,10 @@ see <<appendix_django>>
 
 === an event-driven approach to go microservices via strangler pattern
 
+* decide on a piece of the old system to carve out.
 * get your system to produce events
+    - as its main outputs
+    - and as inputs to your new system
 * consume them in your new service. we now have a separate db and bounded context
 * the new system produces
     - either the same events the old one did (and we can switch those old parts off)
@@ -63,12 +71,23 @@ see <<appendix_django>>
 TODO (DS)
 Missing pieces
 
-    What's still worth doing, even in half measures? E.g. is it worth having a service layer even if the domain is still coupled to persistence? Repositories without CQRS?
-    What size of systems are these helpful within? For example, do they work in the context of a monolith?
-    How should use cases interact across a larger system? For example, is it a problem for a use case to call another use case?
-    Is it a smell for a use case to interact with multiple repositories, and if so, why?
-    How do read-only, but business logic heavy things fit into all this? Use cases or not? (This relates to what these patterns might look like if we didn't bother with CQRS.)
+What's still worth doing, even in half measures? E.g. is it worth having a
+service layer even if the domain is still coupled to persistence? Repositories
+without CQRS?
+
+What size of systems are these helpful within? For example, do they work in the context of a monolith?
+
+How should use cases interact across a larger system? For example, is it a
+problem for a use case to call another use case?
+
+Is it a smell for a use case to interact with multiple repositories, and if so,
+why?
+
+How do read-only, but business logic heavy things fit into all this? Use cases
+or not? (This relates to what these patterns might look like if we didn't
+bother with CQRS.)
 ////
+
 
 === Footguns
 
@@ -76,7 +95,7 @@ This is a part 2 thing really, but basically, don't sally forth and implement
 your own event-driven microservices architecture without reading lots, lots
 more on the subject.
 
-https://martinfowler.com/books/eip.html rubytml[Enterprise Integration Patterns] by
+https://martinfowler.com/books/eip.html[Enterprise Integration Patterns] by
 (as always) Martin Fowler is a pretty good start.
 
 //TODO: add some footgun examples.
