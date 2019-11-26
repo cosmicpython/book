@@ -522,28 +522,93 @@ _if we need to_.
 And think how easy it'd be to swap our read model from Postgres to Redis or
 Memcached? Super-simple.  _We don't even need to change the integration test_.
 
-TODO: demo this.
 
-So definitely don't do this. Ever.  Unless you really need to.  But, if you do
-need to, see how easy the event-driven model makes it?
+=== Changing our Read Model Implementation is Easy
+
+Just watch.
+
+
+[[redis_readmodel_handlers]]
+.Handlers update a redis read model (src/allocation/handlers.py)
+====
+[source,python]
+[role="non-head"]
+----
+def add_allocation_to_read_model(event: events.Allocated, _):
+    redis_pubsub.update_readmodel(event.orderid, event.sku, event.batchref)
+
+def remove_allocation_from_read_model(event: events.Deallocated, _):
+    redis_pubsub.update_readmodel(event.orderid, event.sku, None)
+----
+====
+
+The helpers in our redis module are one-liners:
+
+
+[[redis_readmodel_client]]
+.Redis read model read + update (src/allocation/redis_pubsub.py)
+====
+[source,python]
+[role="non-head"]
+----
+def update_readmodel(orderid, sku, batchref):
+    r.hset(orderid, sku, batchref)
+
+
+def get_readmodel(orderid):
+    return r.hgetall(orderid)
+----
+====
+
+And the view itself changes very slightly to adapt to its new backend:
+
+[[redis_readmodel_view]]
+.View adapted to redis (src/allocation/views.py)
+====
+[source,python]
+[role="non-head"]
+----
+def allocations(orderid):
+    batches = redis_pubsub.get_readmodel(orderid)
+    return [
+        {'batchref': b.decode(), 'sku': s.decode()}
+        for s, b in batches.items()
+    ]
+----
+====
+
+And the _exact same_ integration tests that we had before still pass,
+because they are written at a level of abstraction that's decoupled from the
+implementation: setup puts messages on the messagebus, and the assertions
+are against our view.
+
+TIP: Event handlers are a great way to manage updates to a read model,
+    if you decide you need one.  They also make it easy to change the
+    implementation of that read model at a later date.
+
 
 
 === But Would You Really?  CRUD versus CQRS.
 
+// TODO (EJ) Some explicit discussion of CRUD vs CQRS might be good. I'd guess
+// that there will be a lot readers coming to this book from Django.
+
 As it happens, the allocation service at MADE.com does use "full blown" CQRS,
 with a read model that uses Redis, and even a second layer of cache provided
 by Varnish.  But its use cases are actually quite a bit different from what
-we've shown here.
-
-For the kind of allocation service we're building, it seems unlikely that
-you'd need to use a separate read model and event handlers for updating it.
+we've shown here. For the kind of allocation service we're building, it seems
+unlikely that you'd need to use a separate read model and event handlers for
+updating it.
 
 But once you commit to using a Domain Model rather than "just" building a
 CRUD app, then some level of CQS or CQRS does become more and more necessary.
 
+// TODO have we really explained the difference between CQS and CQRS?  maybe
+// there isn't one really so we shouldn't use them this way?
+
 Often, your read operations will acting on the same conceptual objects as your
 write model, so using the ORM, adding some read methods to your repositories,
-and using Domain Model classes for your read operations is _just fine_.
+and using Domain Model classes for your read operations is _just fine_. 
 
 As it happens in our case, our read operations act on quite different
 conceptual entities to our Domain Model.  The allocation service thinks
@@ -552,8 +617,5 @@ for a whole order, with multiple skus, so using the ORM ends up being a little
 awkward.  We'd be quite tempted to go with the raw-SQL view we showed right
 at the beginning of the chapter.
 
-
-// TODO (EJ) Some explicit discussion of CRUD vs CQRS might be good. I'd guess
-// that there will be a lot readers coming to this book from Django.
 
 OK.  On that note, let's sally forth into our final chapter.
