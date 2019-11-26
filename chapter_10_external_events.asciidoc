@@ -6,9 +6,9 @@ the "batch quantity changed" events, or indeed, how we might notify the
 outside world about reallocations.
 
 We've got a microservice with a web API, but what about other ways of talking
-to other systems?  How does it know if, say, a shipment is delayed or the
-quantity is amended?  How does it communicate to our warehouse system to say
-that an order has been allocated and needs to be sent to a customer?
+to other systems?  How will we know if, say, a shipment is delayed or the
+quantity is amended? How will we tell the warehouse system that an order has
+been allocated and needs to be sent to a customer?
 
 In this chapter we'd like to show how the events metaphor can be extended
 to encompass the way that we handle incoming and outgoing messages from the
@@ -55,6 +55,57 @@ events|in                                              events|out
 ----
 
 
+=== How Not to Do It ===
+
+Before we get into that, let's talk about the alternatives. We regularly talk to
+engineers who are trying to build out a Microservices architecture. Often they
+are migrating from an existing application, and their first instinct is to
+split their system up into _concepts_.
+
+What concepts have we introduced so far in our system? Well, we have batches of
+stock, we have orders, products, and customers. Our first attempt at breaking
+up the system might look something like this:
+
+TODO: Context Diagram for Batches service
+
+Each "thing" in our system has an associated service, which exposes an HTTP API.
+Our users visit a website and can choose from products that are in stock. When
+they add an item to their basket, we will reserve some stock for them. When an
+order is complete, we confirm the reservation, which causes us to send dispatch
+instructions to the warehouse.
+If this is the customer's third order, we want to update the customer record to
+flag them as a VIP.
+
+TODO: Sequence diagram
+
+We can think of each of these steps as a Command in our system: Reserve Stock,
+Confirm Reservation, Dispatch Goods, Make Customer VIP.
+
+This style of architecture, where we create a microservice per database table,
+and treat our HTTP APIs as CRUD interfaces to anemic models is the most common
+way for people to approach service-oriented design.
+
+This works _fine_ for systems that are very simple, but quickly degrades into
+a Distributed Ball of Mud.
+
+To see why, let's consider another case. Sometimes, when stock arrives at the
+warehouse, we discover that items have been water damaged during transit. We
+can't sell water damaged sofas, so we have to throw them away, and request more
+stock from our partners. We also need to update our stock model, and that
+might mean we need to re-allocate a customer's order.
+
+Where does this logic go?
+
+Well, the warehouse system knows that the stock has been damaged, so maybe it
+should own this process?
+
+TODO: Sequence diagram
+
+
+
+TODO: Why is point-to-point poop?
+
+TODO: WTF is temporal coupling or the distributed BBOM bruh?
 
 === Using a Redis Pubsub Channel for Integration
 

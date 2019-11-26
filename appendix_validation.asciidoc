@@ -31,7 +31,8 @@ pragmatics.
 In linguistics, the syntax of a language is the set of rules that govern the
 structure of grammatical sentences. For example, in English, the sentence
 "Allocate three units of TASTELESS-LAMP to order twenty-seven" is grammatically
-sound while the phrase "hat hat hat hat hat hat wibble" is not.
+sound while the phrase "hat hat hat hat hat hat wibble" is not. We can describe
+gramatically correct sentences as "well-formed".
 
 How does this map to our application? Here are some examples of syntactic rules:
 
@@ -216,7 +217,7 @@ our handlers are exclusively focused on the logic of our use case.
 === Validating Semantics
 
 While syntax is concerned with the structure of messages, semantics is the study
-of _meaning_ in messages. The sentence "allocate no dogs from ellipsis hat" is
+of _meaning_ in messages. The sentence "undo no dogs from ellipsis four" is
 syntactically valid, and has the same structure as the sentence "allocate one
 teapot to order five", but it's meaningless.
 
