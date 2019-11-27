@@ -352,10 +352,10 @@ src/allocation
 ----
 ====
 
-<1> The domain include your core model classes, as well as events and comments.  You might
-    also include some domain-layer exceptions in here
+<1> The domain includes your core model classes, as well as events and comments.  You might
+    also include some domain-layer exceptions in here.
 
-<2> Adapters has our abstractions that let us interface with permanent storage and other.
+<2> Adapters are our abstractions that let us interface with permanent storage and other.
     In Ports & Adapters terminology these are _secondary_ adapters or _driven_ adapters,
     or sometimes _inward-facing_ adapters.
 
@@ -458,5 +458,4 @@ Those are our basic building blocks:
 * And a Makefile for useful command-line, um, commands.
 
 We doubt that anyone will end up with _exactly_ the same solutions we did, but we hope you
-found some inspiration here.
-
+find some inspiration here.
