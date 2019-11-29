@@ -240,16 +240,23 @@ flag customers as VIPs once they make their third purchase, and this will
 entitle them to priority treatment and special offers. Our acceptance criteria
 for this story read as follows:
 
+
+[source,gherkin]
+[role="skip"]
+----
 Given a customer with two orders in their history,
-when the customer places a third order,
-they should be flagged as a VIP.
+When the customer places a third order,
+Then they should be flagged as a VIP.
 
 When a customer first becomes a VIP
-we should send them an email to congratulate them
+Then we should send them an email to congratulate them
+----
 
 Using the techniques we've already discussed in this book, we decide that we
-want to build a new History aggregate that records orders and can raise domain
+want to build a new `History` aggregate that records orders and can raise domain
 events when rules are met. We will structure the code like this:
+
+
 
 [[vip_customer_listing]]
 .VIP Customer
@@ -257,7 +264,6 @@ events when rules are met. We will structure the code like this:
 [source,python]
 [role="skip"]
 ----
-
 class History (Aggregate):
 
     def __init__(self, customer_id: int):
@@ -374,10 +380,12 @@ When we handle a message in our system, the first thing we do is write a log
 line to record what we're about to do. For our CustomerBecameVIP use case, the
 logs might read:
 
-    "Handling event CustomerBecameVIP(customer_id=12345)
-    with handler <function congratulate_vip_customer at 0x10ebc9a60>"
+----
+Handling event CustomerBecameVIP(customer_id=12345)
+with handler <function congratulate_vip_customer at 0x10ebc9a60>
+----
 
-Because we've chosen to use data classes (or named tuples) for our message types
+Because we've chosen to use dataclasses (or namedtuples) for our message types
 we get a neatly printed summary of the incoming data that we can copy and paste
 into a python shell to recreate the object.
 
@@ -386,6 +394,8 @@ in a unit test, or replay the message into the system.
 
 NOTE: In the next chapter we'll show how ports and adapters makes it easy for us
       to replay messages for testing or administrative tasks!
+
+//TODO: will we??
 
 Manual replay works well for cases where we need to fix a bug before we can
 re-process an event, but our systems will _always_ experience some background
