@@ -155,7 +155,9 @@ COMMAND_HANDLERS = {
     are raised, they fail hard and will bubble up.
 
 
-
+[[commands_return_sidebar]]
+.An Ugly Wart that we still have to fix
+*******************************************************************************
 
 Why does `handle_command` have a `return`, but `handle_events` doesn't, we hear
 you ask?  It's so that we can return the batchref from the API.  
@@ -180,8 +182,11 @@ def allocate_endpoint():
 ----
 ====
 
-It's the same wart we've drawn attention to before.  In <<chapter_11_cqrs>>
+This is an ugly wart that we've drawn attention to before.  In <<chapter_11_cqrs>>
 we'll look at a way of separating out command handling from read requests.
+
+*******************************************************************************
+
 
 === Events, Commands, and Error Handling
 
