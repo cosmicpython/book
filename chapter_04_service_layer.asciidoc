@@ -1013,6 +1013,11 @@ def test_add_batch():
 ====
 
 
+TIP: In general, if you find yourself needing to do domain-layer stuff directly
+    in your service-layer tests, it may be an indication that your service
+    layer is incomplete.
+
+
 And the implementation is just two lines
 
 [[add_batch_service]]
@@ -1037,12 +1042,7 @@ def allocate(
 
 NOTE: Should you write a new service just because it would help remove
     dependencies from your tests?  Probably not.  But in this case, we
-    almost definitely would need an add_batch service one day anyway.
-
-TIP: In general, if you find yourself needing to do domain-layer stuff directly
-    in your service-layer tests, it may be an indication that your service
-    layer is incomplete.
-
+    almost definitely would need an `add_batch` service one day anyway.
 
 That now allows us to rewrite _all_ of our service-layer tests purely
 in terms of the services themselves, using only primitives, and without
