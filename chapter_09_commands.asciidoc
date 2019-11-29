@@ -90,12 +90,9 @@ class ChangeBatchQuantity(Command):  #<3>
 
 //TODO: consider keeping BatchQuantityChanged as an event?
 
-Each of the use-cases that we discussed earlier in the book is really a command,
-an instruction for the system to try and do a thing. To unify the two halves of
-the domain, we're going to make a simple change: instead of directly invoking
-our use case functions, like we did before, we're going to take these
-commands, and we're going to put them on the message bus. As a result, our
-message bus changes somewhat.
+Just changing the names and verb tenses is all very well, but it won't actually
+change the behavior of our system.  We want to treat events and commands similarly,
+but not exactly the same.  Let's see how our message bus changes:
 
 [[new_messagebus]]
 .Messagebus handles events and commands differently (src/allocation/messagebus.py)
@@ -150,11 +147,11 @@ COMMAND_HANDLERS = {
 <1> It still has a main `handle()` entrypoint, that takes a message, which may
     be a command or an event.
 
-<2> We dispatch to a function for handling events.  It can delegate to multiple
-    handlers per event, and it catches and logs any errors, but does not let them
-    interrupt message processing.
+<2> Events got to a dispatcher that can delegate to multiple handlers per
+    event; it catches and logs any errors, but does not let them interrupt
+    message processing.
 
-<3> The command handler expects just one handler per command.  If any errors
+<3> The command dispatcher expects just one handler per command.  If any errors
     are raised, they fail hard and will bubble up.
 
 
@@ -166,7 +163,7 @@ you ask?  It's so that we can return the batchref from the API.
 [[flask_uses_command]]
 .Flask gets a response from the command handler (src/allocation/flask_app.py)
 ====
-[source,python]
+[source,python,highlight=8]
 ----
 @app.route("/allocate", methods=['POST'])
 def allocate_endpoint():
