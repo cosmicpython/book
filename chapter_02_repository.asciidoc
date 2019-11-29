@@ -178,6 +178,8 @@ on the topic.]
 We'll get into some of the nitty-gritty around "depending on abstractions,"
 and whether there is a Pythonic equivalent of interfaces,
 <<depend_on_abstractions,later in the book>>.
+
+See also <<what_is_a_port_and_what_is_an_adapter>> later in this chapter.
 *******************************************************************************
 
 
@@ -811,6 +813,30 @@ You'll see this fake in action in the next chapter.
 TIP: Building fakes for your abstractions is an excellent way to get design
     feedback: if it's hard to fake, then the abstraction is probably too
     complicated.
+
+
+[[what_is_a_port_and_what_is_an_adapter]]
+=== What is a Port and What is an Adapter, in Python?
+
+We don't want to dwell on the terminology too much here because the main thing
+we want to think about is dependency inversion, and the specifics of the
+technique you use don't matter too much.  And we're also aware that different
+people use slightly different definitions.
+
+"Ports and Adapters" came out of the OO world, and the definition we hold onto
+is that the _Port_ is the _interface_ between our application and whatever
+it is we wish to abstract away, and the _Adapter_ is the _implementation_
+behind that interface or abstraction.
+
+Now Python doesn't have interfaces _per se_, so that means that although it's
+usually easy to say what's an adapter, defining the port can be harder.  If
+you're using an abstract base class, then that's the port.  If not, the port
+is just the duck type that your adapters conform to, and that your core application
+expects -- the function and method names in use, and their argument names and types.
+
+Concretely, in this chapter, `AbstractRepository` is the port, and
+`SqlAlchemyRepository` and `FakeRepository` are the adapters.
+
 
 
 === Wrap-Up
