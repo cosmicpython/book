@@ -1,29 +1,17 @@
 [[chapter_09_commands]]
 == Commands and Command Handler
 
-//TODO get rid of bullets
-
-.In this chapter
-********************************************************************************
-
-* We'll discuss the difference between _events_ and _commands_.
-* We'll extend our message bus to handle command messages.
-* We'll finish rebuilding our application as a message-processor.
-
-  // DIAGRAM GOES HERE
-
-********************************************************************************
-
 In the previous chapter we talked about using events as a way of representing
-the inputs to our system. This starts to turn our application into a message
-processing machine.
+the inputs to our system, and turned our application into a message processing
+machine.
 
 To achieve that, we converted all our use-case functions to event-handlers.
 When the API receives a POST to create a new batch, it builds a new `BatchCreated`
-event and handles it as though it came from an external system.
+event and handles it as if it were an internal event.
 This might have felt counter-intuitive. After all, the batch _hasn't_ been
 created yet, that's why we called the API. We're going to fix that conceptual
-wart by introducing _Commands_.
+wart by introducing _Commands_, and show how they can be handled by the same
+message bus, but with slightly different rules.
 
 
 === Commands and Events
