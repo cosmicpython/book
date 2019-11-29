@@ -34,9 +34,9 @@ have domain knowledge, and send emails and perform logging; "business logic"
 classes that perform no calculations but do perform IO; and everything coupled
 to everything else so that changing any part of the system becomes fraught with
 danger. This is so common that software engineers have their own term for
-chaos: The Big Ball of Mud anti-pattern (<<bbom_image>>)footnote:[Big Ball of Mud illustration from https://thedailywtf.com/articles/Enterprise-Dependency-Big-Ball-of-Yarn].
-
-//TODO: get permission for image reuse
+chaos: The Big Ball of Mud anti-pattern (<<bbom_image>>)footnote:[Big Ball of Mud
+illustration from
+https://thedailywtf.com/articles/Enterprise-Dependency-Big-Ball-of-Yarn].
 
 [[bbom_image]]
 .A real-life dependency diagram
@@ -204,25 +204,6 @@ model inside out by obeying one simple principle.
 
 [[dip]]
 === The Dependency Inversion Principle
-
-////
-TODO:
-
-[SG] DI? Is this still Dependency Inversion?  Not Dependency Injection right?
-[HP yes]
-
-You can explain DI more easily once you have introduced layers by noting that
-as we depend downwards, it becomes impossible to use something from a higher
-layer. To correct this, you need to create an interface in your layer, and have
-something in the higher layer implement that. The DI is when you provide the
-concrete dependency when calling the lower layer. Hexagonal architectures with
-their ‘depend inwards’ model are even clearer here, because for the port layer
-to do I/O it must depend on the adapter layer above it, which it can’t do, so
-it creates a DAO abstraction, depends on that, and has that implemented in the
-adapter layer.
-
-https://github.com/cosmicpython/book/issues/49
-////
 
 You might be familiar with the dependency inversion principle (DIP) already, because
 it's the D in the SOLIDfootnote:[Robert C. Martin's five principles of object-oriented
