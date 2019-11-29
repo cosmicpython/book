@@ -16,20 +16,24 @@ ____
 It's all very well being able to write _one_ domain model to manage a single bit
 of business process, but what happens when we need to write _many_ models? In
 the real world, our applications sit within an organization and need to exchange
-information with other parts of the system.
+information with other parts of the system.  You may remember our context
+diagram, <<allocation_context_diagram_again>>.
+
+[[allocation_context_diagram_again]]
+.But exactly how will all these different systems talk to each other?
+image::images/allocation_context_diagram.png[]
 
 
+// TODO (DS): Up until this point you haven't really said much about how this
+// code exists in the context of a wider system. I had assumed it was a
+// microservice...Maybe earlier in the book we need to understand a bit about
+// how this code might exist in a monolith/communicate with a monolith. If the
+// answer is still via a message bus, then isn't the distributed system angle a
+// red herring here?
 
-//TODO (DS): Up until this point you haven't really said much about how this
-//code exists in the context of a wider system. I had assumed it was a
-//microservice...Maybe earlier in the book we need to understand a bit about how
-//this code might exist in a monolith/communicate with a monolith. If the
-//answer is still via a message bus, then isn't the distributed system angle a
-//red herring here?
-
-Faced with this requirement, many teams reach for microservices via HTTP APIs
-but if they're not careful, they'll end up producing the most chaotic mess of
-all: the distributed big ball of mud.
+Faced with this requirement, many teams reach for microservices integrated
+via HTTP APIs. But if they're not careful, they'll end up producing the most
+chaotic mess of all: the distributed big ball of mud.
 
 In part two, we'll show how the techniques from part one can be extended to
 distributed systems. We'll zoom out to look at how we can compose a system from
@@ -39,28 +43,24 @@ We'll see how our Service Layer and Unit of Work allow us to reconfigure our app
 to run as an asynchronous message processor, and how event driven systems help
 us to decouple Aggregates and applications from one another.
 
-* TODO: part2_context_diag
+//TODO (DS): It seems to me the two key themes in this book are vertical and
+//horizontal decoupling. Did you consider choosing those for the two parts?
 
 We'll look at the following patterns and techniques:
 
-Domain events::
+Domain Events::
   Trigger workflows that cross consistency boundaries.
 
-Message bus::
+Message Bus::
   Provide a unified way of invoking use-cases from any endpoint.
 
 CQRS::
-  Improve performance and scalability by separating reads and writes.
+  Separating reads and writes avoids awkward compromises in an event-driven
+  architecture, and enables performance and scalability improvements.
 
-Plus we'll introduce a dependency injection framework that uses type hints, just
-to annoy Harry.
+Plus, we'll add a dependency injection framework. Which is nothing to do with
+event-driven architecture per se, but it just tidies up an awful lot of loose
+ends.
 
 TODO: a bit of blurb about making events more central to our design thinking,
-    breadcrumps to eventstorming, etc.
-
-//TODO (DS): Doesn't seem much to do with event driven architecture?
-
-//TODO: plus, we don't, currently.
-
-//TODO (DS): It seems to me the two key themes in this book are vertical and
-//horizontal decoupling. Did you consider choosing those for the two parts?
+    breadcrumbs to eventstorming, etc.
