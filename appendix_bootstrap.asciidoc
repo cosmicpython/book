@@ -1,5 +1,5 @@
 [[appendix_bootstrap]]
-== Bootstrap (aka Configuration Root)
+== Bootstrap (AKA Configuration Root)
 
 NOTE: placeholder chapter, under construction
 
@@ -7,7 +7,7 @@ Congratulations on reading an appendix! Not everyone does.  And yet we
 hide so much good stuff in here...
 
 OK at the end of <<chapter_12_dependency_injection>> we'd left a slightly
-ugly thing -- there's a circular dependency between _flask_app.py_ and
+ugly thing--there's a circular dependency between _flask_app.py_ and
 _redis_pubsub.py_.  Also we had some duplication of boilerplate setup/init
 code in those two entrypoints, which felt a bit rough.
 
@@ -40,12 +40,12 @@ dependencies are, and we haven't even spoken about cross-cutting concerns
 like logging.
 
 
-=== Other Setup Code: Initialisation
+=== Other Setup Code: Initialization
 
 Defaults are maybe feeling a bit messy, but so are some other aspects of the
 initial setup or "bootsrapping" of our application; `orm.start_mappers()` for
-example. We call it in various places in our tests, and at twice in our "real"
-application...
+example, or `uow.bus = bus`. We call them in various places in our tests, and at
+least twice in our "real" application...
 
 
 [[flask_calls_start_mappers]]
@@ -56,8 +56,14 @@ application...
 ----
 app = Flask(__name__)
 orm.start_mappers()
+uow = unit_of_work.SqlAlchemyUnitOfWork()
 bus = messagebus.MessageBus(
-...
+    uow=uow,
+    ...
+)
+uow.bus = bus
+
+
 
 @app.route("/add_batch", methods=['POST'])
 def add_batch():
@@ -83,12 +89,13 @@ def bootstrap(
         session_factory=DEFAULT_SESSION_FACTORY,
         notifications=None,
         publish=redis_pubsub.publish,
-):
+) -> messagebus.MessageBus:
     start_orm()
     uow = unit_of_work.SqlAlchemyUnitOfWork(session_factory=session_factory)
     if notifications is None:
         notifications = EmailNotifications(smtp_host=EMAIL_HOST, port=EMAIL_PORT)
     bus = messagebus.MessageBus(uow=uow, notifications=notifications, publish=publish)
+    uow.bus = bus
     return bus
 ----
 ====
@@ -98,7 +105,7 @@ def bootstrap(
 * it gives us back the core of our app, the messagebus
 
 
-=== Using Bootstrap in our Entrypoints
+=== Using Bootstrap in Our Entrypoints
 
 In our application's entrypoints, we just call `bootstrap.bootstrap()`
 to get a messagebus, rather than configuring a UoW and the rest of it.
@@ -115,7 +122,7 @@ bus = bootstrap.bootstrap()
 @app.route("/add_batch", methods=['POST'])
 def add_batch():
     ...
-    bus.handle([cmd])
+    bus.handle(cmd)
     return 'OK', 201
 ----
 ====
@@ -131,27 +138,26 @@ to get a custom messagebus:
 [source,python]
 ----
 @pytest.fixture
-def sqlite_bus(in_memory_sqlite_db):
-    yield bootstrap.bootstrap(
-        session_factory=sessionmaker(bind=in_memory_sqlite_db),
+def sqlite_bus(sqlite_session_factory):
+    bus = bootstrap.bootstrap(
+        start_orm=lambda: None,
+        session_factory=sqlite_session_factory,
         notifications=mock.Mock(),
         publish=mock.Mock(),
     )
+    yield bus
     clear_mappers()
 
 
 def test_allocations_view(sqlite_bus):
-    sqlite_bus.handle([
-        commands.CreateBatch('b1', 'sku1', 50, None),
-        commands.CreateBatch('b2', 'sku2', 50, date.today()),
-        commands.Allocate('o1', 'sku1', 20),
-        commands.Allocate('o1', 'sku2', 20),
-    ])
-
-    assert views.allocations('o1', sqlite_bus.uow) == [
-        {'sku': 'sku1', 'batchref': 'b1'},
-        {'sku': 'sku2', 'batchref': 'b2'},
+    sqlite_bus.handle(commands.CreateBatch('sku1batch', 'sku1', 50, None))
+    sqlite_bus.handle(commands.CreateBatch('sku2batch', 'sku2', 50, date.today()))
+    ...
+    assert views.allocations('order1', sqlite_bus.uow) == [
+        {'sku': 'sku1', 'batchref': 'sku1batch'},
+        {'sku': 'sku2', 'batchref': 'sku2batch'},
     ]
+
 ----
 ====
 
@@ -191,7 +197,7 @@ One fix is to split the "pub" from the "sub", as in
 
 [[appendix_bootstrap_dependency_graph_2]]
 .Dependency graph with bootstrap script and no circular deps
-image::images/appendix_bootstrap_dependency_graph_2.png["
+image::images/appendix_bootstrap_dependency_graph_2.png[]
 
 Now we have what our esteemed tech reviewer David Seddon would call a "rocky
 road architecture": all the dependencies flow in one direction.

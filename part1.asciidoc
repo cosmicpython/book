@@ -20,15 +20,15 @@ as an afterthought. This is where it all starts to go wrong. Instead, _behavior
 should come first, and drive our storage requirements._
 
 After all, our customers don't care about the data model. They care about what
-the system *does*, otherwise they'd just use a spreadsheet.
+the system _does_, otherwise they'd just use a spreadsheet.
 
-In this first part we'll look at how to build a rich object model through TDD
-(in <<chapter_01_domain_model,Chapter 1>>), and then we'll see how to keep that
-model decoupled from technical concerns. We'll see how to build
+The first part of the book looks at how to build a rich object model
+through TDD (in <<chapter_01_domain_model,Chapter 1>>), and then we'll see how
+to keep that model decoupled from technical concerns. We see how to build
 persistence-agnostic code and how to create stable APIs around our domain so
 that we can refactor aggressively.
 
-To do that, we'll look at four key design patterns:
+To do that, we look at four key design patterns:
 
 * The <<chapter_02_repository,Repository pattern>>, an abstraction over the
   idea of persistent storage
@@ -43,15 +43,16 @@ To do that, we'll look at four key design patterns:
 
 If you'd like a picture of where we're going, take a look at
 <<part1_components_diagram>>, but don't worry if none of it makes any sense
-yet!  We'll introduce each box one by one.
+yet!  We introduce each box in the figure, one by one.
 
 [[part1_components_diagram]]
 .A component diagram for our app at the end of Part 1
 image::images/part1_components_diagram.png[]
 
 //TODO: inline this diagram's source.
+//TODO: font size too small?
 
-We'll also take a little time out to talk about
+We also take a little time out to talk about
 <<chapter_03_abstractions,coupling and abstractions>>, illustrating the
 discussion with a simple example that shows how and why we choose our
 abstractions.
@@ -64,9 +65,9 @@ Several of the appendices are further explorations of the content from Part 1:
   info,  how we run different types of tests.
 
 * <<appendix_csvs>> is a "the proof is in the pudding" kind of chapter, showing
-  how easy it is to swap out our entire infrastructure -- the flask API, the
+  how easy it is to swap out our entire infrastructure--the flask API, the
   ORM and postgres, for a totally different I/O model involving a CLI and
   CSVs.
 
 * Finally, <<appendix_django>> may be of interest if you're wondering how these
-  patterns might look if using Django, instead of Flask+SQLAlchemy
+  patterns might look if using Django, instead of Flask+SQLAlchemy.

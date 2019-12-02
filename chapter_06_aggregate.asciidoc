@@ -8,7 +8,93 @@ discuss the concept of a _consistency boundary_, and show how making it
 explicit can help us to build high-performance software without compromising
 maintainability.
 
-//TODO DIAGRAM GOES HERE
+Here's a preview of where we're headed: we're going to move from a model where
+we need to retrieve all the batches and pass them to the `allocate()` domain
+service (<<chapter_08_before_diagram>>):
+
+
+[[before_aggregates_diagram]]
+.Before: allocate against all batches using domain service
+image::images/before_aggregates_diagram.png[]
+[role="image-source"]
+----
+[plantuml, before_aggregates_diagram]
+@startuml
+
+class services {
+    allocate()
+}
+
+
+package domain_model {
+
+  class Batch {
+  }
+
+  class allocate {
+  }
+}
+
+
+package repositories {
+
+  class BatchRepository {
+    list()
+  }
+
+}
+
+services -> BatchRepository: list all batches
+services --> allocate: allocate(orderline, batches)
+
+@enduml
+----
+
+...to a world in which there is a new _Aggregate_ class named `Product`
+that will be in charge of allocation, and choosing which batches to
+allocate against (<<after_aggregates_diagram>>):
+
+[[after_aggregates_diagram]]
+.After: ask Product to allocate against its batches
+image::images/after_aggregates_diagram.png[]
+[role="image-source"]
+----
+[plantuml, after_aggregates_diagram]
+@startuml
+
+class services {
+    allocate()
+}
+
+
+package domain_model {
+
+  class Product {
+    allocate()
+  }
+
+  class Batch {
+  }
+}
+
+
+package repositories {
+
+  class ProductRepository {
+    get()
+  }
+
+}
+
+services -> ProductRepository: get me the product for this sku
+services --> Product: allocate(orderline)
+Product -o Batch: has
+
+@enduml
+----
+
+Why?  Let's find out.
+
 
 === Why Not Just Run Everything in a Spreadsheet?
 
@@ -37,15 +123,20 @@ an operation.
 
 === Invariants, Constraints and Consistency
 
-If we were writing a hotel booking system, we might have the constraint that no
-two bookings can exist for the same hotel room on the same night. This supports
-the invariant that no room is double booked.
+The two words are somewhat interchangeable, but a _constraint_ is some kind of
+rule that restricts the possible states our model can get into. An _invariant_
+is defined a little more precisely, as a condition that is always true.
+
+If we were writing a hotel booking system, we might have the constraint that double
+bookings are not allowed.  This supports the constraint that a room cannot have more
+than one booking for the same night.
 
 Of course, sometimes we might need to temporarily _bend_ the rules. Perhaps we
-need to shuffle the rooms around due to a VIP booking. While we're moving people
-around, we might be double booked, but our domain model should ensure that, when
-we're finished, we end up in a final consistent state, where the invariants are
-met.  Either that, or we raise an error and refuse to complete the operation.
+need to shuffle the rooms around due to a VIP booking. While we're moving
+bookings around in memory we might be double booked, but our domain model
+should ensure that, when we're finished, we end up in a final consistent state,
+where the invariants are met.  Either that, or we raise an error and refuse to
+complete the operation.
 
 Let's look at a couple of concrete examples from our business requirements
 
@@ -54,43 +145,16 @@ ____
 * An order line can only be allocated to one batch at a time.
 ____
 
-This is a business rule that implements a constraint. The constraint is that an
-order line is allocated to either zero or one batches, but never more than one.
+This is a business rule that imposes an invariant. The invariant is that an
+order line is allocated to either zero or one batch, but never more than one.
 We need to make sure that our code never accidentally calls `Batch.allocate()`
 on two different batches for the same line, and currently, there's nothing
-there to explicitly stop us doing that.  By nominating an aggregate to be
+there to explicitly stop us doing that.  By nominating an Aggregate to be
 "in charge of" all batches, we'll have a single place where we can enforce
 this constraint.
 
-//TODO (DS): I'm unclear on the distinction between invariant and constraint.
 
-////
-TODO // (ej):
-         I'm not sure that "constraint" has any specific definition beyond
-         just being some kind of rule, so maybe just saying rule will be
-         clearer.
-
-         I would say that an invariant has a narrower definition
-         in that it defines some condition that must always be true.
-
-         Under that definition, instead of saying "The invariant is that we never oversell stock
-         by allocating two customers to the same physical cushion", you might say
-         "The invariant is that no batch may have a negative available quantity."
-
-         As another toy example, in the Account class, the invariant is that balance is always > 0,
-         and the constraint is that no debits are allowed that would make the balance negative.
-
-         class Account:
-            def balance(self):
-                return self.money
-
-            def debit(self, amount):
-                if amount > money:
-                    raise NoMoney()
-                self.money -= amount
-////
-
-==== Invariants and Concurrency
+==== Invariants, Concurrency and Locks
 
 Let's look at another one of our business rules:
 
@@ -101,9 +165,10 @@ ____
 ____
 
 Here the constraint is that we can't allocate more stock than is available to a
-batch. The invariant is that we never oversell stock by allocating two
-customers to the same physical cushion. Every time we update the state of the
-system, our code needs to ensure that we don't break the invariants.
+batch, so we never oversell stock by allocating two customers to the same
+physical cushion. Every time we update the state of the system, our code needs
+to ensure that we don't break the invariant, which is that the available
+quantity must be greater than or equal to zero.
 
 In a single threaded single user application it's relatively easy for us to
 maintain this invariant. We can just allocate stock one line at a time, and
@@ -118,16 +183,11 @@ We usually solve this problem by applying locks to our database tables. This
 prevents two operations happening simultaneously on the same row or same
 table.
 
-////
-TODO (ej) In a miscroservices architecture This gets even harder when there's distributed state
-    and locking tables is either not possible or advisable. (Not sure how this comment fits in the text.)
-////
-
-As we start to think about scaling up our app, we realise that our model
+As we start to think about scaling up our app, we realize that our model
 of allocating lines against all available batches may not scale.  If we've
 got tens of thousands of orders per hour, and hundreds of thousands of
 order lines, we can't hold a lock over the whole `batches` table for
-every single one.
+every single one--we'll get deadlocks or performance problems at the very least.
 
 
 In the rest of this chapter, we'll first discuss choosing an aggregate
@@ -170,29 +230,31 @@ TIP: Just like we sometimes use `_leading_underscores` to mark methods or functi
     as "private", you can think of aggregates as being the "public" classes of our
     model, and the rest of the Entities and Value Objects are "private".
 
+So what shall we choose as our aggregate?
+
 Some sort of `Order` object might suggest itself, but that's more about order lines,
 and we're more concerned about something that provides some sort of conceptual unity
 for collections of batches.
 
-//TODO (DS): I don't really understand this para.
-
-////
- TODO (ej): The preceding and following paragraph are a bit confusing until you get to the actual code examples.
-         A visual picture would help clarify here (e.g. a cartoon piece of paper with lines, and
-         a warehouse with chairs, a truck with chairs in it).
-////
+An object to represent a `Warehouse` or a `Shipment` can represent a collection of
+batches, but it wouldn't really slice the batches up in a useful way for the purposes
+of allocating an individual order line.
 
 When we allocate an order line, we're actually only interested in batches
-that have the same SKU as the order line.  Some sort of concept of `GlobalSkuStock`
-or perhaps just simply `Product` -- after all, that was the first concept we
-came across in our exploration of the domain language back in <<chapter_01_domain_model>>.
+that have the same SKU as the order line.  Some sort of concept like `GlobalSkuStock`
+could work: a collection of all the batches for a given SKU.
 
-//TODO (DS): Why not just use product from the beginning? Switching to using
-// the product now makes it harder to remember what's going on. It might be
-// clearer at this point to look into *why* product makes a good aggregate root
-// and compare it with some worse alternatives.
+It's an unwieldy name though, so after some bikeshedding via `SkuStock`, `Stock`,
+`ProductStock`, and so on, we decided to simply call it `Product` --
+after all, that was the first concept we came across in our exploration of the
+domain language back in <<chapter_01_domain_model>>.
 
-Let's go with that for now, and see how it looks
+So the plan is: when we want to allocate an order line, rather than looking up
+all the `Batch` objects in the world and allocating against them, we will identify
+a single `Product` object for the SKU in our order line, and it will be in charge
+of all the batches _for that sku_, and it will be in charge of allocation.
+
+Let's see how that looks, concretely:
 
 
 [[product_aggregate]]
@@ -218,32 +280,32 @@ class Product:
             raise OutOfStock(f'Out of stock for sku {line.sku}')
 ----
 ====
-//TODO (DS): I think a diagram illustrating the product as the aggregate root might make the message land more clearly.
 
 <1> `Product`'s main identifier is the `sku`
+
 <2> It holds a reference to a collection of `batches` for that sku
-<3> And finally, we can move the `allocate()` domain service to
-    being a method on `Product`.
+
+<3> And finally, we can move the `allocate()` Domain Service to
+    being a method on the `Product` aggregate.
+
 
 NOTE: This `Product` might not look like what you'd expect a `Product`
     model to look like.  No price, no description, no dimensions...
     Our allocation service doesn't care about any of those things.
-    This is the power of microservices and bounded contexts, the concept
-    of Product in one app can be very different from another.footnote:[Well, either
-    that, or it's just a bad name.  but `SKUStock` would be so _awkward_!]
+    This is the power of bounded contexts, the concept
+    of Product in one app can be very different from another.
+    See <<bounded_contexts_sidebar,the sidebar on bounded contexts>> for more
+    discussion.
 
-
-
-//TODO: AA prompted the note above, he said "Product" was a confusing name at first.
-// maybe we should just go for something like `ProductStock`, or just `Stock`?
 
 //TODO: talk about magic methods on aggregates maybe?  ie, a non-aggregate entity
 //      might have a __hash__ so that we can put it into a set, but because you
 //      are never supposed to have a collection of aggregates, they could return
-//      an error for __has__. or sumfink.
+//      an error for __hash__. or sumfink.
 
-//TODO (DS): What if there was one really popular product? Would we load all the batches when we instantiate?
 
+
+[[bounded_contexts_sidebar]].
 .Aggregates, Bounded Contexts and Microservices
 *******************************************************************************
 One of the most important contributions from Evans and the DDD community
@@ -264,6 +326,10 @@ This concept translates very well to the world of microservices, where each
 microservice is free to have its own concept of "customer", and rules for
 translating that to and from other microservices it integrates with.
 
+In our example, the allocation service has `Product(sku, batches)`,
+whereas the ecommerce will have `Product(sku, description, price, image_url,
+dimensions, etc...)`
+
 Whether or not you've got a microservices architecture, a key consideration
 in choosing your aggregates is also choosing the bounded context that they
 will operate in.  By restricting the context, you can keep your number of
@@ -271,28 +337,8 @@ aggregates low and their size manageable.
 
 Once again we find ourselves forced to say that we can't give this issue
 the treatment it deserves here, and we can only encourage you to read up on it
-elsewhere.
-
-//TODO more links or suggestions on where to read about bounded context?
-
-////
-TODO (ej)   This section opens up a whole can of worms, but here are some
-thoughts.  They may be too much of a digression from the text though.
-
-* IIRC from the PyCon open space, many people wanted to know "How do you build a model??"
-I recall someone specifically asking about "how you get everyone to use the same domain model".
-Putting in a mention of the "Canonical Model" pattern would be a good breadcrumb.
-
-* Re AA's Note, and SkuStock vs Product vs ProductStock,
-the literal conversations might be worth placing somewhere, maybe at the end of the chapter.
-Putting in an example of a messy conversation like the one with AA would help demonstrate.
-
-*  Re: BoundedContexts, my experience with explaining BoundedContexts is that
-people don't understand it without a concrete example.
-
-Literally having a second, `Product` class  in psuedo-code
-(for warehousing or shipping or something) would be helpful.
-////
+elsewhere.  The Fowler link earlier is a good starting point, and either
+(or indeed, any) DDD book will have a chapter or more on Bounded Contexts.
 
 *******************************************************************************
 
@@ -313,28 +359,36 @@ In our case, we'll switch from `BatchRepository` to `ProductRepository`:
 [source,python]
 [role="skip"]
 ----
-class _UnitOfWork:
-    def __init__(self, session):
-        self.session = session
-        self.products = repository.ProductRepository(session)
+class AbstractUnitOfWork:
+    ...
+
+    def init_repositories(self, products: repository.AbstractProductRepository):
+        self._products = products
+
+    @property
+    def products(self) -> repository.AbstractProductRepository:
+        return self._products
 
 
 #...
 
-class ProductRepository:
-    #...
+class AbstractProductRepository:
 
-    def get(self, sku):
-        return self.session.query(model.Product).filter_by(sku=sku).first()
+    @abc.abstractmethod
+    def add(self, product):
+        ...
+
+    @abc.abstractmethod
+    def get(self, sku) -> model.Product:
+        ...
 ----
 ====
-//TODO (DS): I still wonder if it would be clearer to leave sqlalchemy
-//implementations until later and stick to in-memory implementations for the
-//biz logic.
 
-//TODO (DS): How do the batches get loaded?
-
-And our service layer evolves to use `Product` as its main entrypoint:
+The ORM layer will need some tweaks so that the right batches automatically get
+loaded and associated with `Product` objects.  The nice thing is, Repository
+pattern means we don't actually have to worry about that yet, we can just use
+our `FakeRepository` and then feed through the new model into our service
+layer, to see how it looks with `Product` as its main entrypoint:
 
 [[service_layer_uses_products]]
 .Service layer  (src/allocation/services.py)
@@ -368,19 +422,10 @@ def allocate(
     return batchref
 ----
 ====
-//TODO (DS): A general comment that i felt at this point...i feel increasingly
-//vague about what the system is doing, considering we keep changing it. A
-//diagram (maybe a sequence diagram?) That serves as a reference point would
-//help me orientate and what's changing.
 
-//TODO (DS): Another way you could present it is as a diff side by side.
-
-// TODO: discuss, should repository raise `InvalidSku`?
-
-//TODO (DS): More generally I'd be interested in some general principles about
-//handling exceptions in a layered architecture...
 
 //TODO: mention link between aggregates and foreign keys
+
 
 .Exercise for the Reader
 ******************************************************************************
@@ -393,7 +438,7 @@ if you do that, you'll still have to solve a few challenges on your own,
 like adding the model to the ORM and making sure all the moving parts can
 talk to each other, which we hope will be instructive.
 
-https://github.com/python-leap/code/tree/chapter_06_aggregate_exercise
+https://github.com/cosmicpython/code/tree/chapter_06_aggregate_exercise
 
 We've put in a "cheating" implementation in that delegates to the existing
 `allocate()` function, so you should be able to evolve that towards the real
@@ -406,18 +451,61 @@ do them for you by magic!
 
 ******************************************************************************
 
+
 === Version Numbers
 
-We've got our new aggregate and we're using it in all the right places, the remaining
-question is:  how will we actually enforce our data integrity rules?  We don't want
-to hold a lock over the entire batches table, but how will we implement holding a
-lock over just the rows for a particular sku?  The answer is to have a single
-attribute on the Product model which acts as a marker for the whole state change
-being complete, and we use it as the single resource that concurrent workers
-can fight over:  if two transactions both read the state of the world for `batches`
-at the same time, and they both want to update the `allocations` tables, we force
-both of them to also try and update the `version_number` in the `products` table,
-in such a way that only one of them can win and the world stays consistent.
+We've got our new aggregate so we've solved the conceptual problem of choosing
+an object to be in charge of consistency boundaries.  Let's now spend a little
+time talking about how to enforce data integrity at the database level.
+
+We don't want to hold a lock over the entire batches table, but how will we
+implement holding a lock over just the rows for a particular sku?  The answer
+is to have a single attribute on the Product model which acts as a marker for
+the whole state change being complete, and we use it as the single resource
+that concurrent workers can fight over:  if two transactions both read the
+state of the world for `batches` at the same time, and they both want to update
+the `allocations` tables, we force both of them to also try and update the
+`version_number` in the `products` table, in such a way that only one of them
+can win and the world stays consistent.
+
+<<version_numbers_sequence_diagram>> shows an illustration: two concurrent
+transactions do their read operations at the same time, so they see
+a Product with (eg) `version=3`.  They both call `Product.allocate()`
+in order to modify some state.  But we set up our database integrity
+rules such that only one of them is allowed to `commit` the new Product
+with `version=4`, and the other update will be rejected.
+
+[[version_numbers_sequence_diagram]]
+.Sequence Diagram: Two Transactions Attempt a Concurrent Update on Product
+image::images/version_numbers_sequence_diagram.png[]
+[role="image-source"]
+----
+[plantuml, version_numbers_sequence_diagram]
+@startuml
+
+entity Model
+collections Transaction1
+collections Transaction2
+database Database
+
+
+Transaction1 -> Database: get product
+Database -> Transaction1: Product(version=3)
+Transaction2 -> Database: get product
+Database -> Transaction2: Product(version=3)
+Transaction1 -> Model: Product.allocate()
+Model -> Transaction1: Product(version=4)
+Transaction2 -> Model: Product.allocate()
+Model -> Transaction2: Product(version=4)
+Transaction1 -> Database: commit Product(version=4)
+Database -[#green]> Transaction1: OK
+Transaction2 -> Database: commit Product(version=4)
+Database -[#red]>x Transaction2: Error! version is already 4
+
+@enduml
+----
+
+==== Implementation Options for Version Numbers
 
 There are essentially 3 options for implementing version numbers:
 
@@ -433,9 +521,6 @@ There are essentially 3 options for implementing version numbers:
    could do it by magic.  The repository has access to version numbers for any
    products it retrieves, and when the UoW does a commit, it can increment the
    version number for any products it knows about, assuming them to have changed.
-
-//TODO (DS): I wonder if the version number stuff needs to be a bit clearer...
-//I'm skimming a bit. A sequence diagram might help.
 
 Option 3 isn't ideal, because there's no real way of doing it without having to
 assume that _all_ products have changed, so we'll be incrementing version numbers
@@ -476,107 +561,19 @@ class Product:
 
 <1> There it is!
 
-// TODO: more discussion of version number -- actual numebr doesn't matter,
-    we're just setting _something_ so the db complains, could use uids,
-    also discuss similarity with eventsourcing version numbers.
+// TODO: more discussion of version number--actual number doesn't matter,
+//   we're just setting _something_ so the db complains, could use uids,
+//   also discuss similarity with eventsourcing version numbers.
 
-//TODO (DS): I guess it's just pragmatism, but it seems like the concurrency
-//protection isn't really in the abstraction, it just happens to be in the
-//implementation - know what i mean?
 
-=== Testing for our Data Integrity Rules
+=== Testing for Our Data Integrity Rules
 
 Now to actually make sure we can get the behavior we want: if we have two
 concurrent attempts to do allocation against the same `Product`, one of them
-should fail, because they can't both update the version number:
+should fail, because they can't both update the version number.
 
-////
-TODO:
-In Example 5. An integration test for concurrency behavior (tests/integration/test_uow.py)
-it might be helpful to use order1 and order2 instead of o1 and o2.
-
-This might have been morning-brain, but I had to read the code over a few times to figure out why product version was 4 instead of 1 or 2.
-Perhaps instead something like:
-
-product_version = 3
-insert_batch(session, batch, sku, 100, eta=None, product_version=product_version)
-...
-assert version == 4
-...
-
-Or if you're ok leaving the constant behind:
-
-...
-assert version == product_version +1
-...
-https://github.com/python-leap/book/issues/36
-////
-
-////
-
-TODO (ej) +1 on the where the 4 came from.  Here is a small pseudo-code
-       snippet using concurrent.futures.ThreadPoolExecutor that is a bit more compact.
-       Theoretically right, but not tested!
-from concurrent.futures import ThreadPoolExecutor
-with ThreadPoolExecutor(max_workers=2) as pool:
-    r1 = pool.submit(try_to_allocate, o1, sku, exceptions)
-    r2 = pool.submit(try_to_allocate, o2, sku, exceptions)
-concurrent.futures.wait([r1, r2])
-
-////
-
-[[data_integrity_test]]
-.An integration test for concurrency behavior (tests/integration/test_uow.py)
-====
-[source,python]
-----
-
-def test_concurrent_updates_to_version_are_not_allowed(postgres_session_factory):
-    sku, batch = random_ref('s'), random_ref('b')
-    session = postgres_session_factory()
-    insert_batch(session, batch, sku, 100, eta=None, product_version=3)
-    session.commit()
-
-    exceptions = []
-    o1, o2 = random_ref('o1'), random_ref('o2')
-    target1 = lambda: try_to_allocate(o1, sku, exceptions)
-    target2 = lambda: try_to_allocate(o2, sku, exceptions)
-    t1 = threading.Thread(target=target1)  #<1>
-    t2 = threading.Thread(target=target2)  #<1>
-    t1.start()
-    t2.start()
-    t1.join()
-    t2.join()
-
-    [[version]] = session.execute(
-        "SELECT version_number FROM products WHERE sku=:sku",
-        dict(sku=sku),
-    )
-    assert version == 4  #<2>
-    exception = [exceptions]
-    assert 'could not serialize access due to concurrent update' in str(exception)  #<3>
-
-    orders = list(session.execute(
-        "SELECT orderid FROM allocations"
-        " JOIN batches ON allocations.batch_id = batches.id"
-        " JOIN order_lines ON allocations.orderline_id = order_lines.id"
-        " WHERE order_lines.sku=:sku",
-        dict(sku=sku),
-    ))
-    assert len(orders) == 1  #<4>
-----
-====
-
-<1> We set up two threads that will reliably produce the concurrency behavior we
-    want:  `read1, read2, write1, write2`. (see below for the code being run in
-    each thread).
-
-<2> We assert that the version number has only been incremented once.
-
-<3> We can also check on the specific exception if we like
-
-<4> And we can make sure that only one allocation has gotten through.
-
+First let's simulate a "slow" transaction using a function that does
+allocation, and then does an explicit sleep:
 
 [[time_sleep_thread]]
 .time.sleep can reliably produce concurrency behavior (tests/integration/test_uow.py)
@@ -597,8 +594,62 @@ def try_to_allocate(orderid, sku, exceptions):
 ----
 ====
 
-//TODO (DS): I wonder if it would read better to introduce this function first,
-//then show the test?
+Then we have our test invoke this slow allocation twice, concurrently, using
+threads:
+
+[[data_integrity_test]]
+.An integration test for concurrency behavior (tests/integration/test_uow.py)
+====
+[source,python]
+----
+def test_concurrent_updates_to_version_are_not_allowed(postgres_session_factory):
+    sku, batch = random_sku(), random_batchref()
+    session = postgres_session_factory()
+    insert_batch(session, batch, sku, 100, eta=None, product_version=1)
+    session.commit()
+
+    order1, order2 = random_orderid(1), random_orderid(2)
+    exceptions = []  # type: List[Exception]
+    try_to_allocate_order1 = lambda: try_to_allocate(order1, sku, exceptions)
+    try_to_allocate_order2 = lambda: try_to_allocate(order2, sku, exceptions)
+    thread1 = threading.Thread(target=try_to_allocate_order1)  #<1>
+    thread2 = threading.Thread(target=try_to_allocate_order2)  #<1>
+    thread1.start()
+    thread2.start()
+    thread1.join()
+    thread2.join()
+
+    [[version]] = session.execute(
+        "SELECT version_number FROM products WHERE sku=:sku",
+        dict(sku=sku),
+    )
+    assert version == 2  #<2>
+    exception = [exceptions]
+    assert 'could not serialize access due to concurrent update' in str(exception)  #<3>
+
+    orders = list(session.execute(
+        "SELECT orderid FROM allocations"
+        " JOIN batches ON allocations.batch_id = batches.id"
+        " JOIN order_lines ON allocations.orderline_id = order_lines.id"
+        " WHERE order_lines.sku=:sku",
+        dict(sku=sku),
+    ))
+    assert len(orders) == 1  #<4>
+    with unit_of_work.SqlAlchemyUnitOfWork() as uow:
+        uow.session.execute('select 1')
+----
+====
+
+<1> We start two threads that will reliably produce the concurrency behavior we
+    want:  `read1, read2, write1, write2`.
+
+<2> We assert that the version number has only been incremented once.
+
+<3> We can also check on the specific exception if we like
+
+<4> And we double-check that only one allocation has gotten through.
+
+
 
 ==== Enforcing Concurrency Rules by Using Database Transaction Isolation Levels
 
@@ -666,18 +717,13 @@ having more of an "optimistic locking" approach and might lead to more failures,
 but the failures might be more recoverable.  So, as usual, the right solution
 will depend on circumstances.
 
+NOTE: Some people refer to this as the "read-modify-write" failure mode.
+    https://www.2ndquadrant.com/en/blog/postgresql-anti-patterns-read-modify-write-cycles/[This page has a good overview].
+
+
 //TODO (DS): Maybe worth explaining the difference between optimistic and
 //pessimistic locking in more detail, and earlier in the chapter?
 
-////
-TODO (ej):
-+1 to (DS) comment. The jump in the middle to talking about version numbers is a little abrupt.
-   Maybe introduce the section by talking about integrity and concurrency, then read-modify-write cycles,
-   and optimistic concurrency control?  Ch7 of "Desiging Data Intensive Applications" is i
-   a good reference.
-
-   I also like this treatemnt: https://www.2ndquadrant.com/en/blog/postgresql-anti-patterns-read-modify-write-cycles/
-////
 
 .Recap: Aggregates and Consistency Boundaries
 *****************************************************************
@@ -696,11 +742,11 @@ Something something transactions::
 |===
 |Pros|Cons
 a|
-* Python might not have "official" public and private methods, but the underscores
-  convention belies the fact that it's useful to try and separate what's for "internal"
-  use and what's for "outside code" to use.  Choosing aggregates is just the next level
-  up: it lets you decide which of your domain model classes are the public ones, and which
-  aren't.
+* Python might not have "official" public and private methods, but we do have
+  the underscores convention, because it's often useful to try and what's for
+  "internal" use and what's for "outside code" to use.  Choosing aggregates is
+  just the next level up: it lets you decide which of your domain model classes
+  are the public ones, and which aren't.
 
 * Modelling our operations around explicit consistency boundaries helps to avoid
   performance problems with our ORM.
@@ -710,10 +756,11 @@ a|
 
 a|
 * Yet another new concept for new developers to take on.  Explaining Entities vs
-  Value Objects was already a mental load, now there's a third type of domain model object? 
- 
+  Value Objects was already a mental load, now there's a third type of domain
+  model object?
+
 * Sticking rigidly to the rule that we only modify one aggregate at a time is a
-  big mental shift. 
+  big mental shift.
 
 * Dealing with eventual consistency between aggregates can be complex.
 |===

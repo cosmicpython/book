@@ -1,18 +1,5 @@
 [[chapter_10_external_events]]
-== Event-driven Architecture: Using Events To Integrate Microservices
-
-NOTE: Chapter under construction.
-
-In this chapter:
-
-* We'll see how to use events to communicate between multiple microservices.
-
-* We'll use Redis as a publish-subscribe service
-
-TODO: DIAGRAM GOES HERE
-
-
-=== How Do We Talk To The Outside World?
+== Event-Driven Architecture: Using Events to Integrate Microservices
 
 In the last chapter we never actually spoke about _how_ we would receive
 the "batch quantity changed" events, or indeed, how we might notify the
@@ -25,10 +12,51 @@ that an order has been allocated and needs to be sent to a customer?
 
 In this chapter we'd like to show how the events metaphor can be extended
 to encompass the way that we handle incoming and outgoing messages from the
-system.
+system. Internally, the core of our application is now a message processor.
+Let follow through on that so it becomes a message processor _externally_ as
+well.  The application can receive events from external sources, via an
+external message bus (we'll use Redis pubsub queues as an example), and publish
+its outputs, in the form of events, back there as well.
+
+[[message_processor_diagram]]
+.Our application is a Message Processor
+image::images/message_processor_diagram.png[]
+[role="image-source"]
+----
+[ditaa, message_processor_diagram]
 
 
-==== Using A Redis Pubsub Channel For Integration
++-----------------------------------------------------------------------+
+|{s}                                                                    |
+|                         External Message Bus                          |
+|                         (eg Redis, Evenstore)                         |
++-----------------------------------------------------------------------+
+      |                                                      ^
+      |                                                      |
+events|in                                              events|out
+      |                                                      |
++=----|-=--------------------------------------------------=-|-=--------+
+:     |                 Allocation Service                   |          :
+|     V                                                      |          |
+|  /----------\                                              |          |
+|  | Event    | commands   +---------------+                 |          |
+|  | Consumer |----------> |               |                 |          |
+|  \----------/            |               | internal   /-----------\   |
+|                          |   Internal    |----------> | Event     |   |
+|  /----------\            |  Message Bus  |  events    | Publisher |   |
+|  | Flask    | commands   |               |            \-----------/   |
+|  | API      |----------> |               |                            |
+|  \----------/            +---------------+                            |
+|     ^                                                                 |
+:     |                                                                 :
++=----|----------------------------------------------------------------=+
+      |
+ HTTP requests
+----
+
+
+
+=== Using a Redis Pubsub Channel for Integration
 
 To avoid the "distributed BBOM" antipattern, instead of temporally coupled HTTP
 API calls, we want to use some sort of asynchronous messaging layer to
@@ -59,7 +87,7 @@ Our new flow will look like this:
 .Sequence diagram for reallocation flow
 image::images/reallocation_sequence_diagram.png[]
 [role="image-source"]
-....
+----
 [plantuml, reallocation_sequence_diagram]
 @startuml
 Redis -> MessageBus : BatchQuantityChanged event
@@ -77,10 +105,10 @@ end
 
 MessageBus -> Redis : publish to line_allocated channel
 @enduml
-....
+----
 
 
-=== Test-driving It All Using An End-to-end Test
+=== Test-Driving It All Using an End-To-End Test
 
 Here's how we might start with an end-to-end test.  We can use our existing
 API to create batches, and then we'll test both inbound and outbound messages:
@@ -95,9 +123,9 @@ def test_change_batch_quantity_leading_to_reallocation():
     # start with two batches and an order allocated to one of them  #<1>
     orderid, sku = random_orderid(), random_sku()
     earlier_batch, later_batch = random_batchref('old'), random_batchref('newer')
-    api_client.post_to_add_batch(earlier_batch, sku, qty=10, eta='2011-01-02')  <2>
-    api_client.post_to_add_batch(later_batch, sku, qty=10, eta='2011-01-02')  <2>
-    response = api_client.post_to_allocate(orderid, sku, 10)  <2>
+    api_client.post_to_add_batch(earlier_batch, sku, qty=10, eta='2011-01-02')  #<2>
+    api_client.post_to_add_batch(later_batch, sku, qty=10, eta='2011-01-02')  #<2>
+    response = api_client.post_to_allocate(orderid, sku, 10)  #<2>
     assert response.json()['batchref'] == earlier_batch
 
     subscription = redis_client.subscribe_to('line_allocated')  #<3>
@@ -109,15 +137,15 @@ def test_change_batch_quantity_leading_to_reallocation():
 
     # wait until we see a message saying the order has been reallocated  #<1>
     messages = []
-    def assert_new_allocation_published():  #<4>
-        messages.append(wait_for(subscription.get_message))  #<4>
-        print(messages)
-        data = json.loads(messages[-1]['data'])
-        assert data['orderid'] == orderid
-        assert data['batchref'] == later_batch
-        return True
-
-    wait_for(assert_new_allocation_published)  #<4>
+    for attempt in Retrying(stop=stop_after_delay(3), reraise=True):  #<4>
+        with attempt:
+            message = subscription.get_message(timeout=1)
+            if message:
+                messages.append(message)
+                print(messages)
+            data = json.loads(messages[-1]['data'])
+            assert data['orderid'] == orderid
+            assert data['batchref'] == later_batch
 ----
 ====
 
@@ -135,10 +163,10 @@ def test_change_batch_quantity_leading_to_reallocation():
     batch, and we'll listen to another channel called `line_allocated` to
     look out for the expected reallocation.
 
-<4> The last little test helper is a `wait_for` function.  Because we're
-    moving to asynchronous model, we need our tests to be able to wait until
-    something happens.  To do that, we wrap our assertions inside a function.
-    We'll show the code for `wait_for` below, for the curious:
+<4> Because of the asynchronous nature of the system under test, we need to use
+    the `tenacity` library again to add a retry loop.  Firstly because it may
+    take some time for our new `line_allocated` message to arrive, but also
+    because it won't be the only message on that channel.
 
 ////
 TODO (ej) Minor comment: This e2e test might not be safe or repeatable as part of a
@@ -148,36 +176,6 @@ TODO (ej) Minor comment: This e2e test might not be safe or repeatable as part o
      be too much of a digression.
 ////
 
-[[wait_for]]
-.A helper function for testing asynchronous behaviour (tests/e2e/wait_for.py)
-====
-[source,python]
-----
-def wait_for(fn):
-    """
-    Keep retrying a function, catching any exceptions, until it returns something truthy,
-    or we hit a timeout.
-    """
-    timeout = time.time() + 3
-    while time.time() < timeout:
-        try:
-            r = fn()
-            if r:
-                return r
-        except:
-            if time.time() > timeout:
-                raise
-        time.sleep(0.1)
-    pytest.fail(f'function {fn} never returned anything truthy')
-----
-====
-////
-TODO (ej)  Not 100% sure of the necessity of wait_for. According to the source code, redis-py
-      subscription.get_message already takes a timeout, and under what conditions would
-      a re-triable exception be thrown?
-
-     If you do need to poll and retry, the tenacity library may be simpler than wait_for.
-////
 
 
 ==== Redis Is Another Thin Adapter Around Our Message Bus
@@ -197,7 +195,7 @@ r = redis.Redis(**config.get_redis_host_and_port())
 def main():
     orm.start_mappers()
     pubsub = r.pubsub(ignore_subscribe_messages=True)
-    pubsub.subscribe('change_batch_quantity')  <1>
+    pubsub.subscribe('change_batch_quantity')  #<1>
 
     for m in pubsub.listen():
         handle_change_batch_quantity(m)
@@ -206,8 +204,8 @@ def main():
 def handle_change_batch_quantity(m):
     logging.debug('handling %s', m)
     data = json.loads(m['data'])  #<2>
-    cmd = commands.ChangeBatchQuantity(ref=data['batchref'], qty=data['qty'])
-    messagebus.handle_command(cmd, uow=unit_of_work.SqlAlchemyUnitOfWork())
+    cmd = commands.ChangeBatchQuantity(ref=data['batchref'], qty=data['qty'])  #<2>
+    messagebus.handle(cmd, uow=unit_of_work.SqlAlchemyUnitOfWork())
 
 
 def publish(channel, event: events.Event):  #<3>
@@ -218,13 +216,14 @@ def publish(channel, event: events.Event):  #<3>
 
 <1> `main()` subscribes us to the `change_batch_quantity` channel on load
 
-<2> And our main job as an entrypoint to the system is to deserialize JSON, and
-    pass it to the service layer, much like the Flask adapter does.
+<2> And our main job as an entrypoint to the system is to deserialize JSON,
+    convert it to a `Command`, and pass it to the service layer--much like the
+    Flask adapter does.
 
 <3> We also provide a helper function to publish events back into Redis.
 
 
-==== Our new outgoing event
+==== Our New Outgoing Event
 
 Here's what the `Allocated` event will look like:
 
@@ -273,13 +272,11 @@ class Product:
 The handler for `ChangeBatchQuantity` already exists, so all we need to add
 is a handler that publishes the outgoing event:
 
-//TODO: consider keeping BatchQuantityChanged as an event?
-
 
 [[another_handler]]
 .The messagebus grows (src/allocation/messagebus.py)
 ====
-[source,python]
+[source,python,highlight=2]
 ----
 HANDLERS = {
     events.Allocated: [handlers.publish_allocated_event],
@@ -288,7 +285,7 @@ HANDLERS = {
 ----
 ====
 
-Publishing the event uses our helper function from the redis wrapper:
+Publishing the event uses our helper function from the Redis wrapper:
 
 [[publish_event_handler]]
 .Publish to redis (src/allocation/handlers.py)
@@ -308,23 +305,46 @@ TIP: Outbound events are one of the places it's important to apply some validati
 
 
 
-
 .Internal vs External events
 *******************************************************************************
 It's a good idea to keep the distinction between internal and external events
 clear.  Some events may come from the outside, and some events may get upgraded
 and published externally, but not all of them.  This is particularly important
-if you get into [event sourcing](https://io.made.com/eventsourcing-101/) (very
+if you get into [event sourcing](https://io.made.com/blog/2018-04-28-eventsourcing-101.html) (very
 much a topic for another book though).
 
 *******************************************************************************
 
+// TODO (EJ) Some discussion of idempotency and at-most-once, vs at-least-once
+// delivery might be good.
 
-=== Wrap-up
+=== Wrap-Up
 
 * events can come _from_ the outside, but they can also be published
-  externally -- our `publish` handler converts an event to a message
-  on a redis channel. We use events to talk to the outside world.
-
+  externally--our `publish` handler converts an event to a message
+  on a Redis channel. We use events to talk to the outside world.
 
 TODO: more here
+
+[quote, Martin Fowler, https://martinfowler.com/articles/201701-event-driven.html [What do you mean by “Event-Driven”?]]
+____
+Event notification is nice because it implies a low level of coupling, and is
+pretty simple to set up. It can become problematic, however, if there is
+a logical flow that runs over various event notifications. [...] It can be hard to
+see as it's not explicit in any program text; this can make it hard to debug
+and modify.
+____
+
+[[chapter_10_external_events_tradeoffs]]
+[options="header"]
+.Event-Based Microservices Integration: The Trade-Offs
+|===
+|Pros|Cons
+a|
+* avoids distributed BBOM
+* decoupled, async: easier to change individual services, and add new ones
+
+a|
+* overall flows are harder to see
+
+|===

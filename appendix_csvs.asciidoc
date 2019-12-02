@@ -126,7 +126,7 @@ if __name__ == '__main__':
 //TODO: too much vertical whitespace in this listing
 
 It's actually not looking too bad!  And we're re-using our domain model objects
-and our domain service.... 
+and our domain service... 
 
 But it's actually not going to work.  Existing allocations need to also be part
 of our permanent CSV storage.  We can write a second test to force us to improve
@@ -253,7 +253,7 @@ And here's what a Unit of Work for CSVs would look like:
 class CsvUnitOfWork(unit_of_work.AbstractUnitOfWork):
 
     def __init__(self, folder):
-        self.init_repositories(CsvRepository(folder))
+        self.batches = CsvRepository(folder)
 
     def commit(self):
         with self.batches._allocations_path.open('w') as f:

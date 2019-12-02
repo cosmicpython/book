@@ -2,7 +2,372 @@
 [appendix]
 == Validation
 
-NOTE: placeholder chapter, under construction.
+Whenever we're teaching and talking about these techniques, one question that
+comes up over and over is "where should I do validation? Does that belong with
+my business logic, in the domain model, or is that an infrastructural concern?"
+
+As with any architectural question, the answer is: it depends!
+
+The most important consideration is that we want to keep our code well-separated
+so that each part of the system is simple. We don't want to clutter our code
+with irrelevant detail.
+
+=== What is validation anyway?
+
+When people use the word "validation" they usually mean a process where they
+test the inputs of an operation to make sure that they match some criteria.
+Inputs that match the criteria are considered "valid", and inputs that don't
+are "invalid".
+
+If the input is invalid, then the operation can't continue, but should exit with
+some kind of error.
+
+In other words, validation is about creating _pre-conditions_. We find it useful
+to separate our pre-conditions into three sub-types: syntax, semantics, and
+pragmatics.
+
+=== Validating Syntax
+
+In linguistics, the syntax of a language is the set of rules that govern the
+structure of grammatical sentences. For example, in English, the sentence
+"Allocate three units of TASTELESS-LAMP to order twenty-seven" is grammatically
+sound while the phrase "hat hat hat hat hat hat wibble" is not.
+
+How does this map to our application? Here are some examples of syntactic rules:
+
+* An Allocate command must have an orderid, a sku, and a quantity.
+* A quantity is an integer
+* A sku is a string with a maximum length of 64 characters
+* An orderid is a string with a maximum length of 16 characters
+
+These are rules about the shape and structure of incoming data. An Allocate
+command without a sku or order id isn't a valid message. It's the equivalent
+of the phrase "Allocate three to".
+
+We tend to validate these rules at the edge of the system. Our rule of thumb is
+that a message handler should only ever receive a message that is well-formed
+and contains all required information.
+
+One option is to put your validation logic on the message type itself:
+
+
+[[validation_on_message]]
+.Validation on the message class (src/allocation/commands.py)
+====
+[source,python]
+----
+from schema import And, Schema, Use
+
+
+@dataclass
+class Allocate(Command):
+
+    __schema = Schema({ #<1>
+        'orderid': int,
+         sku: str,
+         qty: And(Use(int), lambda n: n > 0)
+     })
+
+    orderid: str
+    sku: str
+    qty: int
+
+    @classmethod
+    def from_json(cls, data): #<2>
+       data = json.loads(data)
+       return cls(**__schema.validate(data))
+----
+====
+
+<1> The 'schema'.footnote[https://pypi.org/project/schema/] library lets us
+    describe the structure and validation of our messages in a nice declarative way.
+
+<2> The 'from_json' method reads a string as json, and turns it into our message
+    type.
+
+This can get repetitive, though,  since we need to specify our fields twice,
+so we might want to introduce a helper library that can unify the validation and
+declaration of our message types.
+
+
+[[command_factory]]
+.A command factory with schema (src/allocation/commdands.py)
+====
+[source,python]
+----
+def command(name, **fields): #<1>
+    schema = Schema(And(Use(json.loads), fields)) #<2>
+    cls = make_dataclass(name, fields.keys())
+    cls.from_json = lambda s: cls(**schema.validate(s)) #<3>
+    return cls
+
+def greater_than_zero(x):
+    return x > 0
+
+quantity = And(Use(int), greater_than_zero) #<4>
+
+Allocate = command( #<5>
+    orderid=int,
+    sku=str,
+    qty=quantity
+)
+
+AddStock = command(
+    sku=str,
+    qty=quantity
+----
+====
+
+<1> The `command` function takes a message name, plus kwargs for the fields of
+the message payload, where the name of the kwarg is the name of the field, and
+the value is the parser.
+<2> We use the make_dataclass function from the dataclass module to dynamically
+create our message type.
+<3> We patch the `from_json` method onto our dynamic dataclass
+<4> We can create reusable parsers for quantity, or sku, etc to keep things DRY.
+<5> Declaring a message type becomes a one-liner
+
+
+// TODO: Log and continue
+// TODO: add metrics around invalid messages
+// TODO: Postel's law
+// TODO: Tolerant reader pattern
+
+Earlier, we said that we want to avoid cluttering our code with irrelevant
+detail. In particular, we don't want to code defensively inside our domain model.
+Instead, we want to make sure that requests are known to be valid before our
+domain model or use-case handlers see them. This helps our code to stay clean
+and maintainable over the long-term. We sometimes refer to this as "validating
+at the edge of the system".
+
+Back in Chapter 6 we said that the message bus was a great place to put
+cross-cutting concerns, and validation is a perfect example of that. Here's how
+we might change our bus to perform validation for us.
+
+
+[[validation_on_bus]]
+.Validation 
+====
+[source,python]
+----
+class MessageBus:
+
+    def handle_message(self, name: str, body: str):
+        try:
+            message_type = next(type for type in EVENT_HANDLERS.keys() if type.__name__ == name)
+            message = message_type.from_json(body)
+            self.handle([message])
+        except StopIteration:
+            raise KeyError(f"Unknown message name {name}")
+        except ValidationError as e:
+            print(f'invalid message of type {name}\n'
+                  f'{body}\n'
+                  f'{e}')
+            raise
+----
+====
+
+Here's how we might use that method from our Flask API endpoint.
+
+
+[[validation_bubbles_up]]
+.API bubbles up validation errors (src/allocation/flask_app.py)
+====
+[source,python]
+----
+@app.route("/change_quantity", methods=['POST'])
+def change_batch_quantity():
+    try: 
+        bus.handle_message('ChangeBatchQuantity', request.body)
+    except ValidationError as e:
+        return bad_request(e)
+    except exceptions.InvalidSku as e:
+        return jsonify({'message': str(e)}), 400
+
+def bad_request(e: ValidationError):
+    return e.code, 400 
+----
+====
+
+And here's how we might plug it in to our asynchronous message processor
+
+
+[[validation_pubsub]]
+.Validation errors when handling redis messages (src/allocation/redis_pubsub.py)
+====
+[source,python]
+----
+def handle_change_batch_quantity(m, bus: messagebus.MessageBus):
+    try:
+        bus.handle_message('ChangeBatchQuantity', m)
+    except ValidationError:
+       print('Skipping invalid message')
+    except exceptions.InvalidSku as e:
+        print(f'Unable to change stock for missing sku {e}')
+----
+====
+
+Notice that our entry points are solely concerned with how to get a message from
+the outside world, and how to report success or failure. Our mesage bus takes
+care of validating our requests, and routing them to the correct handler, and
+our handlers are exclusively focused on the logic of our use case.
+
+
+=== Validating Semantics
+
+While syntax is concerned with the structure of messages, semantics is the study
+of _meaning_ in messages. The sentence "allocate no dogs from ellipsis hat" is
+syntactically valid, and has the same structure as the sentence "allocate one
+teapot to order five", but it's meaningless.
+
+
+[[invalid_order]]
+.A meaningless message
+====
+[source,python]
+----
+{
+  "orderid": "superman",
+  "sku": "zygote",
+  "qty": -1
+}
+----
+====
+
+We can read this json blob as an Allocate command but we can't successfully
+execute it, because it's _nonsense_.
+
+We tend to validate semantic concerns at the message handler layer with a kind
+of contract-based programming.
+
+
+[[ensure_dot_py]]
+.Preconditions (src/allocation/ensure.py)
+====
+[source,python]
+----
+"""
+This module contains pre-conditions that we apply to our handlers.
+"""
+
+class MessageUnprocessable(Exception): #<1>
+
+    def __init__(self, message):
+        self.message = message
+
+class ProductNotFound(MessageUnprocessable): #<2>
+   """"
+   This exception is raised when we try to perform an action on a product
+   that doesn't exist in our database.
+   """"
+
+    def __init__(self, message):
+        super().__init__(message)
+        self.sku = message.sku
+
+def product_exists(event, uow): #<3>
+    product = uow.products.get(event.sku)
+    if product is None:
+        raise ProductNotFound(event)
+----
+====
+
+<1> We use a common base class for errors that mean a message is invalid
+<2> Using a specific error type for this problem makes it easier to report on
+    and handle the error. For example, it's easy to map ProductNotFound to a 404
+    in Flask.
+<3> `product_exists` is a precondition. If the condition is False, we raise an
+    error.
+
+
+This keeps the main flow of our logic in the service layer clean and declarative:
+
+[[ensure_in_services]]
+.ensure in use in services (src/allocation/services.py)
+====
+[source,python]
+----
+
+# services.py
+
+from allocation import ensure
+
+def allocate(event, uow):
+    line = mode.OrderLine(event.orderid, event.sku, event.qty)
+    with uow:
+        ensure.product_exists(uow, event) #<4>
+
+        product = uow.products.get(line.sku)
+        product.allocate(line)
+        uow.commit()
+----
+====
+
+
+We can extend this technique to make sure that we apply messages idempotently.
+For example, we want to make sure that we don't insert a batch of stock more
+than once.
+
+If we get asked to create a batch that already exists, we'll log a warning and
+continue to the next message.
+
+[[skipmessage]]
+.Listing title
+====
+[source,python]
+----
+class SkipMessage (Exception):
+    """"
+    This exception is raised when a message can't be processed, but there's no
+    incorrect behavior. For example, we might receive the same message multiple
+    times, or we might receive a message that is now out of date.
+    """"
+    
+    def __init__(self, reason):
+        self.reason = reason
+
+def batch_is_new(self, event, uow):
+    batch = uow.batches.get(event.batchid)
+    if batch is not None:
+        raise SkipMessage(f"Batch with id {event.batchid} already exists")
+----
+====
+
+Introducing a `SkipMessage` exception lets us handle these cases in a generic
+way in our message bus. 
+
+[[skip_in_bus]]
+.The Bus Now Knows How To Skip (src/allocation/messagebus.py)
+====
+[source,python]
+----
+class MessageBus:
+
+    def handle_message(self, message):
+        try:
+           ...
+       except SkipMessage as e:
+           logging.warn(f"Skipping message {message.id} because {e.reason}")
+----
+====
+
+
+There are a couple of pit-falls to be aware of here. Firstly, we need to be sure
+that we're using the same unit of work that we use for the main logic of our
+use-case. Otherwise we open ourselves to irritating concurrency bugs.
+
+Secondly, we should try to avoid putting _all_ our business logic into these
+pre-condition checks. As a rule of thumb, if a rule _can_ be tested inside our
+domain model, then it _should_ be tested in the domain model.
+
+=== Validating Pragmatics
+
+Pragmatics is the study of how we understand language in context. After we have
+parsed a message and grasped it's meaning, we still need to process it in
+context. For example, if you get a comment on a pull request saying "I think
+this is very brave", it may mean that the reviewer admires your courage, unless
+they're British, in which case they're trying to tell you that what you're doing
+is insanely risky, and only a fool would attempt it.  Context is everything.
 
 Places we can do validation, and different types of validation:
 
