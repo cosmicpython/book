@@ -109,12 +109,14 @@ def hash_file(path):
 ----
 ====
 
-Now we need to write the bit that makes decisions about what to do. When we
-have to tackle a problem from first principles, we usually try to write a
-simple implementation, and then refactor towards better design. We'll use this
-approach throughout the book, because it's how we write code in the real world:
-start with a solution to the smallest part of the problem, and then iteratively
-make the solution richer and better designed.
+Now we need to write the bit that makes decisions about what to do, the business
+logic if you will.
+
+When we have to tackle a problem from first principles, we usually try to write
+a simple implementation, and then refactor towards better design. We'll use
+this approach throughout the book, because it's how we write code in the real
+world: start with a solution to the smallest part of the problem, and then
+iteratively make the solution richer and better designed.
 
 ////
 [SG] this may just be my lack of Python experience but it would have helped me to see
@@ -122,13 +124,6 @@ from pathlib import Path before this code snippet so that I might be able to gue
 the type of object "path" in hash_file(path)  - I guess a type hint would
 be too much to ask..
 ////
-
-Now we need to write the interesting business logic. When we have to tackle a
-problem from first principles, we usually try to write a simple implementation,
-and then refactor towards better design. We'll use this approach throughout the
-book, because it's how we write code in the real world: start with a solution
-to the smallest part of the problem, and then iteratively make the solution
-richer and better designed.
 
 Our first hackish approach looks something like this:
 
