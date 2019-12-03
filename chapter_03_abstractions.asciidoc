@@ -435,7 +435,7 @@ changes--from the low-level details of IO, we can easily test the core of our co
 
 With this approach we've switched from testing our main entrypoint function,
 `sync()`, to testing a lower-level function, `determine_actions()`.  You might
-decide that's fine because `sunc()` is now so simple.  Or you might decide to
+decide that's fine because `sync()` is now so simple.  Or you might decide to
 keep some integration/acceptance tests to test that `sync()`.  But there's
 another option, which is to modify the `sync()` function so that it can
 be unit tested _and_ end-to-end tested;  it's an approach Bob calls
