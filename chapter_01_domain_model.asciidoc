@@ -145,6 +145,8 @@ Rel_U(warehouse, customer, "Dispatches goods to")
 @enduml
 ----
 
+//TODO: illustration text is cut off
+
 For the purposes of this book, we're imagining a situation where the business
 decides to implement an exciting new way of allocating stock.  Until now, the
 business has been presenting stock and lead times based on what is physically
@@ -606,10 +608,9 @@ class OrderLine:
 ----
 ====
 
-Introduced in Python 3.7, `dataclasses` are a neat way to represent value objects;
-if you're on Python 2, you could use `namedtuples` instead. Either technique
-will give you _value equality_ which is the fancy way of saying "two lines with
-the same `orderid`, `sku` and `qty` are equal."
+One of the nice things that dataclasses (or namedtuples) give us is _value
+equality_ which is the fancy way of saying "two lines with the same `orderid`,
+`sku` and `qty` are equal."
 
 
 [[more_value_objects]]
@@ -640,13 +641,13 @@ def test_equality():
 ----
 ====
 
-These Value Objects match our real-world intuitions about how their values work.
-It doesn't matter _which_ £10 note we're talking about, because they all have
-the same value. Likewise two names are equal if both the first and last name
-match, and two lines are equivalent if they have the same customer order, product code and
-quantity. We can still have complex behavior on a Value Object, though. In
-fact, it's common to support operations on values, for example mathematical
-operators.
+These Value Objects match our real-world intuitions about how their values
+work. It doesn't matter _which_ £10 note we're talking about, because they all
+have the same value. Likewise two names are equal if both the first and last
+name match, and two lines are equivalent if they have the same customer order,
+product code and quantity. We can still have complex behavior on a Value
+Object, though. In fact, it's common to support operations on values, for
+example mathematical operators.
 
 
 [[value_object_maths]]
@@ -682,7 +683,7 @@ def multiplying_two_money_values_is_an_error():
 
 ==== Value Objects and Entities
 
-An order line is uniquely identified by its orderid, sku and quantity; if we
+An order line is uniquely identified by its order ID, sku and quantity; if we
 change one of those values, we now have a new line. That's the definition of a
 _Value Object_: any object that is only identified by its data, and doesn't have a
 long-lived identity. What about a batch though? That _is_ identified by a
