@@ -55,7 +55,7 @@ events|in                                              events|out
 ----
 
 
-=== How Not to Do It ===
+=== Distributed Ball of Mud ===
 
 Before we get into that, let's talk about the alternatives. We regularly talk to
 engineers who are trying to build out a Microservices architecture. Often they
@@ -101,27 +101,96 @@ should own this process?
 
 TODO: Sequence diagram
 
+This sort of works, too, but now our dependency graph is a mess. In order to
+allocate stock, the orders service drives the batches system, which drives
+warehouse; but in order to handle problems at the warehouse, our warehouse
+system drives batches, which drives orders.
+
+Multiply this by all the other workflows we need to provide, and you can see
+how services very quickly get tangled up together.
+
+=== Error Handling in Distributed Systems ===
+
+"Things break" is a universal law of software engineering. What happens in our
+system when one of our requests fails? Let's say that a network error happens
+right after we take a user's order for 3 MISBEGOTTEN-RUG.
+
+TODO: Sequence diagram, allocation fails at DB call
+
+We have two options here: we can place the order anyway, and leave it
+unallocated, or we can refuse to take the order since the allocation can't be
+guaranteed. The failure state of our allocation service has bubbled up and is
+affecting the reliability of our order service.
+
+When two things have to be changed together, we say that they are _coupled_. We
+can think of this failure-cascade as a kind of _temporal coupling_ - every part
+of the system has to work at the same time for any part of it to work. As the
+system gets bigger, there is an exponentially increasing probability that some
+part is degraded.
+
+[[connascence_sidebar]]
+.Connascence
+*******************************************************************************
+We're using the language of "coupling" here, but there's another way to describe
+the relationships between our systems. Connascence is a term used by some
+authors to describe the different types of coupling.
+
+Connascence isn't _bad_ but some types of connascence are _stronger_ than
+others. We want to have strong connascence locally, like when two classes are
+closely related, but weak connascence at a distance.
+
+In our first example of a distributed ball of mud, we see Connascence of
+Execution - multiple components need to know the correct order of work for an
+operation to be successful. 
+
+When thinking about error conditions here, we're talking about Connascence of
+Timing - multiple things have to happen one after another for the operation to
+work.
+
+When we replace our RPC style system with events, we replace both of these types
+of connascence with a _weaker_ type: Connascence of Name, where multiple
+components only need to agree on the name of an event, and the names of fields
+it carries.
+*******************************************************************************
 
 
-TODO: Why is point-to-point poop?
+Really we want to make sure that when we place an order, the order is placed.
+Everything else can happen _later_ so long as it happens. If that sounds
+familiar, it should! This is the same requirement we have of our aggregates and
+commands.
 
-TODO: WTF is temporal coupling or the distributed BBOM bruh?
+Like aggregates, microservices should be _consistency boundaries_. Between two
+services, we can accept eventual consistency, and that means we don't need to
+rely on synchronous calls. Each service accepts commands from the outside world
+and raises events to record the result. Other services can listen to those
+events to trigger the next steps in the workflow.
+
 
 === Using a Redis Pubsub Channel for Integration
 
 To avoid the "distributed BBOM" antipattern, instead of temporally coupled HTTP
-API calls, we want to use some sort of asynchronous messaging layer to
-integrate between systems.  We want our "batch quantity changed" messages to
-come in as external events from upstream systems, and we want our system to
-publish "allocated" events for downstream systems to listen to.
+API calls, we want to use asynchronous messaging to integrate our systems. We
+want our "batch quantity changed" messages to come in as external messages from
+upstream systems, and we want our system to publish "allocated" events for
+downstream systems to listen to.
 
-When moving towards events as an integration solution, you need to choose
-some sort of technology for passing those events from one system to another.
-We need to be able to publish events to some central service, and we need some
-way for other systems to be able to "subscribe" to different types of messages,
-and pick them up asynchronously from some sort of queue.
+TODO: This doesn't sit naturally here.
+Why is this better? Firstly, because things can fail independently, it's easier
+to handle degraded behaviour: we can still take orders if the allocations system
+is having a bad day.
 
-At MADE.com we use https://eventstore.org/[Eventstore];  Kafka or RabbitMQ
+TODO: NEED EXAMPLES OF PROCESS CHANGES FOR THIS PARAGRAPH TO WORK!!
+
+Secondly, we're reducing the strength of coupling between our systems. If we
+need to change the order of operations, or to introduce new steps in the process
+we can do that locally.
+
+We'll need some way of getting events out of one system and into another, like
+our message bus, but for services. This piece of infrastructure is often called
+a Message Broker. The role of a message broker is to take messages from
+publishers and deliver them to subscribers. 
+
+At MADE.com we use https://eventstore.org/[Eventstore]; Kafka or RabbitMQ
 are valid alternatives. A lightweight solution based on Redis
 https://redis.io/topics/pubsub[pubsub channels] can also work just fine, and since
 Redis is much more generally familiar to people, we thought we'd use it for this
