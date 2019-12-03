@@ -128,7 +128,7 @@ rule that restricts the possible states our model can get into. An _invariant_
 is defined a little more precisely, as a condition that is always true.
 
 If we were writing a hotel booking system, we might have the constraint that double
-bookings are not allowed.  This supports the constraint that a room cannot have more
+bookings are not allowed.  This supports the invariant that a room cannot have more
 than one booking for the same night.
 
 Of course, sometimes we might need to temporarily _bend_ the rules. Perhaps we
