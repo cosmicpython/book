@@ -783,7 +783,7 @@ system in a particular shape.
 As we get further into the book, we'll see how the service layer forms an API
 for our system that we can drive in multiple ways. Testing against this API
 reduces the amount of code that we need to change when we refactor our domain
-model. If we restricting ourselves to only testing against the service layer,
+model. If we restrict ourselves to only testing against the service layer,
 we won't have any tests that directly interact with "private" methods or
 attributes on our model objects, which leaves us more free to refactor them.
 

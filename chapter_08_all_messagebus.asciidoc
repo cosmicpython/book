@@ -111,10 +111,10 @@ transactions and data integrity.
 But before we jump in, think about where we're headed.  There are two
 kinds of flows through our system:
 
-* API calls that are handled by a service-layer function
+* API calls that are handled by a service-layer function,
 
 * Internal events (which might be raised as a side-effect of a service-layer function)
-  and their handlers (which in turn call service-layer functions)
+  and their handlers (which in turn call service-layer functions).
 
 Wouldn't it be easier if everything was an event handler?  If we rethink our API
 calls as capturing events, then the service-layer functions can be event handlers
@@ -139,7 +139,7 @@ Our new requirement will fit the same pattern:
 * And the new `AllocationRequired` events that it may raise can be passed on to
   `services.allocate()` too, so there is no conceptual difference between a
   brand-new allocation coming from the API, and a reallocation that's
-  internally triggered by a deallocation
+  internally triggered by a deallocation.
 
 
 All sound like a bit much?   Let's work towards it all gradually.  We'll
