@@ -1166,6 +1166,34 @@ TIP: If you decide you want to build a read-only endpoint for retrieving allocat
 
 ******************************************************************************
 
+=== Why Is Everything Called A Service?
+
+Some of you are probably scratching your heads at this point trying to figure
+out exactly what is the difference between a Domain Service and a Service Layer.
+
+We're sorry, we didn't choose the names, or we'd have much cooler and friendlier
+ways to talk about this stuff.
+
+We're using two things called a "service" in this chapter. The first is an
+Application Service (our service layer). Its job is to handle requests from the
+outside world, and to _orchestrate_ an operation. What we mean is that the
+service layer _drives_ the application, by following a bunch of simple steps:
+
+* Get some data from the database
+* Update the domain model
+* Persist any changes
+
+This is the kind of boring work that has to happen for every operation in your
+system, and keeping it separate from business logic helps to keep things tidy.
+
+The second type of service is a Domain Service. This is the name for a piece of
+logic that belongs in the domain model but doesn't sit naturally inside a
+stateful entity or value object. For example, if you were building a shopping
+cart application, you might choose to build taxation rules as a Domain Service.
+Calculating tax is a separate job from updating the cart, and it's an important
+part of the model, but it doesn't seem to right to have a persisted entity for
+the job. Instead a stateless TaxCalculator class, or a calculate_tax function
+can do the job.
 
 === Wrap-Up
 
