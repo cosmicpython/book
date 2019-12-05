@@ -502,7 +502,7 @@ def test_allocation_is_idempotent():
 At the moment, it's probably a valid criticism to say that the domain model is
 too trivial to bother with DDD (or even object-orientation!).  In real life,
 any number of business rules and edge cases crop up: customers can ask for
-delivery on specific future dates, which means we might not want to allocate1
+delivery on specific future dates, which means we might not want to allocate
 them to the earliest batch.  Some skus aren't in batches, but ordered on
 demand directly from suppliers, so they have different logic.  Depending on the
 customer's location, we can only allocate to a subset of warehouses and shipments
