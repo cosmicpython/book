@@ -88,8 +88,9 @@ file directories which we'll call the source and the destination.
 Our first and third requirements are simple enough, we can just compare two
 lists of paths. Our second is trickier, though. In order to detect renames,
 we'll have to inspect the content of files. For this we can use a hashing
-function like md5 or SHA. The code to generate a SHA hash from a file is simple
+function like MD5 or SHA-1. The code to generate a SHA-1 hash from a file is simple
 enough.
+// [KP] #cryptonerdnitpicking
 
 [[hash_file]]
 .Hashing a file (sync.py)
@@ -488,6 +489,7 @@ TIP: Notice that, although we're using dependency injection, there was no need
     book we often show ABCs because we hope they help to understand what the
     abstraction is, but they're not necessary.  Python's dynamic nature means
     we can always rely on duck typing.
+// [KP] Again, one could mention PEP544 protocols here. For some reason, I like them.
 
 [[bob_tests]]
 .Tests using DI
@@ -597,6 +599,15 @@ by our esteemed tech reviewer, Ed Jung, which also addresses mocking and its alt
 And while we're recommending talks, don't miss
 https://www.youtube.com/watch?v=PBQN62oUnN8[Brandon Rhodes talking about "hoisting" I/O"],
 which really nicely covers the issues we're talking about, using another simple example.
+
+////
+[KP] I used to be guilty of over-mocking, myself. However, I occasionally find
+it useful to test a scenario where I do not want to do a complete setup of
+a particular state and just let some "is_a_thing()" method return True/False.
+
+The reason I find this OK may be due to the high complexity it takes to set up test
+scenarios with Django models, though.
+////
 
 TIP: In this chapter we've spent a lot of time replacing end-to-end tests with
     unit tests.  That doesn't mean we think you should never use E2E tests!

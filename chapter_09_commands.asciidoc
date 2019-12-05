@@ -305,7 +305,7 @@ def congratulate_vip_customer(uow, event: CustomerBecameVip): #<4>
             customer.email_address,
             f'Congratulations {customer.first_name}!'
         )
-        
+
 ----
 ====
 
@@ -356,7 +356,7 @@ from the commands that raised them. What should we do, then, to make sure we
 can recover from errors when they inevitably occur?
 
 The first thing we need is to know _when_ an error has occurred, and for that we
-usually rely on logs. 
+usually rely on logs.
 
 Let's look again at the 'handle_event' method from our message bus.
 
@@ -439,7 +439,7 @@ def handle_event(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):
     with an exponentially increasing wait between attempts.
 
 Retrying operations that might fail is probably the single best way to improve
-the resilience of our software. Again, the unit of work and command handler 
+the resilience of our software. Again, the unit of work and command handler
 patterns mean that each attempt starts from a consistent state, and won't leave
 things half-finished.
 

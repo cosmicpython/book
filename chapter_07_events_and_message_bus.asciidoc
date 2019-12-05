@@ -566,11 +566,15 @@ class SqlAlchemyRepository(AbstractRepository):
 ----
 ====
 
+////
+[KP] not sure if that is the right way in asciidoc to make __init__()'s
+underscores visible.
+////
 
 <1> For the UoW to be able to publish new events, it needs to be able to ask
     the repository for which `Product` objects have been used during this session.
     We use a `set` called `.seen` to store them.  That means our implementations
-    need to call `super().__init__()`
+    need to call `+super().__init__()+`
 
 <2> The parent `add()` method adds things to `.seen`, and now requires subclasses
     to implement `._add()`
@@ -713,10 +717,10 @@ Option 3: Unit of Work collects events from Aggregates and passes them to Messag
 a|
 * A message bus gives us a nice way to separate responsibilities when we have
   to take multiple actions in response to a request.
-  
+
 * Event Handlers are nicely decoupled from the "core" application logic,
   making it easy to change their implementation later.
-  
+
 * Domain events are a great way to model the real world, and we can use them
   as part of the business language we use when modeling with stakeholders.
   (in fact an entire working practice called "eventstorming" has arisen out
@@ -732,9 +736,9 @@ a|
 * What's more, that hidden event-handling code executes _synchronously_,
   meaning your service-layer function
   doesn't finish until all the handlers for any events are finished.  That
-  could potentially cause unexpected performance problems in your web endpoints 
+  could potentially cause unexpected performance problems in your web endpoints
   (adding asynchronous processing is possible but makes things even *more* confusing.)
-  
+
 * More generally, event-driven workflows can be confusing because once things
   are split across a chain of multiple handlers, there no single place
   in the system where you can understand how a request will be fulfilled.
