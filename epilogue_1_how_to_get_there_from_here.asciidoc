@@ -1,6 +1,12 @@
 [[epilogue_1_how_to_get_there_from_here]]
 == Epilogue: How Do I Get There From Here?
 
+OK Bob and Harry, that's all well and good, and if I ever get hired to work
+on a green-field new service, I know what to do.  But in the meantime, I'm
+here with my big ball of Django mud, and I don't see any way to get to your
+nice, clean, virginal, perfect, untainted, simplistic model.  Not from here.
+
+
 NOTE: TODO, chapter under construction
 
 OK, but how do I get there from here?
@@ -15,6 +21,7 @@ is.
 * fork the repo and delete stuff that's not in your bounded context
 * strangler pattern.  can start with just an HTTP proxy
 * what are peloton doing?
+
 
 === What do you want to achieve?
 
@@ -65,7 +72,15 @@ see <<appendix_django>>
     - or new ones, and we switch over the downstream things progressively
 
 
+
 //TODO: event capture and all that jazz
+
+=== More required reading
+
+* _Monolith to Microservices_ by Sam Newman, and his original book,
+   _Building Microservices_
+
+Stangler (Fig) pattern is mentioned as a favorite, also many others.
 
 ////
 TODO (DS)
@@ -97,6 +112,7 @@ more on the subject.
 
 https://martinfowler.com/books/eip.html[Enterprise Integration Patterns] by
 (as always) Martin Fowler is a pretty good start.
+
 
 //TODO: add some footgun examples.
 
