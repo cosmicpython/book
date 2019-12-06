@@ -536,7 +536,7 @@ WARNING: We're using abstract base classes in this book for didactic reasons:
 NOTE: To really reap the benefits of ABCs (such as they may be) you'll want to
     be running some helpers like `pylint` and `mypy`.
 
-// [KP] Another possibility would be to use protocols as introduced in Python 3.8 (PEP 544).
+
 
 ==== What Is the Trade-Off?
 
@@ -550,11 +550,6 @@ ____
 
 Whenever we introduce an architectural pattern in this book, we'll always be
 trying to ask: "what do we get for this?  And what does it cost us?."
-
-////
-[KP] I think, you make the same point later at chapter_02_repository_tradeoffs. It may
-be worth repeating, though.
-////
 
 Usually at the very least we'll be introducing an extra layer of abstraction,
 and although we may hope it will be reducing complexity overall, it does add
@@ -876,6 +871,7 @@ a|
 * An ORM already buys you some decoupling.  Changing foreign keys might be hard,
   but it should be pretty easy to swap between, eg, MySql and Postgres, if you
   ever need to.
+
 ////
 [KP] I always found this benefit of ORMs rather weak. In the rare cases when I
 actually had to switch DB engines, the payoff was high enough to justify some
