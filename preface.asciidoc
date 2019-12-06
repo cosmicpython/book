@@ -79,20 +79,33 @@ those languages in a long time (or indeed ever), those code listings can be
 quite... trying. There's a reason the latest edition of that other classic text,
 https://martinfowler.com/books/refactoring.html[Refactoring], is in JavaScript.
 
-So we hope this book will make for a lightweight introduction to some
-of the key architectural patterns that support domain-driven design
-(DDD) and event-driven microservices, that it will serve as a reference
-for implementing them in a Pythonic way, and that it will serve as a
-first step for those who want to do further research  in this field.
 
-////
-[SG] Great preface. One niggle, until the last paragraph I thought what was being
-described was a book on designing enterprise software well in Python using established(?)
-techniques and patterns, more often seen in other languages. However in the last paragraph
-feels like event-driven microservices just suddenly pops in unannounced and the book changes
-direction a bit to be about DDD+event-driven microservices?
-TODO
-////
+=== TDD, DDD and Event-Driven Architecture
+
+In order of notoriety, we know of three tools for managing complexity:
+
+1. Test-Driven Development (TDD) helps us to build code that is correct,
+   and enables us to refactor or add new features, without fear of regression.
+   But it can be hard to get the best out of our tests:  how do we make sure
+   that they run as fast as possible? That we get as much coverage and feedback
+   from fast, dependency-free unit tests, and have the minimum number of slower,
+   flakey end-to-end tests?
+
+2. Domain-Driven Design (DDD) asks us to focus our efforts on building a good
+   model of the business domain, but how to we make sure that our models aren't
+   encumbered with infrastructure concerns and become hard to change?
+
+3. Loosely coupled (micro)-services integrated via messages (sometimes called
+   Reactive Microservices) are a well established answer to managing complexity
+   across multiple applications or business domains. But it's not always
+   obvious how to make them fit with the established tools of
+   the Python world--Flask, Django, Celery and so on.
+
+Our aim with this book is to introduce several classic architectural patterns,
+and show how they support TDD, DDD and event-driven microservices.  We hope
+it will serve as a reference for implementing them in a Pythonic way, and that
+people can use it as a first step towards further research  in this field.
+
 
 === Who Should Read This Book
 
