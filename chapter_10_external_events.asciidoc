@@ -60,13 +60,35 @@ events|in                                              events|out
 Before we get into that, let's talk about the alternatives. We regularly talk to
 engineers who are trying to build out a Microservices architecture. Often they
 are migrating from an existing application, and their first instinct is to
-split their system up into _concepts_.
+split their system up into _nouns_.
 
-What concepts have we introduced so far in our system? Well, we have batches of
+What nouns have we introduced so far in our system? Well, we have batches of
 stock, we have orders, products, and customers. Our first attempt at breaking
 up the system might look something like this:
 
-TODO: Context Diagram for Batches service
+[[batches_context_diagram]]
+.Context diagram for the batches service
+image::images/allocation_context_diagram.png[]
+[role="image-source"]
+----
+[plantuml, batches_context_diagram]
+@startuml Batches Context Diagram
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4.puml
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Context.puml
+
+System(systema, "Batches", "Knows about available stock")
+
+Person(customer, "Customer", "Wants to buy furniture")
+
+System(orders, "Orders", "Knows about customer orders")
+System(warehouse, "Warehouse", "Knows about shipping instructions")
+
+Rel(customer, orders, "Places order with")
+Rel(orders, batches, "Reserves stock with")
+Rel(batches, warehouse, "Sends instructions to")
+
+@enduml
+----   
 
 Each "thing" in our system has an associated service, which exposes an HTTP API.
 Our users visit a website and can choose from products that are in stock. When
@@ -76,7 +98,39 @@ instructions to the warehouse.
 If this is the customer's third order, we want to update the customer record to
 flag them as a VIP.
 
-TODO: Sequence diagram
+[role="image-source"]
+----
+[plantuml, chapter_10_sequence_1]
+@startuml
+
+actor Customer
+boundary Warehouse
+entity Orders
+entity Batches
+database CRM
+
+
+== Reservation ==
+
+  Customer -> Orders: Add product to basket
+  Orders -> Batches: Reserve stock
+  Batches --> Orders: Confirmed
+  Orders --> Customer: OK
+
+== Purchase ==
+
+  Customer -> Orders: Place order
+  Orders -> Batches: Confirm reservation
+  Batches -> Warehouse: Dispatch goods
+  Warehouse --> Batches: Dispatch received
+  Batches --> Orders: Reservation confirmed
+  Orders -> CRM: Update customer record
+  CRM --> Orders: Record updated
+  Orders --> Customer: Thanks for your order!
+
+
+@enduml
+----
 
 We can think of each of these steps as a Command in our system: Reserve Stock,
 Confirm Reservation, Dispatch Goods, Make Customer VIP.
@@ -99,7 +153,29 @@ Where does this logic go?
 Well, the warehouse system knows that the stock has been damaged, so maybe it
 should own this process?
 
-TODO: Sequence diagram
+[role="image-source"]
+----
+[plantuml, chapter_10_sequence_2]
+@startuml
+
+actor w as "Warehouse worker"
+boundary Warehouse
+entity Orders
+entity Batches
+database CRM
+
+
+  w -> Warehouse: Stock damaged
+  Warehouse -> Batches: Decrease available stock
+  Batches -> Batches: Reallocate orders
+  Batches -> Website: Allocation changed
+  Orders -> CRM: Update order
+  CRM --> Website: Updated
+  Website --> Batches: Order history updated
+  Batches --> Warehouse: Stock decreased
+
+@enduml
+----
 
 This sort of works, too, but now our dependency graph is a mess. In order to
 allocate stock, the orders service drives the batches system, which drives
@@ -151,6 +227,12 @@ When we replace our RPC style system with events, we replace both of these types
 of connascence with a _weaker_ type: Connascence of Name, where multiple
 components only need to agree on the name of an event, and the names of fields
 it carries.
+
+We can never completely avoid coupling, except by having our software not talk
+to any other software. What we want is to avoid _inappropriate_ coupling. 
+Connascence provides a mental model for understanding the strength and type of
+coupling inherent in different architectural styles. Read all about it at
+www.connascence.io
 *******************************************************************************
 
 
