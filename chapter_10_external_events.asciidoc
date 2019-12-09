@@ -261,7 +261,7 @@ Why is this better? Firstly, because things can fail independently, it's easier
 to handle degraded behaviour: we can still take orders if the allocations system
 is having a bad day.
 
-TODO: NEED EXAMPLES OF PROCESS CHANGES FOR THIS PARAGRAPH TO WORK!!
+// TODO: NEED EXAMPLES OF PROCESS CHANGES FOR THIS PARAGRAPH TO WORK!!
 
 Secondly, we're reducing the strength of coupling between our systems. If we
 need to change the order of operations, or to introduce new steps in the process
