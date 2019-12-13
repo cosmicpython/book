@@ -2,7 +2,7 @@
 
 == Our First Use Case: Flask API and Service Layer
 
-Back to our allocations project! 
+Back to our allocations project!
 
 In this chapter, we discuss the difference between orchestration logic,
 business logic, and interfacing code, and we introduce the _Service Layer_
@@ -1218,10 +1218,12 @@ Adding the service layer has really bought us quite a lot:
   are fast/unit tests, with just the bare minimum of E2E and integration
   tests.
 
+
 ==== The DIP in Action
 
-<<service_layer_diagram_abstract_dependencies>> shows the abstract
-dependencies of our service layer:
+<<service_layer_diagram_abstract_dependencies>> shows the
+dependencies of our service layer: the Domain Model,
+and the `AbstractRepository` (the port, in ports & adapters terminology).
 
 [[service_layer_diagram_abstract_dependencies]]
 .Abstract dependencies of the service layer
@@ -1237,12 +1239,14 @@ image::images/service_layer_diagram_abstract_dependencies.png[]
            V                   V
 +------------------+     +--------------------+
 |   Domain Model   |     | AbstractRepository |
+|                  |     |       (Port)       |
 +------------------+     +--------------------+
 ----
 
 
-When we run the tests, we implement the abstract dependencies using
-`FakeRepository`, as in <<service_layer_diagram_test_dependencies>>:
+When we run the tests, <<service_layer_diagram_test_dependencies>> shows
+how we implement the abstract dependencies using `FakeRepository` (the
+adapter):
 
 [[service_layer_diagram_test_dependencies]]
 .Tests provide an implementation of the abstract dependency
@@ -1350,7 +1354,7 @@ a|
 * If your app is _purely_ a web app, your controllers/view functions can be
   the single place to capture all the use cases.
 
-* It's yet another layer of abstraction.  
+* It's yet another layer of abstraction.
 
 * Putting too much logic into the service layer can lead to the _Anemic Domain_
   anti pattern. It's better to introduce this layer once you spot orchestration
