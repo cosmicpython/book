@@ -68,7 +68,7 @@ up the system might look something like this:
 
 [[batches_context_diagram]]
 .Context diagram for the batches service
-image::images/allocation_context_diagram.png[]
+image::images/batches_context_diagram.png[]
 [role="image-source"]
 ----
 [plantuml, batches_context_diagram]
@@ -76,7 +76,7 @@ image::images/allocation_context_diagram.png[]
 !includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4.puml
 !includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Context.puml
 
-System(systema, "Batches", "Knows about available stock")
+System(batches, "Batches", "Knows about available stock")
 
 Person(customer, "Customer", "Wants to buy furniture")
 
@@ -88,7 +88,7 @@ Rel(orders, batches, "Reserves stock with")
 Rel(batches, warehouse, "Sends instructions to")
 
 @enduml
-----   
+----
 
 Each "thing" in our system has an associated service, which exposes an HTTP API.
 Our users visit a website and can choose from products that are in stock. When
@@ -98,9 +98,12 @@ instructions to the warehouse.
 If this is the customer's third order, we want to update the customer record to
 flag them as a VIP.
 
+[[command_flow_diagram_1]]
+.Command Flow 1
+image::images/command_flow_diagram_1.png[]
 [role="image-source"]
 ----
-[plantuml, chapter_10_sequence_1]
+[plantuml, command_flow_diagram_1]
 @startuml
 
 actor Customer
@@ -153,9 +156,12 @@ Where does this logic go?
 Well, the warehouse system knows that the stock has been damaged, so maybe it
 should own this process?
 
+[[command_flow_diagram_2]]
+.Command Flow 2
+image::images/command_flow_diagram_2.png[]
 [role="image-source"]
 ----
-[plantuml, chapter_10_sequence_2]
+[plantuml, command_flow_diagram_2]
 @startuml
 
 actor w as "Warehouse worker"
