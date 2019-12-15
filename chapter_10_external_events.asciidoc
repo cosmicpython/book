@@ -236,6 +236,8 @@ www.connascence.io
 *******************************************************************************
 
 
+=== The Alternative: Temporal Decoupling using Asynchronous Messaging
+
 Really we want to make sure that when we place an order, the order is placed.
 Everything else can happen _later_ so long as it happens. If that sounds
 familiar, it should! This is the same requirement we have of our aggregates and
@@ -247,16 +249,12 @@ rely on synchronous calls. Each service accepts commands from the outside world
 and raises events to record the result. Other services can listen to those
 events to trigger the next steps in the workflow.
 
-
-=== Using a Redis Pubsub Channel for Integration
-
-To avoid the "distributed BBOM" antipattern, instead of temporally coupled HTTP
+To avoid the "Distributed BOM" antipattern, instead of temporally coupled HTTP
 API calls, we want to use asynchronous messaging to integrate our systems. We
 want our "batch quantity changed" messages to come in as external messages from
 upstream systems, and we want our system to publish "allocated" events for
 downstream systems to listen to.
 
-TODO: This doesn't sit naturally here.
 Why is this better? Firstly, because things can fail independently, it's easier
 to handle degraded behaviour: we can still take orders if the allocations system
 is having a bad day.
@@ -266,6 +264,9 @@ is having a bad day.
 Secondly, we're reducing the strength of coupling between our systems. If we
 need to change the order of operations, or to introduce new steps in the process
 we can do that locally.
+
+
+=== Using a Redis Pubsub Channel for Integration
 
 We'll need some way of getting events out of one system and into another, like
 our message bus, but for services. This piece of infrastructure is often called
