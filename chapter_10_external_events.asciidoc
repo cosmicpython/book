@@ -63,11 +63,12 @@ are migrating from an existing application, and their first instinct is to
 split their system up into _nouns_.
 
 What nouns have we introduced so far in our system? Well, we have batches of
-stock, we have orders, products, and customers. Our first attempt at breaking
-up the system might look something like this:
+stock, we have orders, products, and customers. So a naive attempt at breaking
+up the system might have looked like <<batches_context_diagram>> (notice that
+we've named our system after a noun, _batches_, instead of _allocation_).
 
 [[batches_context_diagram]]
-.Context diagram for the batches service
+.Context diagram for the "batches" service
 image::images/batches_context_diagram.png[]
 [role="image-source"]
 ----
@@ -91,12 +92,13 @@ Rel(batches, warehouse, "Sends instructions to")
 ----
 
 Each "thing" in our system has an associated service, which exposes an HTTP API.
-Our users visit a website and can choose from products that are in stock. When
-they add an item to their basket, we will reserve some stock for them. When an
-order is complete, we confirm the reservation, which causes us to send dispatch
-instructions to the warehouse.
-If this is the customer's third order, we want to update the customer record to
-flag them as a VIP.
+
+Let's work through the typical flow: our users visit a website and can choose
+from products that are in stock. When they add an item to their basket, we will
+reserve some stock for them. When an order is complete, we confirm the
+reservation, which causes us to send dispatch instructions to the warehouse.
+Let's also say, if this is the customer's third order, we want to update the
+customer record to flag them as a VIP.
 
 [[command_flow_diagram_1]]
 .Command Flow 1
@@ -135,12 +137,12 @@ database CRM
 @enduml
 ----
 
-We can think of each of these steps as a Command in our system: Reserve Stock,
-Confirm Reservation, Dispatch Goods, Make Customer VIP.
+We can think of each of these steps as a Command in our system: `Reserve_Stock`,
+`Confirm_Reservation`, `Dispatch_Goods`, `Make_Customer_VIP`...
 
 This style of architecture, where we create a microservice per database table,
 and treat our HTTP APIs as CRUD interfaces to anemic models is the most common
-way for people to approach service-oriented design.
+initial way for people to approach service-oriented design.
 
 This works _fine_ for systems that are very simple, but quickly degrades into
 a Distributed Ball of Mud.
