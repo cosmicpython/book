@@ -88,7 +88,7 @@ package repositories {
 
 services -> ProductRepository: get me the product for this sku
 services --> Product: allocate(orderline)
-Product -o Batch: has
+Product o-- Batch: has
 
 @enduml
 ----
