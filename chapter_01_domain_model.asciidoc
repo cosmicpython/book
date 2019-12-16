@@ -542,7 +542,7 @@ class Batch:
     def __init__(self, ref: Reference, sku: Sku, qty: Quantity):
         self.sku = sku
         self.reference = ref
-        self.available_quantity = qty
+        self._purchased_quantity = qty
 ----
 ====
 
