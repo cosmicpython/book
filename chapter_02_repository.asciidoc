@@ -498,7 +498,7 @@ We stick rigidly to using these methods for data access in our domain and our
 service layer. This self-imposed simplicity stops us from coupling our domain
 model to the database.
 
-Here's what an abstract base class for our repository would look like:
+Here's what an abstract base class (ABC) for our repository would look like:
 
 [[abstract_repo]]
 .The simplest possible repository (repository.py)
