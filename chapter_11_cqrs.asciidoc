@@ -19,17 +19,37 @@ So strap in, and see if you can spot the moment where the madness descends.
 Because you need to be on the lookout for that moment in your own life.
 
 
-=== Always Redirect After a POST
+=== Post/Redirect/Get
 
-If you've been doing web development, you're probably familiar with the convention
-to return a 302-redirect from a POST request.  That's an example of
-Command-Query Separation (CQS), which is at the sane end of the CQRS spectrum.
+If you've been doing web development, you're probably familiar with the
+post/redirect/get pattern. This is a technique where a web endpoint accepts an
+HTTP POST, and responds with a redirect to see the result. For example, we might
+accept a POST to `/batches` to create a new batch, and redirect the user to
+`/batches/123` to see their newly created batch. This approach fixes the
+problems that arise when users refresh the results page in their browser, or try
+to bookmark a results page.
 
-For an API, redirects don't apply, but the principle of POST-Redirect-GET
-is still a good one, and we're currently breaking that rule, because our
-`allocate` endpoint currently returns the batch ID.  Let's change it
-to return a simple OK message, and instead provide a new read-only
-endpoint to retrieve allocation state:
+In the case of a refresh, these problems can lead to our users double-submitting
+data, buying two sofas where they only needed one. In the case of a bookmark
+our hapless customers will end up with a broken page when they try to GET a
+POST endpoint.
+
+Both these problems happen because we're returning data in response to a write
+operation. Post/Redirect/Get side-steps the issue by separating the read and
+write phases of our operation.
+
+This technique is a simple example of CQS - Command-Query Separation. In CQS we
+follow one simple rule: functions should either modify state, or answer
+questions, but never both. This makes software easier to reason about: we should
+always be able to ask "are the lights on?" without flicking the light switch.
+
+As we'll see, we can use the CQS principle to make our systems faster and more
+scalable, but first, let's fix the CQS violation in our existing code. A few
+chapters ago we introduced an `allocate` endpoint that takes an order and
+calls our service layer to allocate some stock. At the end of the call, we
+return a 200 OK and the batch id. That's led to some ugly design flaws so that
+we can get the data we need. Let's change it to return a simple OK message, and
+instead provide a new read-only endpoint to retrieve allocation state:
 
 
 [[api_test_does_get_after_post]]
