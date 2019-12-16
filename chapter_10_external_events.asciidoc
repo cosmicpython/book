@@ -109,9 +109,9 @@ image::images/command_flow_diagram_1.png[]
 @startuml
 
 actor Customer
-boundary Warehouse
 entity Orders
 entity Batches
+entity Warehouse
 database CRM
 
 
@@ -119,19 +119,15 @@ database CRM
 
   Customer -> Orders: Add product to basket
   Orders -> Batches: Reserve stock
-  Batches --> Orders: Confirmed
-  Orders --> Customer: OK
 
 == Purchase ==
 
   Customer -> Orders: Place order
+  activate Orders
   Orders -> Batches: Confirm reservation
   Batches -> Warehouse: Dispatch goods
-  Warehouse --> Batches: Dispatch received
-  Batches --> Orders: Reservation confirmed
   Orders -> CRM: Update customer record
-  CRM --> Orders: Record updated
-  Orders --> Customer: Thanks for your order!
+  deactivate Orders
 
 
 @enduml
@@ -167,20 +163,19 @@ image::images/command_flow_diagram_2.png[]
 @startuml
 
 actor w as "Warehouse worker"
-boundary Warehouse
-entity Orders
+entity Warehouse
 entity Batches
+entity Orders
 database CRM
 
 
-  w -> Warehouse: Stock damaged
+  w -> Warehouse: Report stock damage
+  activate Warehouse
   Warehouse -> Batches: Decrease available stock
   Batches -> Batches: Reallocate orders
-  Batches -> Website: Allocation changed
-  Orders -> CRM: Update order
-  CRM --> Website: Updated
-  Website --> Batches: Order history updated
-  Batches --> Warehouse: Stock decreased
+  Batches -> Orders: Update order status
+  Orders -> CRM: Update order history
+  deactivate Warehouse
 
 @enduml
 ----
