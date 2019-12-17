@@ -589,7 +589,7 @@ def try_to_allocate(orderid, sku, exceptions):
             time.sleep(0.2)
             uow.commit()
     except Exception as e:
-        print(traceback.format_exc())
+        logging.exception("Swallowing unexpected exception in 'try_to_allocate'")
         exceptions.append(e)
 ----
 ====
