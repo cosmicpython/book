@@ -25,14 +25,13 @@ If you've been doing web development, you're probably familiar with the
 post/redirect/get pattern. This is a technique where a web endpoint accepts an
 HTTP POST, and responds with a redirect to see the result. For example, we might
 accept a POST to `/batches` to create a new batch, and redirect the user to
-`/batches/123` to see their newly created batch. This approach fixes the
-problems that arise when users refresh the results page in their browser, or try
-to bookmark a results page.
+`/batches/123` to see their newly created batch.
 
-In the case of a refresh, these problems can lead to our users double-submitting
-data, buying two sofas where they only needed one. In the case of a bookmark
-our hapless customers will end up with a broken page when they try to GET a
-POST endpoint.
+This approach fixes the problems that arise when users refresh the results page
+in their browser, or try to bookmark a results page. In the case of a refresh,
+it can lead to our users double-submitting data, buying two sofas where they
+only needed one. In the case of a bookmark our hapless customers will end up
+with a broken page when they try to GET a POST endpoint.
 
 Both these problems happen because we're returning data in response to a write
 operation. Post/Redirect/Get side-steps the issue by separating the read and
