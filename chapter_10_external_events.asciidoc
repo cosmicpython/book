@@ -93,12 +93,12 @@ Rel(batches, warehouse, "Sends instructions to")
 
 Each "thing" in our system has an associated service, which exposes an HTTP API.
 
-Let's work through the typical flow: our users visit a website and can choose
-from products that are in stock. When they add an item to their basket, we will
-reserve some stock for them. When an order is complete, we confirm the
-reservation, which causes us to send dispatch instructions to the warehouse.
-Let's also say, if this is the customer's third order, we want to update the
-customer record to flag them as a VIP.
+Let's work through an example happy-path flow in <<command_flow_diagram_1>>:
+our users visit a website and can choose from products that are in stock. When
+they add an item to their basket, we will reserve some stock for them. When an
+order is complete, we confirm the reservation, which causes us to send dispatch
+instructions to the warehouse. Let's also say, if this is the customer's third
+order, we want to update the customer record to flag them as a VIP.
 
 [[command_flow_diagram_1]]
 .Command Flow 1
@@ -152,7 +152,7 @@ might mean we need to re-allocate a customer's order.
 Where does this logic go?
 
 Well, the warehouse system knows that the stock has been damaged, so maybe it
-should own this process?
+should own this process, as shown in <<command_flow_diagram_2>>?
 
 [[command_flow_diagram_2]]
 .Command Flow 2
@@ -192,9 +192,29 @@ how services very quickly get tangled up together.
 
 "Things break" is a universal law of software engineering. What happens in our
 system when one of our requests fails? Let's say that a network error happens
-right after we take a user's order for 3 MISBEGOTTEN-RUG.
+right after we take a user's order for 3 MISBEGOTTEN-RUG,
+<<command_flow_diagram_with_error>>.
 
-TODO: Sequence diagram, allocation fails at DB call
+[[command_flow_diagram_with_error]]
+.Command Flow with Error
+image::images/command_flow_diagram_with_error.png[]
+[role="image-source"]
+----
+[plantuml, command_flow_diagram_with_error]
+@startuml
+
+actor Customer
+entity Orders
+entity Batches
+
+Customer -> Orders: Place order
+Orders -[#red]x Batches: Confirm reservation
+hnote right: network error
+Orders --> Customer: ???
+
+@enduml
+----
+
 
 We have two options here: we can place the order anyway, and leave it
 unallocated, or we can refuse to take the order since the allocation can't be
