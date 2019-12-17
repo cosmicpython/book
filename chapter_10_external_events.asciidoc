@@ -85,17 +85,17 @@ Our new flow will look like this:
 
 ////
 skinparam sequence {
-	ArrowColor DeepSkyBlue
-	ActorBorderColor DeepSkyBlue
-	LifeLineBorderColor blue
-	LifeLineBackgroundColor #A9DCDF
-	
-	EntityBorderColor DeepSkyBlue
-	EntityBackgroundColor DodgerBlue
-	EntityFontName Guardian Sans Cond Black
-	EntityFontSize 17
-	EntityFontColor #A9DCDF
-	
+    ArrowColor DeepSkyBlue
+    ActorBorderColor DeepSkyBlue
+    LifeLineBorderColor blue
+    LifeLineBackgroundColor #A9DCDF
+    
+    EntityBorderColor DeepSkyBlue
+    EntityBackgroundColor DodgerBlue
+    EntityFontName Guardian Sans Cond Black
+    EntityFontSize 17
+    EntityFontColor #A9DCDF
+    
 }
 ////
 
@@ -104,27 +104,9 @@ skinparam sequence {
 image::images/reallocation_sequence_diagram.png[]
 [role="image-source"]
 ----
-[plantuml, reallocation_sequence_diagram]
+[plantuml, reallocation_sequence_diagram, config=/home/harry/workspace/cosmicpython/book/plantuml.cfg]
+
 @startuml
-
-skinparam default {
-    FontName Guardian Sans Cond Regular
-	FontSize 18
-    FontColor Black
-    Padding 100
-}
-skinparam sequencelifeline {
-    BorderColor RoyalBlue
-}
-skinparam arrow {
-    Color RoyalBlue
-}
-
-skinparam participant {
-	BackgroundColor Lavender
-    BorderColor RoyalBlue
-}
-
 
 Redis -> MessageBus : BatchQuantityChanged event
 
