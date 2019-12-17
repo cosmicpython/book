@@ -239,7 +239,7 @@ Orders --> Customer: ???
 
 We have two options here: we can place the order anyway, and leave it
 unallocated, or we can refuse to take the order since the allocation can't be
-guaranteed. The failure state of our allocation service has bubbled up and is
+guaranteed. The failure state of our batches service has bubbled up and is
 affecting the reliability of our order service.
 
 When two things have to be changed together, we say that they are _coupled_. We
@@ -314,11 +314,11 @@ Why is this better? Firstly, because things can fail independently, it's easier
 to handle degraded behavior: we can still take orders if the allocations system
 is having a bad day.
 
-// TODO: NEED EXAMPLES OF PROCESS CHANGES FOR THIS PARAGRAPH TO WORK!!
-
 Secondly, we're reducing the strength of coupling between our systems. If we
 need to change the order of operations, or to introduce new steps in the process
 we can do that locally.
+
+// TODO: need to add an example of a process change.  And/or explain "locally"
 
 
 === Using a Redis Pubsub Channel for Integration
