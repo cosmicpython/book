@@ -88,7 +88,7 @@ package repositories {
 
 services -> ProductRepository: get me the product for this sku
 services --> Product: allocate(orderline)
-Product -o Batch: has
+Product o-- Batch: has
 
 @enduml
 ----
@@ -624,7 +624,7 @@ def test_concurrent_updates_to_version_are_not_allowed(postgres_session_factory)
         dict(sku=sku),
     )
     assert version == 2  #<2>
-    exception = [exceptions]
+    [exception] = exceptions
     assert 'could not serialize access due to concurrent update' in str(exception)  #<3>
 
     orders = list(session.execute(
