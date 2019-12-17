@@ -55,7 +55,7 @@ events|in                                              events|out
 ----
 
 
-=== Distributed Ball of Mud ===
+=== Distributed Ball of Mud, and Thinking in Nouns
 
 Before we get into that, let's talk about the alternatives. We regularly talk to
 engineers who are trying to build out a Microservices architecture. Often they
@@ -220,7 +220,7 @@ closely related, but weak connascence at a distance.
 
 In our first example of a distributed ball of mud, we see Connascence of
 Execution - multiple components need to know the correct order of work for an
-operation to be successful. 
+operation to be successful.
 
 When thinking about error conditions here, we're talking about Connascence of
 Timing - multiple things have to happen one after another for the operation to
@@ -232,7 +232,7 @@ components only need to agree on the name of an event, and the names of fields
 it carries.
 
 We can never completely avoid coupling, except by having our software not talk
-to any other software. What we want is to avoid _inappropriate_ coupling. 
+to any other software. What we want is to avoid _inappropriate_ coupling.
 Connascence provides a mental model for understanding the strength and type of
 coupling inherent in different architectural styles. Read all about it at
 http://www.connascence.io[connascence.io]
@@ -241,12 +241,21 @@ http://www.connascence.io[connascence.io]
 
 === The Alternative: Temporal Decoupling using Asynchronous Messaging
 
-//TODO: link back to the point about nouns vs verbs.
+We've already seen part of the answer, which is that we should think in
+terms of verbs, not nouns.  Our domain model is about modelling a business
+process; it's not a static data model about a thing, it's a model of a verb.
 
-Really we want to make sure that when we place an order, the order is placed.
-Everything else can happen _later_ so long as it happens. If that sounds
-familiar, it should! This is the same requirement we have of our aggregates and
-commands.
+So instead of thinking about a system for orders and a system for batches,
+we think about a system for _ordering_ and a system for _allocating_, and
+so on.
+
+When we separate things this way, it's a little easier to see which system
+should be responsible for what.  When thinking about _ordering_, really we want
+to make sure that when we place an order, the order is placed. Everything else
+can happen _later_ so long as it happens.
+
+NOTE: If this sounds familiar, it should!  Segregating responsibilities is
+    the same process we went through when designing our aggregates and commands.
 
 Like aggregates, microservices should be _consistency boundaries_. Between two
 services, we can accept eventual consistency, and that means we don't need to
@@ -261,7 +270,7 @@ upstream systems, and we want our system to publish "allocated" events for
 downstream systems to listen to.
 
 Why is this better? Firstly, because things can fail independently, it's easier
-to handle degraded behaviour: we can still take orders if the allocations system
+to handle degraded behavior: we can still take orders if the allocations system
 is having a bad day.
 
 // TODO: NEED EXAMPLES OF PROCESS CHANGES FOR THIS PARAGRAPH TO WORK!!
@@ -273,10 +282,11 @@ we can do that locally.
 
 === Using a Redis Pubsub Channel for Integration
 
-We'll need some way of getting events out of one system and into another, like
-our message bus, but for services. This piece of infrastructure is often called
-a Message Broker. The role of a message broker is to take messages from
-publishers and deliver them to subscribers. 
+Let's see how it will all work concretely. We'll need some way of getting
+events out of one system and into another, like our message bus, but for
+services. This piece of infrastructure is often called a Message Broker. The
+role of a message broker is to take messages from publishers and deliver them
+to subscribers.
 
 At MADE.com we use https://eventstore.org/[Eventstore]; Kafka or RabbitMQ
 are valid alternatives. A lightweight solution based on Redis
