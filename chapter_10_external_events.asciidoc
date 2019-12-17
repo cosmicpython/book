@@ -133,6 +133,27 @@ database CRM
 @enduml
 ----
 
+////
+
+TODO (EJ)
+
+I'm having a little bit of trouble understanding the sequence diagrams because
+I'm unsure what the arrow semantics are. The couple things I've noticed are:
+
+* PlantUML renders synchronous messages with a non-standard arrowhead that
+  looks like a cross between the synch/async messages in standard UML. Other
+  users have had this complaint and there is a fix that just involves adding
+  the directive skinparam style strictuml.
+
+* The use of different line-types and arrowheads is in-consistent between
+  diagrams, which makes things harder to understand. (Or I am mis-understanding
+  the examples.)
+
+A legend that explicitly defines the arrow meanings would be helpful. And maybe
+developing examples over the preceding chapters would build familiarity with
+the different symbols.
+////
+
 We can think of each of these steps as a Command in our system: `Reserve_Stock`,
 `Confirm_Reservation`, `Dispatch_Goods`, `Make_Customer_VIP`...
 
