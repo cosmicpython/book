@@ -9,16 +9,16 @@ allowing us to decouple our model layer from the data layer.  We'll see a
 concrete example of how this simplifying abstraction makes our system more
 testable by hiding the complexities of the database.
 
-<<chapter_02_class_diagram>> shows a little preview of what we're going to
+<<repository_class_diagram>> shows a little preview of what we're going to
 build: a `Repository` class that sits between `SqlAlchemy` (our ORM) and our
 Domain Model's `Batch` classes.
 
-[[chapter_02_class_diagram]]
+[[repository_class_diagram]]
 .Batch, Repository and SqlAlchemy
-image::images/chapter_02_class_diagram.png[]
+image::images/repository_class_diagram.png[]
 [role="image-source"]
 ----
-[plantuml, chapter_02_class_diagram]
+[plantuml, repository_class_diagram, config=plantuml.cfg]
 @startuml
 
 package allocation {

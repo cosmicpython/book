@@ -455,20 +455,25 @@ class Batch:
 image::images/model_diagram.png[]
 [role="image-source"]
 ----
-[ditaa, model_diagram]
-+=====================+
-| Batch               |
-+---------------------+
-| reference           |
-| sku                 |
-| eta                 |
-| _purchased_quantity |       +=============+
-| _allocations ------------->>| OrderLine   |
-+---------------------+       +-------------+
-                              | order_id    |
-                              | sku         |
-                              | qty         |
-                              +-------------+
+[plantuml, model_diagram, config=plantuml.cfg]
+
+left to right direction
+
+class Batch {
+    reference
+    sku
+    eta
+    _purchased_quantity
+    _allocations
+}
+
+class OrderLine {
+    order_id
+    sku
+    qty
+}
+
+Batch::_allocations o-- OrderLine
 ----
 
 

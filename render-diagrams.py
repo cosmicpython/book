@@ -39,6 +39,8 @@ def _add_dots(source, image_id):
     lines = source.splitlines()
     assert lines[0].startswith('[')
     assert image_id in lines[0]
+    plantuml_cfg = str(Path('plantuml.cfg').absolute())
+    lines[0] = lines[0].replace('config=plantuml.cfg', f'config={plantuml_cfg}')
     lines.insert(1, '....')
     lines.append('....')
     return '\n'.join(lines)
@@ -50,7 +52,7 @@ def render_image(source, image_id):
     tf.write_text(source)
     cmd = ['asciidoctor', '-r', 'asciidoctor-diagram', '-a', f'imagesoutdir={IMAGES_DIR}', str(tf)]
     print(' '.join(cmd))
-    subprocess.run(cmd)
+    subprocess.run(cmd, check=True)
 
 if __name__ == '__main__':
     main()
