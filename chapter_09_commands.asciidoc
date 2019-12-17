@@ -408,7 +408,7 @@ exponentially increasing back-off period".
 
 
 [[messagebus_handle_event_with_retry]]
-.Handle with Retry
+.Handle with Retry (src/allocation/messagebus.py)
 ====
 [source,python]
 [role="skip"]
@@ -428,8 +428,9 @@ def handle_event(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):
                 with attempt:
                   print('handling event', event, 'with handler', handler)
                   handler(event, uow=uow)
-        except RetryError:
-            print('Failed to handle event, retrying')
+        except RetryError as retry_failure:
+            n = failure.last_attempt.attempt_number
+            print(f'Failed to handle event {n} times, giving up!')
 
 ----
 ====
