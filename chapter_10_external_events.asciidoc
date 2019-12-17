@@ -83,6 +83,22 @@ NOTE: We're glossing over the complexity involved in choosing the right messagin
 
 Our new flow will look like this:
 
+////
+skinparam sequence {
+	ArrowColor DeepSkyBlue
+	ActorBorderColor DeepSkyBlue
+	LifeLineBorderColor blue
+	LifeLineBackgroundColor #A9DCDF
+	
+	EntityBorderColor DeepSkyBlue
+	EntityBackgroundColor DodgerBlue
+	EntityFontName Guardian Sans Cond Black
+	EntityFontSize 17
+	EntityFontColor #A9DCDF
+	
+}
+////
+
 [[reallocation_sequence_diagram_with_redis]]
 .Sequence diagram for reallocation flow
 image::images/reallocation_sequence_diagram.png[]
@@ -90,6 +106,26 @@ image::images/reallocation_sequence_diagram.png[]
 ----
 [plantuml, reallocation_sequence_diagram]
 @startuml
+
+skinparam default {
+    FontName Guardian Sans Cond Regular
+	FontSize 18
+    FontColor Black
+    Padding 100
+}
+skinparam sequencelifeline {
+    BorderColor RoyalBlue
+}
+skinparam arrow {
+    Color RoyalBlue
+}
+
+skinparam participant {
+	BackgroundColor Lavender
+    BorderColor RoyalBlue
+}
+
+
 Redis -> MessageBus : BatchQuantityChanged event
 
 group BatchQuantityChanged Handler + Unit of Work 1
