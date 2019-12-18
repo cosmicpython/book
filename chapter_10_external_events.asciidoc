@@ -83,22 +83,6 @@ NOTE: We're glossing over the complexity involved in choosing the right messagin
 
 Our new flow will look like this:
 
-////
-skinparam sequence {
-    ArrowColor DeepSkyBlue
-    ActorBorderColor DeepSkyBlue
-    LifeLineBorderColor blue
-    LifeLineBackgroundColor #A9DCDF
-    
-    EntityBorderColor DeepSkyBlue
-    EntityBackgroundColor DodgerBlue
-    EntityFontName Guardian Sans Cond Black
-    EntityFontSize 17
-    EntityFontColor #A9DCDF
-    
-}
-////
-
 [[reallocation_sequence_diagram_with_redis]]
 .Sequence diagram for reallocation flow
 image::images/reallocation_sequence_diagram_with_redis.png[]
