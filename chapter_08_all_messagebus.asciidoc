@@ -466,7 +466,7 @@ back to our existing handler for allocation, to be re-allocated.
 image::images/reallocation_sequence_diagram.png[]
 [role="image-source"]
 ----
-[plantuml, reallocation_sequence_diagram]
+[plantuml, reallocation_sequence_diagram, config=plantuml.cfg]
 @startuml
 API -> MessageBus : BatchQuantityChanged event
 
