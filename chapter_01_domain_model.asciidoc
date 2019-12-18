@@ -122,8 +122,14 @@ image::images/allocation_context_diagram.png[]
 ----
 [plantuml, allocation_context_diagram]
 @startuml Allocation Context Diagram
-!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4.puml
 !includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Context.puml
+
+skinparam roundCorner 20
+skinparam Padding 2
+skinparam wrapWidth 200
+skinparam default {
+    FontName Guardian Sans Cond Regular
+}
 
 System(systema, "Allocation", "Allocates stock to customer orders")
 
