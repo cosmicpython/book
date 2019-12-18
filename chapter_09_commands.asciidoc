@@ -126,9 +126,9 @@ def handle_command(command, uow: unit_of_work.AbstractUnitOfWork):  #<3>
     try:
         handler = COMMAND_HANDLERS[type(command)]
         return handler(command, uow=uow)
-    except Exception as e:
+    except Exception:
         logging.exception('Exception handling command %s', command)
-        raise e  #<3>
+        raise  #<3>
 
 
 EVENT_HANDLERS = {

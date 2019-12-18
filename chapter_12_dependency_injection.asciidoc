@@ -251,7 +251,7 @@ What else changes in the bus?
             self.call_handler_with_dependencies(handler, command)  #<2>
         except Exception:
             logging.exception('Exception handling command %s', command)
-            raise e
+            raise
 ----
 ====
 
