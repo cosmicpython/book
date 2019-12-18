@@ -81,7 +81,8 @@ def allocate_endpoint():
         request.json['qty'],
     )
     try:
-        batchref = services.allocate(line, unit_of_work.start)
+        uow = unit_of_work.SqlAlchemyUnitOfWork()
+        batchref = services.allocate(line, uow)
     except (model.OutOfStock, services.InvalidSku) as e:
         send_mail(
             'out of stock',
