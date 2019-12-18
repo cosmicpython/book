@@ -35,6 +35,7 @@ def render_images(chapter_name):
             code = next_element.cssselect('pre')[0].text
             render_image(code, image_id)
 
+
 def _add_dots(source, image_id):
     lines = source.splitlines()
     assert lines[0].startswith('[')
@@ -45,14 +46,19 @@ def _add_dots(source, image_id):
     lines.append('....')
     return '\n'.join(lines)
 
+
 def render_image(source, image_id):
     source = _add_dots(source, image_id)
     print(source)
+    target = Path(f'images/{image_id}.png')
+    if target.exists():
+        target.unlink()
     tf = Path(tempfile.NamedTemporaryFile().name)
     tf.write_text(source)
     cmd = ['asciidoctor', '-r', 'asciidoctor-diagram', '-a', f'imagesoutdir={IMAGES_DIR}', str(tf)]
     print(' '.join(cmd))
     subprocess.run(cmd, check=True)
+
 
 if __name__ == '__main__':
     main()
