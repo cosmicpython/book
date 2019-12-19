@@ -8,7 +8,7 @@ IMAGES_DIR = Path(__file__).absolute().parent / 'images'
 
 
 def main():
-    for fn in Path(__file__).absolute().parent.glob('*.html'):
+    for fn in sorted(Path(__file__).absolute().parent.glob('*.html')):
         chapter_name = fn.name.replace('.html', '')
         if chapter_name == 'book':
             continue
