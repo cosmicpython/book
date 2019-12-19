@@ -72,21 +72,20 @@ we've named our system after a noun, _batches_, instead of _allocation_).
 image::images/batches_context_diagram.png[]
 [role="image-source"]
 ----
-[plantuml, batches_context_diagram]
+[plantuml, batches_context_diagram, config=plantuml.cfg]
 @startuml Batches Context Diagram
-!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4.puml
 !includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Context.puml
 
+skinparam roundCorner 20
+
 System(batches, "Batches", "Knows about available stock")
-
 Person(customer, "Customer", "Wants to buy furniture")
-
 System(orders, "Orders", "Knows about customer orders")
 System(warehouse, "Warehouse", "Knows about shipping instructions")
 
-Rel(customer, orders, "Places order with")
-Rel(orders, batches, "Reserves stock with")
-Rel(batches, warehouse, "Sends instructions to")
+Rel_R(customer, orders, "Places order with")
+Rel_D(orders, batches, "Reserves stock with")
+Rel_D(batches, warehouse, "Sends instructions to")
 
 @enduml
 ----
@@ -105,7 +104,7 @@ order, we want to update the customer record to flag them as a VIP.
 image::images/command_flow_diagram_1.png[]
 [role="image-source"]
 ----
-[plantuml, command_flow_diagram_1]
+[plantuml, command_flow_diagram_1, config=plantuml.cfg]
 @startuml
 
 actor Customer
@@ -180,7 +179,7 @@ should own this process, as shown in <<command_flow_diagram_2>>?
 image::images/command_flow_diagram_2.png[]
 [role="image-source"]
 ----
-[plantuml, command_flow_diagram_2]
+[plantuml, command_flow_diagram_2, config=plantuml.cfg]
 @startuml
 
 actor w as "Warehouse worker"
@@ -221,7 +220,7 @@ right after we take a user's order for 3 MISBEGOTTEN-RUG,
 image::images/command_flow_diagram_with_error.png[]
 [role="image-source"]
 ----
-[plantuml, command_flow_diagram_with_error]
+[plantuml, command_flow_diagram_with_error, config=plantuml.cfg]
 @startuml
 
 actor Customer
@@ -344,11 +343,13 @@ Our new flow will look like this:
 
 [[reallocation_sequence_diagram_with_redis]]
 .Sequence diagram for reallocation flow
-image::images/reallocation_sequence_diagram.png[]
+image::images/reallocation_sequence_diagram_with_redis.png[]
 [role="image-source"]
 ----
-[plantuml, reallocation_sequence_diagram]
+[plantuml, reallocation_sequence_diagram_with_redis, config=plantuml.cfg]
+
 @startuml
+
 Redis -> MessageBus : BatchQuantityChanged event
 
 group BatchQuantityChanged Handler + Unit of Work 1

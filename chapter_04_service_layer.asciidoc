@@ -17,36 +17,34 @@ By the end of this chapter, we'll have added a Flask API that will talk to
 the Service Layer, which will serve as the entrypoint to our Domain Model.
 By making the service layer depend on the `AbstractRepository`, we'll be
 able to unit test it using `FakeRepository`, and then run it in real life
-using `SqlAlchemyRepository`.  <<chapter_03_class_diagram>> is a class
+using `SqlAlchemyRepository`.  <<service_layer_class_diagram>> is a class
 diagram showing where we're heading.
 
-[[chapter_03_class_diagram]]
+[[service_layer_class_diagram]]
 .Our target architecture for the end of this chapter
-image::images/chapter_03_class_diagram.png[]
+image::images/service_layer_class_diagram.png[]
 
 [role="image-source"]
 ----
-[plantuml, chapter_03_class_diagram]
+[plantuml, service_layer_class_diagram, config=plantuml.cfg]
 @startuml
+hide empty members
+left to right direction
 
-package api {
+package "Flask API" as api {
 
-  class Flask {
-    allocate_endpoint()
+  class "allocate_endpoint()" as allocate_endpoint {
   }
+  hide allocate_endpoint circle
 }
 
-package sqlalchemy {
-  class Session {
-    query()
-    add()
-  }
-}
 
 package allocation {
 
-  class services {
-    allocate(line, repository, session)
+  package services {
+    class "allocate(line, repository, session)" as allocate {
+    }
+    hide allocate circle
   }
 
   abstract class AbstractRepository {
@@ -61,7 +59,7 @@ package allocation {
 
 
   class FakeRepository {
-    batches: List<Batch>
+    batches: List[Batch]
   }
 
   class BatchRepository {
@@ -70,14 +68,22 @@ package allocation {
 
 }
 
-services -> AbstractRepository: uses
+package sqlalchemy {
+  class Session {
+    query()
+    add()
+  }
+}
+
+
+allocate -> AbstractRepository: uses
 AbstractRepository -> Batch : stores
 
 AbstractRepository <|-- FakeRepository : implements
 AbstractRepository <|-- BatchRepository : implements
-Flask --> services : invokes
+allocate_endpoint --> allocate : invokes
 
-BatchRepository ---> Session : abstracts
+BatchRepository --> Session : abstracts
 @enduml
 ----
 

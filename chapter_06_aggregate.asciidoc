@@ -18,21 +18,27 @@ service (<<chapter_08_before_diagram>>):
 image::images/before_aggregates_diagram.png[]
 [role="image-source"]
 ----
-[plantuml, before_aggregates_diagram]
+[plantuml, before_aggregates_diagram, config=plantuml.cfg]
 @startuml
 
-class services {
-    allocate()
+package "Service Layer" as services {
+    class "allocate()" as allocate {
+    }
 }
 
+hide allocate circle
+hide allocate members
 
-package domain_model {
+
+package "Domain Model" as domain_model {
 
   class Batch {
   }
 
-  class allocate {
+  class "allocate()" as allocate_domain_service {
   }
+    hide allocate_domain_service circle
+    hide allocate_domain_service members
 }
 
 
@@ -45,7 +51,7 @@ package repositories {
 }
 
 services -> BatchRepository: list all batches
-services --> allocate: allocate(orderline, batches)
+services --> allocate_domain_service: allocate(orderline, batches)
 
 @enduml
 ----
@@ -59,15 +65,19 @@ allocate against (<<after_aggregates_diagram>>):
 image::images/after_aggregates_diagram.png[]
 [role="image-source"]
 ----
-[plantuml, after_aggregates_diagram]
+[plantuml, after_aggregates_diagram, config=plantuml.cfg]
 @startuml
 
-class services {
-    allocate()
+package "Service Layer" as services {
+    class "allocate()" as allocate {
+    }
 }
 
+hide allocate circle
+hide allocate members
 
-package domain_model {
+
+package "Domain Model" as domain_model {
 
   class Product {
     allocate()
@@ -87,8 +97,8 @@ package repositories {
 }
 
 services -> ProductRepository: get me the product for this sku
-services --> Product: allocate(orderline)
-Product o-- Batch: has
+services --> Product: product.allocate(orderline)
+Product o- Batch: has
 
 @enduml
 ----
@@ -480,7 +490,7 @@ with `version=4`, and the other update will be rejected.
 image::images/version_numbers_sequence_diagram.png[]
 [role="image-source"]
 ----
-[plantuml, version_numbers_sequence_diagram]
+[plantuml, version_numbers_sequence_diagram, config=plantuml.cfg]
 @startuml
 
 entity Model

@@ -122,8 +122,14 @@ image::images/allocation_context_diagram.png[]
 ----
 [plantuml, allocation_context_diagram]
 @startuml Allocation Context Diagram
-!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4.puml
 !includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Context.puml
+
+skinparam roundCorner 20
+skinparam Padding 2
+skinparam wrapWidth 200
+skinparam default {
+    FontName Guardian Sans Cond Regular
+}
 
 System(systema, "Allocation", "Allocates stock to customer orders")
 
@@ -144,8 +150,6 @@ Rel_U(warehouse, customer, "Dispatches goods to")
 
 @enduml
 ----
-
-//TODO: illustration text is cut off
 
 For the purposes of this book, we're imagining a situation where the business
 decides to implement an exciting new way of allocating stock.  Until now, the
@@ -455,20 +459,26 @@ class Batch:
 image::images/model_diagram.png[]
 [role="image-source"]
 ----
-[ditaa, model_diagram]
-+=====================+
-| Batch               |
-+---------------------+
-| reference           |
-| sku                 |
-| eta                 |
-| _purchased_quantity |       +=============+
-| _allocations ------------->>| OrderLine   |
-+---------------------+       +-------------+
-                              | order_id    |
-                              | sku         |
-                              | qty         |
-                              +-------------+
+[plantuml, model_diagram, config=plantuml.cfg]
+
+left to right direction
+hide empty members
+
+class Batch {
+    reference
+    sku
+    eta
+    _purchased_quantity
+    _allocations
+}
+
+class OrderLine {
+    order_id
+    sku
+    qty
+}
+
+Batch::_allocations o-- OrderLine
 ----
 
 
