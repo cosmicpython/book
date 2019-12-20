@@ -13,6 +13,18 @@ created yet, that's why we called the API. We're going to fix that conceptual
 wart by introducing _Commands_, and show how they can be handled by the same
 message bus, but with slightly different rules.
 
+[TIP]
+====
+You can find our code for this chapter at
+https://github.com/cosmicpython/code/tree/chapter_09_commands[github.com/cosmicpython/code/tree/chapter_09_commands].
+
+----
+git clone https://github.com/cosmicpython/code.git cosmic-code && cd cosmic-code
+git checkout chapter_09_commands
+# or, if you want to code along, checkout the previous chapter's code.
+git checkout chapter_08_all_messagebus
+----
+====
 
 === Commands and Events
 

@@ -15,6 +15,18 @@ And we'll do it using a lovely piece of Python syntax, a context manager.
 // TODO: I feel like maybe we should waffle a bit more in this chapter? We
 // could talk about guidelines for what to mock?
 
+[TIP]
+====
+You can find our code for this chapter at
+https://github.com/cosmicpython/code/tree/chapter_05_uow[github.com/cosmicpython/code/tree/chapter_05_uow].
+
+----
+git clone https://github.com/cosmicpython/code.git cosmic-code && cd cosmic-code
+git checkout chapter_05_uow
+# or, if you want to code along, checkout the previous chapter's code.
+git checkout chapter_04_service_layer
+----
+====
 
 === The Unit of Work Collaborates with Repository(-Ies)
 

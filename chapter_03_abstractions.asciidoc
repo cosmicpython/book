@@ -6,6 +6,19 @@ We've talked about _abstractions_ quite a lot.  The Repository is an
 abstraction over permanent storage for example.  But what makes a good
 abstraction?  What do we want from them?  And how do they relate to testing?
 
+
+[TIP]
+====
+You can find our code for this chapter at
+https://github.com/cosmicpython/code/tree/appendix_project_structure[github.com/cosmicpython/code/tree/chapter_03_abstractions].
+
+----
+git clone https://github.com/cosmicpython/code.git
+git checkout chapter_03_abstractions
+----
+====
+
+
 A key theme in this book, hidden among the fancy patterns, is that we can use
 simple abstractions to hide messy details. When we're writing code for fun, or
 in a kata,footnote:[A code kata is a small contained programming challenge often

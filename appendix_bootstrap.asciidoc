@@ -16,6 +16,20 @@ root" in OO parlance, is a pattern that can help us to keep things tidy.  Let's
 take a look.
 
 
+[TIP]
+====
+You can find our code for this chapter at
+https://github.com/cosmicpython/code/tree/appendix_bootstrap[github.com/cosmicpython/code/tree/appendix_bootstrap].
+
+----
+git clone https://github.com/cosmicpython/code.git cosmic-code && cd cosmic-code
+git checkout appendix_bootstrap
+# or, if you want to code along, checkout the previous chapter's code.
+git checkout chapter_12_dependency_injection
+----
+====
+
+
 === Defaults and Config
 
 Where do we declare our defaults?  _config.py_ is one place, but we also do

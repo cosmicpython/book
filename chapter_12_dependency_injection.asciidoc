@@ -23,12 +23,25 @@ unease at the back of your mind at this point.  Let's bring it out into the
 open. We've currently shown two different ways of managing dependencies, and
 testing them.
 
+[TIP]
+====
+You can find our code for this chapter at
+https://github.com/cosmicpython/code/tree/chapter_12_dependency_injection[github.com/cosmicpython/code/tree/chapter_12_dependency_injection].
+
+----
+git clone https://github.com/cosmicpython/code.git cosmic-code && cd cosmic-code
+git checkout chapter_12_dependency_injection
+# or, if you want to code along, checkout the previous chapter's code.
+git checkout chapter_11_cqrs
+----
+====
+
+=== Implicit vs Explicit Dependencies
+
 TIP: If you haven't already, it's worth reading <<chapter_03_abstractions>>
     before continuing with this chapter, particularly the discussion of
     FCIS vs DI.
 
-
-=== Implicit vs Explicit Dependencies
 
 For our database dependency, we've built a careful framework of explicit
 dependencies and easy options for overriding them in tests. Our main handler
