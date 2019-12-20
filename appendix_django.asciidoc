@@ -260,7 +260,7 @@ def test_rolls_back_on_error():
 
 
 And the implementation is quite simple, although it took me a few
-goes to find what actual invocation of Django's transaction magic 
+goes to find what actual invocation of Django's transaction magic
 would work:
 
 
@@ -306,7 +306,7 @@ class DjangoUnitOfWork(AbstractUnitOfWork):
 
 === API: Django Views Are Adapters
 
-The Django _views.py_ file ends up being almost identical to the 
+The Django _views.py_ file ends up being almost identical to the
 old _flask_app.py_, because our architecture means it's a very
 thin wrapper around our service layer (which didn't change at all btw).
 
@@ -349,7 +349,7 @@ def allocate(request):
 ====
 
 
-=== Conclusions: Would You Bother?
+=== Conclusions: Would You Bother?  What else can you do?
 
 OK it works but it does feel like more effort than Flask/SQLAlchemy.  Why is
 that, and when might you still choose Django?
@@ -366,8 +366,31 @@ that, and when might you still choose Django?
 So why might you still do it?
 
 * when migrating an existing project that has Django?
-* or because you want the Django Admin? (but we'd have to say that's likely to
-  be a bad idea, it goes against the grain of wanting to decouple your model
-  and business logic from the ORM...)
-  
+
+* or because you want the Django Admin? But we'd have to say that's likely to
+  be a bad idea--it goes against the grain of wanting to decouple your model
+  and business logic from the ORM.  The Django admin makes sense for CRUD
+  apps.  If you have a more complex domain + workflow, it's less likely to
+  be useful.
+
+
+So what should you do if you want to apply some of the patterns in this book
+to a Django app?  We'd say:
+
+* Repository and Unit of Work pattern are going to be quite a lot of work. The
+  main thing they will buy you in the short term is faster unit tests, so
+  evaluate whether that feels worth it in your case.  In the longer term, they
+  decouple your app from Django and the database, so if you anticipate wanting
+  to migrate away from either of those, Repository and UoW are a good idea.
+
+* You can still do DDD and domain modelling with Django models, tightly coupled
+  as they are to the database; you may be slowed down by migrations, but
+  it shouldn't be fatal.  So follow the "fat models" pattern, push as much
+  logic down to your models as possible, and apply patterns like Entity,
+  Value Object and Aggregate
+
+* Service Layer might be of interest if you're seeing a lot of duplication in
+  your views.py.  It can be a good way of thinking about your use cases,
+  separately from your web endpoints.
+
 // TODO: Expand on this wrap-up?
