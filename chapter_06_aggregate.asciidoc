@@ -8,9 +8,9 @@ discuss the concept of a _consistency boundary_, and show how making it
 explicit can help us to build high-performance software without compromising
 maintainability.
 
-Here's a preview of where we're headed: we're going to move from a model where
-we need to retrieve all the batches and pass them to the `allocate()` domain
-service (<<chapter_08_before_diagram>>):
+Here's a preview of where we're headed: we're going to move from the model in 
+<<before_aggregates_diagram>>, where we need to retrieve all the batches and
+pass them to the `allocate()` domain service...
 
 
 [[before_aggregates_diagram]]
@@ -21,13 +21,15 @@ image::images/before_aggregates_diagram.png[]
 [plantuml, before_aggregates_diagram, config=plantuml.cfg]
 @startuml
 
+hide empty members
+
 package "Service Layer" as services {
     class "allocate()" as allocate {
     }
+    hide allocate circle
+    hide allocate members
 }
 
-hide allocate circle
-hide allocate members
 
 
 package "Domain Model" as domain_model {
@@ -50,15 +52,15 @@ package repositories {
 
 }
 
-services -> BatchRepository: list all batches
-services --> allocate_domain_service: allocate(orderline, batches)
+allocate -> BatchRepository: list all batches
+allocate --> allocate_domain_service: allocate(orderline, batches)
 
 @enduml
 ----
 
-...to a world in which there is a new _Aggregate_ class named `Product`
-that will be in charge of allocation, and choosing which batches to
-allocate against (<<after_aggregates_diagram>>):
+...to a world like <<after_aggregates_diagram>>, in which there is a new
+_Aggregate_ class named `Product` that will be in charge of allocation, and
+choosing which batches to allocate against:
 
 [[after_aggregates_diagram]]
 .After: ask Product to allocate against its batches
@@ -67,6 +69,8 @@ image::images/after_aggregates_diagram.png[]
 ----
 [plantuml, after_aggregates_diagram, config=plantuml.cfg]
 @startuml
+
+hide empty members
 
 package "Service Layer" as services {
     class "allocate()" as allocate {
@@ -96,8 +100,8 @@ package repositories {
 
 }
 
-services -> ProductRepository: get me the product for this sku
-services --> Product: product.allocate(orderline)
+allocate -> ProductRepository: get me the product for this sku
+allocate --> Product: product.allocate(orderline)
 Product o- Batch: has
 
 @enduml
@@ -315,7 +319,7 @@ NOTE: This `Product` might not look like what you'd expect a `Product`
 
 
 
-[[bounded_contexts_sidebar]].
+[[bounded_contexts_sidebar]]
 .Aggregates, Bounded Contexts and Microservices
 *******************************************************************************
 One of the most important contributions from Evans and the DDD community
