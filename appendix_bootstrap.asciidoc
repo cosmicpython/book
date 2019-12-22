@@ -214,6 +214,11 @@ One fix is to split the "pub" from the "sub", as in
 image::images/appendix_bootstrap_dependency_graph_2.png[]
 
 Now we have what our esteemed tech reviewer David Seddon would call a "rocky
-road architecture": all the dependencies flow in one direction.
+river architecture": all the dependencies flow in one direction.
+
+// (DS) thanks for the mention. typo road/river.
+// stricly speaking that's only have of the architecture, the other is about having
+// small layered subpackages.  but really that side of things is targeted towards
+// monoliths.
 
 TODO: alternative fix by making an abstract redis thingie?  

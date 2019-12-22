@@ -179,6 +179,8 @@ On top of which, declaring an explicit dependency is an implementation of
 the DIP--rather than having an (implicit) dependency on a _specific_ detail,
 we have an (explicit) dependency on an _abstraction_:
 
+// (DS) great section
+
 
 [[handler_with_explicit_dependency]]
 .The explicit dependency is more abstract (src/allocation/handlers.py)
@@ -203,6 +205,9 @@ all these other things?
 
 Since we've now made the messagebus into the core of our application, it's the
 ideal place to manage these dependencies.
+
+// TODO (DS): at this point i don't get what problem you're trying to solve.
+// Haven't you already implemented dependency injection?
 
 
 === Messagebus Does DI
@@ -240,6 +245,8 @@ class MessageBus:  #<1>
 <1> The messagebus becomes a class...
 <2> ...which asks for all our dependencies in one place
 <3> and stores them into a dict
+
+// TODO (DS) diff?
 
 What else changes in the bus? 
 
@@ -309,11 +316,17 @@ functions and event handlers and other entrypoints, our dependencies would be
 all over the place.
 
 
+// (DS) I'm a bit lost
+
+
 === Initializing DI in Our App Entrypoints
 
 In our flask app, we can just initialize the messagebus inline with
 the rest of our app config and setup, passing it in the actual
 dependencies we want to use:
+
+// TODO (DS): starting to make more sense once we get to here.  Could you start
+// with the entry point and then show the implementation after?
 
 [[flask_initialises_bus]]
 .Flask initializes a bus with the production dependencies (src/allocation/flask_app.py)

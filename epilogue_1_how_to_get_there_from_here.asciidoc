@@ -6,6 +6,9 @@ on a green-field new service, I know what to do.  But in the meantime, I'm
 here with my big ball of Django mud, and I don't see any way to get to your
 nice, clean, virginal, perfect, untainted, simplistic model.  Not from here.
 
+// (DS) - could "virginal" be offensive?  not to me, but, you know, it doesn't
+// need it...
+
 
 NOTE: TODO, chapter under construction
 
@@ -37,6 +40,11 @@ What's the problem with a monolith?
   layers?
 
 --> try to move towards Domain Model  and Service Layer.
+
+
+// (DS) the big benefit of our monolith, which has always caused pushback
+// at the mention of breaking it up, is that other people in the company can do
+// clever things with the data,  which is all in one place.
 
 
 

@@ -104,6 +104,8 @@ def test_unhappy_path_returns_400_and_error_message():
 ====
 
 
+// TODO (DS) this could be a diff
+
 OK what might the flask app look like?
 
 
@@ -163,6 +165,9 @@ WHAT THE ACTUAL F?  ARE YOU GUYS TRIPPING F-ING BALLS?
 Yes.  Yes we are.  Obviously don't do this.  Unless you have Reasons (TM). Let's come
 back to that and assume you don't.  You probably don't.  Go ahead and do
 something sane instead:
+
+// TODO (DS) this is funny. but it's a strange way of telling the story.  why
+// not come back to it later?
 
 
 [[view_using_repo]]
@@ -265,7 +270,7 @@ add a new `@property` to the domain model to be able to get the order ids
 allocated to a batch:
 
 [[orderids_on_batch]]
-.An argubably-uneccessary property on our model (src/allocation/model.py)
+.An arguably-unnecessary property on our model (src/allocation/model.py)
 ====
 [source,python]
 [role="skip"]
@@ -549,6 +554,18 @@ Flask -> User: some allocations
 OK.  Horrible, right?  But also, kinda, surprisingly nice, considering?  Our
 events and message bus give us a really nice place to do this sort of stuff,
 _if we need to_.
+
+////
+TODO (DS)
+
+Incidentally, I've just been implementing an elasticsearch-backed page for a
+read view on some models. That's basically the same approach (you normalise the
+data you care about into a document database). No one has batted an eyelid, so
+perhaps you're overstating how crazy this might appear.
+
+I do like the tone though, it's enjoyable to read. (I miss the
+wizened-old-architect conversation you had in the original blog post though).
+////
 
 And think how easy it'd be to swap our read model from Postgres to Redis or
 Memcached? Super-simple.  _We don't even need to change the integration test_.
