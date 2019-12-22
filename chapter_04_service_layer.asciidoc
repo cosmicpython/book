@@ -907,6 +907,12 @@ hazard, we again drop down to a low gear until we can pick up speed again.
 * Write the bulk of the tests for your system against the service layer. This
   offers a good trade-off between coverage, run-time, and efficiency. These
   tests tend to cover one code path of a feature and use fakes for IO.
+footnote:[
+A valid concern about writing tests at a higher level is that it can lead to
+combinatorial explosion, for more complex use cases.  In these cases dropping
+down to lower-level unit tests of the various collaborating domain objects
+can be useful.  But see also <<chapter_07_events_and_message_bus>> and
+<<fake_message_bus>>]
 
 * Maintain a small core of tests written against your domain model. These tests
   have highly-focused coverage, and are more brittle, but have the highest

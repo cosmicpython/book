@@ -155,16 +155,18 @@ class MessageBus:
 
     def handle_message(self, name: str, body: str):
         try:
-            message_type = next(type for type in EVENT_HANDLERS.keys() if type.__name__ == name)
+            message_type = next(mt for mt in EVENT_HANDLERS.keys() if mt.__name__ == name)
             message = message_type.from_json(body)
             self.handle([message])
         except StopIteration:
             raise KeyError(f"Unknown message name {name}")
         except ValidationError as e:
-            print(f'invalid message of type {name}\n'
-                  f'{body}\n'
-                  f'{e}')
-            raise
+            logging.error(
+                f'invalid message of type {name}\n'
+                f'{body}\n'
+                f'{e}'
+            )
+            raise e
 ----
 ====
 
@@ -313,7 +315,7 @@ If we get asked to create a batch that already exists, we'll log a warning and
 continue to the next message.
 
 [[skipmessage]]
-.Listing title
+.Raise SkipMessage exception for ignorable events (src/allocation/services.py)
 ====
 [source,python]
 ----
@@ -353,7 +355,7 @@ class MessageBus:
 ====
 
 
-There are a couple of pit-falls to be aware of here. Firstly, we need to be sure
+There are a couple of pitfalls to be aware of here. Firstly, we need to be sure
 that we're using the same unit of work that we use for the main logic of our
 use-case. Otherwise we open ourselves to irritating concurrency bugs.
 

@@ -271,15 +271,15 @@ events when rules are met. We will structure the code like this:
 
 
 [[vip_customer_listing]]
-.VIP Customer
+.VIP Customer (example code for a different project)
 ====
 [source,python]
 [role="skip"]
 ----
-class History (Aggregate):
+class History(Aggregate):
 
     def __init__(self, customer_id: int):
-        self.orders = Set() # Set[HistoryEntry]
+        self.orders = set() # Set[HistoryEntry]
         self.customer_id = customer_id
 
     def record_order(self, order_id: str, order_amount: int): #<1>

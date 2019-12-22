@@ -482,6 +482,10 @@ do them for you by magic!
 
 === Version Numbers
 
+// TODO (DS) this is really about concurrency, not version numbers.  it might
+// be worth mentioning that this is optimistic locking, and also give a nod
+// to pessimistic locking
+
 We've got our new aggregate so we've solved the conceptual problem of choosing
 an object to be in charge of consistency boundaries.  Let's now spend a little
 time talking about how to enforce data integrity at the database level.
