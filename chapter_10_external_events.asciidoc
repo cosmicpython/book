@@ -13,7 +13,7 @@ been allocated and needs to be sent to a customer?
 In this chapter we'd like to show how the events metaphor can be extended
 to encompass the way that we handle incoming and outgoing messages from the
 system. Internally, the core of our application is now a message processor.
-Let follow through on that so it becomes a message processor _externally_ as
+Let's follow through on that so it becomes a message processor _externally_ as
 well.  The application can receive events from external sources, via an
 external message bus (we'll use Redis pubsub queues as an example), and publish
 its outputs, in the form of events, back there as well.
@@ -368,11 +368,11 @@ Redis -> MessageBus : BatchQuantityChanged event
 
 group BatchQuantityChanged Handler + Unit of Work 1
     MessageBus -> Domain_Model : change batch quantity
-    Domain_Model -> MessageBus : emit AllocationRequired event(s)
+    Domain_Model -> MessageBus : emit Allocate command(s)
 end
 
 
-group AllocationRequired Handler + Unit of Work 2 (or more)
+group Allocate Handler + Unit of Work 2 (or more)
     MessageBus -> Domain_Model : allocate
     Domain_Model -> MessageBus : emit Allocated event(s)
 end
@@ -381,6 +381,7 @@ MessageBus -> Redis : publish to line_allocated channel
 @enduml
 ----
 
+// TODO (DS): hard to remember what the change is here
 
 === Test-Driving It All Using an End-To-End Test
 
@@ -608,6 +609,9 @@ a logical flow that runs over various event notifications. [...] It can be hard 
 see as it's not explicit in any program text; this can make it hard to debug
 and modify.
 ____
+
+
+// (DS) glad you included this warning.
 
 [[chapter_10_external_events_tradeoffs]]
 [options="header"]

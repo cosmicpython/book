@@ -58,6 +58,10 @@ image::images/message_bus_diagram.png[]
                      +-----------------+
 ----
 
+
+// TODO (DS) does the messagebus "handle" events? isnt that the handlers?  maybe
+// "routes"?
+
 [TIP]
 ====
 You can find our code for this chapter at
@@ -456,7 +460,7 @@ raised by the domain model.
 
 
 [[service_layer_raises_events]]
-.Listing title
+.Service layer calls messagebus.handle directly (src/allocation/services.py)
 ====
 [source,python]
 [role="skip"]
@@ -750,8 +754,11 @@ a|
   (adding asynchronous processing is possible but makes things even *more* confusing.)
 
 * More generally, event-driven workflows can be confusing because once things
-  are split across a chain of multiple handlers, there no single place
+  are split across a chain of multiple handlers, there is no single place
   in the system where you can understand how a request will be fulfilled.
+
+* You also open yourself up to the possibility of circular dependencies between your
+  event handlers, and infinite loops.
 
 a|
 |===
