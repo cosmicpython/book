@@ -8,9 +8,66 @@ If the Repository is our abstraction over the idea of persistent storage,
 the Unit of Work is our abstraction over the idea of _atomic operations_. It
 will allow us to finally, fully, decouple our Service Layer from the data layer.
 
-And we'll do it using a lovely piece of Python syntax, a context manager.
 
-// TODO DIAGRAM GOES HERE
+<<before_uow_diagram>> shows that, currently, there is a lot of communication
+across the layers of our infrastructure:  the API talks directly to the DB
+layer to start a session, it talks to the repository layer to initialize a
+`BatchRepository`, and it talks to the service layer to ask it to allocate.
+
+[[before_uow_diagram]]
+.UoW diagram
+image::images/before_uow_diagram.png[]
+[role="image-source"]
+----
+[plantuml, before_uow_diagram, config=plantuml.cfg]
+@startuml
+
+participant "Flask API" as API
+participant "Service Layer" as services
+participant BatchRepository
+participant DB
+
+API -> DB : start session
+API -> BatchRepository : init BatchRepository(session)
+API -> services: allocate(orderline, repo)
+services -> BatchRepository : list batches
+API -> DB: session.commit()
+
+@enduml
+----
+
+<<after_uow_diagram>> shows our target state: the Flask API now
+only does two things: it initializes a unit of work, and it invokes
+the service layer.  The service layer collaborates with the UoW, but
+neither the service layer nor Flask longer needs to talk directly to the DB.
+
+
+[[after_uow_diagram]]
+.UoW diagram
+image::images/after_uow_diagram.png[]
+[role="image-source"]
+----
+[plantuml, after_uow_diagram, config=plantuml.cfg]
+@startuml
+
+participant "Flask API" as API
+participant "Service Layer" as services
+participant UoW
+participant DB
+
+API -> UoW : init UoW
+API -> services : allocate(orderline, uow)
+services -> UoW : start UoW
+UoW -> DB: start session
+services -> UoW : list batches
+services -> services: allocate(orderline, batches)
+services -> UoW: commit()
+UoW -> DB: session.commit()
+
+@enduml
+----
+
+And we'll do it all using a lovely piece of Python syntax, a context manager.
 
 // TODO: I feel like maybe we should waffle a bit more in this chapter? We
 // could talk about guidelines for what to mock?
