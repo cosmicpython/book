@@ -38,8 +38,8 @@ Services -> DB: session.commit()
 
 <<after_uow_diagram>> shows our target state: the Flask API now
 only does two things: it initializes a unit of work, and it invokes
-the service layer.  The service layer collaborates with the UoW, but
-neither the service layer nor Flask longer needs to talk directly to the DB.
+the service.  The service collaborates with the UoW, but
+neither the service nor Flask longer needs to talk directly to the DB.
 
 
 [[after_uow_diagram]]
@@ -51,8 +51,10 @@ image::images/after_uow_diagram.png[]
 @startuml
 
 participant "Flask API" as API
-participant Services
-participant UoW
+box "Service Layer"
+    participant Services
+    participant UoW
+endbox
 participant DB
 
 API -> UoW : init UoW
