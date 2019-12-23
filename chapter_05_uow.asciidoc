@@ -31,7 +31,7 @@ API -> DB : start session
 API -> BatchRepository : init BatchRepository(session)
 API -> services: allocate(orderline, repo)
 services -> BatchRepository : list batches
-API -> DB: session.commit()
+services -> DB: session.commit()
 
 @enduml
 ----
