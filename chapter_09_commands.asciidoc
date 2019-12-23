@@ -126,21 +126,21 @@ def handle(message: Message, uow: unit_of_work.AbstractUnitOfWork):  #<1>
 def handle_event(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):  #<2>
     for handler in EVENT_HANDLERS[type(event)]:
         try:
-            print('handling event', event, 'with handler', handler, flush=True)
+            logging.debug('handling event %s with handler %s', event, handler)
             handler(event, uow=uow)
         except:  #<2>
-            print(f'Exception handling event {event}\n:{traceback.format_exc()}')
+            logging.exception('Exception handling event %s', event)
             continue
 
 
 def handle_command(command, uow: unit_of_work.AbstractUnitOfWork):  #<3>
-    print('handling command', command, flush=True)
+    logging.debug('handling command %s', command)
     try:
         handler = COMMAND_HANDLERS[type(command)]
         return handler(command, uow=uow)
-    except Exception as e:
-        print(f'Exception handling command {command}: {e}')
-        raise e  #<3>
+    except Exception:
+        logging.exception('Exception handling command %s', command)
+        raise  #<3>
 
 
 EVENT_HANDLERS = {
@@ -380,10 +380,10 @@ Let's look again at the 'handle_event' method from our message bus.
 def handle_event(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):
     for handler in EVENT_HANDLERS[type(event)]:
         try:
-            print('handling event', event, 'with handler', handler, flush=True)
+            logging.debug('handling event %s with handler %s', event, handler)
             handler(event, uow=uow)
         except:
-            print(f'Exception handling event {event}\n:{traceback.format_exc()}')
+            logging.exception('Exception handling event %s', event)
             continue
 ----
 ====
@@ -438,7 +438,7 @@ def handle_event(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):
             ):
 
                 with attempt:
-                  print('handling event', event, 'with handler', handler)
+                  logging.debug('handling event %s with handler %s', event, handler)
                   handler(event, uow=uow)
         except RetryError as retry_failure:
             n = retry_failure.last_attempt.attempt_number

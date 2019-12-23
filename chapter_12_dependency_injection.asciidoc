@@ -250,8 +250,6 @@ class MessageBus:  #<1>
 
 What else changes in the bus? 
 
-// TODO: print -> logging.debug
-
 [[messagebus_handlers_change]]
 .Event and Command handler logic stays the same (src/allocation/messagebus.py)
 ====
@@ -260,20 +258,20 @@ What else changes in the bus?
     def handle_event(self, event: events.Event):  #<1>
         for handler in EVENT_HANDLERS[type(event)]:
             try:
-                print('handling event', event, 'with handler', handler, flush=True)
+                logging.debug('handling event %s with handler %s', event, handler)
                 self.call_handler_with_dependencies(handler, event)  #<2>
             except:
-                print(f'Exception handling event {event}\n:{traceback.format_exc()}')
+                logging.exception('Exception handling event %s', event)
                 continue
 
     def handle_command(self, command: commands.Command):  #<1>
-        print('handling command', command, flush=True)
+        logging.debug('handling command %s', command)
         try:
             handler = COMMAND_HANDLERS[type(command)]
             self.call_handler_with_dependencies(handler, command)  #<2>
-        except Exception as e:
-            print(f'Exception handling command {command}: {e}')
-            raise e
+        except Exception:
+            logging.exception('Exception handling command %s', command)
+            raise
 ----
 ====
 
