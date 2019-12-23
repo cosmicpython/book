@@ -15,7 +15,7 @@ layer to start a session, it talks to the repository layer to initialize a
 `BatchRepository`, and it talks to the service layer to ask it to allocate.
 
 [[before_uow_diagram]]
-.UoW diagram
+.Without UoW: API talks directly to 3 layers
 image::images/before_uow_diagram.png[]
 [role="image-source"]
 ----
@@ -43,7 +43,7 @@ neither the service layer nor Flask longer needs to talk directly to the DB.
 
 
 [[after_uow_diagram]]
-.UoW diagram
+.With UoW: UoW now manages DB state
 image::images/after_uow_diagram.png[]
 [role="image-source"]
 ----
