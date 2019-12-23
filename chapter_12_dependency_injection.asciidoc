@@ -258,19 +258,20 @@ What else changes in the bus?
     def handle_event(self, event: events.Event):  #<1>
         for handler in EVENT_HANDLERS[type(event)]:
             try:
-                logging.debug('handling event %s with handler %s', event, handler)
+                logger.debug('handling event %s with handler %s', event, handler)
                 self.call_handler_with_dependencies(handler, event)  #<2>
             except:
-                logging.exception('Exception handling event %s', event)
+                logger.exception('Exception handling event %s', event)
                 continue
 
+
     def handle_command(self, command: commands.Command):  #<1>
-        logging.debug('handling command %s', command)
+        logger.debug('handling command %s', command)
         try:
             handler = COMMAND_HANDLERS[type(command)]
             self.call_handler_with_dependencies(handler, command)  #<2>
         except Exception:
-            logging.exception('Exception handling command %s', command)
+            logger.exception('Exception handling command %s', command)
             raise
 ----
 ====
