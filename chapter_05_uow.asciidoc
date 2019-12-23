@@ -23,15 +23,15 @@ image::images/before_uow_diagram.png[]
 @startuml
 
 participant "Flask API" as API
-participant "Service Layer" as services
+participant Services
 participant BatchRepository
 participant DB
 
 API -> DB : start session
 API -> BatchRepository : init BatchRepository(session)
-API -> services: allocate(orderline, repo)
-services -> BatchRepository : list batches
-services -> DB: session.commit()
+API -> Services: allocate(orderline, repo)
+Services -> BatchRepository : list batches
+Services -> DB: session.commit()
 
 @enduml
 ----
@@ -51,17 +51,17 @@ image::images/after_uow_diagram.png[]
 @startuml
 
 participant "Flask API" as API
-participant "Service Layer" as services
+participant Services
 participant UoW
 participant DB
 
 API -> UoW : init UoW
-API -> services : allocate(orderline, uow)
-services -> UoW : start UoW
+API -> Services : allocate(orderline, uow)
+Services -> UoW : start UoW
 UoW -> DB: start session
-services -> UoW : list batches
-services -> services: allocate(orderline, batches)
-services -> UoW: commit()
+Services -> UoW : list batches
+Services -> Services: allocate(orderline, batches)
+Services -> UoW: commit()
 UoW -> DB: session.commit()
 
 @enduml
