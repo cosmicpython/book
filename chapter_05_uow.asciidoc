@@ -37,10 +37,11 @@ Services -> API: OK
 @enduml
 ----
 
-<<after_uow_diagram>> shows our target state: the Flask API now
-only does two things: it initializes a unit of work, and it invokes
-the service.  The service collaborates with the UoW, but
-neither the service nor Flask longer needs to talk directly to the DB.
+<<after_uow_diagram>> shows our target state: the Flask API now only does two
+things: it initializes a unit of work, and it invokes the service.  The service
+collaborates with the UoW (we like to think of the UoW as being part of the
+service layer), but neither the service function itself nor Flask longer needs
+to talk directly to the DB.
 
 
 [[after_uow_diagram]]
