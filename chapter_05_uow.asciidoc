@@ -441,8 +441,8 @@ client code:
 [source,python]
 [role="skip"]
 ----
-def add_batch(ref: str, sku: str, qty: int, eta: Optional[date], start_uow):
-    with start_uow() as uow:
+def add_batch(ref: str, sku: str, qty: int, eta: Optional[date], uow):
+    with uow:
         uow.batches.add(model.Batch(ref, sku, qty, eta))
         # uow.commit()
 ----
