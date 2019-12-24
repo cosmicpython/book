@@ -32,6 +32,7 @@ API -> BatchRepository : init BatchRepository(session)
 API -> Services: allocate(orderline, repo)
 Services -> BatchRepository : list batches
 Services -> DB: session.commit()
+Services -> API: OK
 
 @enduml
 ----
@@ -59,12 +60,15 @@ participant DB
 
 API -> UoW : init UoW
 API -> Services : allocate(orderline, uow)
-Services -> UoW : start UoW
-UoW -> DB: start session
-Services -> UoW : list batches
-Services -> Services: allocate(orderline, batches)
-Services -> UoW: commit()
-UoW -> DB: session.commit()
+group Unit of Work
+    Services -> UoW : start UoW
+    UoW -> DB: start session
+    Services -> UoW : list batches
+    Services -> Services: allocate(orderline, batches)
+    Services -> UoW: commit()
+    UoW -> DB: session.commit()
+end
+Services -> API: OK
 
 @enduml
 ----
