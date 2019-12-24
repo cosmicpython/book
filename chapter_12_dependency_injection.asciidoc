@@ -29,9 +29,9 @@ You can find our code for this chapter at
 https://github.com/cosmicpython/code/tree/chapter_12_dependency_injection[github.com/cosmicpython/code/tree/chapter_12_dependency_injection].
 
 ----
-git clone https://github.com/cosmicpython/code.git cosmic-code && cd cosmic-code
+git clone https://github.com/cosmicpython/code.git && cd code
 git checkout chapter_12_dependency_injection
-# or, if you want to code along, checkout the previous chapter's code.
+# or, if you want to code along, checkout the previous chapter.
 git checkout chapter_11_cqrs
 ----
 ====
@@ -250,8 +250,6 @@ class MessageBus:  #<1>
 
 What else changes in the bus? 
 
-// TODO: print -> logging.debug
-
 [[messagebus_handlers_change]]
 .Event and Command handler logic stays the same (src/allocation/messagebus.py)
 ====
@@ -260,20 +258,21 @@ What else changes in the bus?
     def handle_event(self, event: events.Event):  #<1>
         for handler in EVENT_HANDLERS[type(event)]:
             try:
-                print('handling event', event, 'with handler', handler, flush=True)
+                logger.debug('handling event %s with handler %s', event, handler)
                 self.call_handler_with_dependencies(handler, event)  #<2>
             except:
-                print(f'Exception handling event {event}\n:{traceback.format_exc()}')
+                logger.exception('Exception handling event %s', event)
                 continue
 
+
     def handle_command(self, command: commands.Command):  #<1>
-        print('handling command', command, flush=True)
+        logger.debug('handling command %s', command)
         try:
             handler = COMMAND_HANDLERS[type(command)]
             self.call_handler_with_dependencies(handler, command)  #<2>
-        except Exception as e:
-            print(f'Exception handling command {command}: {e}')
-            raise e
+        except Exception:
+            logger.exception('Exception handling command %s', command)
+            raise
 ----
 ====
 

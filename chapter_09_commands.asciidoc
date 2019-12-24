@@ -19,9 +19,9 @@ You can find our code for this chapter at
 https://github.com/cosmicpython/code/tree/chapter_09_commands[github.com/cosmicpython/code/tree/chapter_09_commands].
 
 ----
-git clone https://github.com/cosmicpython/code.git cosmic-code && cd cosmic-code
+git clone https://github.com/cosmicpython/code.git && cd code
 git checkout chapter_09_commands
-# or, if you want to code along, checkout the previous chapter's code.
+# or, if you want to code along, checkout the previous chapter.
 git checkout chapter_08_all_messagebus
 ----
 ====
@@ -126,21 +126,21 @@ def handle(message: Message, uow: unit_of_work.AbstractUnitOfWork):  #<1>
 def handle_event(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):  #<2>
     for handler in EVENT_HANDLERS[type(event)]:
         try:
-            print('handling event', event, 'with handler', handler, flush=True)
+            logger.debug('handling event %s with handler %s', event, handler)
             handler(event, uow=uow)
         except:  #<2>
-            print(f'Exception handling event {event}\n:{traceback.format_exc()}')
+            logger.exception('Exception handling event %s', event)
             continue
 
 
 def handle_command(command, uow: unit_of_work.AbstractUnitOfWork):  #<3>
-    print('handling command', command, flush=True)
+    logger.debug('handling command %s', command)
     try:
         handler = COMMAND_HANDLERS[type(command)]
         return handler(command, uow=uow)
-    except Exception as e:
-        print(f'Exception handling command {command}: {e}')
-        raise e  #<3>
+    except Exception:
+        logger.exception('Exception handling command %s', command)
+        raise  #<3>
 
 
 EVENT_HANDLERS = {
@@ -372,7 +372,7 @@ usually rely on logs.
 
 Let's look again at the 'handle_event' method from our message bus.
 
-[[messagebus_logging_with_print]]
+[[messagebus_logging]]
 .Current handle function (src/allocation/messagebus.py)
 ====
 [source,python,highlight=4;7]
@@ -380,10 +380,10 @@ Let's look again at the 'handle_event' method from our message bus.
 def handle_event(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):
     for handler in EVENT_HANDLERS[type(event)]:
         try:
-            print('handling event', event, 'with handler', handler, flush=True)
+            logger.debug('handling event %s with handler %s', event, handler)
             handler(event, uow=uow)
         except:
-            print(f'Exception handling event {event}\n:{traceback.format_exc()}')
+            logger.exception('Exception handling event %s', event)
             continue
 ----
 ====
@@ -438,11 +438,11 @@ def handle_event(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):
             ):
 
                 with attempt:
-                  print('handling event', event, 'with handler', handler)
+                  logger.debug('handling event %s with handler %s', event, handler)
                   handler(event, uow=uow)
         except RetryError as retry_failure:
             n = retry_failure.last_attempt.attempt_number
-            print(f'Failed to handle event {n} times, giving up!')
+            logger.error(f'Failed to handle event {n} times, giving up!')
 
 ----
 ====
