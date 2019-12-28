@@ -109,7 +109,7 @@ def allocate(
 ) -> str:
     line = OrderLine(orderid, sku, qty)
     with uow:  #<1>
-        batches = uow.batches.list()  #<2>
+        batches = uow.batch_repo.list()  #<2>
         ...
         batchref = model.allocate(line, batches)
         uow.commit()  #<3>
@@ -117,7 +117,7 @@ def allocate(
 ====
 
 <1> We'll start a unit of work as a context manager
-<2> `uow.batches` is the batches repo, so the unit of work provides us
+<2> `uow.batch_repo` is the batches repo, so the unit of work provides us
     access to our permanent storage.
 <3> When we're done, we commit or roll back our work, using the UOW
 
@@ -163,7 +163,7 @@ def test_uow_can_retrieve_a_batch_and_allocate_to_it(session_factory):
 
     uow = unit_of_work.SqlAlchemyUnitOfWork(session_factory)  #<1>
     with uow:
-        batch = uow.batches.get(reference='batch1')  #<2>
+        batch = uow.batch_repo.get(reference='batch1')  #<2>
         line = model.OrderLine('o1', 'HIPSTER-WORKBENCH', 10)
         batch.allocate(line)
         uow.commit()  #<3>
@@ -177,7 +177,7 @@ def test_uow_can_retrieve_a_batch_and_allocate_to_it(session_factory):
     and get back a `uow` object to use in our `with` block.
 
 <2> The UoW gives us access to the batches repository via
-    `uow.batches`
+    `uow.batch_repo`
 
 <3> And we call `commit()` on it when we're done.
 
@@ -226,7 +226,7 @@ base class:
 [source,python]
 ----
 class AbstractUnitOfWork(abc.ABC):
-    batches: repository.AbstractRepository  #<1>
+    batch_repo: repository.AbstractRepository  #<1>
 
     def __enter__(self) -> AbstractUnitOfWork:  #<2>
         return self  #<3>
@@ -244,7 +244,7 @@ class AbstractUnitOfWork(abc.ABC):
 ----
 ====
 
-<1> The UoW provides an attribute called `.batches`, which will give us access
+<1> The UoW provides an attribute called `.batch_repo`, which will give us access
     to the batches repository.
 
 <2> If you've never seen a context manager, `__enter__` and `__exit__` are
@@ -283,7 +283,7 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 
     def __enter__(self):
         self.session = self.session_factory()  # type: Session  #<2>
-        self.batches = repository.SqlAlchemyRepository(self.session)  #<2>
+        self.batch_repo = repository.SqlAlchemyRepository(self.session)  #<2>
         return super().__enter__()
 
     def __exit__(self, *args):
@@ -328,7 +328,7 @@ Here's how we use a fake Unit of Work in our service layer tests
 class FakeUnitOfWork(unit_of_work.AbstractUnitOfWork):
 
     def __init__(self):
-        self.batches = FakeRepository([])  #<1>
+        self.batch_repo = FakeRepository([])  #<1>
         self.committed = False  #<2>
 
     def commit(self):
@@ -342,7 +342,7 @@ class FakeUnitOfWork(unit_of_work.AbstractUnitOfWork):
 def test_add_batch():
     uow = FakeUnitOfWork()  #<3>
     services.add_batch("b1", "CRUNCHY-ARMCHAIR", 100, None, uow)  #<3>
-    assert uow.batches.get("b1") is not None
+    assert uow.batch_repo.get("b1") is not None
     assert uow.committed
 
 
@@ -399,7 +399,7 @@ def add_batch(
         uow: unit_of_work.AbstractUnitOfWork  #<1>
 ):
     with uow:
-        uow.batches.add(model.Batch(ref, sku, qty, eta))
+        uow.batch_repo.add(model.Batch(ref, sku, qty, eta))
         uow.commit()
 
 
@@ -409,7 +409,7 @@ def allocate(
 ) -> str:
     line = OrderLine(orderid, sku, qty)
     with uow:
-        batches = uow.batches.list()
+        batches = uow.batch_repo.list()
         if not is_valid_sku(line.sku, batches):
             raise InvalidSku(f'Invalid sku {line.sku}')
         batchref = model.allocate(line, batches)
@@ -507,7 +507,7 @@ client code:
 ----
 def add_batch(ref: str, sku: str, qty: int, eta: Optional[date], start_uow):
     with start_uow() as uow:
-        uow.batches.add(model.Batch(ref, sku, qty, eta))
+        uow.batch_repo.add(model.Batch(ref, sku, qty, eta))
         # uow.commit()
 ----
 ====
@@ -545,7 +545,7 @@ Supposing we want to be able to deallocate and then reallocate orders?
 ----
 def reallocate(line: OrderLine, uow: AbstractUnitOfWork) -> str:
     with uow:
-        batch = uow.batches.get(sku=line.sku)
+        batch = uow.batch_repo.get(sku=line.sku)
         if batch is None:
             raise InvalidSku(f'Invalid sku {line.sku}')
         batch.deallocate(line)  #<1>
@@ -573,7 +573,7 @@ opened and half our sofas have fallen into the Indian Ocean.  Oops!
 ----
 def change_batch_quantity(batchref: str, new_qty: int, uow: AbstractUnitOfWork):
     with uow:
-        batch = uow.batches.get(reference=batchref)
+        batch = uow.batch_repo.get(reference=batchref)
         batch.change_purchased_quantity(new_qty)
         while batch.available_quantity < 0:
             line = batch.deallocate_one()  #<1>
@@ -627,7 +627,7 @@ possible level of abstraction (just as we did for the unit tests).
 For this chapter, probably the best thing to do is try to implement a
 UoW from scratch.  You could either follow the model we have quite closely,
 or perhaps experiment with separating the UoW (whose responsibilities are
-`commit()`, `rollback()` and providing the `.batches` repository) from the
+`commit()`, `rollback()` and providing the `.batch_repo` repository) from the
 context manager, whose job is to initialize things, and then do the commit
 or rollback on exit.  If you feel like going all-functional rather than
 messing about with all these classes, you could use `@contextmanager` from
