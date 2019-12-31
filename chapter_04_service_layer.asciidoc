@@ -23,7 +23,6 @@ diagram showing where we're heading.
 [[service_layer_class_diagram]]
 .Our target architecture for the end of this chapter
 image::images/service_layer_class_diagram.png[]
-
 [role="image-source"]
 ----
 [plantuml, service_layer_class_diagram, config=plantuml.cfg]
@@ -1219,6 +1218,93 @@ Calculating tax is a separate job from updating the cart, and it's an important
 part of the model, but it doesn't seem to right to have a persisted entity for
 the job. Instead a stateless TaxCalculator class, or a calculate_tax function
 can do the job.
+
+
+=== Putting things in folders to see where everything belongs
+
+[[nested_folder_tree]]
+.Some subfolders
+====
+[source,text]
+[role="skip"]
+----
+.
+├── config.py
+├── domain  #<1>
+│   ├── __init__.py
+│   └── model.py
+├── service_layer  #<2>
+│   ├── __init__.py
+│   └── services.py
+├── adapters  #<3>
+│   ├── __init__.py
+│   ├── orm.py
+│   └── repository.py
+├── entrypoints  <4>
+│   ├── __init__.py
+│   └── flask_app.py
+└── tests
+    ├── __init__.py
+    ├── conftest.py
+    ├── unit
+    │   ├── test_allocate.py
+    │   ├── test_batches.py
+    │   └── test_services.py
+    ├── integration
+    │   ├── test_orm.py
+    │   └── test_repository.py
+    └── e2e
+        └── test_api.py
+
+----
+====
+
+<1> Let's have a folder for our domain model.  Currently that's just one file,
+    but for a more complex application you might have one file per class, you
+    might have some helper parent classes for `Entity`, `ValueObject` and
+    `Aggregate`, you might add an __exceptions.py__ for domain-layer exceptions,
+    and as we'll see in Part 2, __commands.py__ and __events.py__.
+
+<2> We'll distinguish the service layer.  Currently that's just one file
+    called _services.py_ for our service-layer functions.  You could
+    add service-layer exceptions in here, and as we'll see in the next
+    chapter, we'll add __unit_of_work.py__
+
+<3> Adapters is a nod to the Ports and Adapters terminology.  This will fill
+    up with any other abstractions around external I/O, eg a __redis_client.py__.
+
+<4> Entrypoints are the places we drive our application from.  Arguably these are 
+    adapters too.  Upstream adapters are called "primary" adapters, and downstream
+    adapters (like the SQL repository) are called "secondary" adapters.
+
+What about ports?  If you really wanted to go to town, you could split out the
+abstract repository (which is the Port) into its own file.  Bob likes to say
+that the domain owns the repository:
+
+[[nested_folder_tree]]
+.Some subfolders
+====
+[source,text]
+[role="skip"]
+----
+.
+├── domain
+│   ├── __init__.py
+│   ├── abstract_repository.py
+│   └── model.py
+├── adapters
+│   ├── __init__.py
+│   ├── orm.py
+│   └── sqlalchemy_repository.py
+...
+----
+====
+
+The primary/upstream ports are harder to define at this stage, because
+the port is just "the service-layer function and its arguments". In
+later chapter, we build Command and Event classes, and you can call
+those ports.
+
 
 === Wrap-Up
 
