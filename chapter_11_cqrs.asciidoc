@@ -1,22 +1,23 @@
 [[chapter_11_cqrs]]
 == Command-Query Responsibility Separation (CQRS)
 
-In this chapter we're going to take a fairly uncontroversial insight--the
-fact that reads (commands) and writes (queries) are different, and so they
-should be treated differently--and we're going to push that insight out way
-beyond the bounds of sanity and into fullblown boomtown architecture-astronaut
-crazyland.  We may provide a few justifications along the way of when you
-might or might not want to do it, bla-bla-bla-performance and so forth, but,
-honestly, it's just because we want to see the world burn.  In a decoupled way.
+In this chapter we're going to start with a fairly uncontroversial insight:
+reads (commands) and writes (queries) are different, so they
+should be treated differently. Then we're going to push that insight as far
+as we can.  If you're anything like Harry, this will all seem crazy at first,
+but as we'll see there are two main reasons that it might not all be so
+totally insane:
 
-NOTE: Chapter under construction.  More sober and coherent treatment of the subject
-    may be found at
-    https://io.made.com/blog/2017-09-13-commands-and-queries-handlers-and-views.html
+1. Your domain model is conceptually structured around write operations, and
+    requirements for read operations are sometimes quite different.
 
-// TODO: replace with cosmicpython.com url
+2. In most business applications, reads outnumber writes by an order of magnitude
+    or so, and they can be the hardest part of your application to scale.  CQRS
+    enables massive performance improvements.
 
-So strap in, and see if you can spot the moment where the madness descends.
-Because you need to be on the lookout for that moment in your own life.
+So allow us to show you around the madhouse, and see if we can convince you
+that everything is totally sane.
+
 
 [TIP]
 ====
@@ -25,8 +26,7 @@ https://github.com/cosmicpython/code/tree/chapter_11_cqrs[github.com/cosmicpytho
 
 ----
 git clone https://github.com/cosmicpython/code.git && cd code
-git checkout chapter_11_cqrs
-# or, if you want to code along, checkout the previous chapter.
+git checkout chapter_11_cqrs# or, if you want to code along, checkout the previous chapter.
 git checkout chapter_10_external_events
 ----
 ====
@@ -139,7 +139,7 @@ obj-...
 
 
 [[views_dot_py]]
-.Views do... raw sql??? (src/allocation/views.py)
+.Views do... raw SQL??? (src/allocation/views.py)
 ====
 [source,python]
 [role="non-head"]
@@ -160,14 +160,108 @@ def allocations(orderid: str, uow: unit_of_work.SqlAlchemyUnitOfWork):
 ----
 ====
 
-WHAT THE ACTUAL F?  ARE YOU GUYS TRIPPING F-ING BALLS?
 
-Yes.  Yes we are.  Obviously don't do this.  Unless you have Reasons (TM). Let's come
-back to that and assume you don't.  You probably don't.  Go ahead and do
-something sane instead:
+[quote, Our Readers]
+____
+Excuse me?  Raw SQL?
+____
 
-// TODO (DS) this is funny. but it's a strange way of telling the story.  why
-// not come back to it later?
+If you're anything like Harry encountering this pattern for the first time,
+you'll be wondering what on earth Bob has been smoking.  We're hand-rolling our
+own SQL now, and converting database rows directly to dicts?  After all the
+effort we put into building a nice domain model?  And what about Repository
+Pattern, isn't that meant to be our abstraction around the database, why don't
+we reuse that?
+
+Well, let's explore that seemingly more-sane alternative first, and see what it
+looks like in practice.
+
+
+We'll still keep our view in a separate _views.py_ module; enforcing a clear
+distinction between reads and writes in your application is still a good idea.
+We apply command-query separation, and it's easy to see which code modifies
+state (the event handlers) and which code just retrieves read-only state (the views).
+
+TIP: Split out your read-only views from your state-modifying
+    command and event handlers.
+
+
+=== Testing CQRS Views
+
+Before we get into exploring various options, let's talk about testing.
+Whichever approaches you decide to go for, you're probably going to need
+at least one integration test.  Something like this:
+
+
+[[integration_testing_views]]
+.An integration test for a view (tests/integration/test_views.py)
+====
+[source,python]
+----
+from datetime import date
+from allocation import commands, unit_of_work, messagebus, views
+
+
+def test_allocations_view(sqlite_session_factory):
+    uow = unit_of_work.SqlAlchemyUnitOfWork(sqlite_session_factory)
+    messagebus.handle(commands.CreateBatch('sku1batch', 'sku1', 50, None), uow)  #<1>
+    messagebus.handle(commands.CreateBatch('sku2batch', 'sku2', 50, date.today()), uow)
+    messagebus.handle(commands.Allocate('order1', 'sku1', 20), uow)
+    messagebus.handle(commands.Allocate('order1', 'sku2', 20), uow)
+    # add a spurious batch and order to make sure we're getting the right ones
+    messagebus.handle(commands.CreateBatch('sku1batch-later', 'sku1', 50, date.today()), uow)
+    messagebus.handle(commands.Allocate('otherorder', 'sku1', 30), uow)
+    messagebus.handle(commands.Allocate('otherorder', 'sku2', 10), uow)
+
+    assert views.allocations('order1', uow) == [
+        {'sku': 'sku1', 'batchref': 'sku1batch'},
+        {'sku': 'sku2', 'batchref': 'sku2batch'},
+    ]
+----
+====
+
+<1> We do the setup for the integration test using the public entrypoint to
+    our application, the messagebus.  That keeps our tests decoupled from
+    any impementation/infrastructure details about how things get stored.
+
+////
+Before you dismiss the need to use integration tests as just another
+anti-feather in the anti-cap of this total anti-pattern, it's worth thinking
+through the alternatives.
+
+- If you're going via the `Products` repository, then you'll need integration
+  tests for any new query methods you add.
+
+- If you're going via the ORM, you'll still need integration tests
+
+- And if you decide to build a read-only `BatchRepository`, ignoring
+  the purists that tell you you're not allowed to have a Repository for
+  a non-Aggregate model class, call it `BatchDAL` if you want, in any case,
+  you'll still need integration tests for _that_.
+
+So the choice is about whether or not you want a layer of abstraction between
+your permanent storage and the logic of your read-only views.
+
+* If the views are relatively simple (all the logic in our case is in filtering
+  down to the right batch references), then adding another layer doesn't seem
+  worth it.
+
+* If your views do more complex calculations, or need to invoke some business
+  rules to decide what to display... If, in short, you find yourself writing a
+  lot of integration tests for a single view, then it may be worth building
+  that intermediary layer, so that you can test the SQL and the
+  display/calculation/view logic separately
+
+// TODO: some example code showing a DAL layer in front of some read-only view
+// code with more complex business logic.
+
+////
+
+
+
+=== "Sane" Alternative 1: Using the Existing Repository
+
+How about adding a helper method to our products repository?
 
 
 [[view_using_repo]]
@@ -180,94 +274,27 @@ from allocation import unit_of_work
 
 def allocations(orderid: str, uow: unit_of_work.AbstractUnitOfWork):
     with uow:
-        products = uow.products.for_order(orderid=orderid)
-        batches = [b for p in products for b in p.batches]
+        products = uow.products.for_order(orderid=orderid)  #<1>
+        batches = [b for p in products for b in p.batches]  #<2>
         return [
             {'sku': b.sku, 'batchref': b.reference}
             for b in batches
-            if orderid in b.orderids
+            if orderid in b.orderids  #<3>
         ]
 ----
 ====
 
-We're sure you can figure out how to write a query called `.for_order()`
-on your repository that can find all the products for an order.
+<1> Our repository returns product objects, and we need to find all the
+    products for the skus in a given order, so we'll build a new helper method
+    called `.for_order()` on the repository.
 
+<2> Now we have products but we actually want batch references, so we
+    get all the possible batches with a list comprehension.
 
-Note that splitting out a _views.py_ module and enforcing a clear
-distinction between reads and writes in your application is still
-probably a good idea.  We apply command-query separation, and it's easy to see
-which code modifies state (the event handlers) and which code just retrieves
-read-only state (the views).
+<3> And then we filter _again_ to get just the batches for our specific
+    order.  That in turn relies on our batch objects being able to tell us
+    which order IDs it has allocated to it:
 
-TIP: Split out your read-only views from your state-modifying
-    command and event handlers.
-
-
-=== Why on Earth Would You Write Raw SQL in Your Views?
-
-OK Bob and Harry, let's get back to that SQL monstrosity though.  Why
-on earth would you show us that?  Don't think we're about to forget, the
-sheer horror has been permanently burned into our memories.  Why on
-earth would you want to do that? _Ever?_
-
-Broadly speaking there are two reasons:
-
-1. Performance.
-2. Keeping your Domain Model free of Spurious Concerns.
-
-
-==== SELECT N+1
-
-The so-called
-https://secure.phabricator.com/book/phabcontrib/article/n_plus_one/[SELECT N+1]
-problem is a common performance problem with ORMs: when retrieving a list of
-objects, your ORM will often perform an initial query to, say, get all the IDs
-of the objects it needs, and then issue individual queries for each object to
-retrieve their attributes.  This is especially likely if there are any foreign
-key relationships on your objects.
-
-//TODO: set echo=True and show SQL query logs in our own app?
-
-
-==== General Database Read Performance
-
-Beyond `SELECT N+1`, you may have other reasons that you want to decouple the
-way you persist state changes from the way that you retrieve current state.
-A set of fully normalized relational tables is a good way to make sure that
-write operations never cause data corruption.  But retrieving data using lots
-of JOINs can be slow.  It's common in such cases to add some denormalized views
-(we'll see an example of that later), build read replicas, or even add caching
-layers.
-
-
-==== Your Domain Model is not Optimized for Read Operations
-
-Now here's the chinstrokey-architect justification.  As we've said before,
-a Domain Model is not a data model--we're trying to capture the way the
-business works: workflow, rules around state changes, messages exchanged;
-concerns about how the system reacts to external events and user input.
-_Most of this stuff is totally irrelevant for read-only operations_.
-
-Making a facile point, your domain classes will have a number of methods for
-modifying state, and you won't need any of them for read-only operations.
-Now that is very, very, very far away from a justification for using raw
-SQL instead of reusing our domain objects for queries, but you can at
-least see how the two are conceptually different.
-
-As the complexity of your domain model grows though, you may find yourself
-making more and more choices about how to structure that model, which make
-it more and more awkward to use for read operations.
-
-Even in our simple example, we've chosen to use `Product` as our aggregate,
-but for our "show me the allocations for this order id" endpoint, going
-via Product isn't really the most obvious way of doing things.  In
-<<view_using_repo>> we retrieve all the products for the skus in the order,
-then we find all the batches for those products, and _then_ we iterate (slowly,
-in Python) through all of them finding the ones that have allocations for that
-order id?  It's clunky.  And we didn't mention it at the time, but we had to
-add a new `@property` to the domain model to be able to get the order ids
-allocated to a batch:
 
 [[orderids_on_batch]]
 .An arguably-unnecessary property on our model (src/allocation/model.py)
@@ -284,11 +311,46 @@ class Batch:
 ----
 ====
 
+You can start to see that reusing our existing repository and domain model classes
+is not as straightforward as you might have assumed.  We've had to add new helper
+methods to both, and we're doing a bunch of looping and filtering in Python, which
+is work that would be much more efficiently done by the database.
 
-=== Using the ORM is Probably Simpler.  Probably.
+So, yes, on the plus side we're re-using our existing abstractions, but on the
+downside, it all feels quite clunky.
 
-You may be thinking, OK, if our repository is clunky, then I can just use my
-ORM.  That's what it's for!
+
+=== Your Domain Model is not Optimized for Read Operations
+
+What we're seeing here are the effects of the fact that our domain model
+is designed primarily for write operations, and our requirements for
+reads are often conceptually quite different.
+
+This is the chinstrokey-architect justification for CQRS.  As we've said before,
+a Domain Model is not a data model--we're trying to capture the way the
+business works: workflow, rules around state changes, messages exchanged;
+concerns about how the system reacts to external events and user input.
+_Most of this stuff is totally irrelevant for read-only operations_.
+
+Making a facile point, your domain classes will have a number of methods for
+modifying state, and you won't need any of them for read-only operations.
+
+As the complexity of your domain model grows, you will find yourself making
+more and more choices about how to structure that model, which make it more and
+more awkward to use for read operations.
+
+
+TIP: This justification for CQRS is related to the justification for Domain
+    Model.  If you're building a simple CRUD app, then reads and writes are
+    going to be closely related, so you don't need a Domain Model or CQRS. But
+    the more complex your domain, the more likely you are to need both.
+
+
+=== "Sane" Alternative 2: Using the ORM
+
+You may be thinking, OK, if our repository is clunky, and working with 
+`Products` is clunky, then I can at least  use my ORM and work with `Batches`.
+That's what it's for!
 
 [[view_using_orm]]
 .A simple view that uses the ORM (src/allocation/views.py)
@@ -317,93 +379,40 @@ version from <<views_dot_py>>?  It may not look too bad up there, but we
 can tell you it took several attempts, and plenty of digging through the
 SQLAlchemy docs.  SQL is just SQL.
 
-
-=== Testing CQRS Views
-
-Let's talk about testing.  Whichever of the approaches you decide to go for,
-the most obvious kind of test to write is an integration test, one that goes
-to a real database.
-
-This test would work for any of the approaches we've shown so far:
+But the ORM can also expose us to performance problems.
 
 
-[[integration_testing_views]]
-.An integration test for a view (tests/integration/test_views.py)
-====
-[source,python]
-----
-from datetime import date
-from allocation import commands, unit_of_work, messagebus, views
+=== SELECT N+1, and Other Performance Considerations
 
+The so-called
+https://secure.phabricator.com/book/phabcontrib/article/n_plus_one/[SELECT N+1]
+problem is a common performance problem with ORMs: when retrieving a list of
+objects, your ORM will often perform an initial query to, say, get all the IDs
+of the objects it needs, and then issue individual queries for each object to
+retrieve their attributes.  This is especially likely if there are any foreign
+key relationships on your objects.
 
-def test_allocations_view(sqlite_session_factory):
-    uow = unit_of_work.SqlAlchemyUnitOfWork(sqlite_session_factory)
-    messagebus.handle(commands.CreateBatch('sku1batch', 'sku1', 50, None), uow)
-    messagebus.handle(commands.CreateBatch('sku2batch', 'sku2', 50, date.today()), uow)
-    messagebus.handle(commands.Allocate('order1', 'sku1', 20), uow)
-    messagebus.handle(commands.Allocate('order1', 'sku2', 20), uow)
-    # add a spurious batch and order to make sure we're getting the right ones
-    messagebus.handle(commands.CreateBatch('sku1batch-later', 'sku1', 50, date.today()), uow)
-    messagebus.handle(commands.Allocate('otherorder', 'sku1', 30), uow)
-    messagebus.handle(commands.Allocate('otherorder', 'sku2', 10), uow)
+NOTE: In all fairness we should say that SQLAlchemy is quite good at avoiding
+    the SELECT N+1 problem.  It doesn't display it in the above example, and
+    you can request https://docs.sqlalchemy.org/en/13/orm/loading_relationships.html[eager loading] explicitly to avoid it when dealing
+    with joined objects.
 
-    assert views.allocations('order1', uow) == [
-        {'sku': 'sku1', 'batchref': 'sku1batch'},
-        {'sku': 'sku2', 'batchref': 'sku2batch'},
-    ]
-----
-====
-
-Before you dismiss the need to use integration tests as just another
-anti-feather in the anti-cap of this total anti-pattern, it's worth thinking
-through the alternatives.
-
-- If you're going via the `Products` repository, then you'll need integration
-    tests for the `.for_order()` helper method
-
-- If you're going via the ORM, you'll still need integration tests
-
-- And if you decide to build a read-only `BatchRepository`, ignoring
-  the purists that tell you you're not allowed to have a Repository for
-  a non-Aggregate model class, call it `BatchDAL` if you want, in any case,
-  you'll still need integration tests for _that_.
-
-So the choice is about whether or not you want a layer of abstraction between
-your permanent storage and the logic of your read-only views.
-
-* If the views are relatively simple (all the logic in our case is in filtering
-  down to the right batch references), then adding another layer doesn't seem
-  worth it.
-
-* If your views do more complex calculations, or need to invoke some business rules
-  to decide what to display... If, in short, you find yourself writing a lot of
-  integration tests for a single view, then it may be worth building that
-  intermediary layer, so that you can test the SQL and the display/calculation/view
-  logic separately
-
-
-// TODO: some example code showing a DAL layer in front of some read-only view
-// code with more complex business logic.
+Beyond `SELECT N+1`, you may have other reasons that you want to decouple the
+way you persist state changes from the way that you retrieve current state.
+A set of fully normalized relational tables is a good way to make sure that
+write operations never cause data corruption.  But retrieving data using lots
+of JOINs can be slow.  It's common in such cases to add some denormalized views
+build read replicas, or even add caching layers.
 
 
 === Doubling Down on the Madness.
 
-Have we convinced you that our raw SQL version isn't so crazy as it first
-seemed?  Perhaps we were exaggerating the craziness for effect?
-
-Just you wait.
+On that note: have we convinced you that our raw SQL version isn't so crazy as
+it first seemed?  Perhaps we were exaggerating the craziness for effect? Just
+you wait.
 
 So. Crazy or not, that hardcoded SQL query is pretty ugly right?  What if we
-made it nicer by keeping a totally separate, denormalized datastore for our
-view model?
-
-Horrifying, right?  Wait 'til we tell you we're not even going to use Postgres
-views, or triggers, or anything known and reliable and boring like that, to
-keep it up to date.  We're going to use our amazing event-driven architecture!
-That's right!  May as well join the cult and start drinking folks, the ship is
-made of cardboard and the captains are crazy and there's nothing you can do to
-stop them.
-
+made it nicer...
 
 [[much_nicer_query]]
 .A much nicer query (src/allocation/views.py)
@@ -420,10 +429,10 @@ def allocations(orderid: str, uow: unit_of_work.SqlAlchemyUnitOfWork):
 ----
 ====
 
-Here's our table.  Hee hee hee, no foreign keys, just strings, YOLO.
+...by _keeping a totally separate, denormalized datastore for our view model?
 
 [[new_table]]
-.A very simple table (src/allocation/orm.py)
+.Hee hee hee, no foreign keys, just strings, YOLO. (src/allocation/orm.py)
 ====
 [source,python]
 ----
@@ -435,6 +444,17 @@ allocations_view = Table(
 )
 ----
 ====
+
+OK, nicer-looking SQL queries wouldn't be a justification for anything really,
+but building a denormalized copy of your data that's optimized for read operations
+isn't uncommon, once you've reached the limits of what you can do with indexes.
+
+Keeping it up to date is the challenge!  Postgres views and triggers are a
+common solution, but that limits you to Postgres. We'd like to show you how we
+can reuse our event-driven architecture instead.
+
+
+==== Updating a Read Model Table Using an Event Handler
 
 We add a second handler to the `Allocated` event:
 
@@ -450,7 +470,6 @@ EVENT_HANDLERS = {
     ],
 ----
 ====
-
 
 Here's what our update-view-model code looks like:
 
@@ -474,9 +493,8 @@ def add_allocation_to_read_model(
 ----
 ====
 
-
-And it'll work!
-
+Believe it or not, that will pretty much work!  _And it will work
+against the exact same integration tests as the rest of our options._
 
 (OK you'll also need to handle deallocated:)
 
@@ -549,35 +567,21 @@ Flask -> User: some allocations
 ----
 
 
-=== But Whyyyyyyy?
+// TODO: discuss updating the view model manually / rebuilding / backup plan if something goes wrong between the two transactions.
 
-OK.  Horrible, right?  But also, kinda, surprisingly nice, considering?  Our
-events and message bus give us a really nice place to do this sort of stuff,
-_if we need to_.
-
-////
-TODO (DS)
-
-Incidentally, I've just been implementing an elasticsearch-backed page for a
-read view on some models. That's basically the same approach (you normalise the
-data you care about into a document database). No one has batted an eyelid, so
-perhaps you're overstating how crazy this might appear.
-
-I do like the tone though, it's enjoyable to read. (I miss the
-wizened-old-architect conversation you had in the original blog post though).
-////
-
-And think how easy it'd be to swap our read model from Postgres to Redis or
-Memcached? Super-simple.  _We don't even need to change the integration test_.
 
 
 === Changing our Read Model Implementation is Easy
+
+Let's see the flexibility that our event-driven model buys us in action,
+by seeing what happens if we ever decide we want to implement a read model
+using a totally separate storage engine, Redis.
 
 Just watch.
 
 
 [[redis_readmodel_handlers]]
-.Handlers update a redis read model (src/allocation/handlers.py)
+.Handlers update a Redis read model (src/allocation/handlers.py)
 ====
 [source,python]
 [role="non-head"]
@@ -590,7 +594,7 @@ def remove_allocation_from_read_model(event: events.Deallocated, _):
 ----
 ====
 
-The helpers in our redis module are one-liners:
+The helpers in our Redis module are one-liners:
 
 
 [[redis_readmodel_client]]
@@ -638,9 +642,6 @@ TIP: Event handlers are a great way to manage updates to a read model,
 
 === But Would You Really?  CRUD versus CQRS.
 
-// TODO (EJ) Some explicit discussion of CRUD vs CQRS might be good. I'd guess
-// that there will be a lot readers coming to this book from Django.
-
 As it happens, the allocation service at MADE.com does use "full blown" CQRS,
 with a read model that uses Redis, and even a second layer of cache provided
 by Varnish.  But its use cases are actually quite a bit different from what
@@ -665,5 +666,6 @@ for a whole order, with multiple skus, so using the ORM ends up being a little
 awkward.  We'd be quite tempted to go with the raw-SQL view we showed right
 at the beginning of the chapter.
 
+// TODO: link to original blog post?
 
 OK.  On that note, let's sally forth into our final chapter.
