@@ -1272,14 +1272,20 @@ can do the job.
 
 <3> Adapters is a nod to the Ports and Adapters terminology.  This will fill
     up with any other abstractions around external I/O, eg a __redis_client.py__.
+    Strictly speaking you would call these _secondary_ adapters or _driven_
+    adapters, or sometimes _inward-facing_ adapters.
 
-<4> Entrypoints are the places we drive our application from.  Arguably these are 
-    adapters too.  Upstream adapters are called "primary" adapters, and downstream
-    adapters (like the SQL repository) are called "secondary" adapters.
+<4> Entrypoints are the places we drive our application from.  In the
+    official Ports & Adapters terminology, these are adapters too, and are
+    referred to as _primary_,  _driving_ or _outward-facing_ adapters.
 
-What about ports?  If you really wanted to go to town, you could split out the
-abstract repository (which is the Port) into its own file.  Bob likes to say
-that the domain owns the repository:
+What about ports?  As you may remember, they are the abstract interfaces which the
+adapters implement. If you really wanted to go to town, you could split out the
+abstract repository (which is the Port) into its own file, along with any other
+ABCs for other adapters, and put them in a folder called __ports__footnote:[Our
+tech reviewer David Seddon would particularly enjoy that, because it would make
+our module dependency graph really neat, illustrating the "depend on abstractions"
+concept.].
 
 [[abstract_repo_own_file]]
 .Some subfolders

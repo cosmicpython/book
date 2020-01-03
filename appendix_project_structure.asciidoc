@@ -339,57 +339,6 @@ all you need.
 // TODO (DS): Offhand, I think this might fail if you had any subpackages, as
 // it won't install those files?
 
-=== More nested folder structures
-
-As an application grows in complexity, you may decide to start putting things
-into subfolders according to their role in the architecture.  Here's on naming
-convention we've experimented with:
-
-[[more_nested_folders]]
-.A place for everything and everything in its place.
-====
-[source,text]
-[role="skip"]
-----
-src/allocation
-├── config.py
-├── domain  <1>
-│   ├── commands.py
-│   ├── events.py
-│   └── model.py
-├── adapters  <2>
-│   ├── email.py
-│   ├── orm.py
-│   ├── redis_client.py
-│   └── repository.py
-├── entrypoints  <3>
-│   ├── flask_app.py
-│   └── redis_eventconsumer.py
-└── service_layer <4>
-    ├── exceptions.py
-    ├── handlers.py
-    ├── messagebus.py
-    └── unit_of_work.py
-----
-====
-
-<1> The domain includes your core model classes, as well as events and comments.  You might
-    also include some domain-layer exceptions in here.
-
-<2> Adapters are our abstractions that let us interface with permanent storage and other.
-    In Ports & Adapters terminology these are _secondary_ adapters or _driven_ adapters,
-    or sometimes _inward-facing_ adapters.
-
-<3> Entrypoints are the places that allow commands and information to come into our app.
-    These are adapters too, sometimes called primary or driving or outward-facing adapters.
-
-<4> The `service_layer` folder you could also call `orchestration` perhaps, since it's got
-    all the gubbins we need for our event-driven architecture, which is the way we actually
-    present our use cases to the outside world, and put the core domain model to work.
-
-// TODO (DS) i find this structure singals the architecture much more clealy. you
-// might want to think about using it from the get go?
-// You could revisit the diagram of the dependencies...
 
 === Dockerfile
 
