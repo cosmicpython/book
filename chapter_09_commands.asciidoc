@@ -66,10 +66,10 @@ e|      e| Event e| Command
 //                       "create batch" -> "batch created"
 
 
-What kinds of commands do we have in our system right now? 
+What kinds of commands do we have in our system right now?
 
 [[commands_dot_py]]
-.Pulling out some commands (src/allocation/commands.py)
+.Pulling out some commands (src/allocation/domain/commands.py)
 ====
 [source,python]
 ----
@@ -107,7 +107,7 @@ change the behavior of our system.  We want to treat events and commands similar
 but not exactly the same.  Let's see how our message bus changes:
 
 [[new_messagebus]]
-.Messagebus handles events and commands differently (src/allocation/messagebus.py)
+.Messagebus handles events and commands differently (src/allocation/service_layer/messagebus.py)
 ====
 [source,python]
 ----
@@ -172,10 +172,10 @@ COMMAND_HANDLERS = {
 *******************************************************************************
 
 Why does `handle_command` have a `return`, but `handle_events` doesn't, we hear
-you ask?  It's so that we can return the batchref from the API.  
+you ask?  It's so that we can return the batchref from the API.
 
 [[flask_uses_command]]
-.Flask gets a response from the command handler (src/allocation/flask_app.py)
+.Flask gets a response from the command handler (src/allocation/entrypoints/flask_app.py)
 ====
 [source,python,highlight=8]
 ----
@@ -187,7 +187,7 @@ def allocate_endpoint():
         )
         uow = unit_of_work.SqlAlchemyUnitOfWork()
         batchref = messagebus.handle(cmd, uow)
-    except exceptions.InvalidSku as e:
+    except InvalidSku as e:
         return jsonify({'message': str(e)}), 400
 
     return jsonify({'batchref': batchref}), 201
@@ -373,7 +373,7 @@ usually rely on logs.
 Let's look again at the 'handle_event' method from our message bus.
 
 [[messagebus_logging]]
-.Current handle function (src/allocation/messagebus.py)
+.Current handle function (src/allocation/service_layer/messagebus.py)
 ====
 [source,python,highlight=4;7]
 ----
@@ -420,7 +420,7 @@ exponentially increasing back-off period".
 
 
 [[messagebus_handle_event_with_retry]]
-.Handle with Retry (src/allocation/messagebus.py)
+.Handle with Retry (src/allocation/service_layer/messagebus.py)
 ====
 [source,python]
 [role="skip"]
