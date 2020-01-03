@@ -316,7 +316,23 @@ all over the place.
 
 
 // (DS) I'm a bit lost
-
+// (EJ) Agree with DS comment.  It took me a little while to understand it.  
+//      The use of "DI" is a little bit liberal, because this just looks like some 
+//      runtime meta-programming magic to me.
+//
+//      Something that may help, is this: 
+//         * In the constructor,  you do all the signature inspection, then use closures or partials 
+//           to bind the kwargs/deps to the handlers. Then store _those_ callable instances into a dict,
+//           keyed by message type.  IIRC I think the "Fluent Python" book has a section on this concept
+//           for reference (closures/function composition  vs. classes/DI).  You could also callback to the FCIS/DI
+//           concepts here, and show how they are closely related.
+//
+//         * When you need to dispatch a message to its handlers, just use the messagebus' new handler dictionary,
+//           instead of COMMAND_HANDLERS + EVENT_HANDLERS + call_handler_with_dependencies.
+//
+//      This also reinforces the idea of "composing your root" as soon as possible in the app lifecycle.
+//      All the dependencies are static so they don't need to be passed on every call to handle().
+//
 
 === Initializing DI in Our App Entrypoints
 
@@ -418,6 +434,14 @@ class TestAddBatch:
         assert bus.uow.committed
 ----
 ====
+
+// (ej) The name "FakeBus" is confusing, because the fake is also the unit under test.  It also makes
+//      this test look like it's testing nothinbg.  
+//
+//      This is really an example of "test-specific subclass" technique, so a better name would be "TestMessageBus" 
+//      or something like that. 
+// 
+//      See https://haacked.com/archive/2007/12/06/test-specific-subclasses-vs-partial-mocks.aspx/
 
 
 === Building an Adapter "Properly": A Worked Example
