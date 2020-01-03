@@ -182,6 +182,8 @@ TODO: bootstrapper as class instead?
 === Dependency Diagrams
 
 
+TODO: all these diagrams are out of date now that we have nested-folders.  redo
+
 In chapter 9 (<<chapter_09_dependency_graph>>), it's a real mess:
 
 [[chapter_09_dependency_graph]]
@@ -195,16 +197,9 @@ are much better:
 .Dependency graph for chapter 10 (it's better)
 image::images/chapter_10_dependency_graph.png[]
 
-Does the bootstrap script help? As <<appendix_bootstrap_dependency_graph_1>>
+Does the bootstrap script help? As <<appendix_bootstrap_dependency_graph_2>>
 shows, the answer is: "kinda."
 
-[[appendix_bootstrap_dependency_graph_1]]
-.Dependency graph with bootstrap script
-image::images/appendix_bootstrap_dependency_graph_1.png[]
-
-
-Well kinda-not actually.  That Redis circular dependency is still there and
-looking ugly.
 
 One fix is to split the "pub" from the "sub", as in
 <<appendix_bootstrap_dependency_graph_2>>:
