@@ -35,7 +35,7 @@ git checkout chapter_04_service_layer
 Here's how it'll look in use, when it's finished:
 
 [[uow_preview]]
-.Preview of unit of work in action (src/allocation/services.py)
+.Preview of unit of work in action (src/allocation/service_layer/services.py)
 ====
 [source,python]
 ----
@@ -122,7 +122,7 @@ def test_uow_can_retrieve_a_batch_and_allocate_to_it(session_factory):
 For the curious, the `insert_batch` and `get_allocated_batch_ref` helpers
 look like this:
 
-[[id_here]]
+[[sql_helpers]]
 .Helpers for doing SQL stuff (tests/integration/test_uow.py)
 ====
 [source,python]
@@ -133,6 +133,7 @@ def insert_batch(session, ref, sku, qty, eta):
         ' VALUES (:ref, :sku, :qty, :eta)',
         dict(ref=ref, sku=sku, qty=qty, eta=eta)
     )
+
 
 def get_allocated_batch_ref(session, orderid, sku):
     [[orderlineid]] = session.execute(
@@ -157,7 +158,7 @@ base class:
 
 
 [[abstract_unit_of_work]]
-.the Unit of Work context manager in the abstract (src/allocation/unit_of_work.py)
+.Abstract Unit of Work context manager (src/allocation/service_layer/unit_of_work.py)
 ====
 [source,python]
 ----
@@ -204,7 +205,7 @@ The main thing that our concrete implementation adds is the
 database session:
 
 [[unit_of_work]]
-.the real SQLAlchemy Unit of Work (src/allocation/unit_of_work.py)
+.the real SQLAlchemy Unit of Work (src/allocation/service_layer/unit_of_work.py)
 ====
 [source,python]
 ----
@@ -326,7 +327,7 @@ And here's what our new service layer looks like:
 
 
 [[service_layer_with_uow]]
-.Service layer using UoW (src/allocation/services.py)
+.Service layer using UoW (src/allocation/service_layer/services.py)
 ====
 [source,python]
 ----
@@ -436,7 +437,7 @@ It would allow us to save a line of code, and remove the explicit commit from ou
 client code:
 
 [[add_batch_nocommit]]
-.\... would save us a line of code (src/allocation/services.py)
+.\... would save us a line of code (src/allocation/service_layer/services.py)
 ====
 [source,python]
 [role="skip"]
