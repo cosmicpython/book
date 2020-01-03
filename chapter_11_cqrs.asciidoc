@@ -110,11 +110,11 @@ OK what might the flask app look like?
 
 
 [[flask_app_calls_view]]
-.Endpoint for viewing allocations (src/allocation/flask_app.py)
+.Endpoint for viewing allocations (src/allocation/entrypoints/flask_app.py)
 ====
 [source,python]
 ----
-from allocation import commands, exceptions, messagebus, orm, unit_of_work, views
+from allocation import views
 ...
 
 @app.route("/allocations/<orderid>", methods=['GET'])
@@ -144,7 +144,7 @@ obj-...
 [source,python]
 [role="non-head"]
 ----
-from allocation import unit_of_work
+from allocation.service_layer import unit_of_work
 
 def allocations(orderid: str, uow: unit_of_work.SqlAlchemyUnitOfWork):
     with uow:
@@ -198,10 +198,6 @@ at least one integration test.  Something like this:
 ====
 [source,python]
 ----
-from datetime import date
-from allocation import commands, unit_of_work, messagebus, views
-
-
 def test_allocations_view(sqlite_session_factory):
     uow = unit_of_work.SqlAlchemyUnitOfWork(sqlite_session_factory)
     messagebus.handle(commands.CreateBatch('sku1batch', 'sku1', 50, None), uow)  #<1>
@@ -297,7 +293,7 @@ def allocations(orderid: str, uow: unit_of_work.AbstractUnitOfWork):
 
 
 [[orderids_on_batch]]
-.An arguably-unnecessary property on our model (src/allocation/model.py)
+.An arguably-unnecessary property on our model (src/allocation/domain/model.py)
 ====
 [source,python]
 [role="skip"]
@@ -432,7 +428,7 @@ def allocations(orderid: str, uow: unit_of_work.SqlAlchemyUnitOfWork):
 ...by _keeping a totally separate, denormalized datastore for our view model?
 
 [[new_table]]
-.Hee hee hee, no foreign keys, just strings, YOLO. (src/allocation/orm.py)
+.Hee hee hee, no foreign keys, just strings, YOLO. (src/allocation/adapters/orm.py)
 ====
 [source,python]
 ----
@@ -459,7 +455,7 @@ can reuse our event-driven architecture instead.
 We add a second handler to the `Allocated` event:
 
 [[new_handler_for_allocated]]
-.Allocated event gets a new handler (src/allocation/messagebus.py)
+.Allocated event gets a new handler (src/allocation/service_layer/messagebus.py)
 ====
 [source,python]
 ----
@@ -475,7 +471,7 @@ Here's what our update-view-model code looks like:
 
 
 [[update_view_model_1]]
-.Update on allocation (src/allocation/handlers.py)
+.Update on allocation (src/allocation/service_layer/handlers.py)
 ====
 [source,python]
 ----
@@ -581,7 +577,7 @@ Just watch.
 
 
 [[redis_readmodel_handlers]]
-.Handlers update a Redis read model (src/allocation/handlers.py)
+.Handlers update a Redis read model (src/allocation/service_layer/handlers.py)
 ====
 [source,python]
 [role="non-head"]
@@ -598,7 +594,7 @@ The helpers in our Redis module are one-liners:
 
 
 [[redis_readmodel_client]]
-.Redis read model read + update (src/allocation/redis_pubsub.py)
+.Redis read model read + update (src/allocation/adapters/redis_eventpublisher.py)
 ====
 [source,python]
 [role="non-head"]
@@ -611,6 +607,8 @@ def get_readmodel(orderid):
     return r.hgetall(orderid)
 ----
 ====
+
+(maybe the name __redis_eventpublisher.py__ is a misnomer now, but you get the idea).
 
 And the view itself changes very slightly to adapt to its new backend:
 
