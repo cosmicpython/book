@@ -286,7 +286,7 @@ Let's see how that looks, concretely:
 
 
 [[product_aggregate]]
-.Our chosen Aggregate, Product (src/allocation/model.py)
+.Our chosen Aggregate, Product (src/allocation/domain/model.py)
 ====
 [source,python]
 [role="non-head"]
@@ -419,7 +419,7 @@ our `FakeRepository` and then feed through the new model into our service
 layer, to see how it looks with `Product` as its main entrypoint:
 
 [[service_layer_uses_products]]
-.Service layer  (src/allocation/services.py)
+.Service layer  (src/allocation/service_layer/services.py)
 ====
 [source,python]
 ----
@@ -567,7 +567,7 @@ So in the end, even though version numbers don't _have_ to be a domain concern,
 you might decide the cleanest tradeoff is to put them in the domain.
 
 [[product_aggregate_with_version_number]]
-.Our chosen Aggregate, Product (src/allocation/model.py)
+.Our chosen Aggregate, Product (src/allocation/domain/model.py)
 ====
 [source,python]
 ----
@@ -689,7 +689,7 @@ To get the test to pass as it is, we can set the transaction isolation level
 on our session:
 
 [[transaction_serializable]]
-.Set isolation level for session (src/allocation/unit_of_work.py)
+.Set isolation level for session (src/allocation/service_layer/unit_of_work.py)
 ====
 [source,python]
 ----
@@ -713,7 +713,7 @@ which will produce different behavior: two concurrent transactions will not
 be allowed to do a read on the same rows at the same time.
 
 [[with_for_update]]
-.SqlAlchemy with_for_update (src/allocation/repository.py)
+.SqlAlchemy with_for_update (src/allocation/adapters/repository.py)
 ====
 [source,python]
 [role="non-head"]
