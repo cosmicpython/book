@@ -583,10 +583,10 @@ Just watch.
 [role="non-head"]
 ----
 def add_allocation_to_read_model(event: events.Allocated, _):
-    redis_pubsub.update_readmodel(event.orderid, event.sku, event.batchref)
+    redis_eventpublisher.update_readmodel(event.orderid, event.sku, event.batchref)
 
 def remove_allocation_from_read_model(event: events.Deallocated, _):
-    redis_pubsub.update_readmodel(event.orderid, event.sku, None)
+    redis_eventpublisher.update_readmodel(event.orderid, event.sku, None)
 ----
 ====
 
@@ -619,7 +619,7 @@ And the view itself changes very slightly to adapt to its new backend:
 [role="non-head"]
 ----
 def allocations(orderid):
-    batches = redis_pubsub.get_readmodel(orderid)
+    batches = redis_eventpublisher.get_readmodel(orderid)
     return [
         {'batchref': b.decode(), 'sku': s.decode()}
         for s, b in batches.items()
