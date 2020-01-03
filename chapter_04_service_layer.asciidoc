@@ -1296,12 +1296,13 @@ concept.].
 .
 ├── domain
 │   ├── __init__.py
-│   ├── abstract_repository.py
 │   └── model.py
 ├── adapters
 │   ├── __init__.py
 │   ├── orm.py
 │   └── sqlalchemy_repository.py
+├── ports
+│   ├── abstract_repository.py
 ...
 ----
 ====
@@ -1309,7 +1310,10 @@ concept.].
 The primary/upstream ports are harder to define at this stage, because
 the port is just "the service-layer function and its arguments". In
 later chapter, we build Command and Event classes, and you can call
-those ports.
+those ports in theory, but putting them into a _ports_ subfolder instead
+of inside the domain folder would feel weird to us.
+
+// TODO - this whole ports discussion feels a bit long-winded, maybe cut?
 
 
 === Wrap-Up
