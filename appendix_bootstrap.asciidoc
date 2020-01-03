@@ -102,7 +102,7 @@ def bootstrap(
         start_orm=orm.start_mappers,
         session_factory=DEFAULT_SESSION_FACTORY,
         notifications=None,
-        publish=redis_pubsub.publish,
+        publish=redis_eventpublisher.publish,
 ) -> messagebus.MessageBus:
     start_orm()
     uow = unit_of_work.SqlAlchemyUnitOfWork(session_factory=session_factory)
