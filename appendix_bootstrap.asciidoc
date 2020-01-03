@@ -53,6 +53,8 @@ There is some other config spread around though, like what our "normal"
 dependencies are, and we haven't even spoken about cross-cutting concerns
 like logging.
 
+// (ej) Configuration itself is very commonly a crosscutting concern, depending on
+//      how you do it.  I think it's a very common patternt o use a config.py as a singleton.
 
 === Other Setup Code: Initialization
 
@@ -141,6 +143,22 @@ def add_batch():
 ----
 ====
 
+
+// (ej) The "Flask-onic" version of bootstrap is the application factory pattern w/ blueprints.
+//
+// The issue that the style above (where app is a module variable) can raise, is that the import will
+// have side-effects, because it inits the bus.  In the worst case, someone may have decided to add
+// network calls to retrieve config.
+//
+// If you end up needing to unit test somethihng in this module, or use the flask test client, 
+// it can then lead you down the path to patching the configuration, which defeats the composition root.
+// 
+// I think Docker helps mitigate this problem, with the cost of potentially increasing the complexity.
+//
+//  Reference:
+//  https://flask.palletsprojects.com/en/1.1.x/patterns/appfactories/#
+//  https://flask.palletsprojects.com/en/1.1.x/testing/#other-testing-tricks
+//  https://flask.palletsprojects.com/en/1.1.x/blueprints/#blueprints
 
 And in tests, we can use our `bootstrap.bootstrap()` with overridden defaults
 to get a custom messagebus:
