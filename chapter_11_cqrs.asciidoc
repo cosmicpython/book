@@ -18,6 +18,16 @@ totally insane:
 So allow us to show you around the madhouse, and see if we can convince you
 that everything is totally sane.
 
+// (ej) Point 1 may be a little bit too abstract?  Concrete 
+//      examples would help motivate, and also useful for calling back to 
+//      ideas about Bounded Contexts. (e.g. CustomerExperience team might
+//      want to do reporting to analyze in-efficiences in order fullfillment, CustomerGrowth 
+//      might want to access data for predictive analytics. These could require
+//      not just different read ops, but domain models.)
+//
+//      That could also support a Point 3, which is that you t want to be mindful of over-sharing the domain model
+//      because it could lead to accidental coupling, or integration via the database.
+//
 
 [TIP]
 ====
@@ -407,6 +417,18 @@ build read replicas, or even add caching layers.
 
 === Doubling Down on the Madness.
 
+//
+// (ej) Thinking back to some comments Bob made in another PR, maybe "simple" vs. "complex"
+//     instead of "sane" vs. "insane" would be a better rhetorical device for organizing
+//     this chapter? It would tie back to previous discussions about Pros vs. Cons, and 
+//     why you would bother taking on this extra complexity.
+//
+//     The "sane"/simple approach that re-uses the domain model, even in the face of 
+//     SELECT N+1 considerations, etc. may
+//     be perfectly adequate compromise if you are just trying to validate a new product feature,
+//     or don't care about scaling past a certain point, etc.
+//
+
 On that note: have we convinced you that our raw SQL version isn't so crazy as
 it first seemed?  Perhaps we were exaggerating the craziness for effect? Just
 you wait.
@@ -642,12 +664,21 @@ TIP: Event handlers are a great way to manage updates to a read model,
 
 === But Would You Really?  CRUD versus CQRS.
 
+
 As it happens, the allocation service at MADE.com does use "full blown" CQRS,
 with a read model that uses Redis, and even a second layer of cache provided
 by Varnish.  But its use cases are actually quite a bit different from what
 we've shown here. For the kind of allocation service we're building, it seems
 unlikely that you'd need to use a separate read model and event handlers for
 updating it.
+
+// (ej) Might be useful to re-iterate what "full-blown" CQRS means vs simpler CQRS options.  I think
+//      most blog posts describe CQRS in terms of the "full-blown" version, while
+//      ignoring over the simpler version that is developed earlier in this chapter.
+//
+//      In my experience, many people react to CQRS with the response that 
+//      it's insane/too complex/too-hard and want to fall back to a CRUD hammer.
+//
 
 But once you commit to using a Domain Model rather than "just" building a
 CRUD app, then some level of CQS or CQRS does become more and more necessary.
@@ -666,6 +697,14 @@ for a whole order, with multiple skus, so using the ORM ends up being a little
 awkward.  We'd be quite tempted to go with the raw-SQL view we showed right
 at the beginning of the chapter.
 
+// (ej) Many NoSql stores have a CQRS-like write->project->read pattern built-in as 
+//      part of their implementation, and the same ideas apply in principle. 
+//
+//      For example, in elasticsearch, POSTing a document 
+//      adds it to the store, but it won't bed indexed immediately, and document mapping defines 
+//      transformations that affect indexing and search.
+
 // TODO: link to original blog post?
+
 
 OK.  On that note, let's sally forth into our final chapter.
