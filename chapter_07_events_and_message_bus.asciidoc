@@ -85,7 +85,7 @@ this, that's not _really_ to do with the core domain, it's all too easy to
 start dumping these things into our web controllers:
 
 [[email_in_flask]]
-.Just whack it in the endpoint, what could go wrong? (src/allocation/flask_app.py)
+.Just whack it in the endpoint, what could go wrong? (src/allocation/entrypoints/flask_app.py)
 ====
 [source,python]
 [role="skip"]
@@ -124,7 +124,7 @@ we want them to be as thin as possible, we may look at putting it right at
 the source, in the model:
 
 [[email_in_model]]
-.Email-sending code in our model isn't lovely either (src/allocation/model.py)
+.Email-sending code in our model isn't lovely either (src/allocation/domain/model.py)
 ====
 [source,python]
 [role="non-head"]
@@ -137,7 +137,7 @@ the source, in the model:
             #...
         except StopIteration:
             email.send_mail('stock@made.com', f'Out of stock for {line.sku}')
-            raise exceptions.OutOfStock(f'Out of stock for sku {line.sku}')
+            raise OutOfStock(f'Out of stock for sku {line.sku}')
 ----
 ====
 
@@ -164,7 +164,7 @@ We've written a service layer to manage orchestration for us, but even here
 the feature feels out of place:
 
 [[email_in_services]]
-.And in the services layer it's out of place (src/allocation/services.py)
+.And in the services layer it's out of place (src/allocation/service_layer/services.py)
 ====
 [source,python]
 [role="non-head"]
@@ -177,12 +177,12 @@ def allocate(
     with uow:
         product = uow.products.get(sku=line.sku)
         if product is None:
-            raise exceptions.InvalidSku(f'Invalid sku {line.sku}')
+            raise InvalidSku(f'Invalid sku {line.sku}')
         try:
             batchref = product.allocate(line)
             uow.commit()
             return batchref
-        except exceptions.OutOfStock:
+        except model.OutOfStock:
             email.send_mail('stock@made.com', f'Out of stock for {line.sku}')
             raise
 ----
@@ -243,7 +243,7 @@ We could store them in _model.py_, but we may as well keep them in their own fil
 "domain," so we have _domain/model.py_ and _domain/events.py_).
 
 [[events_dot_py]]
-.Event classes (src/allocation/events.py)
+.Event classes (src/allocation/domain/events.py)
 ====
 [source,python]
 ----
@@ -299,7 +299,7 @@ Here's what it looks like on the inside:
 
 
 [[domain_event]]
-.The model raises a domain event (src/allocation/model.py)
+.The model raises a domain event (src/allocation/domain/model.py)
 ====
 [source,python]
 [role="non-head"]
@@ -317,7 +317,7 @@ class Product:
             #...
         except StopIteration:
             self.events.append(events.OutOfStock(line.sku))  #<2>
-            # raise exceptions.OutOfStock(f'Out of stock for sku {line.sku}')  #<3>
+            # raise OutOfStock(f'Out of stock for sku {line.sku}')  #<3>
             return None
 ----
 ====
@@ -349,7 +349,7 @@ Handlers are _subscribed_ to receive events, which we publish to the bus. It
 sounds harder than it is, and we usually implement it with a dict:
 
 [[messagebus]]
-.Simple message bus (src/allocation/messagebus.py)
+.Simple message bus (src/allocation/service_layer/messagebus.py)
 ====
 [source,python]
 ----
@@ -416,7 +416,7 @@ the "publishing" step.
 The simplest way to do this is by adding some code into our service layer.
 
 [[service_talks_to_messagebus]]
-.The service layer with an explicit message bus (src/allocation/services.py)
+.The service layer with an explicit message bus (src/allocation/service_layer/services.py)
 ====
 [source,python]
 [role="non-head"]
@@ -429,7 +429,7 @@ def allocate(
     with uow:
         product = uow.products.get(sku=line.sku)
         if product is None:
-            raise exceptions.InvalidSku(f'Invalid sku {line.sku}')
+            raise InvalidSku(f'Invalid sku {line.sku}')
         try:  #<1>
             batchref = product.allocate(line)
             uow.commit()
@@ -460,7 +460,7 @@ raised by the domain model.
 
 
 [[service_layer_raises_events]]
-.Service layer calls messagebus.handle directly (src/allocation/services.py)
+.Service layer calls messagebus.handle directly (src/allocation/service_layer/services.py)
 ====
 [source,python]
 [role="skip"]
@@ -473,7 +473,7 @@ def allocate(
     with uow:
         product = uow.products.get(sku=line.sku)
         if product is None:
-            raise exceptions.InvalidSku(f'Invalid sku {line.sku}')
+            raise InvalidSku(f'Invalid sku {line.sku}')
         batchref = product.allocate(line)
         if batchref is None:
             messagebus.handle(events.OutOfStock(line.sku))
@@ -496,7 +496,7 @@ a good place to spot events and pass them to the message bus:
 
 
 [[uow_with_messagebus]]
-.The UoW meets the message bus (src/allocation/unit_of_work.py)
+.The UoW meets the message bus (src/allocation/service_layer/unit_of_work.py)
 ====
 [source,python]
 ----
@@ -541,7 +541,7 @@ NOTE: Are you wondering about error-handling, what happens if one of the
 
 
 [[repository_tracks_seen]]
-.Repository tracks aggregates seen (src/allocation/repository.py)
+.Repository tracks aggregates seen (src/allocation/adapters/repository.py)
 ====
 [source,python]
 ----
@@ -603,7 +603,7 @@ totally free of event-handling concerns:
 
 
 [[services_clean]]
-.Service layer is clean again (src/allocation/services.py)
+.Service layer is clean again (src/allocation/service_layer/services.py)
 ====
 [source,python]
 ----
@@ -615,7 +615,7 @@ def allocate(
     with uow:
         product = uow.products.get(sku=line.sku)
         if product is None:
-            raise exceptions.InvalidSku(f'Invalid sku {line.sku}')
+            raise InvalidSku(f'Invalid sku {line.sku}')
         batchref = product.allocate(line)
         uow.commit()
         return batchref

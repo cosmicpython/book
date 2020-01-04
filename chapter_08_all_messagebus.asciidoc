@@ -168,7 +168,7 @@ We start by defining the two events that capture our current API inputs:
 `AllocationRequired` and `BatchCreated`:
 
 [[two_new_events]]
-.BatchCreated and AllocationRequired events (src/allocation/events.py)
+.BatchCreated and AllocationRequired events (src/allocation/domain/events.py)
 ====
 [source,python]
 ----
@@ -196,7 +196,7 @@ and a UoW:
 
 
 [[services_to_handlers]]
-.Handlers and services are the same thing (src/allocation/handlers.py)
+.Handlers and services are the same thing (src/allocation/service_layer/handlers.py)
 ====
 [source,python]
 ----
@@ -229,7 +229,7 @@ def send_out_of_stock_notification(
 The change might be clearer as a diff:
 
 [[services_to_handlers_diff]]
-.Changing from services to handlers (src/allocation/handlers.py)
+.Changing from services to handlers (src/allocation/service_layer/handlers.py)
 ====
 [source,diff]
 ----
@@ -305,7 +305,7 @@ to the main `messagebus.handle()` function:
 
 
 [[handle_takes_uow]]
-.Handle takes a UoW (src/allocation/messagebus.py)
+.Handle takes a UoW (src/allocation/service_layer/messagebus.py)
 ====
 [source,python]
 [role="non-head"]
@@ -323,7 +323,7 @@ And to _unit_of_work.py_:
 
 
 [[uow_passes_self_to_messagebus]]
-.UoW passes self to message bus (src/allocation/unit_of_work.py)
+.UoW passes self to message bus (src/allocation/service_layer/unit_of_work.py)
 ====
 [source,python]
 ----
@@ -384,7 +384,7 @@ when they invoke our `allocate()` handler.  This means we need to put in
 a temporary hack on our messagebus to let it return events.
 
 [[hack_messagebus_results]]
-.Messagebus returns results (src/allocation/messagebus.py)
+.Messagebus returns results (src/allocation/service_layer/messagebus.py)
 ====
 [source,diff]
 ----
@@ -405,7 +405,7 @@ We'll come back to fix this wart in <<chapter_09_cqrs>>.
 ==== Modifying Our API to Do Events
 
 [[flask_uses_messagebus]]
-.Flask changing to messagebus as a diff (src/allocation/flask_app.py)
+.Flask changing to messagebus as a diff (src/allocation/entrypoints/flask_app.py)
 ====
 [source,diff]
 ----
@@ -422,7 +422,7 @@ We'll come back to fix this wart in <<chapter_09_cqrs>>.
          )
 +        results = messagebus.handle(event, unit_of_work.SqlAlchemyUnitOfWork())  #<3>
 +        batchref = results.pop()
-     except exceptions.InvalidSku as e:
+     except InvalidSku as e:
 ----
 ====
 
@@ -517,7 +517,7 @@ needs a batch reference and a new quantity:
 
 
 [[batch_quantity_changed_event]]
-.New event (src/allocation/events.py)
+.New event (src/allocation/domain/events.py)
 ====
 [source,python]
 ----
@@ -591,7 +591,7 @@ class TestChangeBatchQuantity:
 ==== Implementation
 
 [[change_quantity_handler]]
-.Handler delegates to model layer (src/allocation/handlers.py)
+.Handler delegates to model layer (src/allocation/service_layer/handlers.py)
 ====
 [source,python]
 ----
@@ -610,7 +610,7 @@ def change_batch_quantity(
 We realize we'll need a new query type on our repository:
 
 [[get_by_batchref]]
-.A new query type on our repository (src/allocation/repository.py)
+.A new query type on our repository (src/allocation/adapters/repository.py)
 ====
 [source,python]
 ----
@@ -686,7 +686,7 @@ allocate function to publish an event.
 
 
 [[change_batch_model_layer]]
-.Our model evolves to capture the new requirement (src/allocation/model.py)
+.Our model evolves to capture the new requirement (src/allocation/domain/model.py)
 ====
 [source,python]
 ----
@@ -715,7 +715,7 @@ We wire up our new handler:
 
 
 [[full_messagebus]]
-.The messagebus grows (src/allocation/messagebus.py)
+.The messagebus grows (src/allocation/service_layer/messagebus.py)
 ====
 [source,python]
 ----

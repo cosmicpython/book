@@ -48,7 +48,7 @@ dependencies and easy options for overriding them in tests. Our main handler
 functions declare an explicit dependency on the unit of work:
 
 [[existing_handler]]
-.Our handlers have an explicit dependency on the UoW (src/allocation/handlers.py)
+.Our handlers have an explicit dependency on the UoW (src/allocation/service_layer/handlers.py)
 ====
 [source,python]
 [role="existing"]
@@ -78,7 +78,7 @@ The UoW itself declares an explicit dependency on the session factory:
 
 
 [[existing_uow]]
-.The UoW depends on a session factory (src/allocation/unit_of_work.py)
+.The UoW depends on a session factory (src/allocation/service_layer/unit_of_work.py)
 ====
 [source,python]
 [role="existing"]
@@ -121,12 +121,12 @@ languages:
 
 
 [[normal_implicit_dependency]]
-.Email-sending as a normal import-based dependency (src/allocation/handlers.py)
+.Email-sending as a normal import-based dependency (src/allocation/service_layer/handlers.py)
 ====
 [source,python]
 [role="existing"]
 ----
-from allocation import commands, events, email, exceptions, model, redis_pubsub  #<1>
+from allocation.adapters import email, redis_eventpublisher  #<1>
 ...
 
 def send_out_of_stock_notification(
@@ -153,7 +153,7 @@ sake of our tests? `mock.patch` makes monkeypatching nice and easy:
 [source,python]
 [role="existing"]
 ----
-    with mock.patch("allocation.email.send") as mock_send_mail:
+    with mock.patch("allocation.adapters.email.send") as mock_send_mail:
         ...
 ----
 ====
@@ -183,7 +183,7 @@ we have an (explicit) dependency on an _abstraction_:
 
 
 [[handler_with_explicit_dependency]]
-.The explicit dependency is more abstract (src/allocation/handlers.py)
+.The explicit dependency is more abstract (src/allocation/service_layer/handlers.py)
 ====
 [source,python]
 [role="non-head"]
@@ -216,7 +216,7 @@ Here's one way to do it:
 
 
 [[messagebus_as_class]]
-.MessageBus as a class (src/allocation/messagebus.py)
+.MessageBus as a class (src/allocation/service_layer/messagebus.py)
 ====
 [source,python]
 [role="non-head"]
@@ -251,7 +251,7 @@ class MessageBus:  #<1>
 What else changes in the bus? 
 
 [[messagebus_handlers_change]]
-.Event and Command handler logic stays the same (src/allocation/messagebus.py)
+.Event and Command handler logic stays the same (src/allocation/service_layer/messagebus.py)
 ====
 [source,python]
 ----
@@ -289,7 +289,7 @@ Here's the core of our dependency injection approach then.  As you'll see
 there's not much to it:
 
 [[messagebus_does_DI0]]
-.Dependency injection in 3 lines of code (src/allocation/messagebus.py)
+.Dependency injection in 3 lines of code (src/allocation/service_layer/messagebus.py)
 ====
 [source,python]
 ----
@@ -328,15 +328,14 @@ dependencies we want to use:
 // with the entry point and then show the implementation after?
 
 [[flask_initialises_bus]]
-.Flask initializes a bus with the production dependencies (src/allocation/flask_app.py)
+.Flask initializes bus with production dependencies (src/allocation/entrypoints/flask_app.py)
 ====
 [source,python]
 [role="non-head"]
 ----
-from allocation import (
-    commands, email, exceptions, messagebus, orm, redis_pubsub, unit_of_work,
-    views,
-)
+from allocation.adapters import orm, email, redis_eventpublisher
+from allocation.service_layer import messagebus, unit_of_work
+...
 
 app = Flask(__name__)
 orm.start_mappers()
@@ -344,7 +343,7 @@ uow = unit_of_work.SqlAlchemyUnitOfWork()
 bus = messagebus.MessageBus(
     uow=uow,
     send_mail=email.send,
-    publish=redis_pubsub.publish
+    publish=redis_eventpublisher.publish
 )
 uow.bus = bus
 ----
@@ -353,7 +352,7 @@ uow.bus = bus
 
 
 [[redis_initialises_bus]]
-.So does redis (src/allocation/redis_pubsub.py)
+.So does redis (src/allocation/entrypoints/redis_eventconsumer.py)
 ====
 [source,python]
 [role="non-head"]
@@ -362,8 +361,8 @@ def get_bus():  #<1>
     uow = unit_of_work.SqlAlchemyUnitOfWork()
     bus = messagebus.MessageBus(
         uow=uow,
-        notifications=email.send,
-        publish=publish
+        send_mail=email.send,
+        publish=redis_eventpublisher.publish
     )
     uow.bus = bus
     return bus
@@ -425,7 +424,7 @@ class TestAddBatch:
 We've got two types of dependency:
 
 [[messagebus_does_DI]]
-.Two types of dependency (src/allocation/messagebus.py)
+.Two types of dependency (src/allocation/service_layer/messagebus.py)
 ====
 [source,python]
 [role="non-head"]
@@ -463,7 +462,7 @@ email, could be SMS, could be slack posts one day.
 
 
 [[notifications_dot_py]]
-.An ABC and a concrete implementation (src/allocation/notifications.py)
+.An ABC and a concrete implementation (src/allocation/adapters/notifications.py)
 ====
 [source,python]
 ----
@@ -495,7 +494,7 @@ class EmailNotifications(AbstractNotifications):
 we change the dependency in the messagebus:
 
 [[notifications_in_bus]]
-.Notifications in messagebus (src/allocation/messagebus.py)
+.Notifications in messagebus (src/allocation/service_layer/messagebus.py)
 ====
 [source,python]
 ----
@@ -523,7 +522,7 @@ We work through and define a fake version for unit testing:
 class FakeNotifications(notifications.AbstractNotifications):
 
     def __init__(self):
-        self.sent = defaultdict(list)  # type: Dict[str, str]
+        self.sent = defaultdict(list)  # type: Dict[str, List[str]]
 
     def send(self, destination, message):
         self.sent[destination].append(message)

@@ -27,21 +27,30 @@ git checkout appendix_project_structure
 [role="tree"]
 ----
 .
-├── docker-compose.yml  <1>
 ├── Dockerfile  <1>
-├── license.txt
 ├── Makefile  <2>
-├── mypy.ini
 ├── README.md
+├── docker-compose.yml  <1>
+├── license.txt
+├── mypy.ini
 ├── requirements.txt
 ├── src  <3>
 │   ├── allocation
+│   │   ├── __init__.py
+│   │   ├── adapters
+│   │   │   ├── __init__.py
+│   │   │   ├── orm.py
+│   │   │   └── repository.py
 │   │   ├── config.py
-│   │   ├── flask_app.py
-│   │   ├── model.py
-│   │   ├── orm.py
-│   │   ├── repository.py
-│   │   └── services.py
+│   │   ├── domain
+│   │   │   ├── __init__.py
+│   │   │   └── model.py
+│   │   ├── entrypoints
+│   │   │   ├── __init__.py
+│   │   │   └── flask_app.py
+│   │   └── service_layer
+│   │       ├── __init__.py
+│   │       └── services.py
 │   └── setup.py  <3>
 └── tests  <4>
     ├── conftest.py  <4>
@@ -330,57 +339,6 @@ all you need.
 // TODO (DS): Offhand, I think this might fail if you had any subpackages, as
 // it won't install those files?
 
-=== More nested folder structures
-
-As an application grows in complexity, you may decide to start putting things
-into subfolders according to their role in the architecture.  Here's on naming
-convention we've experimented with:
-
-[[more_nested_folders]]
-.A place for everything and everything in its place.
-====
-[source,text]
-[role="skip"]
-----
-src/allocation
-├── config.py
-├── domain  <1>
-│   ├── commands.py
-│   ├── events.py
-│   └── model.py
-├── adapters  <2>
-│   ├── email.py
-│   ├── orm.py
-│   ├── redis_client.py
-│   └── repository.py
-├── entrypoints  <3>
-│   ├── flask_app.py
-│   └── redis_eventconsumer.py
-└── service_layer <4>
-    ├── exceptions.py
-    ├── handlers.py
-    ├── messagebus.py
-    └── unit_of_work.py
-----
-====
-
-<1> The domain includes your core model classes, as well as events and comments.  You might
-    also include some domain-layer exceptions in here.
-
-<2> Adapters are our abstractions that let us interface with permanent storage and other.
-    In Ports & Adapters terminology these are _secondary_ adapters or _driven_ adapters,
-    or sometimes _inward-facing_ adapters.
-
-<3> Entrypoints are the places that allow commands and information to come into our app.
-    These are adapters too, sometimes called primary or driving or outward-facing adapters.
-
-<4> The `service_layer` folder you could also call `orchestration` perhaps, since it's got
-    all the gubbins we need for our event-driven architecture, which is the way we actually
-    present our use cases to the outside world, and put the core domain model to work.
-
-// TODO (DS) i find this structure singals the architecture much more clealy. you
-// might want to think about using it from the get go?
-// You could revisit the diagram of the dependencies...
 
 === Dockerfile
 
@@ -412,7 +370,7 @@ COPY tests/ /tests/
 
 <4>
 WORKDIR /src
-ENV FLASK_APP=allocation/flask_app.py FLASK_DEBUG=1 PYTHONUNBUFFERED=1
+ENV FLASK_APP=allocation/entrypoints/flask_app.py FLASK_DEBUG=1 PYTHONUNBUFFERED=1
 CMD flask run --host=0.0.0.0 --port=80
 ----
 ====

@@ -16,15 +16,14 @@ package next to our main allocation code:
 ----
 ├── src
 │   ├── allocation
-│   │   ├── config.py
-│   │   ├── model.py
-│   │   ├── repository.py
-│   │   ├── services.py
-│   │   └── unit_of_work.py
+│   │   ├── __init__.py
+│   │   ├── adapters
+│   │   │   ├── __init__.py
+...
 │   ├── djangoproject
 │   │   ├── alloc
-│   │   │   ├── apps.py
 │   │   │   ├── __init__.py
+│   │   │   ├── apps.py
 │   │   │   ├── migrations
 │   │   │   │   ├── 0001_initial.py
 │   │   │   │   └── __init__.py
@@ -43,7 +42,7 @@ package next to our main allocation code:
     │   └── test_api.py
     ├── integration
     │   ├── test_repository.py
-#...
+...
 ----
 ====
 
@@ -76,6 +75,7 @@ some raw SQL with a call to the Django ORM / Queryset language:
 [source,python]
 ----
 from djangoproject.alloc import models as django_models
+
 
 @pytest.mark.django_db
 def test_repository_can_save_a_batch():
@@ -124,7 +124,7 @@ Here's how the actual repository ends up looking:
 
 
 [[django_repository]]
-.A Django repository. (src/allocation/repository.py)
+.A Django repository. (src/allocation/adapters/repository.py)
 ====
 [source,python]
 ----
@@ -166,7 +166,7 @@ Those custom methods look something like this:
 [source,python]
 ----
 from django.db import models
-from allocation import model as domain_model
+from allocation.domain import model as domain_model
 
 class Batch(models.Model):
     reference = models.CharField(max_length=255)
@@ -277,7 +277,7 @@ would work:
 
 
 [[start_uow_django]]
-.Unit of Work adapted for Django (src/allocation/unit_of_work.py)
+.Unit of Work adapted for Django (src/allocation/service_layer/unit_of_work.py)
 ====
 [source,python]
 ----

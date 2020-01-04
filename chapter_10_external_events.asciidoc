@@ -455,12 +455,12 @@ TODO (ej) Minor comment: This e2e test might not be safe or repeatable as part o
 
 ==== Redis Is Another Thin Adapter Around Our Message Bus
 
-Our Redis pubsub client is very much like flask:  it translates from the outside
-world to our events:
+Our Redis pubsub listener (we call it an _eventconsumer_) is very much like
+Flask:  it translates from the outside world to our events:
 
 
-[[redis_pubsub_first_cut]]
-.A first cut of a redis message listener (src/allocation/redis_pubsub.py)
+[[redis_eventconsumer_first_cut]]
+.Simple Redis message listener (src/allocation/entrypoints/redis_eventconsumer.py)
 ====
 [source,python]
 ----
@@ -481,11 +481,6 @@ def handle_change_batch_quantity(m):
     data = json.loads(m['data'])  #<2>
     cmd = commands.ChangeBatchQuantity(ref=data['batchref'], qty=data['qty'])  #<2>
     messagebus.handle(cmd, uow=unit_of_work.SqlAlchemyUnitOfWork())
-
-
-def publish(channel, event: events.Event):  #<3>
-    logging.debug('publishing: channel=%s, event=%s', channel, event)
-    r.publish(channel, json.dumps(asdict(event)))
 ----
 ====
 
@@ -495,7 +490,26 @@ def publish(channel, event: events.Event):  #<3>
     convert it to a `Command`, and pass it to the service layer--much like the
     Flask adapter does.
 
-<3> We also provide a helper function to publish events back into Redis.
+We also build a new downstream adapter to do the opposit job: it converts
+domain events to public events:
+
+[[redis_eventpubisher_first_cut]]
+.Simple Redis message publisher (src/allocation/adapters/redis_eventpublisher.py)
+====
+[source,python]
+----
+r = redis.Redis(**config.get_redis_host_and_port())
+
+
+def publish(channel, event: events.Event):  #<1>
+    logging.debug('publishing: channel=%s, event=%s', channel, event)
+    r.publish(channel, json.dumps(asdict(event)))
+----
+====
+
+<1> We take a hard-coded channel here, but you could also store
+    a mapping between event classes/names and the appropriate channel,
+    allowing one or more message types to go to different channels...
 
 
 ==== Our New Outgoing Event
@@ -503,7 +517,7 @@ def publish(channel, event: events.Event):  #<3>
 Here's what the `Allocated` event will look like:
 
 [[allocated_event]]
-.New event (src/allocation/events.py)
+.New event (src/allocation/domain/events.py)
 ====
 [source,python]
 ----
@@ -519,12 +533,11 @@ class Allocated(Event):
 It captures everything we need to know about an allocation: the details of the
 order line, and which batch it was allocated to.
 
-
 We use add it into our model's `allocate()` method (having added a test
 first, naturally)
 
 [[model_emits_allocated_event]]
-.Product.allocate() emits new event to record what happened (src/allocation/model.py)
+.Product.allocate() emits new event to record what happened (src/allocation/domain/model.py)
 ====
 [source,python]
 ----
@@ -549,7 +562,7 @@ is a handler that publishes the outgoing event:
 
 
 [[another_handler]]
-.The messagebus grows (src/allocation/messagebus.py)
+.The messagebus grows (src/allocation/service_layer/messagebus.py)
 ====
 [source,python,highlight=2]
 ----
@@ -563,14 +576,14 @@ HANDLERS = {
 Publishing the event uses our helper function from the Redis wrapper:
 
 [[publish_event_handler]]
-.Publish to redis (src/allocation/handlers.py)
+.Publish to redis (src/allocation/service_layer/handlers.py)
 ====
 [source,python]
 ----
 def publish_allocated_event(
         event: events.Allocated, uow: unit_of_work.AbstractUnitOfWork,
 ):
-    redis_pubsub.publish('line_allocated', event)
+    redis_eventpublisher.publish('line_allocated', event)
 ----
 ====
 
