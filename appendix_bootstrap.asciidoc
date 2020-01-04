@@ -37,7 +37,7 @@ some in, eg, _unit_of_work.py_, which declares the "default" database session
 manager. maybe that's not too bad...
 
 [[default_session_factory]]
-.Default config declared next to uow (src/allocation/unit_of_work.py)
+.Default config declared next to uow (src/allocation/service_layer/unit_of_work.py)
 ====
 [source,python]
 [role="existing"]
@@ -63,7 +63,7 @@ least twice in our "real" application...
 
 
 [[flask_calls_start_mappers]]
-.Flask calls start_mappers (src/allocation/flask_app.py)
+.Flask calls start_mappers (src/allocation/entrypoints/flask_app.py)
 ====
 [source,python]
 [role="existing"]
@@ -125,7 +125,7 @@ In our application's entrypoints, we just call `bootstrap.bootstrap()`
 to get a messagebus, rather than configuring a UoW and the rest of it.
 
 [[flask_calls_bootstrap]]
-.Flask calls bootstrap (src/allocation/flask_app.py)
+.Flask calls bootstrap (src/allocation/entrypoints/flask_app.py)
 ====
 [source,python]
 ----
