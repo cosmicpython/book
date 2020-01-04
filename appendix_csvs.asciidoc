@@ -193,7 +193,7 @@ collection of domain objects.
 
 
 [[csv_repository]]
-.A repository that uses CSV as its storage mechanism (src/allocation/csv_uow.py)
+.A repository that uses CSV as its storage mechanism (src/allocation/service_layer/csv_uow.py)
 ====
 [source,python]
 ----
@@ -246,7 +246,7 @@ And here's what a Unit of Work for CSVs would look like:
 
 
 [[csvs_uow]]
-.A Unit of Work for CSVs: commit = csv.writer. (src/allocation/csv_uow.py)
+.A Unit of Work for CSVs: commit = csv.writer. (src/allocation/service_layer/csv_uow.py)
 ====
 [source,python]
 ----
