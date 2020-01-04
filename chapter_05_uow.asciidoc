@@ -198,6 +198,11 @@ class AbstractUnitOfWork(abc.ABC):
     called.  Read on for more discussion of this).
 
 
+NOTE: We've made the UoW part of the service layer, in our folder
+    hierarchy.  It is also an adapter, but as we'll see later in the
+    book, it often takes on more service-layer responsibilities to do with
+    domain events, so the service layer feels like the right place to us.
+
 
 ==== The Real Unit of Work Uses Sqlalchemy Sessions
 
