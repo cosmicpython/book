@@ -41,25 +41,32 @@ git checkout chapter_10_external_events
 ----
 ====
 
-=== Post/Redirect/Get
 
-If you've been doing web development, you're probably familiar with the
-post/redirect/get pattern. This is a technique where a web endpoint accepts an
-HTTP POST, and responds with a redirect to see the result. For example, we might
-accept a POST to `/batches` to create a new batch, and redirect the user to
-`/batches/123` to see their newly created batch.
+=== Async Post  and Post/Redirect/Get
 
-This approach fixes the problems that arise when users refresh the results page
+If you've used REST APIs, you're probably familiar with the
+Async Post or Post/Redirct/Get patterns.
+
+Async Post is a technique where a HTTP endpoint accepts an
+HTTP POST, and responds with a 202 Accepted, with resource link to see the result.
+For example, we might accept a POST to `/batches` to create a new batch, and
+return a link to `/batches/123`, where the client can retrieve their newly created batch.
+
+Async Post fixes the problem where a POST may trigger a long running operation,
+and we do not want to block the user while waiting on the result
+
+When used together with a Redirect, it's called Post/Redirect/Get.
+Post/Redirect/Get fixes the problems that arise when users refresh the results page
 in their browser, or try to bookmark a results page. In the case of a refresh,
 it can lead to our users double-submitting data, buying two sofas where they
 only needed one. In the case of a bookmark our hapless customers will end up
 with a broken page when they try to GET a POST endpoint.
 
-Both these problems happen because we're returning data in response to a write
-operation. Post/Redirect/Get side-steps the issue by separating the read and
+All these problems happen because we're returning data in response to a write
+operation. Async Post and Post/Re-direct/Get side-step the issues by separating the read and
 write phases of our operation.
 
-This technique is a simple example of CQS - Command-Query Separation. In CQS we
+These techniques are simple examples of CQS - Command-Query Separation. In CQS we
 follow one simple rule: functions should either modify state, or answer
 questions, but never both. This makes software easier to reason about: we should
 always be able to ask "are the lights on?" without flicking the light switch.
@@ -72,6 +79,14 @@ return a 200 OK and the batch id. That's led to some ugly design flaws so that
 we can get the data we need. Let's change it to return a simple OK message, and
 instead provide a new read-only endpoint to retrieve allocation state:
 
+// (ej) The code snippet below implements just the async post pattern, as opposed to PRG.
+//
+//      The text blurb above is my best attempt mash-up to describe Async Post
+//      that broadens the relevance a bit byond web dev (e.g. mobile, backend, data eng).
+//      It should be reviewed to provent  a "too many cooks" problem.
+//
+//      See also for useful diagram: https://docs.microsoft.com/en-us/azure/architecture/patterns/async-request-reply
+//      and reference: http://restcookbook.com/Resources/asynchroneous-operations/
 
 [[api_test_does_get_after_post]]
 .API test does a GET after the POST (tests/e2e/test_api.py)
@@ -113,6 +128,20 @@ def test_unhappy_path_returns_400_and_error_message():
 ----
 ====
 
+///
+// (ej) The API routes are a bit un-conventional. For example, instead of 
+//      * POST /allocate then GET /allocations/<order_id>
+//      something like this is more typical:
+//      * POST /allocations then GET /allocations?order_id=<order_id>
+//
+//      The second style states the API intentions directly (POST creates allocation
+//      sub-resources, then GET is just a query over all allocations)  With the first style
+//      I have to make guesses at the the API's intentions and dig into the implementaion 
+//      to be sure, and it seems odd that an order_id is a sub-resource of an allocation.
+//
+//      This would make the examples a easier to follow, and adhere to
+//      a RESTful API more closely.
+///
 
 // TODO (DS) this could be a diff
 
