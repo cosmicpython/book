@@ -181,6 +181,11 @@ we have an (explicit) dependency on an _abstraction_:
 
 // (DS) great section
 
+[quote, The Zen of Python]
+____
+Explicit Is Better Than Implicit
+____
+
 
 [[handler_with_explicit_dependency]]
 .The explicit dependency is more abstract (src/allocation/service_layer/handlers.py)
@@ -204,19 +209,152 @@ inject them and how? So far, we've only really been dealing with passing the
 UoW around:  our tests use a `FakeUnitOfWork` while Flask and Redis eventconsumer
 entrypoints use the real UoW, and the messagebus passes them onto our command
 handlers.  If we add real and fake email classes, who will create them and
-pass them on?  
+pass them on?
 
-Putting all that responsibility onto the messagebus feels like a violation of
-the SRP.  Instead, we'll reach for a pattern called _Composition Root_ (a
-bootstrap script to you and me), and we'll do a bit of "Poor Man's DI" 
-(dependency injection without a framework).
+It's extra (duplicated) cruft for Flask, Redis and our tests.  Moreover,
+putting all the responsibility for passing dependencies to the right handler
+onto the messagebus feels like a violation of the SRP.
+
+Instead, we'll reach for a pattern called _Composition Root_ (a bootstrap
+script to you and me), and we'll do a bit of "Poor Man's DI" (dependency
+injection without a framework).
+
+----
+Flask + Redis
+|
+| call
+V
+Bootstraper:  prepares handlers with correct dependencies injected in
+|
+|  pass injected handlers to
+V
+Messagebus
+|
+|  dispatches events and commands to injected handlers
+|
+V
+----
+
+TODO: betterify diagram
 
 
-=== Messagebus Does DI
 
-TODO: no it shouldn't.
 
-Here's one way to do it:
+=== Preparing Handlers: Poor Man's DI with Partial Functions
+
+One way to turn a function with dependencies into one that's ready to be
+called later with those dependencies _aleady injected_, is to use partial
+functions:
+
+
+[[id_here]]
+.Listing title
+====
+[source,python]
+[role="skip"]
+----
+# existing allocate function, with abstract uow dependency
+def allocate(
+        cmd: commands.Allocate, uow: unit_of_work.AbstractUnitOfWork
+):
+    line = OrderLine(cmd.orderid, cmd.sku, cmd.qty)
+    with uow:
+        ...
+
+# bootstrap script prepares actual UoW
+
+uow = unit_of_work.SqlAlchemyUnitOfWork()
+
+# then prepares a version of the allocate fn with dependencies already injected
+allocate_partial = lambda cmd: allocate(cmd, uow)
+
+#  or, alternatively
+import functools
+allocate_partial = functools.partial(allocate, uow=uow)
+
+...
+# later at runtime, we can call the partial function, and it will have
+# the UoW already injected
+allocate_partial(cmd)
+----
+====
+
+
+[[id_here]]
+.Listing title
+====
+[source,python]
+[role="skip"]
+----
+def send_out_of_stock_notification(
+        event: events.OutOfStock, send_mail: Callable,
+):
+    send_mail(
+        'stock@made.com',
+        ...
+
+
+# prepare a version of the send_out_of_stock_notification with dependencies
+sosn_partial = lambda event: send_out_of_stock_notification(event, email.send_mail)
+
+...
+sosn_partial(event)  # will have the uow 
+----
+====
+
+
+=== An alternative using classes
+
+Partial functions will feel familiar to people who've done a bit of functional
+programming.   Here's an alternative using classes, which may appeal to other
+people.   It requires rewriting all our handler functions as classes though:
+
+The class is designed to produce a callable function, so it has a
+++__call__++ method.  We use the ++__init__++ to declare the dependencies it
+requires:
+
+[[id_here]]
+.Listing title
+====
+[source,python]
+----
+# we replace the old `def allocate(cmd, uow)` with:
+
+class AllocateHandler:
+
+    def __init__(self, uow: unit_of_work.AbstractUnitOfWork):
+        self.uow = uow
+
+    def __call__(self, cmd: commands.Allocate):
+        line = OrderLine(cmd.orderid, cmd.sku, cmd.qty)
+        with self.uow:
+            # rest of handler method as before
+            ...
+
+# bootstrap script prepares actual UoW
+uow = unit_of_work.SqlAlchemyUnitOfWork()
+
+# then prepares a version of the allocate fn with dependencies already injected
+allocate = AllocateHandler(uow)
+
+...
+# later at runtime, we can call the handler instance, and it will have
+# the UoW already injected
+allocate(cmd)
+----
+====
+
+
+Use whichever you and your team feel more comfortable with.
+
+
+=== Bootstrap script does all the DI
+
+
+=== Messagebus Gets Given Handlers at Runtime
+
+Our messagebus will no longer be static, it needs to have different handlers
+injected depending 
 
 
 [[messagebus_as_class]]
@@ -227,14 +365,8 @@ Here's one way to do it:
 ----
 class MessageBus:  #<1>
 
-    def __init__(
-            self,
-            uow: unit_of_work.AbstractUnitOfWork,  #<2>
-            send_mail: Callable,  #<2>
-            publish: Callable,  #<2>
-    ):
-        self.uow = uow
-        self.dependencies = dict(uow=uow, send_mail=send_mail, publish=publish)  #<3>
+    def __init__(self, handlers: Dict[Message, Callable]):  #<2>
+        self.handlers = handlers  #<2>
 
     def handle(self, message: Message):
         if isinstance(message, events.Event):
@@ -247,10 +379,10 @@ class MessageBus:  #<1>
 ====
 
 <1> The messagebus becomes a class...
-<2> ...which asks for all our dependencies in one place
-<3> and stores them into a dict
+<2> ...which is given its already-dependency-injected handlers
 
 // TODO (DS) diff?
+
 
 What else changes in the bus? 
 
@@ -259,84 +391,40 @@ What else changes in the bus?
 ====
 [source,python]
 ----
-    def handle_event(self, event: events.Event):  #<1>
-        for handler in EVENT_HANDLERS[type(event)]:
-            try:
-                logger.debug('handling event %s with handler %s', event, handler)
-                self.call_handler_with_dependencies(handler, event)  #<2>
-            except:
-                logger.exception('Exception handling event %s', event)
-                continue
+-def handle_event(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):
+-    for handler in EVENT_HANDLERS[type(event)]:
++    def handle_event(self, event: events.Event):
++        for handler in self.event_handlers[type(event)]:  #<1>
+             try:
+                 logger.debug('handling event %s with handler %s', event, handler)
+-            handler(event, uow=uow)
++                handler(event)
+             except:
+                 logger.exception('Exception handling event %s', event)
+                 continue
+ 
+-
+-def handle_command(command, uow: unit_of_work.AbstractUnitOfWork):
++    def handle_command(self, command: commands.Command):
+         logger.debug('handling command %s', command)
+         try:
+-        handler = COMMAND_HANDLERS[type(command)]
+-        handler(command, uow=uow)
++            handler = self.command_handlers[type(command)]  #<1>
++            handler(command)
+         except Exception:
+             logger.exception('Exception handling command %s', command)
+             raise
 
-
-    def handle_command(self, command: commands.Command):  #<1>
-        logger.debug('handling command %s', command)
-        try:
-            handler = COMMAND_HANDLERS[type(command)]
-            self.call_handler_with_dependencies(handler, command)  #<2>
-        except Exception:
-            logger.exception('Exception handling command %s', command)
-            raise
 ----
 ====
 
 <1> `handle_event` and `handle_command` are substantially the same, but instead
-    of calling handlers directly and only passing in the UoW, they call a new method:
-
-<2> `self.call_handler_with_dependencies()`, which takes the handler function and
-    the event we want to call:
+    of indexing into a static `EVENT_HANDLERS` or `COMMAND_HANDLERS` dict, they
+    use the versions on `self`.
 
 
-==== Dependency Injection with Minimal Magic
-
-Here's the core of our dependency injection approach then.  As you'll see
-there's not much to it:
-
-[[messagebus_does_DI0]]
-.Dependency injection in 3 lines of code (src/allocation/service_layer/messagebus.py)
-====
-[source,python]
-----
-    def call_handler_with_dependencies(self, handler: Callable, message: Message):
-        params = inspect.signature(handler).parameters  #<1>
-        deps = {
-            name: dependency for name, dependency in self.dependencies.items()  #<2>
-            if name in params
-        }
-        handler(message, **deps)  #<3>
-----
-====
-
-<1> We inspect our command/event handler's arguments
-<2> We match them by name to our dependencies
-<3> And we inject them in as kwargs when we actually call the handler
-
-//TODO: rename deps to kwargs?
-
-Note this is simple approach is only really possible because we've made the
-messagebus into the core of our app--if we still had a mixture of service
-functions and event handlers and other entrypoints, our dependencies would be
-all over the place.
-
-
-// (DS) I'm a bit lost
-// (EJ) Agree with DS comment.  It took me a little while to understand it.  
-//      The use of "DI" is a little bit liberal, because this just looks like some 
-//      runtime meta-programming magic to me.
-//
-//      Something that may help, is this: 
-//         * In the constructor,  you do all the signature inspection, then use closures or partials 
-//           to bind the kwargs/deps to the handlers. Then store _those_ callable instances into a dict,
-//           keyed by message type.  IIRC I think the "Fluent Python" book has a section on this concept
-//           for reference (closures/function composition  vs. classes/DI).  You could also callback to the FCIS/DI
-//           concepts here, and show how they are closely related.
-//
-//         * When you need to dispatch a message to its handlers, just use the messagebus' new handler dictionary,
-//           instead of COMMAND_HANDLERS + EVENT_HANDLERS + call_handler_with_dependencies.
-//
-//      This also reinforces the idea of "composing your root" as soon as possible in the app lifecycle.
-//      All the dependencies are static so they don't need to be passed on every call to handle().
-//
+TODO: got this far, continue
 
 === Initializing DI in Our App Entrypoints
 
