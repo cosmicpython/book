@@ -199,9 +199,9 @@ def send_out_of_stock_notification(
 ====
 
 
-But if we do declare these dependencies explicitly, who will inject them and how?
-So far, we've only really been dealing with passing the UoW around.  What about
-all these other things?
+But if we do change to declaring all these dependencies explicitly, who will
+inject them and how? So far, we've only really been dealing with passing the
+UoW around.  What about all these other things?
 
 Since we've now made the messagebus into the core of our application, it's the
 ideal place to manage these dependencies.
