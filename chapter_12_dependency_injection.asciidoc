@@ -355,12 +355,86 @@ Use whichever you and your team feel more comfortable with.
 
 === Bootstrap script does all the DI
 
+Our bootstrapper will do any required application initialisation,
+then prepare some dependency-injected handlers, give them to our
+message bus, and hand that back to us.
+
+[[bootstrap_v1]]
+.A bootstrap function (src/allocation/bootstrap.py)
+====
+[source,python]
+----
+def bootstrap(
+    start_orm: bool = True,
+    session_factory: SessionFactoryType = DEFAULT_SESSION_FACTORY,
+    send_mail: Callable = email.send,
+    publish: Callable = redis_eventpublisher.publish,
+) -> messagebus.MessageBus:
+    if start_orm:  #<1>
+        orm.start_mappers()
+    dependencies = {  #<2>
+        'uow': unit_of_work.SqlAlchemyUnitOfWork(session_factory=session_factory),
+        'send_mail': send_mail,
+        'publish': publish,
+    }
+    injected_event_handlers = {  #<2>
+        event_type: inject_dependencies(handler, dependencies)
+        for event_type, event_handlers in handlers.EVENT_HANDLERS.items()
+        for handler in event_handlers
+    }
+    injected_command_handlers = {  #<2>
+        command_type: inject_dependencies(handler, dependencies)
+        for command_type, handler in handlers.COMMAND_HANDLERS.items()
+    }
+
+    bus = messagebus.MessageBus(  #<3>
+        event_handlers=injected_event_handlers,
+        command_handlers=injected_command_handlers,
+    )
+    return bus
+----
+====
+
+<1>  `orm.start_mappers()` is our example of initialisation work that needs
+    to be done once at the beginning of an app.  We also see things like
+    setting up the `logging` module, TODO more examples
+
+<2> we build up our injected versions of the handlers mappings using
+    a function called `inject_dependencies()` which we'll show next.
+
+<3> and we initialize the message bus for the application.
+
+
+
+[[di_by_inspection]]
+.DI by inspecting function signatures
+====
+[source,python]
+----
+def inject_dependencies(handler, dependencies):
+    params = inspect.signature(handler).parameters  #<1>
+    deps = {
+        name: dependency
+        for name, dependency in dependencies.items()  #<2>
+        if name in params
+    }
+    return lambda message: handler(message, **deps)  #<3>
+----
+====
+
+<1> We inspect our command/event handler's arguments
+<2> We match them by name to our dependencies
+<3> And we inject them in as kwargs to a produce a partial
+
+
+
 ...
 
 === Messagebus Gets Given Handlers at Runtime
 
-Our messagebus will no longer be static, it needs to have different handlers
-injected depending 
+Our messagebus will no longer be static, it needs to have the already-injected
+handlers given to it.  So we turn it from being a module into a configurable
+class:
 
 
 [[messagebus_as_class]]
@@ -436,113 +510,87 @@ What else changes in the bus?
 
 TODO: got this far, continue
 
-=== Initializing DI in Our App Entrypoints
+=== Using Bootstrap in Our Entrypoints
 
-In our flask app, we can just initialize the messagebus inline with
-the rest of our app config and setup, passing it in the actual
-dependencies we want to use:
+In our application's entrypoints, we just call `bootstrap.bootstrap()`
+to get a messagebus, rather than configuring a UoW and the rest of it.
+
+[[flask_calls_bootstrap]]
+.Flask calls bootstrap (src/allocation/entrypoints/flask_app.py)
+====
+[source,python]
+----
+app = Flask(__name__)
+bus = bootstrap.bootstrap()
+
+
+@app.route("/add_batch", methods=['POST'])
+def add_batch():
+    ...
+    bus.handle(cmd)
+    return 'OK', 201
+----
+====
 
 // TODO (DS): starting to make more sense once we get to here.  Could you start
 // with the entry point and then show the implementation after?
 
-[[flask_initialises_bus]]
-.Flask initializes bus with production dependencies (src/allocation/entrypoints/flask_app.py)
-====
-[source,python]
-[role="non-head"]
-----
-from allocation.adapters import orm, email, redis_eventpublisher
-from allocation.service_layer import messagebus, unit_of_work
-...
 
-app = Flask(__name__)
-orm.start_mappers()
-uow = unit_of_work.SqlAlchemyUnitOfWork()
-bus = messagebus.MessageBus(
-    uow=uow,
-    send_mail=email.send,
-    publish=redis_eventpublisher.publish
-)
-uow.bus = bus
-----
-====
-
-
-
-[[redis_initialises_bus]]
-.So does redis (src/allocation/entrypoints/redis_eventconsumer.py)
-====
-[source,python]
-[role="non-head"]
-----
-def get_bus():  #<1>
-    uow = unit_of_work.SqlAlchemyUnitOfWork()
-    bus = messagebus.MessageBus(
-        uow=uow,
-        send_mail=email.send,
-        publish=redis_eventpublisher.publish
-    )
-    uow.bus = bus
-    return bus
-
-
-def main():
-    pubsub = r.pubsub(ignore_subscribe_messages=True)
-    pubsub.subscribe('change_batch_quantity')
-    bus = get_bus()  #<1>
-
-    for m in pubsub.listen():
-        handle_change_batch_quantity(m, bus)
-
-
-def handle_change_batch_quantity(m, bus: messagebus.MessageBus):
-----
-====
-
-<1> In the redis case we can't do the initialization at import-time,
-    because we have a circular dependency between flask and redis
-    (we'll look at fixing that in <<appendix_bootstrap>>.
+// (ej) The "Flask-onic" version of bootstrap is the application factory pattern w/ blueprints.
+//
+// The issue that the style above (where app is a module variable) can raise, is that the import will
+// have side-effects, because it inits the bus.  In the worst case, someone may have decided to add
+// network calls to retrieve config.
+//
+// If you end up needing to unit test somethihng in this module, or use the flask test client, 
+// it can then lead you down the path to patching the configuration, which defeats the composition root.
+// 
+// I think Docker helps mitigate this problem, with the cost of potentially increasing the complexity.
+//
+//  Reference:
+//  https://flask.palletsprojects.com/en/1.1.x/patterns/appfactories/#
+//  https://flask.palletsprojects.com/en/1.1.x/testing/#other-testing-tricks
+//  https://flask.palletsprojects.com/en/1.1.x/blueprints/#blueprints
 
 
 === Initializing DI in Our Tests
 
 
-[[fakebus]]
-.Handler tests just do their own bootstrap (tests/unit/test_handlers.py)
+And in tests, we can use our `bootstrap.bootstrap()` with overridden defaults
+to get a custom messagebus:
+
+
+[[custom_bootstrap]]
+.Overriding bootstrap defaults (tests/integration/test_views.py)
 ====
 [source,python]
-[role="non-head"]
 ----
-class FakeBus(messagebus.MessageBus):
-    def __init__(self):
-        uow = FakeUnitOfWork()
-        super().__init__(
-            uow=uow,
-            send_mail=mock.Mock(),
-            publish=mock.Mock(),
-        )
-        uow.bus = self
+@pytest.fixture
+def sqlite_bus(sqlite_session_factory):
+    bus = bootstrap.bootstrap(
+        start_orm=lambda: None,
+        session_factory=sqlite_session_factory,
+        notifications=mock.Mock(),
+        publish=mock.Mock(),
+    )
+    yield bus
+    clear_mappers()
 
-...
 
-class TestAddBatch:
+def test_allocations_view(sqlite_bus):
+    sqlite_bus.handle(commands.CreateBatch('sku1batch', 'sku1', 50, None))
+    sqlite_bus.handle(commands.CreateBatch('sku2batch', 'sku2', 50, date.today()))
+    ...
+    assert views.allocations('order1', sqlite_bus.uow) == [
+        {'sku': 'sku1', 'batchref': 'sku1batch'},
+        {'sku': 'sku2', 'batchref': 'sku2batch'},
+    ]
 
-    @staticmethod
-    def test_for_new_product():
-        bus = FakeBus()
-        bus.handle(commands.CreateBatch("b1", "CRUNCHY-ARMCHAIR", 100, None))
-        assert bus.uow.products.get("CRUNCHY-ARMCHAIR") is not None
-        assert bus.uow.committed
 ----
 ====
 
-// (ej) The name "FakeBus" is confusing, because the fake is also the unit under test.  It also makes
-//      this test look like it's testing nothinbg.  
-//
-//      This is really an example of "test-specific subclass" technique, so a better name would be "TestMessageBus" 
-//      or something like that. 
-// 
-//      See https://haacked.com/archive/2007/12/06/test-specific-subclasses-vs-partial-mocks.aspx/
+
+TODO: bootstrapper as class instead?
 
 
 === Building an Adapter "Properly": A Worked Example
