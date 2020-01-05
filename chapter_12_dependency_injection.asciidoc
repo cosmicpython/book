@@ -201,16 +201,20 @@ def send_out_of_stock_notification(
 
 But if we do change to declaring all these dependencies explicitly, who will
 inject them and how? So far, we've only really been dealing with passing the
-UoW around.  What about all these other things?
+UoW around:  our tests use a `FakeUnitOfWork` while Flask and Redis eventconsumer
+entrypoints use the real UoW, and the messagebus passes them onto our command
+handlers.  If we add real and fake email classes, who will create them and
+pass them on?  
 
-Since we've now made the messagebus into the core of our application, it's the
-ideal place to manage these dependencies.
-
-// TODO (DS): at this point i don't get what problem you're trying to solve.
-// Haven't you already implemented dependency injection?
+Putting all that responsibility onto the messagebus feels like a violation of
+the SRP.  Instead, we'll reach for a pattern called _Composition Root_ (a
+bootstrap script to you and me), and we'll do a bit of "Poor Man's DI" 
+(dependency injection without a framework).
 
 
 === Messagebus Does DI
+
+TODO: no it shouldn't.
 
 Here's one way to do it:
 
