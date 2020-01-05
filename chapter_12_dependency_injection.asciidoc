@@ -225,6 +225,7 @@ Flask + Redis
 | call
 V
 Bootstraper:  prepares handlers with correct dependencies injected in
+|             (test bootstrapper will use fakes, prod one will use reals)
 |
 |  pass injected handlers to
 V
@@ -280,6 +281,9 @@ allocate_partial(cmd)
 ====
 
 
+Here's the same pattern again for the `send_out_of_stock_notification()` handler,
+which has different dependencies:
+
 [[id_here]]
 .Listing title
 ====
@@ -298,7 +302,8 @@ def send_out_of_stock_notification(
 sosn_partial = lambda event: send_out_of_stock_notification(event, email.send_mail)
 
 ...
-sosn_partial(event)  # will have the uow 
+# later, at runtime:
+sosn_partial(event)  # will have email.send_mail already injected in
 ----
 ====
 
@@ -350,6 +355,7 @@ Use whichever you and your team feel more comfortable with.
 
 === Bootstrap script does all the DI
 
+...
 
 === Messagebus Gets Given Handlers at Runtime
 
@@ -397,8 +403,8 @@ What else changes in the bus?
 +        for handler in self.event_handlers[type(event)]:  #<1>
              try:
                  logger.debug('handling event %s with handler %s', event, handler)
--            handler(event, uow=uow)
-+                handler(event)
+-            handler(event, uow=uow)  #<2>
++                handler(event)  #<2>
              except:
                  logger.exception('Exception handling event %s', event)
                  continue
@@ -408,10 +414,10 @@ What else changes in the bus?
 +    def handle_command(self, command: commands.Command):
          logger.debug('handling command %s', command)
          try:
--        handler = COMMAND_HANDLERS[type(command)]
+-        handler = COMMAND_HANDLERS[type(command)]  #<1>
 -        handler(command, uow=uow)
-+            handler = self.command_handlers[type(command)]  #<1>
-+            handler(command)
++            handler = self.command_handlers[type(command)]  #<2>
++            handler(command)  #<2>
          except Exception:
              logger.exception('Exception handling command %s', command)
              raise
@@ -422,6 +428,10 @@ What else changes in the bus?
 <1> `handle_event` and `handle_command` are substantially the same, but instead
     of indexing into a static `EVENT_HANDLERS` or `COMMAND_HANDLERS` dict, they
     use the versions on `self`.
+
+<2> and instead of passing a UoW into the handler, they expect the handlers
+    to already have all their dependencies, and only need a specific event or
+    command.
 
 
 TODO: got this far, continue
