@@ -41,32 +41,25 @@ git checkout chapter_10_external_events
 ----
 ====
 
+=== Post/Redirect/Get
 
-=== Async Post  and Post/Redirect/Get
+If you've been doing web development, you're probably familiar with the
+post/redirect/get pattern. This is a technique where a web endpoint accepts an
+HTTP POST, and responds with a redirect to see the result. For example, we might
+accept a POST to `/batches` to create a new batch, and redirect the user to
+`/batches/123` to see their newly created batch.
 
-If you've used REST APIs, you're probably familiar with the
-Async Post or Post/Redirct/Get patterns.
-
-Async Post is a technique where a HTTP endpoint accepts an
-HTTP POST, and responds with a 202 Accepted, with resource link to see the result.
-For example, we might accept a POST to `/batches` to create a new batch, and
-return a link to `/batches/123`, where the client can retrieve their newly created batch.
-
-Async Post fixes the problem where a POST may trigger a long running operation,
-and we do not want to block the user while waiting on the result
-
-When used together with a Redirect, it's called Post/Redirect/Get.
-Post/Redirect/Get fixes the problems that arise when users refresh the results page
+This approach fixes the problems that arise when users refresh the results page
 in their browser, or try to bookmark a results page. In the case of a refresh,
 it can lead to our users double-submitting data, buying two sofas where they
 only needed one. In the case of a bookmark our hapless customers will end up
 with a broken page when they try to GET a POST endpoint.
 
-All these problems happen because we're returning data in response to a write
-operation. Async Post and Post/Re-direct/Get side-step the issues by separating the read and
+Both these problems happen because we're returning data in response to a write
+operation. Post/Redirect/Get side-steps the issue by separating the read and
 write phases of our operation.
 
-These techniques are simple examples of CQS - Command-Query Separation. In CQS we
+This technique is a simple example of CQS - Command-Query Separation. In CQS we
 follow one simple rule: functions should either modify state, or answer
 questions, but never both. This makes software easier to reason about: we should
 always be able to ask "are the lights on?" without flicking the light switch.
@@ -77,7 +70,7 @@ chapters ago we introduced an `allocate` endpoint that takes an order and
 calls our service layer to allocate some stock. At the end of the call, we
 return a 200 OK and the batch id. That's led to some ugly design flaws so that
 we can get the data we need. Let's change it to return a simple OK message, and
-instead provide a new read-only endpoint to retrieve allocation state:
+instead provide a new read-only endpoint to retrieve allocation state.
 
 // (ej) The code snippet below implements just the async post pattern, as opposed to PRG.
 //
@@ -87,6 +80,11 @@ instead provide a new read-only endpoint to retrieve allocation state:
 //
 //      See also for useful diagram: https://docs.microsoft.com/en-us/azure/architecture/patterns/async-request-reply
 //      and reference: http://restcookbook.com/Resources/asynchroneous-operations/
+
+Post/Redirect/Get only really applies to HTML-based web servers, and we're
+building an API. The equivalent pattern is sometimes called "Async POST", where
+we return a "202 Accepted" instead of a 302 Redirect.
+
 
 [[api_test_does_get_after_post]]
 .API test does a GET after the POST (tests/e2e/test_api.py)
