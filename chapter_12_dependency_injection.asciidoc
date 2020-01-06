@@ -359,6 +359,9 @@ Our bootstrapper will do any required application initialisation,
 then prepare some dependency-injected handlers, give them to our
 message bus, and hand that back to us.
 
+
+//TODO: show a version without inspect()
+
 [[bootstrap_v1]]
 .A bootstrap function (src/allocation/bootstrap.py)
 ====
