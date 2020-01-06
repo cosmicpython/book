@@ -508,12 +508,11 @@ What else changes in the bus?
     command.
 
 
-TODO: got this far, continue
-
 === Using Bootstrap in Our Entrypoints
 
-In our application's entrypoints, we just call `bootstrap.bootstrap()`
-to get a messagebus, rather than configuring a UoW and the rest of it.
+In our application's entrypoints, we now just call `bootstrap.bootstrap()`
+and get a messagebus that's ready to go, rather than configuring a UoW and the
+rest of it.
 
 [[flask_calls_bootstrap]]
 .Flask calls bootstrap (src/allocation/entrypoints/flask_app.py)
@@ -585,7 +584,6 @@ def test_allocations_view(sqlite_bus):
         {'sku': 'sku1', 'batchref': 'sku1batch'},
         {'sku': 'sku2', 'batchref': 'sku2batch'},
     ]
-
 ----
 ====
 
