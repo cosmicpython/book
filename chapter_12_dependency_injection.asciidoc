@@ -776,17 +776,18 @@ We change the dependency in the bootstrap script:
 .Notifications in messagebus (src/allocation/bootstrap.py)
 ====
 [source,python]
+[role="skip"]
 ----
-def bootstrap(
-    start_orm: bool = True,
-    uow: unit_of_work.AbstractUnitOfWork = unit_of_work.SqlAlchemyUnitOfWork(),
-    notifications: AbstractNotifications = None,
-    publish: Callable = redis_eventpublisher.publish,
-) -> messagebus.MessageBus:
+ def bootstrap(
+     start_orm: bool = True,
+     uow: unit_of_work.AbstractUnitOfWork = unit_of_work.SqlAlchemyUnitOfWork(),
+-    send_mail: Callable = email.send,
++    notifications: AbstractNotifications = EmailNotifications(),
+     publish: Callable = redis_eventpublisher.publish,
+ ) -> messagebus.MessageBus:
 ----
 ====
 
-//TODO diff
 
 ==== Make a Fake Version for your Tests
 
@@ -805,7 +806,6 @@ class FakeNotifications(notifications.AbstractNotifications):
 
     def send(self, destination, message):
         self.sent[destination].append(message)
-
 ...
 ----
 ====
@@ -834,7 +834,7 @@ and use it in our tests:
 ====
 
 
-==== Figure out how to Integration Test :he Real Thing
+==== Figure out how to Integration Test the Real Thing
 
 Now we test the real thing, usually with an end-to-end or integration
 test.  We've used https://github.com/mailhog/MailHog[MailHog] as a
@@ -949,12 +949,15 @@ Or, do the same thing for redis_eventpublisher.
 ******************************************************************************
 
 
-=== DI wrap-up
+=== DI and bootstrap wrap-up
 
-* messagebus is a nice place to do DI. it becomes a composition root
-* but you don't have to.  it is a violation of the SRP after all. if you use
-  a <<appendix_bootstrap,bootstrap script>>, that can be a good place to
-  initialise some alternative DI tools
+* once you have more than one adapter, you start to feel a lot of pain unless
+  you do DI
+
+* bootstrap script as function works.  as class too
+
+* DI framework if you have more complex requirements. maybe?
+
+* you've now seen how you do an adapter properly
 
 TODO: expand on wrap-up
-
