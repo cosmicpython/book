@@ -415,6 +415,7 @@ def bootstrap(
 
 <3> And we return a configured message bus ready to use.
 
+// TODO: show option of bootstrapper as class instead?
 
 Here's how we inject dependencies into a handler function by inspecting
 it:
@@ -543,7 +544,7 @@ class MessageBus:  #<1>
 <3> The main `handle()` function is substantially the same, just
     moving a few attributes and methods onto `self`.
 
-// TODO (DS) diff?
+// Note for DS, I did try a diff here but it was unreadable. too many changes.
 
 
 What else changes in the bus? 
@@ -617,10 +618,6 @@ rest of it.
 ----
 ====
 
-// TODO (DS): starting to make more sense once we get to here.  Could you start
-// with the entry point and then show the implementation after?
-
-
 // (ej) The "Flask-onic" version of bootstrap is the application factory pattern w/ blueprints.
 //
 // The issue that the style above (where app is a module variable) can raise, is that the import will
@@ -638,11 +635,12 @@ rest of it.
 //  https://flask.palletsprojects.com/en/1.1.x/blueprints/#blueprints
 
 
+
 === Initializing DI in Our Tests
 
 
 And in tests, we can use our `bootstrap.bootstrap()` with overridden defaults
-to get a custom messagebus:
+to get a custom messagebus.  Here's an example in an integration test:
 
 
 [[bootstrap_view_tests]]
@@ -654,10 +652,10 @@ to get a custom messagebus:
 @pytest.fixture
 def sqlite_bus(sqlite_session_factory):
     bus = bootstrap.bootstrap(
-        start_orm=True,
-        uow=unit_of_work.SqlAlchemyUnitOfWork(sqlite_session_factory),
-        send_mail=lambda *args: None,
-        publish=lambda *args: None,
+        start_orm=True,  #<1>
+        uow=unit_of_work.SqlAlchemyUnitOfWork(sqlite_session_factory),  #<2>
+        send_mail=lambda *args: None,  #<3>
+        publish=lambda *args: None,  #<4>
     )
     yield bus
     clear_mappers()
@@ -673,13 +671,36 @@ def test_allocations_view(sqlite_bus):
 ----
 ====
 
+<1> We do want to start the ORM...
+<2> ...because we're going to use a real UoW, albeit with an in-memory database.
+<3> But we don't need to send emails or publish, so we make those noops.
 
-// TODO: show option of bootstrapper as class instead?
+
+In our unit tests, in contrast, we can reuse our `FakeUnitOfWork`:
+
+[[bootstrap_tests]]
+.Bootstrap in unit test (tests/unit/test_handlers.py)
+====
+[source,python]
+[role="non-head"]
+----
+def bootstrap_test_app():
+    return bootstrap.bootstrap(
+        start_orm=False,
+        uow=FakeUnitOfWork(),
+        send_mail=lambda *args: None,
+        publish=lambda *args: None,
+    )
+----
+====
 
 
 === Building an Adapter "Properly": A Worked Example
 
-We've got two types of dependency:
+Let's work through an example of how you might build an adapter, and do
+dependency injection for it, "properly".
+
+At the moment we've got two types of dependency:
 
 [[two_types_of_dependency]]
 .Two types of dependency (src/allocation/service_layer/messagebus.py)
@@ -687,9 +708,9 @@ We've got two types of dependency:
 [source,python]
 [role="skip"]
 ----
-            uow: unit_of_work.AbstractUnitOfWork,  #<1>
-            send_mail: Callable,  #<2>
-            publish: Callable,  #<2>
+    uow: unit_of_work.AbstractUnitOfWork,  #<1>
+    send_mail: Callable,  #<2>
+    publish: Callable,  #<2>
 ----
 ====
 
@@ -749,7 +770,7 @@ class EmailNotifications(AbstractNotifications):
 ====
 
 
-we change the dependency in the bootstrap script:
+We change the dependency in the bootstrap script:
 
 [[notifications_in_bus]]
 .Notifications in messagebus (src/allocation/bootstrap.py)
