@@ -337,8 +337,8 @@ In _unit_of_work.py_, `publish_events()` becomes a less active method,
 `collect_new_events()`:
 
 
-[[uow_passes_self_to_messagebus]]
-.UoW passes self to message bus (src/allocation/service_layer/unit_of_work.py)
+[[uow_collect_new_events]]
+.UoW no longer puts events directly on the bus (src/allocation/service_layer/unit_of_work.py)
 ====
 [source,python]
 ----

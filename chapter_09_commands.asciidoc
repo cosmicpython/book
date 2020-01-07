@@ -104,10 +104,12 @@ class ChangeBatchQuantity(Command):  #<3>
 
 Just changing the names and verb tenses is all very well, but it won't actually
 change the behavior of our system.  We want to treat events and commands similarly,
-but not exactly the same.  Let's see how our message bus changes:
+but not exactly the same.  Let's see how our message bus changes.
 
-[[new_messagebus]]
-.Messagebus handles events and commands differently (src/allocation/service_layer/messagebus.py)
+
+
+[[messagebus_dispatches_differently]]
+.Dispatch events and commands differently (src/allocation/service_layer/messagebus.py)
 ====
 [source,python]
 ----
@@ -115,61 +117,110 @@ Message = Union[commands.Command, events.Event]
 
 
 def handle(message: Message, uow: unit_of_work.AbstractUnitOfWork):  #<1>
-    if isinstance(message, events.Event):
-        handle_event(message, uow)
-    elif isinstance(message, commands.Command):
-        return handle_command(message, uow)
-    else:
-        raise Exception(f'{message} was not an Event or Command')
+    results = []
+    queue = [message]
+    while queue:
+        message = queue.pop(0)
+        if isinstance(message, events.Event):
+            handle_event(message, queue, uow)  #<2>
+        elif isinstance(message, commands.Command):
+            cmd_result = handle_command(message, queue, uow)  #<2>
+            results.append(cmd_result)
+        else:
+            raise Exception(f'{message} was not an Event or Command')
+    return results
+----
+====
+
+<1> It still has a main `handle()` entrypoint, that takes a `message`, which may
+    be a command or an event.
+
+<2> We dispatches events and commands to two different helper functions, shown next.
 
 
-def handle_event(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):  #<2>
-    for handler in EVENT_HANDLERS[type(event)]:
+[[handle_event]]
+.Events cannot interrupt the flow (src/allocation/service_layer/messagebus.py)
+====
+[source,python]
+----
+def handle_event(
+    event: events.Event,
+    queue: List[Message],
+    uow: unit_of_work.AbstractUnitOfWork
+):
+    for handler in EVENT_HANDLERS[type(event)]:  #<1>
         try:
             logger.debug('handling event %s with handler %s', event, handler)
             handler(event, uow=uow)
-        except:  #<2>
+            queue.extend(uow.collect_new_events())
+        except:
             logger.exception('Exception handling event %s', event)
-            continue
+            continue  #<2>
+----
+====
 
+<1> Events go to a dispatcher that can delegate to multiple handlers per
+    event.
 
-def handle_command(command, uow: unit_of_work.AbstractUnitOfWork):  #<3>
+<2> It catches and logs any errors, but does not let them interrupt
+    message processing.
+
+[[handle_command]]
+.Commands reraise exceptiosn (src/allocation/service_layer/messagebus.py)
+====
+[source,python]
+----
+def handle_command(  #<1>
+    command: commands.Command,
+    queue: List[Message],
+    uow: unit_of_work.AbstractUnitOfWork
+):
     logger.debug('handling command %s', command)
     try:
         handler = COMMAND_HANDLERS[type(command)]
-        return handler(command, uow=uow)
+        result = handler(command, uow=uow)
+        queue.extend(uow.collect_new_events())
+        return result
     except Exception:
-        logger.exception('Exception handling command %s', command)
-        raise  #<3>
+        logger.exception('Exception handling command %s', command)  
+        raise  #<2>
+----
+====
 
 
+<1> The command dispatcher expects just one handler per command.
+
+<2> If any errors are raised, they fail hard and will bubble up.
+
+
+We also change the single `HANDLERS` dict into different ones for
+commands and events.  Commands can only have one handler, according
+to our convention.
+
+[[new_handlers_dicts]]
+.New handlers dicts (src/allocation/service_layer/messagebus.py)
+====
+[source,python]
+----
 EVENT_HANDLERS = {
     events.OutOfStock: [handlers.send_out_of_stock_notification],
-}  # type: Dict[Type[events.Event], List[Callable]]  #<2>
+}  # type: Dict[Type[events.Event], List[Callable]]
 
 COMMAND_HANDLERS = {
     commands.Allocate: handlers.allocate,
     commands.CreateBatch: handlers.add_batch,
     commands.ChangeBatchQuantity: handlers.change_batch_quantity,
-}  # type: Dict[Type[commands.Command], Callable]  #<3>
+}  # type: Dict[Type[commands.Command], Callable]
 ----
 ====
 
-
-<1> It still has a main `handle()` entrypoint, that takes a message, which may
-    be a command or an event.
-
-<2> Events got to a dispatcher that can delegate to multiple handlers per
-    event; it catches and logs any errors, but does not let them interrupt
-    message processing.
-
-<3> The command dispatcher expects just one handler per command.  If any errors
-    are raised, they fail hard and will bubble up.
 
 
 [[commands_return_sidebar]]
 .An Ugly Wart that we still have to fix
 *******************************************************************************
+
+TODO fix this bit, out of date
 
 Why does `handle_command` have a `return`, but `handle_events` doesn't, we hear
 you ask?  It's so that we can return the batchref from the API.
