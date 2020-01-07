@@ -366,10 +366,11 @@ message bus, and hand that back to us.
 
 //TODO: show a version without inspect()
 
-[[bootstrap_v1]]
+[[bootstrap_script]]
 .A bootstrap function (src/allocation/bootstrap.py)
 ====
 [source,python]
+[role="non-head"]
 ----
 def bootstrap(
     start_orm: bool = True,  #<1>
@@ -582,10 +583,11 @@ And in tests, we can use our `bootstrap.bootstrap()` with overridden defaults
 to get a custom messagebus:
 
 
-[[custom_bootstrap]]
+[[bootstrap_view_tests]]
 .Overriding bootstrap defaults (tests/integration/test_views.py)
 ====
 [source,python]
+[role="non-head"]
 ----
 @pytest.fixture
 def sqlite_bus(sqlite_session_factory):
@@ -685,24 +687,23 @@ class EmailNotifications(AbstractNotifications):
 ====
 
 
-we change the dependency in the messagebus:
+we change the dependency in the bootstrap script:
 
 [[notifications_in_bus]]
-.Notifications in messagebus (src/allocation/service_layer/messagebus.py)
+.Notifications in messagebus (src/allocation/bootstrap.py)
 ====
 [source,python]
 ----
-class MessageBus:
-
-    def __init__(
-            self,
-            uow: unit_of_work.AbstractUnitOfWork,
-            notifications: notifications.AbstractNotifications,
-            publish: Callable,
-    ):
+def bootstrap(
+    start_orm: bool = True,
+    uow: unit_of_work.AbstractUnitOfWork = unit_of_work.SqlAlchemyUnitOfWork(),
+    notifications: AbstractNotifications = None,
+    publish: Callable = redis_eventpublisher.publish,
+) -> messagebus.MessageBus:
 ----
 ====
 
+//TODO diff
 
 
 We work through and define a fake version for unit testing:
@@ -722,20 +723,12 @@ class FakeNotifications(notifications.AbstractNotifications):
         self.sent[destination].append(message)
 
 ...
-
-class FakeBus(messagebus.MessageBus):
-    def __init__(self):
-        uow = FakeUnitOfWork()
-        super().__init__(
-            uow=uow,
-            notifications=FakeNotifications(),
-            publish=mock.Mock(),
-        )
-        uow.bus = self
 ----
 ====
 
-we can use it in our tests:
+// TODO: back out fakes.py or do it from way earlier in book
+
+and use it in our tests:
 
 [[test_with_fake_notifs]]
 .Tests change slightly (tests/unit/test_handlers.py)
@@ -743,10 +736,16 @@ we can use it in our tests:
 [source,python]
 ----
     def test_sends_email_on_out_of_stock_error():
-        bus = FakeBus()
+        fake_notifs = fakes.FakeNotifications()
+        bus = bootstrap.bootstrap(
+            start_orm=False,
+            uow=fakes.FakeUnitOfWork(),
+            notifications=fake_notifs,
+            publish=lambda *args: None,
+        )
         bus.handle(commands.CreateBatch("b1", "POPULAR-CURTAINS", 9, None))
         bus.handle(commands.Allocate("o1", "POPULAR-CURTAINS", 10))
-        assert bus.dependencies['notifications'].sent['stock@made.com'] == [
+        assert fake_notifs.sent['stock@made.com'] == [
             f"Out of stock for POPULAR-CURTAINS",
         ]
 ----
