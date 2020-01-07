@@ -1,5 +1,5 @@
 [[chapter_12_dependency_injection]]
-== Dependency Injection (And Mocks)
+== Dependency Injection (And Bootstrapping)
 
 //TODO get rid of bullets
 
@@ -482,9 +482,9 @@ class MessageBus:  #<1>
 ====
 
 <1> The messagebus becomes a class...
-<2> ...which is given its already-dependency-injected handlers
-<3> the main `handle()` function is substantially the same, just
-    moving a few methods onto `self`.
+<2> ...which is given its already-dependency-injected handlers.
+<3> The main `handle()` function is substantially the same, just
+    moving a few attributes and methods onto `self`.
 
 // TODO (DS) diff?
 
@@ -710,12 +710,13 @@ def bootstrap(
 
 //TODO diff
 
+==== Make a Fake Version for your Tests
 
 We work through and define a fake version for unit testing:
 
 
 [[fake_notifications]]
-.fake notifications (tests/unit/fakes.py)
+.fake notifications (tests/unit/test_handlers.py)
 ====
 [source,python]
 ----
@@ -730,8 +731,6 @@ class FakeNotifications(notifications.AbstractNotifications):
 ...
 ----
 ====
-
-// TODO: back out fakes.py or do it from way earlier in book
 
 and use it in our tests:
 
@@ -756,6 +755,8 @@ and use it in our tests:
 ----
 ====
 
+
+==== Figure out how to Integration Test :he Real Thing
 
 Now we test the real thing, usually with an end-to-end or integration
 test.  We've used https://github.com/mailhog/MailHog[MailHog] as a
@@ -809,28 +810,40 @@ talking to the MailHog server in the docker cluster:
 ====
 [source,python]
 ----
-cfg = config.get_email_host_and_port()
-...
-
-
-def test_out_of_stock_email(sqlite_bus):
-    sku = random_sku()
-    sqlite_bus.handle(commands.CreateBatch('batch1', sku, 9, None))
-    sqlite_bus.handle(commands.Allocate('order1', sku, 10))
-    messages = requests.get(
-        f'http://{cfg["host"]}:{cfg["http_port"]}/api/v2/messages'
-    ).json()
-    message = next(
-        m for m in messages['items']
-        if sku in str(m)
+@pytest.fixture
+def bus(sqlite_session_factory):
+    bus = bootstrap.bootstrap(
+        start_orm=True,
+        uow=unit_of_work.SqlAlchemyUnitOfWork(sqlite_session_factory),
+        notifications=notifications.EmailNotifications(),  #<1>
+        publish=lambda *args: None,
     )
-    assert message['Raw']['From'] == 'allocations@example.com'
-    assert message['Raw']['To'] == ['stock@made.com']
-    assert f'Out of stock for {sku}' in message['Raw']['Data']
+    yield bus
+    clear_mappers()
+
+
+def get_email_from_mailhog(sku):  #<2>
+    host, port = map(config.get_email_host_and_port().get, ['host', 'http_port'])
+    all_emails = requests.get(f'http://{host}:{port}/api/v2/messages').json()
+    return next(m for m in all_emails['items'] if sku in str(m))
+
+
+def test_out_of_stock_email(bus):
+    sku = random_sku()
+    bus.handle(commands.CreateBatch('batch1', sku, 9, None))  #<3>
+    bus.handle(commands.Allocate('order1', sku, 10))
+    email = get_email_from_mailhog(sku)
+    assert email['Raw']['From'] == 'allocations@example.com'  #<4>
+    assert email['Raw']['To'] == ['stock@made.com']
+    assert f'Out of stock for {sku}' in email['Raw']['Data']
 ----
 ====
 
-against all the odds this actually worked, pretty much first go!
+<1> We use our bootstrapper to build a messagebus which talks to the
+    real notifications class
+<2> We figure out how to fetch emails from our "real" email server
+<3> We use the bus to do our test setup
+<4> And, against all the odds this actually worked, pretty much first go!
 
 
 And, erm, that's it really.
@@ -841,6 +854,8 @@ And, erm, that's it really.
 4. Find a less-fake version you can put into your docker environment
 5. Test the less-fake "real" thing
 6. Profit!
+
+// TODO this isn't really in the right TDD order is it?
 
 
 .Exercise for the Reader 
