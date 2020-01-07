@@ -340,7 +340,7 @@ In _unit_of_work.py_, `publish_events()` becomes a less active method,
 [[uow_collect_new_events]]
 .UoW no longer puts events directly on the bus (src/allocation/service_layer/unit_of_work.py)
 ====
-[source,python]
+[source,diff]
 ----
 -from . import messagebus  #<1>
 -
@@ -359,7 +359,7 @@ In _unit_of_work.py_, `publish_events()` becomes a less active method,
              while product.events:
 -                event = product.events.pop(0)
 -                messagebus.handle(event)
-+                yield product.events.pop(0) #<3>
++                yield product.events.pop(0)  #<3>
 
 ----
 ====

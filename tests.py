@@ -224,4 +224,4 @@ def diff_for_tag(filename, chapter_name, tag):
         check=True
     ).stdout.decode()
     assert output.strip(), f'no commit found for [{tag}]'
-    return output
+    return '\n'.join(l.rstrip() for l in output.splitlines())
