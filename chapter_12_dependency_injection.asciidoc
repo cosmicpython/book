@@ -410,7 +410,7 @@ def bootstrap(
 <2> We build up our injected versions of the handlers mappings using
     a function called `inject_dependencies()` which we'll show next.
 
-<5> And we return a configured message bus ready to use.
+<3> And we return a configured message bus ready to use.
 
 
 Here's how we inject dependencies into a handler function by inspecting
@@ -805,30 +805,13 @@ talking to the MailHog server in the docker cluster:
 [source,python]
 ----
 cfg = config.get_email_host_and_port()
-
-@pytest.fixture
-def bus(sqlite_session_factory):
-    uow = unit_of_work.SqlAlchemyUnitOfWork(sqlite_session_factory)
-    bus = messagebus.MessageBus(
-        uow=uow,
-        notifications=notifications.EmailNotifications(
-            smtp_host=cfg['host'],
-            port=cfg['port'],
-        ),
-        publish=lambda *_, **__: None
-    )
-    uow.bus = bus
-    return bus
+...
 
 
-def random_sku():
-    return uuid.uuid4().hex[:6]
-
-
-def test_out_of_stock_email(bus):
+def test_out_of_stock_email(sqlite_bus):
     sku = random_sku()
-    bus.handle(commands.CreateBatch('batch1', sku, 9, None))
-    bus.handle(commands.Allocate('order1', sku, 10))
+    sqlite_bus.handle(commands.CreateBatch('batch1', sku, 9, None))
+    sqlite_bus.handle(commands.Allocate('order1', sku, 10))
     messages = requests.get(
         f'http://{cfg["host"]}:{cfg["http_port"]}/api/v2/messages'
     ).json()
