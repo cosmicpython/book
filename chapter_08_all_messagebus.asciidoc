@@ -405,6 +405,7 @@ class TestAllocate:
 // TODO: (DS) why staticmethod?
 
 
+[[temporary_ugly_hack]]
 ==== A Temporary Ugly Hack: The Messagebus Has to Return Results
 
 Our API and our service layer currently want to know the allocated batch ref
@@ -430,9 +431,9 @@ a temporary hack on our messagebus to let it return events.
 ----
 ====
 
-
 It's because we're mixing the read and write responsibilities in our system.
 We'll come back to fix this wart in <<chapter_09_cqrs>>.
+
 
 ==== Modifying Our API to Do Events
 

@@ -102,6 +102,11 @@ class ChangeBatchQuantity(Command):  #<3>
 
 //TODO: consider keeping BatchQuantityChanged as an event?
 
+
+
+=== Differences in Exception-handling
+
+
 Just changing the names and verb tenses is all very well, but it won't actually
 change the behavior of our system.  We want to treat events and commands similarly,
 but not exactly the same.  Let's see how our message bus changes.
@@ -170,17 +175,17 @@ def handle_event(
 ====
 [source,python]
 ----
-def handle_command(  #<1>
+def handle_command(
     command: commands.Command,
     queue: List[Message],
     uow: unit_of_work.AbstractUnitOfWork
 ):
     logger.debug('handling command %s', command)
     try:
-        handler = COMMAND_HANDLERS[type(command)]
+        handler = COMMAND_HANDLERS[type(command)]  #<1>
         result = handler(command, uow=uow)
         queue.extend(uow.collect_new_events())
-        return result
+        return result  #<3>
     except Exception:
         logger.exception('Exception handling command %s', command)  
         raise  #<2>
@@ -191,6 +196,10 @@ def handle_command(  #<1>
 <1> The command dispatcher expects just one handler per command.
 
 <2> If any errors are raised, they fail hard and will bubble up.
+
+<3> `return result` is only temporary; as mentioned in <<temporary_ugly_hack>>,
+    it's a temporary hack to allow the message bus to return the batch
+    reference for the API to use.  We'll fix this in <<chapter_11_cqrs>>.
 
 
 We also change the single `HANDLERS` dict into different ones for
@@ -216,42 +225,7 @@ COMMAND_HANDLERS = {
 
 
 
-[[commands_return_sidebar]]
-.An Ugly Wart that we still have to fix
-*******************************************************************************
-
-TODO fix this bit, out of date
-
-Why does `handle_command` have a `return`, but `handle_events` doesn't, we hear
-you ask?  It's so that we can return the batchref from the API.
-
-[[flask_uses_command]]
-.Flask gets a response from the command handler (src/allocation/entrypoints/flask_app.py)
-====
-[source,python,highlight=8]
-----
-@app.route("/allocate", methods=['POST'])
-def allocate_endpoint():
-    try:
-        cmd = commands.Allocate(
-            request.json['orderid'], request.json['sku'], request.json['qty'],
-        )
-        uow = unit_of_work.SqlAlchemyUnitOfWork()
-        batchref = messagebus.handle(cmd, uow)
-    except InvalidSku as e:
-        return jsonify({'message': str(e)}), 400
-
-    return jsonify({'batchref': batchref}), 201
-----
-====
-
-This is an ugly wart that we've drawn attention to before.  In <<chapter_11_cqrs>>
-we'll look at a way of separating out command handling from read requests.
-
-*******************************************************************************
-
-
-=== Events, Commands, and Error Handling
+=== Discussion: Events, Commands, and Error Handling
 
 Many developers get uncomfortable at this point, and ask "what happens when an
 event fails to process. How am I supposed to make sure the system is in a
@@ -428,11 +402,16 @@ Let's look again at the 'handle_event' method from our message bus.
 ====
 [source,python,highlight=4;7]
 ----
-def handle_event(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):
+def handle_event(
+    event: events.Event,
+    queue: List[Message],
+    uow: unit_of_work.AbstractUnitOfWork
+):
     for handler in EVENT_HANDLERS[type(event)]:
         try:
             logger.debug('handling event %s with handler %s', event, handler)
             handler(event, uow=uow)
+            queue.extend(uow.collect_new_events())
         except:
             logger.exception('Exception handling event %s', event)
             continue
@@ -448,9 +427,9 @@ Handling event CustomerBecameVIP(customer_id=12345)
 with handler <function congratulate_vip_customer at 0x10ebc9a60>
 ----
 
-Because we've chosen to use dataclasses (or namedtuples) for our message types
-we get a neatly printed summary of the incoming data that we can copy and paste
-into a python shell to recreate the object.
+Because we've chosen to use dataclasses for our message types we get a neatly
+printed summary of the incoming data that we can copy and paste into a python
+shell to recreate the object.
 
 When an error occurs, we can use the logged data to either reproduce the problem
 in a unit test, or replay the message into the system.
@@ -489,11 +468,13 @@ def handle_event(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):
             ):
 
                 with attempt:
-                  logger.debug('handling event %s with handler %s', event, handler)
-                  handler(event, uow=uow)
+                    logger.debug('handling event %s with handler %s', event, handler)
+                    handler(event, uow=uow)
+                    queue.extend(uow.collect_new_events())
         except RetryError as retry_failure:
             n = retry_failure.last_attempt.attempt_number
             logger.error(f'Failed to handle event {n} times, giving up!')
+            continue
 
 ----
 ====
