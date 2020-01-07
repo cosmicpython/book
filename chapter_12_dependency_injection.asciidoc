@@ -359,12 +359,15 @@ Use whichever you and your team feel more comfortable with.
 
 === Bootstrap script does all the DI
 
-Our bootstrapper will do any required application initialization,
-then prepare some dependency-injected handlers, give them to our
-message bus, and hand that back to us.
+Here's what we want from our bootstrap script:
 
+1. It should declare default dependencies but allow us to override them.
+2. It should do the "init" stuff that we need to get our app started.
+3. It should inject all the dependencies into our handlers.
+4. It should give us back the core object for our app, the message bus.
 
-//TODO: show a version without inspect()
+Here's a first cut.
+
 
 [[bootstrap_script]]
 .A bootstrap function (src/allocation/bootstrap.py)
@@ -436,6 +439,8 @@ def inject_dependencies(handler, dependencies):
 <2> We match them by name to our dependencies
 <3> And we inject them in as kwargs to a produce a partial
 
+
+//TODO: show a version without inspect()
 
 
 === Messagebus Gets Given Handlers at Runtime
@@ -847,7 +852,7 @@ notifications or something?
 
 Oh yeah, step 4 is a bit challenging...
 
-Or, do the same thing for redis.  You'll need to split pub from sub.
+Or, do the same thing for redis_eventpublisher.
 ******************************************************************************
 
 
