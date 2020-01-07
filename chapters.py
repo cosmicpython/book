@@ -13,13 +13,11 @@ CHAPTERS = [
     "chapter_10_external_events",
     "chapter_11_cqrs",
     "chapter_12_dependency_injection",
-    "appendix_bootstrap",
 ]
 
 BRANCHES = {
     'appendix_csvs',
     'appendix_django',
-    'appendix_bootstrap',
 }
 
 STANDALONE = [
@@ -37,5 +35,4 @@ NO_EXERCISE = [
     "chapter_10_external_events",
     "chapter_11_cqrs",
     "chapter_12_dependency_injection",
-    "appendix_bootstrap",
 ]
