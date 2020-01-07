@@ -440,7 +440,64 @@ def inject_dependencies(handler, dependencies):
 <3> And we inject them in as kwargs to a produce a partial
 
 
-//TODO: show a version without inspect()
+.An Even-poorer Man's DI, With Even Less Magic.
+*******************************************************************************
+If you're finding the `inspect` code above a little harder to grok, this
+even-simpler version may appeal.
+
+Harry wrote the code for `inject_dependencies()` as a first cut of how to do
+"manual" dependency injection, and when he saw it, Bob accused him of
+overengineering and writing his own DI framework. 
+
+It honestly didn't even occur to Harry that you could do it any more plainly,
+but in fact of course you can, like this:
+
+
+[[nomagic_di]]
+.Manually creating partial functions inline (src/allocation/bootstrap.py)
+====
+[source,python]
+[role="non-head"]
+----
+    injected_event_handlers = {
+        events.Allocated: [
+            lambda e: handlers.publish_allocated_event(e, publish),
+            lambda e: handlers.add_allocation_to_read_model(e, uow),
+        ],
+        events.Deallocated: [
+            lambda e: handlers.remove_allocation_from_read_model(e, uow),
+            lambda e: handlers.reallocate(e, uow),
+        ],
+        events.OutOfStock: [
+            lambda e: handlers.send_out_of_stock_notification(e, send_mail)
+        ]
+    }
+    injected_command_handlers = {
+        commands.Allocate: lambda c: handlers.allocate(c, uow),
+        commands.CreateBatch: \
+            lambda c: handlers.add_batch(c, uow),
+        commands.ChangeBatchQuantity: \
+            lambda c: handlers.change_batch_quantity(c, uow),
+    }
+----
+====
+
+Harry says he couldn't even imagine writing out that many lines of code
+and having to look up that many function arguments manually.
+manually.  This is a perfectly viable solution though, since it's only one
+line of code or so per handler you add, so not a massive maintenance burden
+even if you have dozens of handlers.
+
+Our app is structured in such a way that we only ever want to do dependency
+injection in one place, the handler functions, so this super-manual solution
+and Harry's `inspect()` based one will work fine.
+
+If you find yourself wanting to do DI into more things and at different times,
+you may get some mileage out of a "real" DI framework.  At MADE we've
+used https://pypi.org/project/Inject/[Inject] in a few places, and it's
+fine although it makes pylint unhappy.  You might also check out
+https://pypi.org/project/punq/[Punq], as written by Bob himself.
+*******************************************************************************
 
 
 === Messagebus Gets Given Handlers at Runtime
@@ -877,9 +934,6 @@ Or, do the same thing for redis_eventpublisher.
 * but you don't have to.  it is a violation of the SRP after all. if you use
   a <<appendix_bootstrap,bootstrap script>>, that can be a good place to
   initialise some alternative DI tools
-* off-the-shelf, you could try https://pypi.org/project/Inject/[Inject]
-  (it's fine, we use it at MADE, it makes pylint complain) or 
-  https://pypi.org/project/punq/[Punq] (as written by Bob himself).
 
 TODO: expand on wrap-up
 
