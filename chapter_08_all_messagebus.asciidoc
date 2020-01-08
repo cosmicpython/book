@@ -371,6 +371,9 @@ In _unit_of_work.py_, `publish_events()` becomes a less active method,
     just makes them available.
 
 
+//TODO: we can definitely get rid of _commit() now right?
+
+
 ==== Our Tests Are All Written in Terms of Events Too:
 
 [[handler_tests]]
