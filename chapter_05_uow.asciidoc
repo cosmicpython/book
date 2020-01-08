@@ -74,7 +74,56 @@ Services -> API: OK
 @enduml
 ----
 
+////
+TODO (EJ)
+I agree on the service layer box, as I'm not sure that it adds much here, and the focus is on UOW.
+
+About the sequence diagram, there are a couple things that might help:
+
+*   Use Session instead of DB as the participant. That will make the syntax of
+    the sequence diagram clearer, as well as matching the source code better.
+    (The service layer creates a Session, which implicitly starts a transaction
+    with the DB. Then Service sends a commit message to Session, as opposed to
+    asking DB to commit a session).
+
+*   This will also make the second diagram clearer, as the diagram conflicts
+    with some details around how SqlAlchemy sessions work. (The SQL transaction
+    doesn't actually start until the first request to the DB, so it's not clear
+    if "Start Session" means start a transaction, or create a SqlAlchemy
+    Session object.)
+
+*   On the second diagram, if you include the repo as a a participant, it may
+    help. Otherwise it looks like it has just disappeared and has no role in
+    the interaction.
+
+*   Some small tweaks to the implementation may help with the diagrams. If
+    instead of injecting a uow instance, you inject a factory, like this:
+
+def foo(stuff, uow_klass):
+    with uow_klass() as uow:
+        # do something
+
+Then the lifecycle of the UoW instance will be the same as the context manager.
+That may have a clearer diagram, because it will let you use the "Create and
+Destroy" symbols on a diagram. See the "Bob" and "George" examples Shortcut
+syntax for activation, deactivation, creation
+
+
+(BOB)
+
+I'm not convinced that a sequence diagram is the right way to show the
+interaction here because we're not really interested in a flow of events. The
+change we've made is about the structure of things and relationships, rather
+than the process or order of things.
+
+Maybe something like https://vivekcek.files.wordpress.com/2013/06/2.png would
+be better? How would you sketch this change if you were explaining it to a
+junior developer?
+////
+
 And we'll do it all using a lovely piece of Python syntax, a context manager.
+
+
 
 // TODO: I feel like maybe we should waffle a bit more in this chapter? We
 // could talk about guidelines for what to mock?
