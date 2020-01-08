@@ -8,6 +8,10 @@ discuss the concept of a _consistency boundary_, and show how making it
 explicit can help us to build high-performance software without compromising
 maintainability.
 
+// TODO (hynek) no you don't (discuss the concept of a consistency boundary),
+// that term doesn't come up until chapter 9
+
+
 Here's a preview of where we're headed: we're going to move from the model in 
 <<before_aggregates_diagram>>, where we need to retrieve all the batches and
 pass them to the `allocate()` domain service...
@@ -223,6 +227,8 @@ and demonstrate its usefulness for managing invariants at the conceptual level,
 as the single entrypoint in our code for modifying batches and allocations. In
 that role, it's defending us from programmer error.
 
+// TODO (hynek) at no point have you explained what an aggregate is
+
 Then we'll return to the topic of concurrency and discuss how the aggregate can
 enforce invariants at a lower level.  In that role, it'll be defending us
 against concurrency / data integrity bugs.
@@ -244,6 +250,10 @@ purpose of data changes.
 // AGGREGATE, because no outside object can ever see it out of the context of the
 // root ENTITY.
 ____
+
+// TODO (hynek) this isn't greate.  there really should be a seciton "what is an
+// aggregate before starting "choosing the right aggregate" and basically explaining
+// it using only an evans quote
 
 Even if it weren't for the data integrity concerns, as a model gets more complex
 and grows more different Entity and Value Objects, all of which start pointing
@@ -316,6 +326,9 @@ class Product:
 <3> And finally, we can move the `allocate()` Domain Service to
     being a method on the `Product` aggregate.
 
+// TODO (hynek): random nitpick: exceptions denoting errors should be
+// named *Error.  Are you doing this to save space in the listing?
+
 
 NOTE: This `Product` might not look like what you'd expect a `Product`
     model to look like.  No price, no description, no dimensions...
@@ -378,6 +391,8 @@ rule that they are the only entities that are publicly accessible to the
 outside world.  In other words, the only repositories we are allowed should
 be repositories that return aggregates.
 
+// TODO (hynek) pls make up your mind on capitalisation
+
 In our case, we'll switch from `BatchRepository` to `ProductRepository`:
 
 
@@ -387,20 +402,12 @@ In our case, we'll switch from `BatchRepository` to `ProductRepository`:
 [source,python]
 [role="skip"]
 ----
-class AbstractUnitOfWork:
-    ...
+class AbstractUnitOfWork(abc.ABC):
+    products: repository.AbstractProductRepository
 
-    def init_repositories(self, products: repository.AbstractProductRepository):
-        self._products = products
+...
 
-    @property
-    def products(self) -> repository.AbstractProductRepository:
-        return self._products
-
-
-#...
-
-class AbstractProductRepository:
+class AbstractProductRepository(abc.ABC):
 
     @abc.abstractmethod
     def add(self, product):
@@ -556,7 +563,7 @@ There are essentially 3 options for implementing version numbers:
 
 Option 3 isn't ideal, because there's no real way of doing it without having to
 assume that _all_ products have changed, so we'll be incrementing version numbers
-when we don't have tofootnote:[perhaps we could get some ORM/sqlalchemy magic to tell
+when we don't have tofootnote:[Perhaps we could get some ORM/SQLAlchemy magic to tell
 us when an object is dirty, but how would that work in the generic case, eg for a
 CsvRepository?].
 
@@ -672,6 +679,10 @@ def test_concurrent_updates_to_version_are_not_allowed(postgres_session_factory)
 ----
 ====
 
+// TODO (hynek) (re # type: List[Exception]) why don't you use the proper syntax
+// for variable type annotations
+// (HP) because its hella ugly.
+
 <1> We start two threads that will reliably produce the concurrency behavior we
     want:  `read1, read2, write1, write2`.
 
@@ -764,6 +775,8 @@ Choose the right aggregate::
 
 Something something transactions::
     bla bla.
+
+// TODO (hynek) ehm.
 
 *****************************************************************
 
