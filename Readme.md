@@ -32,7 +32,6 @@ In the meantime, pull requests, typofixes, and more substantial feedback + sugge
 | [Appendix B: Project Structure](appendix_project_structure.asciidoc) | [![Build Status](https://travis-ci.org/cosmicpython/code.svg?branch=appendix_project_structure)](https://travis-ci.org/cosmicpython/code) |
 | [Appendix C: A major infrastructure change, made easy](appendix_csvs.asciidoc) | [![Build Status](https://travis-ci.org/cosmicpython/code.svg?branch=appendix_csvs)](https://travis-ci.org/cosmicpython/code) |
 | [Appendix D: Django](appendix_django.asciidoc) | [![Build Status](https://travis-ci.org/cosmicpython/code.svg?branch=appendix_django)](https://travis-ci.org/cosmicpython/code) |
-| [Appendix E: Bootstrap](appendix_bootstrap.asciidoc) | [![Build Status](https://travis-ci.org/cosmicpython/code.svg?branch=appendix_bootstrap)](https://travis-ci.org/cosmicpython/code) |
 | [Appendix F: Validation](appendix_validation.asciidoc) | |
 
 

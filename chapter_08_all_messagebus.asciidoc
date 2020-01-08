@@ -162,6 +162,10 @@ Refactoring] workflow, AKA "make the change easy, then make the easy change":
   handler for allocations that the API uses.
 
 
+Along the way we'll make a small tweak to the messagebus and UoW, moving the
+responsibility for putting new events onto the messagebus into the messagebus itself.
+
+
 === Refactoring Service Functions to Message Handlers
 
 We start by defining the two events that capture our current API inputs:
@@ -298,52 +302,76 @@ events classes can be a nice place to do some input validation.
 *******************************************************************************
 
 
-==== The MessageBus Needs to Pass a UoW to Each Handler
+==== The MessageBus Becomes Responsible for Collecting Events from the UoW
 
-Our event handlers now need a UoW.  We make a small modification
-to the main `messagebus.handle()` function:
+Our event handlers now need a UoW.  In addition, as our message bus becomes
+more central to our application, it makes sense to put it explicitly in charge of
+collecting and processing new events.  There was a bit of a circular dependency
+between UoW and message bus until now, so this will make it one-way:
 
 
-[[handle_takes_uow]]
-.Handle takes a UoW (src/allocation/service_layer/messagebus.py)
+[[handle_has_uow_and_queue]]
+.Handle takes a UoW and manages a queue (src/allocation/service_layer/messagebus.py)
 ====
 [source,python]
 [role="non-head"]
 ----
-def handle(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):
-    for handler in HANDLERS[type(event)]:
-        handler(event, uow=uow)  #<1>
+def handle(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):  #<1>
+    queue = [event]  #<2>
+    while queue:
+        event = queue.pop(0)  #<3>
+        for handler in HANDLERS[type(event)]:  #<3>
+            handler(event, uow=uow)  #<4>
+            queue.extend(uow.collect_new_events())  #<5>
 ----
 ====
 
-<1> The messagebus passes a UoW down to each handler
+<1> The messagebus now gets passed the UoW each time it starts up.
+<2> When we begin handling our first event, we start a queue.
+<3> We pop events from the front of the queue and invoke its handlers.
+<4> The messagebus passes the UoW down to each handler
+<5> After each handler finishes, we collect any new events that have been
+    generated, and we add them to the queue.
+
+In _unit_of_work.py_, `publish_events()` becomes a less active method,
+`collect_new_events()`:
 
 
-And to _unit_of_work.py_:
-
-
-[[uow_passes_self_to_messagebus]]
-.UoW passes self to message bus (src/allocation/service_layer/unit_of_work.py)
+[[uow_collect_new_events]]
+.UoW no longer puts events directly on the bus (src/allocation/service_layer/unit_of_work.py)
 ====
-[source,python]
+[source,diff]
 ----
-class AbstractUnitOfWork(abc.ABC):
-    ...
+-from . import messagebus  #<1>
+-
+ 
+ 
+ class AbstractUnitOfWork(abc.ABC):
+@@ -23,13 +21,11 @@ class AbstractUnitOfWork(abc.ABC):
+ 
+     def commit(self):
+         self._commit()
+-        self.publish_events()  #<2>
+ 
+-    def publish_events(self):
++    def collect_new_events(self):
+         for product in self.products.seen:
+             while product.events:
+-                event = product.events.pop(0)
+-                messagebus.handle(event)
++                yield product.events.pop(0)  #<3>
 
-    def publish_events(self):
-        for product in self.products.seen:
-            while product.events:
-                event = product.events.pop(0)
-                messagebus.handle(event, uow=self)  #<1>
 ----
 ====
 
-<1> The UoW passes itself to the messagebus. This pattern is called
-    double-dispatch and it's a common trick for managing a circular dependency.
+<1> The `unit_of_work` module now no longer depends on `messagebus`
+<2> We no longer `publish_events` automatically on commit.  The messagebus
+    is keeping track of the event queue instead.
+<3> And the UoW no longer actively put events onto the messagebus, it
+    just makes them available.
 
 
 ==== Our Tests Are All Written in Terms of Events Too:
-
 
 [[handler_tests]]
 .Handler Tests use Events (tests/unit/test_handlers.py)
@@ -377,6 +405,7 @@ class TestAllocate:
 // TODO: (DS) why staticmethod?
 
 
+[[temporary_ugly_hack]]
 ==== A Temporary Ugly Hack: The Messagebus Has to Return Results
 
 Our API and our service layer currently want to know the allocated batch ref
@@ -390,17 +419,21 @@ a temporary hack on our messagebus to let it return events.
 ----
  def handle(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):
 +    results = []
-     for handler in HANDLERS[type(event)]:
--        handler(event, uow=uow)
-+        r = handler(event, uow=uow)
-+        results.append(r)
+     queue = [event]
+     while queue:
+         event = queue.pop(0)
+         for handler in HANDLERS[type(event)]:
+-            handler(event, uow=uow)
++            r = handler(event, uow=uow)
++            results.append(r)
+             queue.extend(uow.collect_new_events())
 +    return results
 ----
 ====
 
-
 It's because we're mixing the read and write responsibilities in our system.
 We'll come back to fix this wart in <<chapter_09_cqrs>>.
+
 
 ==== Modifying Our API to Do Events
 
