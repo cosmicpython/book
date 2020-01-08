@@ -8,9 +8,73 @@ If the Repository is our abstraction over the idea of persistent storage,
 the Unit of Work is our abstraction over the idea of _atomic operations_. It
 will allow us to finally, fully, decouple our Service Layer from the data layer.
 
-And we'll do it using a lovely piece of Python syntax, a context manager.
 
-// TODO DIAGRAM GOES HERE
+<<before_uow_diagram>> shows that, currently, there is a lot of communication
+across the layers of our infrastructure:  the API talks directly to the DB
+layer to start a session, it talks to the repository layer to initialize a
+`BatchRepository`, and it talks to the service layer to ask it to allocate.
+
+[[before_uow_diagram]]
+.Without UoW: API talks directly to 3 layers
+image::images/before_uow_diagram.png[]
+[role="image-source"]
+----
+[plantuml, before_uow_diagram, config=plantuml.cfg]
+@startuml
+
+participant "Flask API" as API
+participant Services
+participant BatchRepository
+participant DB
+
+API -> DB : start session
+API -> BatchRepository : init BatchRepository(session)
+API -> Services: allocate(orderline, repo)
+Services -> BatchRepository : list batches
+Services -> DB: session.commit()
+Services -> API: OK
+
+@enduml
+----
+
+<<after_uow_diagram>> shows our target state: the Flask API now only does two
+things: it initializes a unit of work, and it invokes the service.  The service
+collaborates with the UoW (we like to think of the UoW as being part of the
+service layer), but neither the service function itself nor Flask longer needs
+to talk directly to the DB.
+
+
+[[after_uow_diagram]]
+.With UoW: UoW now manages DB state
+image::images/after_uow_diagram.png[]
+[role="image-source"]
+----
+[plantuml, after_uow_diagram, config=plantuml.cfg]
+@startuml
+
+participant "Flask API" as API
+box "Service Layer"
+    participant Services
+    participant UoW
+endbox
+participant DB
+
+API -> UoW : init UoW
+API -> Services : allocate(orderline, uow)
+group Unit of Work
+    Services -> UoW : start UoW
+    UoW -> DB: start session
+    Services -> UoW : list batches
+    Services -> Services: allocate(orderline, batches)
+    Services -> UoW: commit()
+    UoW -> DB: session.commit()
+end
+Services -> API: OK
+
+@enduml
+----
+
+And we'll do it all using a lovely piece of Python syntax, a context manager.
 
 // TODO: I feel like maybe we should waffle a bit more in this chapter? We
 // could talk about guidelines for what to mock?
