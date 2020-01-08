@@ -538,7 +538,23 @@ OK, nicer-looking SQL queries wouldn't be a justification for anything really,
 but building a denormalized copy of your data that's optimized for read operations
 isn't uncommon, once you've reached the limits of what you can do with indexes.
 
-Keeping it up to date is the challenge!  Postgres views and triggers are a
+Even with well-tuned indexes, a relational database uses a lot of CPU to perform
+joins. The fastest queries will always be "SELECT * from MyTable WHERE key = :value"
+
+More than raw speed, though, this approach buys us scale. When we're writing
+data to a relational database, we need to make sure that we get a lock over the
+rows we're changing so that we don't run into consistency problems.
+
+If multiple clients are changing data at the same time, we'll have weird race
+conditions. When we're _reading_ data, though, there's no limit to the number
+of clients that can concurrently execute. For this reason read-only stores can
+be horizontally scaled out.
+
+TODO: Diagram (cmd -> handler (single DB instance) -> event; event -> handler (multiple db instances); view -> read instances )
+// Do we need this? It might actually be covered by the seuqnce diagram futher
+down
+
+Keeping them up to date is the challenge!  Postgres views and triggers are a
 common solution, but that limits you to Postgres. We'd like to show you how we
 can reuse our event-driven architecture instead.
 
@@ -735,7 +751,7 @@ TIP: Event handlers are a great way to manage updates to a read model,
 
 
 As it happens, the allocation service at MADE.com does use "full blown" CQRS,
-with a read model that uses Redis, and even a second layer of cache provided
+with a read model stored in Redis, and even a second layer of cache provided
 by Varnish.  But its use cases are actually quite a bit different from what
 we've shown here. For the kind of allocation service we're building, it seems
 unlikely that you'd need to use a separate read model and event handlers for
@@ -768,15 +784,5 @@ in terms of `Batches` for a single sku, but users care about allocations
 for a whole order, with multiple skus, so using the ORM ends up being a little
 awkward.  We'd be quite tempted to go with the raw-SQL view we showed right
 at the beginning of the chapter.
-
-// (ej) Many NoSql stores have a CQRS-like write->project->read pattern built-in as 
-//      part of their implementation, and the same ideas apply in principle. 
-//
-//      For example, in elasticsearch, POSTing a document 
-//      adds it to the store, but it won't bed indexed immediately, and document mapping defines 
-//      transformations that affect indexing and search.
-
-// TODO: link to original blog post?
-
 
 OK.  On that note, let's sally forth into our final chapter.
