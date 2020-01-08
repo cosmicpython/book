@@ -535,11 +535,11 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 ----
 ====
 
+// TODO (hynek) this is super gross API design and makes me super of angry
+// and I'm personally offended.  Also, sentences end with a period.
+
 <1> We'll change our commit method to require a private `._commit()`
     method from subclasses.
-
-// TODO (hynek) this is super gross API desgin and makes me super of angry
-// and I'm personally offended.  Also, sentences end with a period.
 
 <2> After committing, we run through all the objects that our
     repository has seen and pass their events to the message bus.
