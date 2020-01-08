@@ -300,7 +300,7 @@ effort we put into building a nice domain model?  And what about Repository
 Pattern, isn't that meant to be our abstraction around the database, why don't
 we reuse that?
 
-Well, let's explore that seemingly more-sane alternative first, and see what it
+Well, let's explore that seemingly simpler alternative first, and see what it
 looks like in practice.
 
 
@@ -596,6 +596,10 @@ conditions. When we're _reading_ data, though, there's no limit to the number
 of clients that can concurrently execute. For this reason read-only stores can
 be horizontally scaled out.
 
+TIP: Because read replicas can be inconsistent, there's no limit to how many we
+can have. If you're struggling to scale a system with a complex data store, ask
+whether you could build a simpler read model.
+
 TODO: Diagram (cmd -> handler (single DB instance) -> event; event -> handler (multiple db instances); view -> read instances )
 // Do we need this? It might actually be covered by the seuqnce diagram futher
 down
@@ -717,10 +721,27 @@ Flask -> User: some allocations
 @enduml
 ----
 
+**********
+"What happens when it breaks" should be the first question we ask as engineers.
 
-// TODO: discuss updating the view model manually / rebuilding / backup plan if something goes wrong between the two transactions.
+How do we deal with a view model that hasn't been updated because of a bug or
+temporary outage? Well, this is just another case where events and commands can
+fail independently.
 
+If we *never* updated the view model, and the ILL-JUDGED-WARDROBE was forever in
+stock, that would be annoying for customers, but the `allocate` service would
+still fail, and we'd take action to fix the problem.
 
+Rebuilding a view model is easy, though. Since we're using a service layer to
+update our view model, we can write a tool that
+
+* Queries the current state of the write-side to work out what's currently
+  allocated.
+* Calls the `add_allocate_to_read_model` handler for each allocated item.
+
+We can use this technique to create entirely new read-models from historical
+data.
+**********
 
 === Changing our Read Model Implementation is Easy
 
