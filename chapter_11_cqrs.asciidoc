@@ -137,7 +137,7 @@ always be able to ask "are the lights on?" without flicking the light switch.
 NOTE: When building APIs we can apply the same design technique by returning a
 201 Created, or a 202 Accepted, with a Location header containing the URI of our
 new resources. What's important here isn't the status code we use, but the
-logical breakdown of work into a write phase and a query phase.
+logical separation of work into a write phase and a query phase.
 
 As we'll see, we can use the CQS principle to make our systems faster and more
 scalable, but first, let's fix the CQS violation in our existing code. A few
