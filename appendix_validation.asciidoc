@@ -80,10 +80,10 @@ class Allocate(Command):
 ----
 ====
 
-<1> The 'schema'.footnote[https://pypi.org/project/schema/] library lets us
+<1> The ++schema++footnote:[https://pypi.org/project/schema/] library lets us
     describe the structure and validation of our messages in a nice declarative way.
 
-<2> The 'from_json' method reads a string as json, and turns it into our message
+<2> The `from_json` method reads a string as JSON, and turns it into our message
     type.
 
 This can get repetitive, though,  since we need to specify our fields twice,
@@ -385,5 +385,4 @@ TODO: Topics still (?) to discuss:
 * Validate at the edges, don't program defensively inside
 * Difference between syntax and semantics
 * Discuss patterns for validating messages
-* Talk about reasons for loosely validating messages in the consumer, tolerant reader et c.
-
+* Talk about reasons for loosely validating messages in the consumer, tolerant reader etc.

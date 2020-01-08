@@ -69,7 +69,7 @@ image::images/coupling_illustration2.png[]
 [ditaa,coupling_illustration2]
 +--------+                           +--------+
 | System |      /-------------\      | System |
-|   A    |      |             | ---> |   B    |
+|   A    | ---> |             | ---> |   B    |
 |        | ---> | Abstraction | ---> |        |
 |        |      |             | ---> |        |
 |        |      \-------------/      |        |
@@ -80,12 +80,16 @@ image::images/coupling_illustration2.png[]
 
 In both diagrams, we have a pair of subsystems, with the one dependent on
 the other. In the first diagram, there is a high degree of coupling between the
-two, because reasons. If we need to change system B, there's a good
-chance that the change will ripple through to system A.
+two; the number of arrows indicate lots of different kinds of dependencies
+between the two. If we need to change system B, there's a good chance that the
+change will ripple through to system A.
 
 In the second, though, we have reduced the degree of coupling by inserting a
-new, simpler, abstraction. This abstraction serves to protect us from change by
-hiding away the complex details of whatever system B does.
+new, simpler, abstraction. Because it is simpler, System A has fewer different
+kinds of dependencies on the abstraction. The abstraction serves to
+protect us from change by hiding away the complex details of whatever system B
+does--we can change the arrows on the right without changing the ones on the
+left.
 
 
 === Abstracting State Aids Testability
@@ -556,8 +560,8 @@ def test_when_a_file_has_been_renamed_in_the_source():
 The advantage of this approach is that your tests act on the exact same function
 that's used by your production code.  The disadvantage is that we have to make
 our stateful components explicit and we have to pass them around.
-DHHfootnote:[David Heinemeier Hansson, the creator of Ruby on Rails]
-famously described this as "test damage".
+David Heinemeier Hansson, the creator of Ruby on Rails, famously described this
+as "test-induced design damage".
 
 In either case, we can now work on fixing all the bugs in our implementation;
 enumerating tests for all the edge cases is now much easier.
@@ -569,8 +573,8 @@ At this point you may be scratching your head and thinking
 "Why don't you just use `mock.patch` and save yourself the effort?
 
 We avoid using mocks in this book, and in our production code, too. We're not
-going to enter into a Holy War, but our instinct is that mocking frameworks are
-a code smell.
+going to enter into a Holy War, but our instinct is that mocking frameworks,
+particularly monkeypatching, are a code smell.
 
 Instead, we like to clearly identify the responsibilities in our codebase, and to
 separate those responsibilities out into small, focused objects that are easy to
@@ -582,9 +586,6 @@ There are three closely related reasons for that:
 code, but it does nothing to improve the design. Using mock.patch won't let your
 code work with a `--dry-run` flag, nor will it help you run against an ftp
 server. For that, you'll need to introduce abstractions.
-+
-Designing for testability really means designing for extensibility. We trade off
-a little more complexity for a cleaner design that admits novel use-cases.
 
 2.  Tests that use mocks _tend_ to be more coupled to the implementation details
 of the codebase. That's because mock tests verify the interactions between
@@ -597,6 +598,10 @@ https://www.martinfowler.com/articles/mocksArentStubs.html[Mocks Aren't Stubs]
 3.  Over-use of mocks leads to complicated test suites that fail to explain the
 code.
 
+NOTE: Designing for testability really means designing for
+    extensibility. We trade off a little more complexity for a cleaner design
+    that admits novel use-cases.
+
 We view TDD as a design practice first, and a testing practice second. The tests
 act as a record of our design choices, and serve to explain the system to us
 when we return to the code after a long absence.
@@ -606,8 +611,9 @@ story we care about.
 
 Steve Freeman has a great example of over-mocked tests in his talk
 https://www.youtube.com/watch?v=B48Exq57Zg8[Test Driven Development: That's Not What We Meant].
-You should also check out this https://www.youtube.com/watch?v=Ldlz4V-UCFw[Pycon talk on Mocking Pitfalls]
-by our esteemed tech reviewer, Ed Jung, which also addresses mocking and its alternatives.
+You should also check out this https://www.youtube.com/watch?v=Ldlz4V-UCFw[PyCon talk on Mocking Pitfalls]
+by our esteemed tech reviewer, Ed Jung, which also addresses mocking and its
+alternatives.
 
 And while we're recommending talks, don't miss
 https://www.youtube.com/watch?v=PBQN62oUnN8[Brandon Rhodes talking about "hoisting" I/O"],
@@ -624,6 +630,7 @@ TIP: In this chapter we've spent a lot of time replacing end-to-end tests with
 
 .So Which Do We Use in this Book? FCIS or DI?
 ******************************************************************************
+//TODO (hynek) not sure you can rely on people remembering those acronyms just yet
 Both. Our domain model is entirely free of dependencies and side-effects,
 so that's our functional core.  The service layer that we build around it
 (in <<chapter_04_service_layer>>) allows us to drive the system edge-to-edge
