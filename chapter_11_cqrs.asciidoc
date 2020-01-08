@@ -71,6 +71,52 @@ is very differerent. For example, our customers won't notice if the query
 is a few seconds out of date, but if our `allocate` service is inconsistent
 we'll make a mess of their orders.
 
+*************************
+
+TODO: Sidebar syntax
+
+This idea of trading consistency against performance makes a lot of developers
+nervous at first, so let's talk quickly about that.
+
+Let's imagine that our "Get Available Stock" query is 30 seconds out of date
+when Bob visits the page for ILL-JUDGED-WARDROBE. 
+Meanwhile, though, Harry has already bought the last item. When we try to
+allocate Bob's order, we'll get a failure and we'll need to either cancel his
+order, or buy more stock and delay his delivery.
+
+People who've only every worked with relational data stores get _really_ nervous
+about this problem, but it's worth considering two other scenarios to gain some
+perspective.
+
+Firstly, let's imagine that Bob and Harry both visit the page at _the same
+time_. Harry goes off to make coffee, and by the time he returns, Bob has
+already bought the last wardrobe. When Harry places his order, we send it to
+the allocation service and, because there's not enough stock, we have to refund
+his payment or buy more stock and delay his delivery.
+
+As soon as we render the product page, the data is already stale. This insight
+is key to understanding why reads can be safely inconsistent: we'll always need
+to check the current state of our system when we come to allocate, because all
+distributed systems are inconsistent. As soon as you have a web server and two
+customers, you've got the potential for stale data.
+
+Okay, let's assume we solve that problem somehow: we magically build a totally
+consistent web application where nobody ever sees stale data. This time Harry
+gets to the page first and buys his wardrobe.
+
+Unfortunately for him, when the warehouse staff try to dispatch his furniture
+it falls off the fork-lift truck and smashes into a zillion pieces. Now what?
+
+The only thing to do is call Harry up and either refund his order or buy more
+stock and delay delivery.
+
+No matter what we do, we're always going to find that our software systems are
+inconsistent with reality and so we'll always need business processes to cope
+with these edge cases. It's okay to trade performance for consistency on the
+read side, because stale data is essentially unavoidable.
+
+************************
+
 We can think of these these requirements as forming two halves of a system:
 the read side, and the write side.
 
