@@ -4,30 +4,100 @@
 In this chapter we're going to start with a fairly uncontroversial insight:
 reads (commands) and writes (queries) are different, so they
 should be treated differently. Then we're going to push that insight as far
-as we can.  If you're anything like Harry, this will all seem crazy at first,
-but as we'll see there are two main reasons that it might not all be so
-totally insane:
+as we can. If you're anything like Harry, this will all seem crazy at first,
+but hopefully we can make the argument that it's not *totally* insane.
 
-1. Your domain model is conceptually structured around write operations, and
-    requirements for read operations are sometimes quite different.
+Firstly though, why bother?
 
-2. In most business applications, reads outnumber writes by an order of magnitude
-    or so, and they can be the hardest part of your application to scale.  CQRS
-    enables massive performance improvements.
+=== Domain models are for writing
 
-So allow us to show you around the madhouse, and see if we can convince you
-that everything is totally sane.
+We've spent a lot of time in this book talking about how to build software that
+enforces the rules of our domain. These rules, or constraints, will be different
+for every application and they make up the interesting core of our systems.
 
-// (ej) Point 1 may be a little bit too abstract?  Concrete 
-//      examples would help motivate, and also useful for calling back to 
-//      ideas about Bounded Contexts. (e.g. CustomerExperience team might
-//      want to do reporting to analyze in-efficiences in order fullfillment, CustomerGrowth 
-//      might want to access data for predictive analytics. These could require
-//      not just different read ops, but domain models.)
-//
-//      That could also support a Point 3, which is that you t want to be mindful of over-sharing the domain model
-//      because it could lead to accidental coupling, or integration via the database.
-//
+In this book we've set explicit constraints like "You can't allocate more stock
+than is available", as well as implicit constraints like "each order line is
+allocated to a single batch".
+
+We wrote these rules down as unit tests at the beginning of the book.
+
+[[domain_tests]]
+.Our basic domain tests
+====
+[source,python] (tests/unit/test_batches.py)
+----
+def test_allocating_to_a_batch_reduces_the_available_quantity():
+    batch = Batch("batch-001", "SMALL-TABLE", qty=20, eta=date.today())
+    line = OrderLine('order-ref', "SMALL-TABLE", 2)
+
+    batch.allocate(line)
+
+    assert batch.available_quantity == 18
+
+
+def test_cannot_allocate_if_available_smaller_than_required():
+    small_batch, large_line = make_batch_and_line("ELEGANT-LAMP", 2, 20)
+    assert small_batch.can_allocate(large_line) is False
+----
+====
+
+In order to apply these rules properly, we needed to ensure that operations
+were consistent, and so we introduced patterns like _unit of work_ and _aggregates_
+that help us commit small chunks of work.
+
+To communicate changes between those small chunks, we introduced Domain Events
+so that we can write rules like "When stock is damaged or lost, adjust the
+available quantity on the batch, and re-allocate orders if necessary".
+
+All of this complexity exists so that we can enforce rules when we change the
+state of our system. We've built a very flexible set of tools for writing data.
+
+What about reads, though?
+
+=== Most users aren't going to buy your furniture
+
+At MADE.com we have a system very like the Allocation service. In a busy day we
+might process 100 orders in an hour, and we have a big gnarly system for
+allocating stock to those orders.
+
+In that same busy day, though, we might have 100 product views per *second*.
+Each time somebody visits a product page, or a product listing page, we need
+to figure out whether the product is still in stock, and how long it will take
+us to deliver it.
+
+The _domain_ is the same - we're concerned with batches of stock, and their
+arrival date, and the amount that's still available - but the access pattern
+is very differerent. For example, our customers won't notice if the query
+is a few seconds out of date, but if our `allocate` service is inconsistent
+we'll make a mess of their orders.
+
+We can think of these these requirements as forming two halves of a system:
+the read side, and the write side.
+
+TODO: Diagram
+
+  Commands
+     |
+     v
+[ Handlers ]
+     v
+ ( domain )
+     ^
+[  Views   ]
+     ^
+     |
+  Queries
+
+|| Read side | Write side |
+| Behaviour | Simple read | Complex business logic |
+| Cacheability | Highly cacheable | Uncacheable |
+| Consistency | Can be stale | Must be transactionally consistent |
+
+
+For the write side, our fancy domain architectural patterns help us to evolve
+our system over time, but the complexity we've built so far doesn't buy
+anything for reading data. The service layer, the unit of work,  and the clever
+domain model are just bloat.
 
 [TIP]
 ====
@@ -41,8 +111,8 @@ git checkout chapter_10_external_events
 ----
 ====
 
-=== Post/Redirect/Get
-
+=== Post/Redirect/Get and CQS
+ 
 If you've been doing web development, you're probably familiar with the
 post/redirect/get pattern. This is a technique where a web endpoint accepts an
 HTTP POST, and responds with a redirect to see the result. For example, we might
@@ -64,6 +134,11 @@ follow one simple rule: functions should either modify state, or answer
 questions, but never both. This makes software easier to reason about: we should
 always be able to ask "are the lights on?" without flicking the light switch.
 
+NOTE: When building APIs we can apply the same design technique by returning a
+201 Created, or a 202 Accepted, with a Location header containing the URI of our
+new resources. What's important here isn't the status code we use, but the
+logical breakdown of work into a write phase and a query phase.
+
 As we'll see, we can use the CQS principle to make our systems faster and more
 scalable, but first, let's fix the CQS violation in our existing code. A few
 chapters ago we introduced an `allocate` endpoint that takes an order and
@@ -71,20 +146,6 @@ calls our service layer to allocate some stock. At the end of the call, we
 return a 200 OK and the batch id. That's led to some ugly design flaws so that
 we can get the data we need. Let's change it to return a simple OK message, and
 instead provide a new read-only endpoint to retrieve allocation state.
-
-// (ej) The code snippet below implements just the async post pattern, as opposed to PRG.
-//
-//      The text blurb above is my best attempt mash-up to describe Async Post
-//      that broadens the relevance a bit byond web dev (e.g. mobile, backend, data eng).
-//      It should be reviewed to provent  a "too many cooks" problem.
-//
-//      See also for useful diagram: https://docs.microsoft.com/en-us/azure/architecture/patterns/async-request-reply
-//      and reference: http://restcookbook.com/Resources/asynchroneous-operations/
-
-Post/Redirect/Get only really applies to HTML-based web servers, and we're
-building an API. The equivalent pattern is sometimes called "Async POST", where
-we return a "202 Accepted" instead of a 302 Redirect.
-
 
 [[api_test_does_get_after_post]]
 .API test does a GET after the POST (tests/e2e/test_api.py)
@@ -125,23 +186,6 @@ def test_unhappy_path_returns_400_and_error_message():
     assert r.status_code == 404
 ----
 ====
-
-///
-// (ej) The API routes are a bit un-conventional. For example, instead of 
-//      * POST /allocate then GET /allocations/<order_id>
-//      something like this is more typical:
-//      * POST /allocations then GET /allocations?order_id=<order_id>
-//
-//      The second style states the API intentions directly (POST creates allocation
-//      sub-resources, then GET is just a query over all allocations)  With the first style
-//      I have to make guesses at the the API's intentions and dig into the implementaion 
-//      to be sure, and it seems odd that an order_id is a sub-resource of an allocation.
-//
-//      This would make the examples a easier to follow, and adhere to
-//      a RESTful API more closely.
-///
-
-// TODO (DS) this could be a diff
 
 OK what might the flask app look like?
 
@@ -194,7 +238,7 @@ def allocations(orderid: str, uow: unit_of_work.SqlAlchemyUnitOfWork):
             dict(orderid=orderid)
         ))
     return [{'sku': sku, 'batchref': batchref} for sku, batchref in results]
-----
+---
 ====
 
 
@@ -697,6 +741,12 @@ we've shown here. For the kind of allocation service we're building, it seems
 unlikely that you'd need to use a separate read model and event handlers for
 updating it.
 
+| Option | Pros | Cons |
+| Just use repositories | Simple, consistent approach. | Expect performance issues with complex query patterns. |
+| Use custom queries with your ORM | Allows re-use of db configuration and model definitions | Adds another query language with its own quirks and syntax. |
+| Use hand-rolled SQL | Offers fine control over performance with a standard query syntax | Changes to db schema have to be made to your hand-rolled queries *and* your ORM definitions. Highly normalised schemas may stil have performance limitations |
+| Create separate read stores with events | Read-only copies are easy to scale out. Views can be constructed when data changes so that queries are as simple as possible. | Complex technique. Harry will be forever suspicious of your tastes and motives |
+
 // (ej) Might be useful to re-iterate what "full-blown" CQRS means vs simpler CQRS options.  I think
 //      most blog posts describe CQRS in terms of the "full-blown" version, while
 //      ignoring over the simpler version that is developed earlier in this chapter.
@@ -705,11 +755,8 @@ updating it.
 //      it's insane/too complex/too-hard and want to fall back to a CRUD hammer.
 //
 
-But once you commit to using a Domain Model rather than "just" building a
-CRUD app, then some level of CQS or CQRS does become more and more necessary.
-
-// TODO have we really explained the difference between CQS and CQRS?  maybe
-// there isn't one really so we shouldn't use them this way?
+But as your domain model becomes richer and more complex, a simplified read
+model become ever more compelling.
 
 Often, your read operations will acting on the same conceptual objects as your
 write model, so using the ORM, adding some read methods to your repositories,
