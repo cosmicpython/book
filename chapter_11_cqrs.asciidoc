@@ -21,10 +21,11 @@ allocated to a single batch".
 
 We wrote these rules down as unit tests at the beginning of the book.
 
+
 [[domain_tests]]
-.Our basic domain tests
+.Our basic domain tests (tests/unit/test_batches.py)
 ====
-[source,python] (tests/unit/test_batches.py)
+[source,python]
 ----
 def test_allocating_to_a_batch_reduces_the_available_quantity():
     batch = Batch("batch-001", "SMALL-TABLE", qty=20, eta=date.today())
@@ -34,6 +35,7 @@ def test_allocating_to_a_batch_reduces_the_available_quantity():
 
     assert batch.available_quantity == 18
 
+...
 
 def test_cannot_allocate_if_available_smaller_than_required():
     small_batch, large_line = make_batch_and_line("ELEGANT-LAMP", 2, 20)
@@ -67,13 +69,15 @@ us to deliver it.
 
 The _domain_ is the same - we're concerned with batches of stock, and their
 arrival date, and the amount that's still available - but the access pattern
-is very differerent. For example, our customers won't notice if the query
+is very different. For example, our customers won't notice if the query
 is a few seconds out of date, but if our `allocate` service is inconsistent
 we'll make a mess of their orders.
 
-*************************
 
-TODO: Sidebar syntax
+.Is Read Consistency Truly Attainable?
+*******************************************************************************
+
+// TODO: check sidebar title Bob
 
 This idea of trading consistency against performance makes a lot of developers
 nervous at first, so let's talk quickly about that.
@@ -114,8 +118,7 @@ No matter what we do, we're always going to find that our software systems are
 inconsistent with reality and so we'll always need business processes to cope
 with these edge cases. It's okay to trade performance for consistency on the
 read side, because stale data is essentially unavoidable.
-
-************************
+*******************************************************************************
 
 We can think of these these requirements as forming two halves of a system:
 the read side, and the write side.
@@ -284,7 +287,7 @@ def allocations(orderid: str, uow: unit_of_work.SqlAlchemyUnitOfWork):
             dict(orderid=orderid)
         ))
     return [{'sku': sku, 'batchref': batchref} for sku, batchref in results]
----
+----
 ====
 
 
