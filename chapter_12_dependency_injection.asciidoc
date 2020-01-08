@@ -216,8 +216,11 @@ putting all the responsibility for passing dependencies to the right handler
 onto the messagebus feels like a violation of the SRP.
 
 Instead, we'll reach for a pattern called _Composition Root_ (a bootstrap
-script to you and me), and we'll do a bit of "Poor Man's DI" (dependency
-injection without a framework).
+script to you and me)footnote:[
+Because Python is not a "pure" OO language, Python developers aren't necessarily
+used to the concept of needing to "compose" a set of objects into a working
+application.  We just pick our entrypoint and run code from top to bottom.],
+and we'll do a bit of "Poor Man's DI" (dependency injection without a framework).
 
 ----
 Flask + Redis
@@ -308,7 +311,7 @@ sosn_partial(event)  # will have email.send_mail already injected in
 ====
 
 
-=== An alternative using classes
+=== An Alternative Using Classes
 
 Partial functions will feel familiar to people who've done a bit of functional
 programming.   Here's an alternative using classes, which may appeal to other
@@ -357,7 +360,7 @@ allocate(cmd)
 Use whichever you and your team feel more comfortable with.
 
 
-=== Bootstrap script does all the DI
+=== A Bootstrap Script
 
 Here's what we want from our bootstrap script:
 
@@ -448,7 +451,7 @@ even-simpler version may appeal.
 
 Harry wrote the code for `inject_dependencies()` as a first cut of how to do
 "manual" dependency injection, and when he saw it, Bob accused him of
-overengineering and writing his own DI framework. 
+overengineering and writing his own DI framework.
 
 It honestly didn't even occur to Harry that you could do it any more plainly,
 but in fact of course you can, like this:
@@ -547,7 +550,7 @@ class MessageBus:  #<1>
 // Note for DS, I did try a diff here but it was unreadable. too many changes.
 
 
-What else changes in the bus? 
+What else changes in the bus?
 
 [[messagebus_handlers_change]]
 .Event and Command handler logic stays the same (src/allocation/service_layer/messagebus.py)
@@ -581,7 +584,7 @@ What else changes in the bus?
     of indexing into a static `EVENT_HANDLERS` or `COMMAND_HANDLERS` dict, they
     use the versions on `self`.
 
-<2> and instead of passing a UoW into the handler, they expect the handlers
+<2> Instead of passing a UoW into the handler, we expect the handlers
     to already have all their dependencies, so all they need is a single argument,
     the specific event or command.
 
@@ -599,24 +602,32 @@ rest of it.
 ----
 -from allocation import views
 +from allocation import bootstrap, views
- 
+
  app = Flask(__name__)
--orm.start_mappers()
+-orm.start_mappers()  #<1>
 +bus = bootstrap.bootstrap()
- 
- 
+
+
  @app.route("/add_batch", methods=['POST'])
 @@ -19,8 +16,7 @@ def add_batch():
      cmd = commands.CreateBatch(
          request.json['ref'], request.json['sku'], request.json['qty'], eta,
      )
--    uow = unit_of_work.SqlAlchemyUnitOfWork()
+-    uow = unit_of_work.SqlAlchemyUnitOfWork()  #<2>
 -    messagebus.handle(cmd, uow)
-+    bus.handle(cmd)
++    bus.handle(cmd)  #<3>
      return 'OK', 201
 
 ----
 ====
+
+<1> We no longer need to call `start_orm()`, the bootstrap script's initialization
+    stages will do that
+
+<2> We no longer need to explicit build a particular type of UoW, the bootstrap
+    script defaults take care of it
+
+<3> And our messagebus is now a specific instance rather than the module global.
 
 // (ej) The "Flask-onic" version of bootstrap is the application factory pattern w/ blueprints.
 //
@@ -624,9 +635,9 @@ rest of it.
 // have side-effects, because it inits the bus.  In the worst case, someone may have decided to add
 // network calls to retrieve config.
 //
-// If you end up needing to unit test somethihng in this module, or use the flask test client, 
+// If you end up needing to unit test somethihng in this module, or use the flask test client,
 // it can then lead you down the path to patching the configuration, which defeats the composition root.
-// 
+//
 // I think Docker helps mitigate this problem, with the cost of potentially increasing the complexity.
 //
 //  Reference:
@@ -638,9 +649,8 @@ rest of it.
 
 === Initializing DI in Our Tests
 
-
-And in tests, we can use our `bootstrap.bootstrap()` with overridden defaults
-to get a custom messagebus.  Here's an example in an integration test:
+In tests, we can use `bootstrap.bootstrap()` with overridden defaults to get a
+custom messagebus.  Here's an example in an integration test:
 
 
 [[bootstrap_view_tests]]
@@ -671,7 +681,7 @@ def test_allocations_view(sqlite_bus):
 ----
 ====
 
-<1> We do want to start the ORM...
+<1> We do still want to start the ORM...
 <2> ...because we're going to use a real UoW, albeit with an in-memory database.
 <3> But we don't need to send emails or publish, so we make those noops.
 
@@ -686,19 +696,29 @@ In our unit tests, in contrast, we can reuse our `FakeUnitOfWork`:
 ----
 def bootstrap_test_app():
     return bootstrap.bootstrap(
-        start_orm=False,
-        uow=FakeUnitOfWork(),
-        send_mail=lambda *args: None,
-        publish=lambda *args: None,
+        start_orm=False,  #<1>
+        uow=FakeUnitOfWork(),  #<2>
+        send_mail=lambda *args: None,  #<3>
+        publish=lambda *args: None,  #<3>
     )
 ----
 ====
 
+<1> No need to start the ORM...
+<2> ...because the fake UoW doesn't use one
+<3> And we want to fake out our email and Redis adapters too.
+
+
+So that gets rid of a little duplication, and we've moved a bunch
+of setup and sensible defaults into a single place.
+
+//TODO weak segue
+
 
 === Building an Adapter "Properly": A Worked Example
 
-Let's work through an example of how you might build an adapter, and do
-dependency injection for it, "properly".
+To really get a feel for how it all works, let's work through an example of how
+you might build an adapter, and do dependency injection for it, "properly".
 
 At the moment we've got two types of dependency:
 
@@ -936,7 +956,7 @@ And, erm, that's it really.
 // TODO this isn't really in the right TDD order is it?
 
 
-.Exercise for the Reader 
+.Exercise for the Reader
 ******************************************************************************
 NOTE: TODO, under construction
 
