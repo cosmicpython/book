@@ -385,7 +385,8 @@ to a Django app?  We'd say:
 
 * You can still do DDD and domain modelling with Django models, tightly coupled
   as they are to the database; you may be slowed down by migrations, but
-  it shouldn't be fatal.  So follow the "fat models" pattern, push as much
+  it shouldn't be fatal.  So, as long as your apps is not too complex and your tests not too slow, you may
+  be able to get something out of the "fat models" approach: push as much
   logic down to your models as possible, and apply patterns like Entity,
   Value Object and Aggregate
 
