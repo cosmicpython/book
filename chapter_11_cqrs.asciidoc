@@ -73,11 +73,6 @@ we can get the data we need. Let's change it to return a simple OK message, and
 instead provide a new read-only endpoint to retrieve allocation state.
 
 // (ej) The code snippet below implements just the async post pattern, as opposed to PRG.
-//
-//      The text blurb above is my best attempt mash-up to describe Async Post
-//      that broadens the relevance a bit byond web dev (e.g. mobile, backend, data eng).
-//      It should be reviewed to provent  a "too many cooks" problem.
-//
 //      See also for useful diagram: https://docs.microsoft.com/en-us/azure/architecture/patterns/async-request-reply
 //      and reference: http://restcookbook.com/Resources/asynchroneous-operations/
 
