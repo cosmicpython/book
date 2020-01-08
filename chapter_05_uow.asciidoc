@@ -591,10 +591,10 @@ hopefully you'll agree that the context manager is a really nice Pythonic way
 of visually grouping code into blocks that we want to happen atomically.
 
 This pattern is so useful, in fact, that SQLAlchemy already uses a unit-of-work
-in the shape of the Session object. The Session object in SqlAlchemy is the way
+in the shape of the Session object. The Session object in SQLAlchemy is the way
 that your application loads data from the database.
 
-Every time you load a new entity from the db, the Session begins to _track_
+Every time you load a new entity from the database, the Session begins to _track_
 changes to the entity, and when the Session is _flushed_, all your changes are
 persisted together.
 
@@ -642,7 +642,7 @@ This is a lovely case for a context manager::
     context manager to automatically rollback our work at the end of request
     which means the system is safe by default.
 
-SqlAlchemy already implements this pattern::
+SQLAlchemy already implements this pattern::
     We introduce an even simpler abstraction over the SQLAlchemy Session object
     in order to "narrow" the interface between the ORM and our code. This helps
     to keep us loosely coupled.

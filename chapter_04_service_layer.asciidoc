@@ -229,6 +229,7 @@ def allocate_endpoint():
 ----
 ====
 
+//TODO (hynek) pretty sure you can drop the jsonify call
 
 So far so good.  No need for too much more of your "architecture astronaut"
 nonsense, Bob and Harry, you may be thinking.
@@ -362,7 +363,7 @@ E2E tests is starting to get out of control, and soon we'll end up with an
 inverted test pyramid (or "ice cream cone model" as Bob likes to call it).
 
 
-=== Introducing a Service Layer, and Using Fakerepository to Unit Test It
+=== Introducing a Service Layer, and Using FakeRepository to Unit Test It
 
 If we look at what our Flask app is doing, there's quite a lot of what we
 might call __orchestration__—fetching stuff out of our repository, validating
@@ -427,11 +428,15 @@ def test_error_for_invalid_sku():
 ----
 ====
 
+
 <1> `FakeRepository` holds the `Batch` objects that will be used by our test.
 
 <2> Our services module (_services.py_) will define an `allocate()`
-    function. It will sit between our `allocate_endpoint()` in the API
-    layer and the `allocate()` domain service from our domain model.
+    service-layer function. It will sit between our `allocate_endpoint()`
+    function in the API layer and the `allocate()` domain service function from
+    our domain model.footnote:[Service-layer services and domain services do have
+    confusingly similar names. We have a sidebar on it later in the chapter
+    <<why_is_everything_a_service>>.].
 
 <3> We also need a `FakeSession` to fake out the database session, see below:
 
@@ -454,6 +459,10 @@ things even nicer in the next chapter, <<chapter_05_uow>>)
 
 .Mocks vs Fakes; Classic Style vs London School TDD
 *******************************************************************************
+
+// TODO (hynek) this should be unified with the previous mock-hating section.
+// also the semicolon looks weird.
+
 Couldn't we have used a mock (from `unittest.mock`) instead of building our
 own `FakeSession`, or instead of `FakeRepository`?  What's the difference
 between a fake and a mock anyway?
@@ -469,6 +478,9 @@ In the case of `FakeSession`, the `session` object isn't one of our own
 abstractions, so the argument doesn't apply;  in fact, a `unittest.mock` mock
 would have been just fine, but out of habit we avoided using one;  in any case,
 we'll be getting rid of it in the next chapter.
+
+//TODO (hynek) you could mention Alex Gaynor's `pretend` which gives you
+// stubs without mocks error-prone magic.
 
 In general we try and avoid using mocks, and the associated `mock.patch`.
 Whenever we find ourselves reaching for them, we often see it as an indication
@@ -604,6 +616,11 @@ decided this argument carries the day. What you decide to do in your own
 codebase is up to you.]
 This means it'll work both when the tests give it a `FakeRepository`, and
 when the flask app gives it a `SqlAlchemyRepository`.
+
+// TODO (hynek, re type-hating footnote: I feel like this meditation has already
+// come up a few times.  Maybe have a short section instead to get it out of
+// your system and be done?
+// Also: type haters have never had to maintain large apps over a long time.
 
 If you remember the <<dip,Dependency Inversion Principle section from the introduction>>,
 this is what we mean when we says we should "depend on abstractions". Our
@@ -875,7 +892,7 @@ implementation.
 
 Most of the time, when we are adding a new feature, or fixing a bug, we don't
 need to make extensive changes to the domain model. In these cases, we prefer
-to write tests against services for the lower-coupling and high-coverage.
+to write tests against services because of the lower coupling and higher coverage.
 
 For example, when writing an `add_stock` function, or a `cancel_order` feature,
 we can work more quickly and with less coupling by writing tests against the
@@ -897,7 +914,7 @@ hazard, we again drop down to a low gear until we can pick up speed again.
 .Different Types of Test: Rules of Thumb
 ******************************************************************************
 
-* Write one end-to-end test per featurefootnote:[what about happy path and
+* Write one end-to-end test per featurefootnote:[What about happy path and
   unhappy path? We say, error-handling is a feature, so yes you need one E2E
   test for error handling, but probably not one unhappy-path test per feature]
   to demonstrate that the feature exists and is working. This might be written
@@ -1010,6 +1027,9 @@ def test_returns_allocation():
     assert result == "batch1"
 ----
 ====
+
+
+// TODO (hynek) would @classmethod and use cls be more idiomatic?
 
 At least that would move all of our tests' dependencies on the domain
 into one place.
@@ -1185,11 +1205,12 @@ require any change to our service layer or domain layer!
 
 TIP: If you decide you want to build a read-only endpoint for retrieving allocation
     info, just do the simplest thing that can possibly work (TM), which is
-    `repo.get()` right in the flask handler.  We'll talk more about reads vs
+    `repo.get()` right in the Flask handler.  We'll talk more about reads vs
     writes in <<chapter_11_cqrs>>.
 
 ******************************************************************************
 
+[[why_is_everything_a_service]]
 === Why Is Everything Called A Service?
 
 Some of you are probably scratching your heads at this point trying to figure
@@ -1321,7 +1342,7 @@ of inside the domain folder would feel weird to us.
 
 Adding the service layer has really bought us quite a lot:
 
-* Our flask API endpoints become very thin and easy to write:  their
+* Our Flask API endpoints become very thin and easy to write:  their
   only responsibility is doing "web stuff," things like parsing JSON
   and producing the right HTTP codes for happy or unhappy cases.
 
@@ -1336,7 +1357,7 @@ Adding the service layer has really bought us quite a lot:
   designs without needing to rewrite a load of tests.
 
 * And our "test pyramid" is looking good--the bulk of our tests
-  are fast/unit tests, with just the bare minimum of E2E and integration
+  are fast unit tests, with just the bare minimum of E2E and integration
   tests.
 
 
