@@ -69,9 +69,11 @@ of SPARKLY-BOOKCASE.
 
 In all of these situations,  we learn about the need to change batch quantities
 when they're already in the system.  Perhaps someone made a mistake on the number
-in the manifest, or perhaps some sofas fell off a truck. Following a conversation with the
-business,footnote:[https://en.wikipedia.org/wiki/Event_storming[Event storming]
-is a common technique], we model the situation as in
+in the manifest, or perhaps some sofas fell off a truck. Following a
+conversation with the business,footnote:[
+Event-based modelling is so popular that a practice called _event storming_ has
+been developed for facilitating event-based requirements gathering and domain
+model elaboration.], we model the situation as in
 <<batch_changed_events_flow_diagram>>:
 
 
@@ -272,7 +274,7 @@ primitives, with some well-defined objects (see sidebar).
 .From Domain Objects, via Primitive Obsession, to Events as an Interface
 *******************************************************************************
 
-Some of you may may remember the <<decouple_service_layer_from_domain>> section
+Some of you may may remember the <<primitive_obsession>> section
 from <<chapter_04_service_layer>>, in which we changed our service-layer API
 from being in terms of domain objects, to primitives.  And now we're moving
 back, but to different objects?  What gives?
@@ -293,7 +295,7 @@ vary, but instead we've coupled the external world to our Event classes instead.
 They're part of the domain too, but the hope is that they vary less often, so
 they're a sensible artifact to couple on.
 
-And what have we bought ourselves?  Well, when invoking a use case in our application,
+And what have we bought ourselves?  Now, when invoking a use case in our application,
 we no longer need to remember a particular combination of primitives, just a single
 event class that represents the input to our application.  That's conceptually
 quite nice.  On top of that, as we'll see in <<appendix_validation>>, those
@@ -363,6 +365,7 @@ In _unit_of_work.py_, `publish_events()` becomes a less active method,
 
 ----
 ====
+return bus
 
 <1> The `unit_of_work` module now no longer depends on `messagebus`
 <2> We no longer `publish_events` automatically on commit.  The messagebus
@@ -406,6 +409,7 @@ class TestAllocate:
 ====
 
 // TODO: (DS) why staticmethod?
+// TODO (hynek) why staticmethod?
 
 
 [[temporary_ugly_hack]]
@@ -434,8 +438,11 @@ a temporary hack on our messagebus to let it return events.
 ----
 ====
 
+// TODO (hynek) inline the r=, the addition of a meaningless variable is distracting.
+
+
 It's because we're mixing the read and write responsibilities in our system.
-We'll come back to fix this wart in <<chapter_09_cqrs>>.
+We'll come back to fix this wart in <<chapter_11_cqrs>>.
 
 
 ==== Modifying Our API to Do Events
@@ -567,7 +574,7 @@ class BatchQuantityChanged(Event):
 
 === Test-Driving a New Handler
 
-Following the lessons learned in <<chapter_03_service_layer>>,
+Following the lessons learned in <<chapter_04_service_layer>>,
 we can operate in "high gear," and write our unit tests at the highest
 possible level of abstraction, in terms of events. Here's what they might
 look like:
@@ -611,7 +618,12 @@ class TestChangeBatchQuantity:
 ----
 ====
 
+// TODO (hynek) might be useful to add an assert about batch2 too to make it
+// clearer what's happening
+
 //TODO: (DS) why * 1?
+//TODO: (hynek) why * 1?
+//TODO: (hynek) s/we"ll/we'll/
 
 <1> The simple case would be trivially easy to implement, we just
     modify a quantity.
@@ -843,6 +855,8 @@ def test_reallocates_if_necessary_isolated():
 ----
 ====
 
+// TODO: this listing flows outside the sidebar margin.  and the normal margin too tbh.
+
 Whether you want to do this or not depends on the complexity of your chain of
 events.  We'd say, start out with edge-to-edge testing, and only resort to
 this if necessary.
@@ -899,10 +913,7 @@ Singleton Pattern.
 * Events are simple dataclasses that define the data structures for inputs,
   and internal messages within our system.  This is quite powerful from a DDD
   standpoint, since events often translate really well into business language
-  (in fact an entire practice know as "Event Storming" has evolved around it).
-
-//TODO (DS): this is maybe the third time you've used this sentence about
-// eventstorming
+  (cf __event storming__).
 
 * Handlers are the way we react to events.   They can call down to our
   model, or they can call out to external services.  We can define multiple
@@ -940,7 +951,7 @@ a|
 
 a|
 * Messagebus is still a slightly unpredictable way of doing things from
-  a web pov.  don't know in advance when things are going to end
+  a web point of view.  You don't know in advance when things are going to end
 
 * We've gone from domain objects in service layer calls, to primitives,
   and now to domain events, which feels flip-floppey.

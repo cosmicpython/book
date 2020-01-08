@@ -372,6 +372,8 @@ HANDLERS = {
 ----
 ====
 
+// TODO (hynek) Dunno if you wanna go there but we've got TypedDict in 3.8 now
+
 NOTE: Note that the messagebus as implemented is entirely synchronous--our
     objective isn't to create an async/nonblocking task queue to defer
     execution in time, we're only aiming to separate tasks conceptually.
@@ -384,6 +386,9 @@ NOTE: Note that the messagebus as implemented is entirely synchronous--our
 Celery is a popular tool in the Python world for deferring self-contained
 chunks of work to an asynchronous task queue. The messagebus we're
 presenting here is very different, so the short answer is no.
+
+// (hynek) preceding sentence is completely superflous yet so funny that i love
+// it so much that i want to marry it.
 
 If you do have a requirement for moving work off the main thread, you
 can still use our event-based metaphors, but we would suggest you
@@ -406,12 +411,12 @@ and Python-only.
 *******************************************************************************
 
 
-==== Option 1 : The Service Layer Takes Events from the Model and Puts them on the Message Bus
+=== Option 1 : The Service Layer Takes Events from the Model and Puts them on the Message Bus
 
 Our domain model raises events, and our message bus will call the right
 handlers whenever an event happens. Now all we need is to connect the two. We
-need something to catch events from the model and pass them to the message bus--
-the "publishing" step.
+need something to catch events from the model and pass them to the message
+bus--the "publishing" step.
 
 The simplest way to do this is by adding some code into our service layer.
 
@@ -421,6 +426,9 @@ The simplest way to do this is by adding some code into our service layer.
 [source,python]
 [role="non-head"]
 ----
+from . import messagebus
+...
+
 def allocate(
         orderid: str, sku: str, qty: int,
         uow: unit_of_work.AbstractUnitOfWork
@@ -452,7 +460,7 @@ service layer explicitly collects events from aggregates, and passes them to
 the messagebus.
 
 
-==== Option 2: The Service Layer Raises Its Own Events
+=== Option 2: The Service Layer Raises Its Own Events
 
 Another variant on this which we've used is that you can have the service layer
 in charge of creating and raising events directly, rather than having them
@@ -488,7 +496,7 @@ we'd like to show you what we think is the most elegant solution, in which we
 put the unit of work in charge of collecting and raising events.
 
 
-=== The Unit of Work Can Publish Events to the Message Bus
+=== Option 3: The Unit of Work Can Publish Events to the Message Bus
 
 The UoW already has a `try/finally`, and it knows about all the aggregates
 currently in play because it provides access to the Repository.  So it's
@@ -528,7 +536,10 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 ====
 
 <1> We'll change our commit method to require a private `._commit()`
-    method from subclasses
+    method from subclasses.
+
+// TODO (hynek) this is super gross API desgin and makes me super of angry
+// and I'm personally offended.  Also, sentences end with a period.
 
 <2> After committing, we run through all the objects that our
     repository has seen and pass their events to the message bus.
@@ -544,7 +555,7 @@ NOTE: Are you wondering about error-handling, what happens if one of the
 
 
 [[repository_tracks_seen]]
-.Repository tracks aggregates seen (src/allocation/adapters/repository.py)
+.Repository tracks aggregates that pass through it (src/allocation/adapters/repository.py)
 ====
 [source,python]
 ----
@@ -587,6 +598,10 @@ class SqlAlchemyRepository(AbstractRepository):
 ----
 ====
 
+// TODO (hynek) now I see what you meant in your email about adding functionality
+// to the base class and yeah it's gross ;) In both cases you do something in the base
+// and then something else additionally.  this IMHO should be a wrapper and not a
+// base class
 
 <1> For the UoW to be able to publish new events, it needs to be able to ask
     the repository for which `Product` objects have been used during this session.
@@ -700,6 +715,7 @@ Events can help with SRP::
     ones.
     We also use events for communicating between aggregates so that we don't
     need to run long-running transactions that lock against multiple tables.
+// TODO (hynek) there's enough space to write out SRP
 
 A Message Bus routes messages to handlers::
     You can think of a message bus as a dict that maps from events to their
@@ -740,8 +756,6 @@ a|
 
 * Domain events are a great way to model the real world, and we can use them
   as part of the business language we use when modeling with stakeholders.
-  (in fact an entire working practice called "eventstorming" has arisen out
-  of it).
 
 a|
 
