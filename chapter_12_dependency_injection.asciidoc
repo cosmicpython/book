@@ -220,7 +220,7 @@ script to you and me)footnote:[
 Because Python is not a "pure" OO language, Python developers aren't necessarily
 used to the concept of needing to "compose" a set of objects into a working
 application.  We just pick our entrypoint and run code from top to bottom.],
-and we'll do a bit of "Poor Man's DI" (dependency injection without a framework).
+and we'll do a bit of "Pure DI" (dependency injection without a framework).
 
 ----
 Flask + Redis
@@ -244,7 +244,7 @@ TODO: betterify diagram
 
 
 
-=== Preparing Handlers: Poor Man's DI with Partial Functions
+=== Preparing Handlers: Pure DI with Partial Functions
 
 One way to turn a function with dependencies into one that's ready to be
 called later with those dependencies _aleady injected_, is to use partial
@@ -444,7 +444,7 @@ def inject_dependencies(handler, dependencies):
 <3> And we inject them in as kwargs to a produce a partial
 
 
-.An Even-poorer Man's DI, With Even Less Magic.
+.An Even-Purer DI, With Even Less Magic.
 *******************************************************************************
 If you're finding the `inspect` code above a little harder to grok, this
 even-simpler version may appeal.
