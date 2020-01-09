@@ -387,8 +387,7 @@ return bus
 ----
 class TestAddBatch:
 
-    @staticmethod
-    def test_for_new_product():
+    def test_for_new_product(self):
         uow = FakeUnitOfWork()
         messagebus.handle(events.BatchCreated("b1", "CRUNCHY-ARMCHAIR", 100, None), uow)
         assert uow.products.get("CRUNCHY-ARMCHAIR") is not None
@@ -399,17 +398,13 @@ class TestAddBatch:
 
 class TestAllocate:
 
-    @staticmethod
-    def test_returns_allocation():
+    def test_returns_allocation(self):
         uow = FakeUnitOfWork()
         messagebus.handle(events.BatchCreated("b1", "COMPLICATED-LAMP", 100, None), uow)
         result = messagebus.handle(events.AllocationRequired("o1", "COMPLICATED-LAMP", 10), uow)
         assert result == "b1"
 ----
 ====
-
-// TODO: (DS) why staticmethod?
-// TODO (hynek) why staticmethod?
 
 
 [[temporary_ugly_hack]]
@@ -587,8 +582,7 @@ look like:
 ----
 class TestChangeBatchQuantity:
 
-    @staticmethod
-    def test_changes_available_quantity():
+    def test_changes_available_quantity(self):
         uow = FakeUnitOfWork()
         messagebus.handle(events.BatchCreated("batch1", "ADORABLE-SETTEE", 100, None), uow)
         [batch] = uow.products.get(sku="ADORABLE-SETTEE").batches
@@ -599,8 +593,7 @@ class TestChangeBatchQuantity:
         assert batch.available_quantity == 50  #<1>
 
 
-    @staticmethod
-    def test_reallocates_if_necessary():
+    def test_reallocates_if_necessary(self):
         uow = FakeUnitOfWork()
         messagebus.handle(events.BatchCreated("batch1", "INDIFFERENT-TABLE", 50, None), uow)
         messagebus.handle(events.BatchCreated("batch2", "INDIFFERENT-TABLE", 50, date.today()), uow)

@@ -839,7 +839,7 @@ and use it in our tests:
 ====
 [source,python]
 ----
-    def test_sends_email_on_out_of_stock_error():
+    def test_sends_email_on_out_of_stock_error(self):
         fake_notifs = fakes.FakeNotifications()
         bus = bootstrap.bootstrap(
             start_orm=False,
