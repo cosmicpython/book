@@ -738,7 +738,7 @@ which will produce different behavior: two concurrent transactions will not
 be allowed to do a read on the same rows at the same time.
 
 [[with_for_update]]
-.SqlAlchemy with_for_update (src/allocation/adapters/repository.py)
+.SQLAlchemy with_for_update (src/allocation/adapters/repository.py)
 ====
 [source,python]
 [role="non-head"]

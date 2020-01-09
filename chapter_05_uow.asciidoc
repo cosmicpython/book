@@ -319,7 +319,7 @@ NOTE: We've made the UoW part of the service layer, in our folder
     domain events, so the service layer feels like the right place to us.
 
 
-==== The Real Unit of Work Uses Sqlalchemy Sessions
+==== The Real Unit of Work Uses SQLAlchemy Sessions
 
 The main thing that our concrete implementation adds is the
 database session:
