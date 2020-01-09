@@ -45,7 +45,7 @@ package SqlAlchemy {
 
 }
 
-  BatchRepository *--- Session : abstracts >
+  BatchRepository o--- Session : abstracts >
   BatchRepository -> Batch : fetches >
 
 @enduml
@@ -545,6 +545,9 @@ WARNING: We're using abstract base classes in this book for didactic reasons:
 //TODO (hynek) mention protocols as an alternative.  (also link to later comment
 // about us hating on typing+abcs too often, + we should just have one sidebar on it to
 // get it out of our system)
+// (EJ2) ABCs are mentioned several times, so I think they could be consolidated too. 
+//        Could be an opportunity to drop a nugget on InterfaceSegregationPrinciple 
+//       and duck typing.
 
 <1> Python tip: `@abc.abstractmethod` is one of the only things that makes
     ABCs actually "work" in Python.   Python will refuse to let you instantiate

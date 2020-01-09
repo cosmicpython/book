@@ -71,13 +71,12 @@ The _domain_ is the same - we're concerned with batches of stock, and their
 arrival date, and the amount that's still available - but the access pattern
 is very different. For example, our customers won't notice if the query
 is a few seconds out of date, but if our `allocate` service is inconsistent
-we'll make a mess of their orders.
+we'll make a mess of their orders. We can take advantage of this difference by
+making our reads _eventually consistent_ in order to make them perform better.
 
 
 .Is Read Consistency Truly Attainable?
 *******************************************************************************
-
-// TODO: check sidebar title Bob
 
 This idea of trading consistency against performance makes a lot of developers
 nervous at first, so let's talk quickly about that.

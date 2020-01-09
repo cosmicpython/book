@@ -631,6 +631,11 @@ TIP: In this chapter we've spent a lot of time replacing end-to-end tests with
 .So Which Do We Use in this Book? FCIS or DI?
 ******************************************************************************
 //TODO (hynek) not sure you can rely on people remembering those acronyms just yet
+//(EJ2) Agree with above. Instead of talking about "FCIS" vs "DI", talking about 
+//      "functional" vs "object-oriented" style of composition will be easier to remember. 
+//       And also, talking about side-effect free functions instead of avoiding state
+//       will be helfpul, because that's the main point with FCIS.
+//
 Both. Our domain model is entirely free of dependencies and side-effects,
 so that's our functional core.  The service layer that we build around it
 (in <<chapter_04_service_layer>>) allows us to drive the system edge-to-edge
@@ -669,5 +674,6 @@ Practice makes less-imperfect!
 // really on in the book. But it is also a bit of a brain dump of lots of deep,
 // amazing concepts. I don't think you've quite found the best structure here
 // yet. Perhaps it could be structured around these heuristics?
+// (EJ3) Not sure how to structure this better.
 
 And now back to our regular programming...
