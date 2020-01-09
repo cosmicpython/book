@@ -45,7 +45,7 @@ package SqlAlchemy {
 
 }
 
-  BatchRepository *--- Session : abstracts >
+  BatchRepository o--- Session : abstracts >
   BatchRepository -> Batch : fetches >
 
 @enduml
