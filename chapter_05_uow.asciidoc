@@ -299,7 +299,7 @@ class AbstractUnitOfWork(abc.ABC):
 <1> The UoW provides an attribute called `.batches`, which will give us access
     to the batches repository.
 
-<2> If you've never seen a context manager, `__enter__` and `__exit__` are
+<2> If you've never seen a context manager, +++<code>__enter__</code>+++ and +++<code>__exit__</code>+++ are
     the two magic methods that execute when we enter the `with` block and
     when we exit it.  They're our setup and teardown phases.
 

@@ -785,28 +785,29 @@ class Batch:
 ----
 ====
 
-Python's ++__eq__++ magic (or dunder) method defines the behavior of the class for the
-`==` operator.
+Python's +++<code>__eq__</code>+++ magic methodfootnote:[Pronounced "dunder-EQ". By some, at least.]
+defines the behavior of the class for the`==` operator.
 
 For both Entity and Value Objects it's also worth thinking through how
-`__hash__` will work.  It's the magic method Python uses to control the
++++<code>__hash__</code>+++ will work.  It's the magic method Python uses to control the
 behavior of objects when you add them to sets or use them as dict keys;
 more info https://docs.python.org/3/glossary.html#term-hashable[in the Python docs].
 
-For Value Objects, the hash should be based on all the value attributes.
-For entities, the hash should either be `None`, or it should be based
-on the attribute(s), like `.reference`, that define identity over time.
+For Value Objects, the hash should be based on all the value attributes,
+and we should ensure that the objects are immutable.  We get this for
+free by specifying `@frozen=True` on the dataclass.
 
-//TODO (DS) Getting hash values right for these kinds of objects is quite
-//important (e.g. if you're using them in dictionaries or sets). I reckon it
-//might be worth spending more time on this.
-// (HP): if we get into this, it links into the hack in next chapter required
-// by sqlalchemy, `@dataclass(frozen=True)` -> `dataclass(unsafe_hash=True)`
-// (EJ1) Agree with the above points, and would hope that readers are aware.
-//       I think it's adequate to point out that if you override
-//       __hash__, you should also override __eq__; then wave your hands in the air,
-//      warn that there are other important details, and leave a breadcrumb to 
-//      something like https://www.journaldev.com/17357/python-hash-function
+For entities, the simplest option is to say that the hash is ++None++, meaning
+that the object is not hashable and cannot, for example, be used in a set.
+If for some reason you decide you really do want to use set or dict operations
+with Entities, then the hash should be based on the attribute(s), like
+`.reference`, that define the Entity's unique identity over time. You should
+also try to somehow make _that_ attribute read-only.
+
+WARNING: This is tricky territory; you shouldn't modify +++<code>__hash__</code>+++ without
+    also modifying +++<code>__eq__</code>+++.  If you're not sure what you're doing, some
+    further reading is suggested.  https://hynek.me/articles/hashes-and-equality/[
+    Hashes and Equality] by our tech reviewer Hynek is a good place to start.
 
 
 
@@ -897,7 +898,8 @@ You may or may not like the use of `next()` above, but we're pretty
 sure you'll agree that being able to use `sorted()` on our list of
 batches is nice, idiomatic Python.
 
-To make it work we implement ++__gt__++ on our domain model:
+To make it work we implement +++<code>__gt__</code>+++ on our domain model:
+
 
 
 [[dunder_gt]]
