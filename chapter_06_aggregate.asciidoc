@@ -170,8 +170,8 @@ Of course, sometimes we might need to temporarily _bend_ the rules. Perhaps we
 need to shuffle the rooms around due to a VIP booking. While we're moving
 bookings around in memory we might be double booked, but our domain model
 should ensure that, when we're finished, we end up in a final consistent state,
-where the invariants are met.  Either that, or we raise an error and refuse to
-complete the operation.
+where the invariants are met. If we can't find a way to fit all our guests in
+we should raise an error and refuse to complete the operation.
 
 Let's look at a couple of concrete examples from our business requirements
 
@@ -184,9 +184,7 @@ This is a business rule that imposes an invariant. The invariant is that an
 order line is allocated to either zero or one batch, but never more than one.
 We need to make sure that our code never accidentally calls `Batch.allocate()`
 on two different batches for the same line, and currently, there's nothing
-there to explicitly stop us doing that.  By nominating an Aggregate to be
-"in charge of" all batches, we'll have a single place where we can enforce
-this constraint.
+there to explicitly stop us doing that.  
 
 
 ==== Invariants, Concurrency and Locks
@@ -224,74 +222,62 @@ got tens of thousands of orders per hour, and hundreds of thousands of
 order lines, we can't hold a lock over the whole `batches` table for
 every single one--we'll get deadlocks or performance problems at the very least.
 
+=== What is an Aggregate?
 
-In the rest of this chapter, we'll first discuss choosing an aggregate
-and demonstrate its usefulness for managing invariants at the conceptual level,
-as the single entrypoint in our code for modifying batches and allocations. In
-that role, it's defending us from programmer error.
+Okay, so if we can't lock the whole database every time we want to allocate an
+order line, what should we do instead? We want to protect the invariants of our
+system but allow for the greatest degree of concurrency. Maintaining our
+invariants inevitably means preventing concurrent writes - if multiple users can
+allocate DEADLY-SPOON at the same time, we run the risk of over-allocating.
 
-// TODO (hynek) at no point have you explained what an aggregate is
-// (EJ1) I think you can also limbo your way out of this by saying "discuss how the Aggregate"
-//       concept is useful for" instead of "discuss choosing an aggregate"
+On the other hand, there's no reason why we can't allocate DEADLY-SPOON at the
+same time as FLIMSY-DESK. It's safe to allocate two different products at the
+same time because there's no invariant that covers them both.
 
-Then we'll return to the topic of concurrency and discuss how the aggregate can
-enforce invariants at a lower level.  In that role, it'll be defending us
-against concurrency / data integrity bugs.
+The aggregate pattern is a design pattern from the DDD community that helps us
+to resolve this tension. An aggregate is just a domain object that contains
+other domain objects and lets us treat the whole collection as a single unit.
 
+The only way to modify the objects inside the aggregate is to load the whole
+thing, and to call methods on the aggregate itself.
 
-=== Choosing the Right Aggregate
+For example, if we're building a shopping site, the "Cart" might make a good
+aggregate: it's a collection of items that I can treat as a single unit.
+Importantly, I want to load the entire basket as a single blob from my data
+store. I don't want two requests to modify my basket at the same time, or I
+run the risk of weird concurrency errors. Instead, I want each change to my
+basket to run in a single database transaction.
 
-[quote, Eric Evans, DDD blue book]
-____
-// We need an abstraction for encapsulating references within the model.
-An AGGREGATE is a cluster of associated objects that we treat as a unit for the
-purpose of data changes.
-// Each AGGREGATE has a root and a boundary. The boundary
-// defines what is inside the AGGREGATE. The root is a single, specific ENTITY
-// contained in the AGGREGATE. The root is the only member of the AGGREGATE that
-// outside objects are allowed to hold references to, although objects within the
-// boundary may hold references to each other. ENTITIES other than the root have
-// local identity, but that identity needs to be distinguishable only within the
-// AGGREGATE, because no outside object can ever see it out of the context of the
-// root ENTITY.
-____
+I don't want to modify multiple baskets in a transaction, because there's no
+use-case for changing the baskets of several customers at the same time. Each
+basket is a single _consistency boundary_ responsible for maintaining its own
+invariants.
 
-// TODO (hynek) this isn't greate.  there really should be a seciton "what is an
-// aggregate before starting "choosing the right aggregate" and basically explaining
-// it using only an evans quote
-// (EJ2) Agree with above, but OTOH, explaining Aggregate is notoriously difficult,
-//       and often just boils down to seeing a lot of examples.
-//
-//       What would be really nice here is if you had an example of a badly chosen
-//       aggregate that create headaches.  I'm not sure if Warehouse or Shipment
-//       would be obviously bad without a lot of explanation.
+=== Choosing an Aggregate
 
-Even if it weren't for the data integrity concerns, as a model gets more complex
-and grows more different Entity and Value Objects, all of which start pointing
-to each other, it can be hard to keep track of who can modify what.  Especially
-when we have _collections_ in the model like we do (our batches are a collection),
-it's a good idea to nominate some entities to be the single entrypoint for
-modifying their related objects.  It makes the system conceptually simpler
-and easy to reason about if you nominate some objects to be in charge of consistency
-for the others.
+What aggregate should we use for our system? The choice is somewhat arbitrary,
+but it's important. The aggregate will be the boundary where we make sure
+eery operation ends in a consistent state. This helps us to reason about our
+software and prevent weird race issues. We want to draw a boundary around a
+small number of objects - the smaller the better for performance - that have to
+be consistent with one another, and we need to give it a good name.
 
-TIP: Just like we sometimes use `_leading_underscores` to mark methods or functions
-    as "private", you can think of aggregates as being the "public" classes of our
-    model, and the rest of the Entities and Value Objects are "private".
+The object we're manipulating under the covers is the Batch. What do we call a
+collection of batches? How should we divide all the batches in the system into
+discreet islands of consistency?
 
-So what shall we choose as our aggregate?
+We _could_ use the Shipment as our boundary. Each shipment contains several
+batches, and they all travel to our warehouse at the same time. Or perhaps we
+could use the Warehouse as our boundary: each warehouse contains many batches
+and it could make sense to count all the stock at the same time.
 
-Some sort of `Order` object might suggest itself, but that's more about order lines,
-and we're more concerned about something that provides some sort of conceptual unity
-for collections of batches.
-
-An object to represent a `Warehouse` or a `Shipment` can represent a collection of
-batches, but it wouldn't really slice the batches up in a useful way for the purposes
-of allocating an individual order line.
+Neither of these concepts really satisfies us, though. I should be able to
+allocate DEADLY-SPOONs and FLIMSY-DESKs at the same time, even if they're in the
+same warehouse, or the same shipment. These concepts have the wrong granularity.
 
 When we allocate an order line, we're actually only interested in batches
-that have the same SKU as the order line.  Some sort of concept like `GlobalSkuStock`
-could work: a collection of all the batches for a given SKU.
+that have the same SKU as the order line. Some sort of concept like
+`GlobalSkuStock` could work: a collection of all the batches for a given SKU.
 
 It's an unwieldy name though, so after some bikeshedding via `SkuStock`, `Stock`,
 `ProductStock`, and so on, we decided to simply call it `Product` --
