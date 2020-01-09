@@ -443,9 +443,9 @@ def allocate_endpoint():
 
     # extract order line from request
     line = OrderLine(
-        request.params['order_id'],
-        request.params['sku'],
-        request.params['qty'],
+        request.json['orderid'],
+        request.json['sku'],
+        request.json['qty'],
     )
 
     # load all batches from the DB
