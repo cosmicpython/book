@@ -76,7 +76,7 @@ Services -> API: OK
 
 ////
 TODO (EJ)
-I agree on the service layer box, as I'm not sure that it adds much here, and the focus is on UOW.
+I agree on the service layer box, as I'm not sure that it adds much here, and the focus is on UoW.
 
 About the sequence diagram, there are a couple things that might help:
 
@@ -168,7 +168,7 @@ def allocate(
 <1> We'll start a unit of work as a context manager
 <2> `uow.batches` is the batches repo, so the unit of work provides us
     access to our permanent storage.
-<3> When we're done, we commit or roll back our work, using the UOW
+<3> When we're done, we commit or roll back our work, using the UoW
 
 The unit of work acts as a single entry point to our persistent storage, and
 keeps track of what objects were loaded and what the latest state is.footnote:[
