@@ -5,7 +5,7 @@ In the previous chapter we talked about using events as a way of representing
 the inputs to our system, and turned our application into a message processing
 machine.
 
-To achieve that, we converted all our use-case functions to event-handlers.
+To achieve that, we converted all our use-case functions to event handlers.
 When the API receives a POST to create a new batch, it builds a new `BatchCreated`
 event and handles it as if it were an internal event.
 This might have felt counter-intuitive. After all, the batch _hasn't_ been
@@ -98,7 +98,7 @@ class ChangeBatchQuantity(Command):  #<3>
 
 <1> `commands.Allocate` will replace `events.AllocationRequired`
 <2> `commands.CreateBatch` will replace `events.BatchCreated`
-<3> `commands.ChangeBatchQuantity` will replace `events.BatchQuantityChanged``
+<3> `commands.ChangeBatchQuantity` will replace `events.BatchQuantityChanged`
 
 //TODO: consider keeping BatchQuantityChanged as an event?
 
@@ -164,11 +164,15 @@ def handle_event(
 ----
 ====
 
+// TODO (hynek): change except to except Exception to avoid catching eg
+// KeyboardInterrupt
+
 <1> Events go to a dispatcher that can delegate to multiple handlers per
     event.
 
 <2> It catches and logs any errors, but does not let them interrupt
     message processing.
+
 
 [[handle_command]]
 .Commands reraise exceptions (src/allocation/service_layer/messagebus.py)
@@ -235,7 +239,7 @@ If we manage to process half of the events during `messagebus.handle` before an
 out-of-memory error kills our process, how do we mitigate problems caused by the
 lost messages?
 
-Let's start with the worst case: we fail to handle and event, and the system is
+Let's start with the worst case: we fail to handle an event, and the system is
 left in an inconsistent state. What kind of error would cause this? Often in our
 systems we can end up in an inconsistent state when only half an operation is
 completed.
@@ -272,7 +276,7 @@ successful.
 Let's take another example to see why not.
 
 Imagine we are building an e-commerce website that sells expensive luxury goods.
-Our marketing department want to reward customers for repeat visits. We will
+Our marketing department wants to reward customers for repeat visits. We will
 flag customers as VIPs once they make their third purchase, and this will
 entitle them to priority treatment and special offers. Our acceptance criteria
 for this story read as follows:
@@ -428,7 +432,7 @@ with handler <function congratulate_vip_customer at 0x10ebc9a60>
 ----
 
 Because we've chosen to use dataclasses for our message types we get a neatly
-printed summary of the incoming data that we can copy and paste into a python
+printed summary of the incoming data that we can copy and paste into a Python
 shell to recreate the object.
 
 When an error occurs, we can use the logged data to either reproduce the problem
@@ -479,7 +483,13 @@ def handle_event(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):
 ----
 ====
 
-<1> Tenacity is a python library that implements common patterns for retrying.
+// TODO (hynek) you've used the "correct" logger formatting before – you should
+// stick to it
+// also no reason to split it out. if you use lazy formatting, you can just
+// neatly distribute it over multiple lines
+
+<1> Tenacity is a Python library that implements common patterns for retrying.
+
 <2> Here we configure our message bus to retry operations up to three times,
     with an exponentially increasing wait between attempts.
 
@@ -512,4 +522,4 @@ a|
 |===
 
 
-TODO: discussion, can events raise commands?
+// TODO: discussion, can events raise commands?
