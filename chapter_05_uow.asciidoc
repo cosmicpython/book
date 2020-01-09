@@ -75,10 +75,12 @@ Services -> API: OK
 ----
 
 ////
-TODO (EJ)
-I agree on the service layer box, as I'm not sure that it adds much here, and the focus is on UOW.
+TODO (EJ1) WRT BOB's comment below, I think it makes sense and the example would be a good
+alternative. If I were learning about this for the first time, I might find the current
+UoW sequence diagram confusing, as it seems to me that it doesn't exatly match the source
+code at the detail level.
 
-About the sequence diagram, there are a couple things that might help:
+However, if you definitely want to use a sequence diagram, there are a couple things that might help:
 
 *   Use Session instead of DB as the participant. That will make the syntax of
     the sequence diagram clearer, as well as matching the source code better.
@@ -367,6 +369,10 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
     use our database session.
 
 //TODO: why not swap out db using os.environ?
+// (EJ2) Could be a good idea to point out that this couples the unit of work to postgres.
+//         This does get dealt with in in bootstrap, so you could make a forward-reference.
+// (EJ3) IIRC using a factory like this is considered an anti-pattern ("Control-Freak" from M.Seeman's book)
+//         Is there a reason to inject a factory instead of a session?
 
 
 
@@ -429,7 +435,7 @@ def test_allocate_returns_allocation():
 ////
 TODO (BOB): Defend the mocking point
 
-(EJ):
+(EJ3):
 
 https://github.com/cosmicpython/book/blame/master/chapter_05_uow.asciidoc#L238
 Maybe "Only mock your immediate neighbors" is more applicable?

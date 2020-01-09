@@ -233,8 +233,14 @@ domain experts about allocation:
 
 * We allocate to shipment batches in order of which has the earliest ETA.
 
-// TODO: this list of examples is massive in  the pdf.  try using a table
+// TODO: this list of examples is massive in the pdf.  try using a table
 // to make it smaller.
+// EJ2: agree with above. maybe organizing in terms of a single high level scenario:
+//      "A customer places an order for 2 chairs, an an order for red sofa. 
+//       Each order line in an order must be allocated to a batch of stock from
+//       the warehouse. If stock is not available, the purchasing department should
+//       purchase a new batch, and customers should receive an ETA...."
+//     Then you can just have a bullet list of rules.  I think people can fill in the blanks.
 
 .Exercise for the Reader
 ******************************************************************************
@@ -249,6 +255,7 @@ You'll find some placeholder unit tests there, but you could just start from
 scratch, or combine/rewrite them however you like.
 
 //TODO: add test_cannot_allocate_same_line_twice ?
+//(EJ3): nice to have for completeness, but not necessary
 
 ******************************************************************************
 
@@ -781,9 +788,6 @@ class Batch:
 Python's `__eq__` magic method defines the behavior of the class for the
 `==` operator.
 
-// TODO (EJ) The difference between "is" and "__eq__" might be a tripping point
-// for some people.]
-
 For both Entity and Value Objects it's also worth thinking through how
 `__hash__` will work.  It's the magic method Python uses to control the
 behavior of objects when you add them to sets or use them as dict keys;
@@ -798,6 +802,11 @@ on the attribute(s), like `.reference`, that define identity over time.
 //might be worth spending more time on this.
 // (HP): if we get into this, it links into the hack in next chapter required
 // by sqlalchemy, `@dataclass(frozen=True)` -> `dataclass(unsafe_hash=True)`
+// (EJ1) Agree with the above points, and would hope that readers are aware.
+//       I think it's adequate to point out that if you override
+//       __hash__, you should also override __eq__; then wave your hands in the air,
+//      warn that there are other important details, and leave a breadcrumb to 
+//      something like https://www.journaldev.com/17357/python-hash-function
 
 
 
@@ -984,9 +993,13 @@ Not everything has to be an object::
 // [SG] Why is a Factory a code smell?
 // [HP] A *class* called Factory is a code smell.  A function called
 // factory _might_ be fine.
+// (EJ3) Manager, Builder, and Factory are code smells for very different reasons.
+//  I'm not sure that calling them out here adds much, and just potentially adds to confusion. 
+//  Maybe just say that not everything has to be class, unlike in some other caffeine-inspired 
+//  languages.
 
 This is the time to apply your best OO design principles::
-    Revise the SOLID principles, and all the other good heuristics like "-a vs is-a",
+    Revisit the SOLID principles, and all the other good heuristics like "-a vs is-a",
     "prefer composition over inheritance", and so on.
 
 You'll also want to think about consistency boundaries and Aggregates::

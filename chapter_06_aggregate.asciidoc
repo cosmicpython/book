@@ -10,6 +10,8 @@ maintainability.
 
 // TODO (hynek) no you don't (discuss the concept of a consistency boundary),
 // that term doesn't come up until chapter 9
+// (EJ1) I think you can limbo your way out of this by saying 
+//          "an aggregate as a unit of consistency" instead of "consistency boundary."
 
 
 Here's a preview of where we're headed: we're going to move from the model in 
@@ -143,6 +145,7 @@ low initial complexity but tends not to scale very well because it's difficult
 to apply logic and maintain consistency.
 
 // TODO: better examples.
+
 Who is allowed to view this particular field? Who's allowed to update it? What
 happens when we try to order -350 chairs, or 10,000,000 tables? Can an employee
 have a negative salary?
@@ -228,6 +231,8 @@ as the single entrypoint in our code for modifying batches and allocations. In
 that role, it's defending us from programmer error.
 
 // TODO (hynek) at no point have you explained what an aggregate is
+// (EJ1) I think you can also limbo your way out of this by saying "discuss how the Aggregate"
+//       concept is useful for" instead of "discuss choosing an aggregate"
 
 Then we'll return to the topic of concurrency and discuss how the aggregate can
 enforce invariants at a lower level.  In that role, it'll be defending us
@@ -254,6 +259,12 @@ ____
 // TODO (hynek) this isn't greate.  there really should be a seciton "what is an
 // aggregate before starting "choosing the right aggregate" and basically explaining
 // it using only an evans quote
+// (EJ2) Agree with above, but OTOH, explaining Aggregate is notoriously difficult,
+//       and often just boils down to seeing a lot of examples.
+//
+//       What would be really nice here is if you had an example of a badly chosen
+//       aggregate that create headaches.  I'm not sure if Warehouse or Shipment
+//       would be obviously bad without a lot of explanation.
 
 Even if it weren't for the data integrity concerns, as a model gets more complex
 and grows more different Entity and Value Objects, all of which start pointing
@@ -492,6 +503,9 @@ do them for you by magic!
 // TODO (DS) this is really about concurrency, not version numbers.  it might
 // be worth mentioning that this is optimistic locking, and also give a nod
 // to pessimistic locking
+// (EJ1) Agree with above. Could just change the section title to 
+//       "Optimistic Concurrency Control with Version Numbers". That
+//       will give anyone who's curious a good search term to Google.
 
 We've got our new aggregate so we've solved the conceptual problem of choosing
 an object to be in charge of consistency boundaries.  Let's now spend a little
@@ -777,6 +791,7 @@ Something something transactions::
     bla bla.
 
 // TODO (hynek) ehm.
+// (EJ1) bla
 
 *****************************************************************
 

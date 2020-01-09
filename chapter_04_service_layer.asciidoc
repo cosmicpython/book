@@ -799,7 +799,7 @@ we see teams writing too many tests against their domain model. This causes
 problems when they come to change their codebase, and find that they need to
 update tens or even hundreds of unit tests.
 
-// TODO (EJ)  I think this is one of those things that borders on a war of
+// TODO (EJ3)  I think this is one of those things that borders on a war of
 // religion.  Might want to have some sidebar on BDD, and the perils of test
 // coverage metrics.
 
@@ -878,8 +878,8 @@ When we want to improve the design of the code, though, we will need to replace
 or delete these tests, because they are tightly coupled to a particular
 implementation.
 
-// TODO: (EJ) an example that is overmocked would be good here if you decide to
-// add one.
+// TODO: (EJ3) an example that is overmocked would be good here if you decide to
+// add one. Ch12 already has one that could be expanded.
 
 // TODO (SG) - maybe we could do with a/some concrete examples here?  Eg an
 // example where a unit test would break but a service-layer test wouldn't?
@@ -1030,6 +1030,8 @@ def test_returns_allocation():
 
 
 // TODO (hynek) would @classmethod and use cls be more idiomatic?
+// (EJ) re: @classmethod, I don't think it's necessary unless you wanted to have
+//      a shared variable amongst all class instances.
 
 At least that would move all of our tests' dependencies on the domain
 into one place.
@@ -1335,6 +1337,14 @@ those ports in theory, but putting them into a _ports_ subfolder instead
 of inside the domain folder would feel weird to us.
 
 // TODO - this whole ports discussion feels a bit long-winded, maybe cut?
+// (EJ3) - I think this section could be shortened up a bit.  Re: the 'ports'
+//         package/folder, I get the value for pedagogical purposes here, but
+//         in general I'm ambivalent because:
+//         * in practice, someone may cargo-cult the 'adapters' + 'ports' structure naively,
+//           and end up sticking anything that is a port or adapter here. And then
+//           you will end up coincidental coupling.
+//         * any package structure is subjective and fail you eventually, which is the
+//           how you get crosscuts.
 
 
 === Wrap-Up
