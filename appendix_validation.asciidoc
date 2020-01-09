@@ -37,9 +37,8 @@ gramatically correct sentences as "well-formed".
 How does this map to our application? Here are some examples of syntactic rules:
 
 * An Allocate command must have an orderid, a sku, and a quantity.
-* A quantity is an integer
-* A sku is a string with a maximum length of 64 characters
-* An orderid is a string with a maximum length of 16 characters
+* A quantity is a positive integer
+* A sku is a string
 
 These are rules about the shape and structure of incoming data. An Allocate
 command without a sku or order id isn't a valid message. It's the equivalent
@@ -67,7 +66,7 @@ class Allocate(Command):
         'orderid': int,
          sku: str,
          qty: And(Use(int), lambda n: n > 0)
-     })
+     }, ignore_extra_keys=True)
 
     orderid: str
     sku: str
@@ -97,7 +96,7 @@ declaration of our message types.
 [source,python]
 ----
 def command(name, **fields): #<1>
-    schema = Schema(And(Use(json.loads), fields)) #<2>
+    schema = Schema(And(Use(json.loads), fields), ignore_extra_keys=True) #<2>
     cls = make_dataclass(name, fields.keys())
     cls.from_json = lambda s: cls(**schema.validate(s)) #<3>
     return cls
@@ -128,11 +127,58 @@ create our message type.
 <4> We can create reusable parsers for quantity, or sku, etc to keep things DRY.
 <5> Declaring a message type becomes a one-liner
 
+********************************************************************************
 
-// TODO: Log and continue
-// TODO: add metrics around invalid messages
-// TODO: Postel's law
-// TODO: Tolerant reader pattern
+=== Postel's Law and the Tolerant Reader Pattern
+
+Postel's law, or the Robustness Principle, tells us "Be liberal in what you
+accept, and conservative in what you emit". The idea here is that we should be
+strict whenever we're sending messages to other systems, but as lenient as
+possible when we're receiving messages from others.
+
+For example, our system _could_ validate the format of a sku. We've been using
+made up skus like "UNFORGIVING-CUSHION" and "MISBEGOTTEN-POUFFE". These follow
+a simple pattern: two words, separated by dashes, where the second word is the
+type of product, and the first word an adjective.
+
+Developers _love_ to validate this kind of thing in their messages, and reject
+anything that looks like an invalid sku. This causes horrible problems down the
+line when some anarchist releases a product named "COMFY-CHAISE-LONGUE" or when
+a snafu at the supplier results in a shipment of "CHEAP-CARPET-2".
+
+Really, as the allocation system, it's _none of our business_ what the format of
+a sku might be. All we need is an identifier, so we can simply describe it as a
+string. This means that the Procurement system can change the format whenever
+they like, and we won't care.
+
+This same principle applies to order numbers, customer phone numbers, and much
+more. For the most part, we can ignore the internal structure of strings.
+
+Similarly, developers _love_ to validate incoming messages with tools like JSON
+schema, or to build libraries that validate incoming messages and share them
+among systems. This likewise fails the robustness test.
+
+Let's imagine, for example, that the procurement system adds new fields to the
+`change_batch_quantity` message that record the reason for the change, and the
+email of the user responsible for the change.
+
+Since these fields don't matter to the allocation service, we should simply
+ignore them. We can do that in the `Schema` library by passing the keyword arg
+`ignore_extra_keys=True`.
+
+This pattern, where we extract only the fields we care about, and do minimal
+validation of them is the Tolerant Reader pattern.
+
+TIP: Validate as little as possible. Only read the fields you need, and don't
+over-specify their contents. This will help you to stay robust when other
+systems change over time. Resist the temptation to share message definitions
+between systems, instead make it easy to define the data you depend on. For more
+on the Tolerant Reader pattern, see Martin Fowler's article https://martinfowler.com/bliki/TolerantReader.html
+
+********************************************************************************
+
+
+=== Validating At The Edge
 
 Earlier, we said that we want to avoid cluttering our code with irrelevant
 detail. In particular, we don't want to code defensively inside our domain model.
@@ -215,6 +261,12 @@ the outside world, and how to report success or failure. Our mesage bus takes
 care of validating our requests, and routing them to the correct handler, and
 our handlers are exclusively focused on the logic of our use case.
 
+TIP: Usually when you receive an invalid message there's little you can do but
+log the error and continue. At MADE we use metrics to count how many messages a
+system receives, and how many of those are successfully processed, skipped, or
+invalid. Our monitoring tools will alert us if we see spikes in the numbers of
+bad messages. Ignoring unrecognised fields and being liberal about the format of
+data helps to keep us robust when things change.
 
 === Validating Semantics
 
@@ -372,17 +424,35 @@ this is very brave", it may mean that the reviewer admires your courage, unless
 they're British, in which case they're trying to tell you that what you're doing
 is insanely risky, and only a fool would attempt it.  Context is everything.
 
-Places we can do validation, and different types of validation:
+In software terms, the pragmatics of an operations are usually managed by the
+domain model. When we receive a message like "allocate three million units of
+SCARCE-CLOCK to order 76543", the message is *syntactically* valid, and
+*semantically* valid, but we're unable to comply because we don't have the stock
+available.
 
-1. event/command schemas
-2. at service layer
-3. in model (business rules)
-4. at exit boundaries (?)
+.Validation Wrap-Up
+*****************************************************************
 
+Validation means different things to different people::
+    When talking about validation, make sure you're clear about what you're
+    validating.
+    We find it useful to think about syntax, semantics, and pragmatics: the
+    structure of messages, the meaningfulness of messages, and the business
+    logic governing our response to messages.
 
-TODO: Topics still (?) to discuss:
+Validate at the edge when possible::
+    Validating required fields and the permissible ranges of numbers is *boring*
+    and we want to keep it out of our nice clean code base. Handlers should only
+    ever receive valid messages.
 
-* Validate at the edges, don't program defensively inside
-* Difference between syntax and semantics
-* Discuss patterns for validating messages
-* Talk about reasons for loosely validating messages in the consumer, tolerant reader etc.
+Only validate what you require::
+    Use the Tolerant Reader pattern: only read the fields your application needs
+    and don't over-specify their internal structure. If you can treat it as an
+    opaque string, that will make life easier.
+
+Spend time writing helpers for validation::
+    Having a nice declarative way to validate incoming messages and apply
+    preconditions to your handlers will make your codebase much cleaner.
+    It's worth investing time to make boring code easy to maintain.
+
+*****************************************************************
