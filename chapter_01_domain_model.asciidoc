@@ -802,10 +802,10 @@ on the attribute(s), like `.reference`, that define identity over time.
 //might be worth spending more time on this.
 // (HP): if we get into this, it links into the hack in next chapter required
 // by sqlalchemy, `@dataclass(frozen=True)` -> `dataclass(unsafe_hash=True)`
-// (EJ2) Agree with the above points, and would hope that readers are aware.
-//       At a minimum I think you should point out the if your override
+// (EJ1) Agree with the above points, and would hope that readers are aware.
+//       I think it's adequate to point out that if you override
 //       __hash__, you should also override __eq__; then wave your hands in the air,
-//      warn that there are some important details, and leave a breadcrumb to 
+//      warn that there are other important details, and leave a breadcrumb to 
 //      something like https://www.journaldev.com/17357/python-hash-function
 
 
