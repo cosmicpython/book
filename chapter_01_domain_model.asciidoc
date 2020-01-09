@@ -65,7 +65,7 @@ and cannot encourage you enough to go on and read a proper DDD book.
 
 * The original https://domainlanguage.com/ddd/["blue book"],
   _Domain-Driven Design_ by Eric Evans (Addison-Wesley, 2003)
-* Or, some people prefer the "red book", _Implementing Domain-Driven Design_,
+* Or, some people prefer the https://learning.oreilly.com/library/view/implementing-domain-driven-design/9780133039900/["red book"], _Implementing Domain-Driven Design_,
   by Vaughn Vernon (Addison-Wesley, 2013).
 
 *****************************************************************
@@ -172,7 +172,7 @@ Time for some domain modeling.
 
 === Exploring the Domain Language
 
-Understanding the Domain Model takes time, and patience, and Post-It notes. We
+Understanding the Domain Model takes time, and patience, and Post-it notes. We
 have an initial conversation with our business experts and we agree on a glossary
 and some rules for the first minimal version of the domain model. Wherever
 possible, we ask for concrete examples to illustrate each rule.
@@ -482,7 +482,7 @@ class Batch {
 }
 
 class OrderLine {
-    order_id
+    orderid
     sku
     qty
 }
@@ -785,7 +785,7 @@ class Batch:
 ----
 ====
 
-Python's `__eq__` magic method defines the behavior of the class for the
+Python's ++__eq__++ magic (or dunder) method defines the behavior of the class for the
 `==` operator.
 
 For both Entity and Value Objects it's also worth thinking through how
@@ -897,7 +897,7 @@ You may or may not like the use of `next()` above, but we're pretty
 sure you'll agree that being able to use `sorted()` on our list of
 batches is nice, idiomatic Python.
 
-To make it work we implement `__gt__` on our domain model:
+To make it work we implement ++__gt__++ on our domain model:
 
 
 [[dunder_gt]]
