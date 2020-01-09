@@ -232,7 +232,8 @@ allocate DEADLY-SPOON at the same time, we run the risk of over-allocating.
 
 On the other hand, there's no reason why we can't allocate DEADLY-SPOON at the
 same time as FLIMSY-DESK. It's safe to allocate two different products at the
-same time because there's no invariant that covers them both.
+same time because there's no invariant that covers them both. We don't need them
+to be consistent with each other.
 
 The aggregate pattern is a design pattern from the DDD community that helps us
 to resolve this tension. An aggregate is just a domain object that contains
@@ -257,7 +258,7 @@ invariants.
 
 What aggregate should we use for our system? The choice is somewhat arbitrary,
 but it's important. The aggregate will be the boundary where we make sure
-eery operation ends in a consistent state. This helps us to reason about our
+every operation ends in a consistent state. This helps us to reason about our
 software and prevent weird race issues. We want to draw a boundary around a
 small number of objects - the smaller the better for performance - that have to
 be consistent with one another, and we need to give it a good name.
@@ -271,7 +272,7 @@ batches, and they all travel to our warehouse at the same time. Or perhaps we
 could use the Warehouse as our boundary: each warehouse contains many batches
 and it could make sense to count all the stock at the same time.
 
-Neither of these concepts really satisfies us, though. I should be able to
+Neither of these concepts really satisfies us, though. We should be able to
 allocate DEADLY-SPOONs and FLIMSY-DESKs at the same time, even if they're in the
 same warehouse, or the same shipment. These concepts have the wrong granularity.
 
