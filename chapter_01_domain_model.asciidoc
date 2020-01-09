@@ -181,66 +181,64 @@ We make sure to express those rules in the business jargon (the _ubiquitous
 language_ in DDD terminology). We choose memorable identifiers for our objects
 so that the examples are easier to talk about.
 
-Here are some notes we might have taken while having a conversation with our
-domain experts about allocation:
+<<allocation_notes>> shows some notes we might have taken while having a
+conversation with our domain experts about allocation:
 
-* A _product_ is identified by a _sku_, pronounced "skew," which is short for
+[[allocation_notes]]
+.Some Notes on Allocation
+|===
+
+a| A _product_ is identified by a _sku_, pronounced "skew," which is short for
   "stock keeping unit."
 
-* _Customers_ place _orders_. An order is identified by an _order reference_,
+a| _Customers_ place _orders_. An order is identified by an _order reference_,
   and comprises multiple _order lines_, where each line has a _sku_, and a
-  _quantity_.
-+
-.Example:
-** 10 units of RED-CHAIR
-** 1 unit of TASTELESS-LAMP
+  _quantity_.  Example:
 
-* The purchasing department orders small _batches_ of stock. A _batch_ of stock
+----
+- 10 units of RED-CHAIR
+- 1 unit of TASTELESS-LAMP
+----
+
+a| The purchasing department orders small _batches_ of stock. A _batch_ of stock
   has a unique id which they call a _reference_, a _sku_ and a _quantity_.
 
-* We need to _allocate_ _order lines_ to _batches_. When we've allocated an
+a| We need to _allocate_ _order lines_ to _batches_. When we've allocated an
   order line to a batch, we will send stock from that specific batch to the
   customer's delivery address.
 
-* When we allocate x units of stock to a batch, the _available quantity_ is
-  reduced by x.
-+
-.Example:
-** We have a batch of 20 SMALL-TABLE, and we allocate an order line for 2
-   SMALL-TABLE.
-** The batch should have 18 SMALL-TABLE remaining.
+a| When we allocate x units of stock to a batch, the _available quantity_ is
+  reduced by x. Example:
 
-* We can't allocate to a batch if the available quantity is less than the
-  quantity of the order line.
-+
-.Example:
-** We have a batch of 1 BLUE-CUSHION, and an order line for 2
-   BLUE-CUSHION.
-** We should not be able to allocate the line to the batch.
+----
+- We have a batch of 20 SMALL-TABLE, and we allocate an order line for 2 SMALL-TABLE.
+- The batch should have 18 SMALL-TABLE remaining.
+----
 
-* We can't allocate the same line twice.
-+
-.Example:
-** We have a batch of 10 BLUE-VASE, and we allocate an order line for 2
-   BLUE-VASE.
-** If we allocate the order line again to the same batch, the batch
-   should still have an available quantity of 8.
+a| We can't allocate to a batch if the available quantity is less than the
+  quantity of the order line. Example:
 
-* Batches have an _ETA_ if they are currently shipping, or they may be in
+----
+- We have a batch of 1 BLUE-CUSHION, and an order line for 2 BLUE-CUSHION.
+- We should not be able to allocate the line to the batch.
+----
+
+a| We can't allocate the same line twice.  Example:
+
+----
+- We have a batch of 10 BLUE-VASE, and we allocate an order line for 2 BLUE-VASE.
+- If we allocate the order line again to the same batch, the batch should still
+  have an available quantity of 8.
+----
+
+a| Batches have an _ETA_ if they are currently shipping, or they may be in
   _Warehouse stock_.
 
-* We allocate to warehouse stock in preference to shipment batches
+a| We allocate to warehouse stock in preference to shipment batches
 
-* We allocate to shipment batches in order of which has the earliest ETA.
+a| We allocate to shipment batches in order of which has the earliest ETA.
+|===
 
-// TODO: this list of examples is massive in the pdf.  try using a table
-// to make it smaller.
-// EJ2: agree with above. maybe organizing in terms of a single high level scenario:
-//      "A customer places an order for 2 chairs, an an order for red sofa. 
-//       Each order line in an order must be allocated to a batch of stock from
-//       the warehouse. If stock is not available, the purchasing department should
-//       purchase a new batch, and customers should receive an ETA...."
-//     Then you can just have a bullet list of rules.  I think people can fill in the blanks.
 
 .Exercise for the Reader
 ******************************************************************************
@@ -996,8 +994,8 @@ Not everything has to be an object::
 // [HP] A *class* called Factory is a code smell.  A function called
 // factory _might_ be fine.
 // (EJ3) Manager, Builder, and Factory are code smells for very different reasons.
-//  I'm not sure that calling them out here adds much, and just potentially adds to confusion. 
-//  Maybe just say that not everything has to be class, unlike in some other caffeine-inspired 
+//  I'm not sure that calling them out here adds much, and just potentially adds to confusion.
+//  Maybe just say that not everything has to be class, unlike in some other caffeine-inspired
 //  languages.
 
 This is the time to apply your best OO design principles::
