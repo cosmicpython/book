@@ -778,11 +778,8 @@ class Batch:
 ----
 ====
 
-Python's `__eq__` magic method defines the behavior of the class for the
+Python's `\___eq___` magic (or dunder) method defines the behavior of the class for the
 `==` operator.
-
-// TODO (EJ) The difference between "is" and "__eq__" might be a tripping point
-// for some people.]
 
 For both Entity and Value Objects it's also worth thinking through how
 `__hash__` will work.  It's the magic method Python uses to control the
@@ -888,7 +885,7 @@ You may or may not like the use of `next()` above, but we're pretty
 sure you'll agree that being able to use `sorted()` on our list of
 batches is nice, idiomatic Python.
 
-To make it work we implement `__gt__` on our domain model:
+To make it work we implement `\___gt___` on our domain model:
 
 
 [[dunder_gt]]
