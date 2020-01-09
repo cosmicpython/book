@@ -104,7 +104,7 @@ implementation detail).
 [role="skip"]
 [source,python]
 ----
-@flask.route.gubbins
+@app.route("/gubbins", methods=['POST'])
 def allocate_endpoint():
     # extract order line from request
     line = OrderLine(request.params, ...)
@@ -437,7 +437,7 @@ At this point though, our API endpoint might look something like
 [role="skip"]
 [source,python]
 ----
-@flask.route.gubbins
+@app.route("/gubbins", methods=['POST'])
 def allocate_endpoint():
     session = start_session()
 
@@ -760,7 +760,7 @@ And now our flask endpoint might look something like <<api_endpoint_with_repo>>:
 [role="skip"]
 [source,python]
 ----
-@flask.route.gubbins
+@app.route("/gubbins", methods=['POST'])
 def allocate_endpoint():
     batches = SqlAlchemyRepository.list()
     lines = [
