@@ -985,7 +985,7 @@ Imagine, for example, if we decide one day that we want to change allocations
 to live on the `OrderLine` instead of on the `Batch` object: if we were using
 Django, say, we'd have to define and think through the database migration
 before we could run any tests.  As it is, because our model is just plain
-Python objects, we can change a `set()` to being a new attribute, without
+old Python objects, we can change a `set()` to being a new attribute, without
 needing to think about the database until later.
 
 
