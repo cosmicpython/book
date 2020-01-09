@@ -10,7 +10,7 @@ update-code:
 	./checkout-branches-for-ci.py
 
 count-todos:
-	ls *.asciidoc | xargs grep -c TODO | sed  s/:/"   "/
+	ls *.asciidoc | xargs grep -c TODO | sed  s/:/\\t/
 
 diagrams: html
 	./render-diagrams.py
