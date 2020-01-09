@@ -483,9 +483,10 @@ def allocate(
         if product is None:
             raise InvalidSku(f'Invalid sku {line.sku}')
         batchref = product.allocate(line)
+        uow.commit()
+
         if batchref is None:
             messagebus.handle(events.OutOfStock(line.sku))
-        uow.commit()
         return batchref
 ----
 ====
