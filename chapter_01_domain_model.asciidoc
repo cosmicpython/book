@@ -785,11 +785,11 @@ class Batch:
 ----
 ====
 
-Python's `__eq__` magic method defines the behavior of the class for the
+Python's +++<code>__eq__</code>+++ magic method defines the behavior of the class for the
 `==` operator.
 
 For both Entity and Value Objects it's also worth thinking through how
-`__hash__` will work.  It's the magic method Python uses to control the
++++<code>__hash__</code>+++ will work.  It's the magic method Python uses to control the
 behavior of objects when you add them to sets or use them as dict keys;
 more info https://docs.python.org/3/glossary.html#term-hashable[in the Python docs].
 
@@ -804,8 +804,8 @@ with Entities, then the hash should be based on the attribute(s), like
 `.reference`, that define the Entity's unique identity over time. You should
 also try to somehow make _that_ attribute read-only.
 
-WARNING: This is tricky territory; you shouldn't modify `__hash__` without
-    also modifying `__eq__`.  If you're not sure what you're doing, some
+WARNING: This is tricky territory; you shouldn't modify +++<code>__hash__</code>+++ without
+    also modifying +++<code>__eq__</code>+++.  If you're not sure what you're doing, some
     further reading is suggested.  https://hynek.me/articles/hashes-and-equality/[
     Hashes and Equality] by our tech reviewer Hynek is a good place to start.
 
@@ -898,7 +898,7 @@ You may or may not like the use of `next()` above, but we're pretty
 sure you'll agree that being able to use `sorted()` on our list of
 batches is nice, idiomatic Python.
 
-To make it work we implement `__gt__` on our domain model:
+To make it work we implement +++<code>__gt__</code>+++ on our domain model:
 
 
 [[dunder_gt]]
