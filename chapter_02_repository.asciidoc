@@ -574,7 +574,7 @@ of nothing.
 ____
 
 Whenever we introduce an architectural pattern in this book, we'll always be
-trying to ask: "what do we get for this?  And what does it cost us?."
+trying to ask: "What do we get for this?  And what does it cost us?."
 
 Usually at the very least we'll be introducing an extra layer of abstraction,
 and although we may hope it will be reducing complexity overall, it does add
@@ -937,8 +937,8 @@ Postgres fields) you usually lose the portability.
 * Maintaining ORM mappings by hand is extra work and extra code.
 
 * Any extra layer of indirection always increases maintenance costs and
-  adds a "wtf factor" for Python programmers who've never seen Repository Pattern
-  before
+  adds a "WTF factor" for Python programmers who've never seen Repository Pattern
+  before.
 |===
 
 <<domain_model_tradeoffs_diagram>> shows the basic thesis: yes, for simple
