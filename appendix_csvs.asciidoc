@@ -240,6 +240,8 @@ class CsvRepository(repository.AbstractRepository):
 ----
 ====
 
+// TODO (hynek) re self._load(): DUDE! no i/o in init!
+
 
 And here's what a Unit of Work for CSVs would look like:
 

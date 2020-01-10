@@ -77,9 +77,9 @@ git checkout appendix_project_structure
     ends up being more trouble than it's worth; the cost in terms of complexity
     and longer rebuild/CI times is too high. YMMV.]
 
-<2> A __Makefile__footnote:[http://www.pyinvoke.org/[Invoke] is a pure-Python alternative to Makefiles,
-    worth checking out if everyone in your team knows Python (or at least knows
-    it better than Bash!)]
+<2> A __Makefile__footnote:[A pure-Python alternative to Makefiles is 
+    http://www.pyinvoke.org/[Invoke]; worth checking out if everyone in your
+    team knows Python (or at least knows it better than Bash!)]
     provides the entrypoint for all the typical commands a developer
     (or a CI server) might want to run during their normal workflow.  `make
     build`, `make test`, and so on.  This is optional, you could just use
@@ -88,7 +88,7 @@ git checkout appendix_project_structure
     documentation, a Makefile is code so it has less tendency to go out of date.
 
 <3> All the actual source code for our app, including the domain model, the
-    flask app, and infrastructure code, lives in a Python package inside
+    Flask app, and infrastructure code, lives in a Python package inside
     _src_,footnote:[More on _src_ folders: https://hynek.me/articles/testing-packaging/]
     which we install using `pip install -e` and the _setup.py_ file.  This makes
     imports easy. Currently the structure within this module is totally flat,
@@ -168,8 +168,8 @@ https://github.com/cosmicpython/book/issues/52
 // TODO (DS): I reckon configuration patterns are an important part of the architecture your outlining, i wonder if they belong in the main book?
 
 Whenever our application code needs access to some config, it's going to
-get it from a file called _config.py__. <<config_dot_py>> shows a couple of
-examples from our app:
+get it from a file called __config.py__. Here are a couple of examples from our
+app:
 
 [[config_dot_py]]
 .Sample config functions (src/allocation/config.py)
@@ -198,9 +198,14 @@ def get_api_url():
     `os.environ` if it needs to.
 
 <2> _config.py_ also defines some default settings, designed to work when
-    running the code from the developer's local machinefootnote:[You might prefer
-    to fail hard if an env var is not set, but this gives us a local dev
-    setup that "just works" (as much as possible).].
+    running the code from the developer's local machinefootnote:[
+    This gives us a local dev setup that "just works" (as much as possible).
+    You may prefer to fail hard on missing env vars instead, particularly
+    if any of the defaults would be insecure in production.].
+
+There is an elegant Python package called
+https://github.com/hynek/environ-config[environ-config] which is worth looking
+at if you get tired of hand-rolling your own environment-based config functions.
 
 // TODO (DS): The way config interacts with dependency injection might be worth
 // a diagram (ie the layers)
@@ -213,8 +218,7 @@ def get_api_url():
 
 We use a lightweight docker container orchestration tool called docker-compose.
 It's main configuration is via a YAML file (sighfootnote:[Harry hates YAML. He says
-he can never remember the syntax or how it's supposed to indent.]),
-<<docker_compose>>:
+he can never remember the syntax or how it's supposed to indent.]):
 
 
 [[docker_compose]]
@@ -276,7 +280,7 @@ services:
     local dev machine and the container, the `PYTHONDONTWRITEBYTECODE` env
     var tells Python to not write `.pyc` files, and that will save you from
     having millions of root-owned files sprinkled all over your local filesystem,
-    being all annoying to delete, and causing weird python compiler errors besides.
+    being all annoying to delete, and causing weird Python compiler errors besides.
 
 <6> Mounting our source and test code as `volumes` means we don't need to rebuild
     our containers every time we make a code change.
@@ -288,15 +292,15 @@ services:
     docker-compose.override.yml]--these correspond to the default ports we set
     in _config.py_.
 
-NOTE: Inside docker, other containers are available through hostnames named after
-    their service name. Outside docker, they are available on `localhost`, at the
+NOTE: Inside Docker, other containers are available through hostnames named after
+    their service name. Outside Docker, they are available on `localhost`, at the
     port defined in the `ports` section.
 
 
 === Installing Your Source as a Package
 
 All our application code (everything except tests really) lives inside an
-_src_ folder, as in <<src_folder_tree>>:
+_src_ folder:
 
 [[src_folder_tree]]
 .The src folder
@@ -313,8 +317,8 @@ _src_ folder, as in <<src_folder_tree>>:
 ====
 
 <1> Subfolders define top-level module names.  You can have multiple if you like.
-<2> And _setup.py_ is the file you need to make it pip-installable.  See
-    <<setup_dot_py>>.
+
+<2> And _setup.py_ is the file you need to make it pip-installable, shown next.
 
 [[setup_dot_py]]
 .pip-installable modules in 3 lines  (src/setup.py)
@@ -330,6 +334,10 @@ setup(
 )
 ----
 ====
+
+// TODO (hynek) hmmm for a proper src-layout the setup.py belongs outside of
+// src and then just use find_packages(src). I’ve never seen it like this.
+// setup.py is kinda metadata so it should be with the other metadata
 
 That's all you need.  `packages=` specifies the names of subfolders that you
 want to install as top-level modules. The `name` entry is just cosmetic, but
@@ -375,9 +383,10 @@ CMD flask run --host=0.0.0.0 --port=80
 ----
 ====
 
-<1> Installing system-level dependencies
-<2> Installing our Python dependencies
-<3> Copying and installing our source
+<1> Installing system-level dependencies.
+<2> Installing our Python dependencies (you may want to split out your dev from
+    prod dependencies, we haven't here, for simplicity).
+<3> Copying and installing our source.
 <4> Optionally configuring a default startup command (you'll probably override
     this a lot from the command-line)
 
