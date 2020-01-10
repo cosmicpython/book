@@ -14,7 +14,10 @@ for frm, to in MOVES:
 
 sources = list(Path(__file__).absolute().parent.glob('*.asciidoc'))
 for frm, to in MOVES:
-    subprocess.run(['sed', '-i', f's/{frm}/{to}/g'] + sources + ['chapters.py', 'atlas.json', 'Readme.md'])
+    subprocess.run(
+        ['sed', '-i', f's/{frm}/{to}/g'] + sources + ['chapters.py', 'atlas.json', 'Readme.md'],
+        check=True,
+    )
 
 input('base repo done, ready to do submodules')
 
