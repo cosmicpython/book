@@ -533,7 +533,7 @@ build read replicas, or even add caching layers.
 === Doubling Down on the Madness.
 
 //
-// (ej) Thinking back to some comments Bob made in another PR, maybe "simple" vs. "complex"
+// TODO (EJ3) Thinking back to some comments Bob made in another PR, maybe "simple" vs. "complex"
 //     instead of "sane" vs. "insane" would be a better rhetorical device for organizing
 //     this chapter? It would tie back to previous discussions about Pros vs. Cons, and 
 //     why you would bother taking on this extra complexity.
@@ -832,7 +832,7 @@ updating it.
 | Use hand-rolled SQL | Offers fine control over performance with a standard query syntax | Changes to db schema have to be made to your hand-rolled queries *and* your ORM definitions. Highly normalised schemas may stil have performance limitations |
 | Create separate read stores with events | Read-only copies are easy to scale out. Views can be constructed when data changes so that queries are as simple as possible. | Complex technique. Harry will be forever suspicious of your tastes and motives |
 
-// (ej) Might be useful to re-iterate what "full-blown" CQRS means vs simpler CQRS options.  I think
+// TODO (EJ3) Might be useful to re-iterate what "full-blown" CQRS means vs simpler CQRS options.  I think
 //      most blog posts describe CQRS in terms of the "full-blown" version, while
 //      ignoring over the simpler version that is developed earlier in this chapter.
 //
