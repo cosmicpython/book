@@ -43,7 +43,7 @@ Commands capture _intent_. They express our wish for the system to do something.
 As a result, when they fail, the sender needs to receive error information.
 
 Events are broadcast by an actor to all interested listeners. When we publish the
-`batch_quantity_changed` we don't know who's going to pick it up. We name events
+`BatchQuantityChanged` we don't know who's going to pick it up. We name events
 with past-tense verb phrases like "order allocated to stock," or "shipment delayed."
 
 We often use events to spread the knowledge about successful commands.
@@ -199,7 +199,7 @@ def handle_command(
 
 <1> The command dispatcher expects just one handler per command.
 
-<2> If any errors are raised, they fail hard and will bubble up.
+<2> If any errors are raised, they fail-fast and will bubble up.
 
 <3> `return result` is only temporary; as mentioned in <<temporary_ugly_hack>>,
     it's a temporary hack to allow the message bus to return the batch
@@ -405,7 +405,7 @@ Let's look again at the 'handle_event' method from our message bus.
 [[messagebus_logging]]
 .Current handle function (src/allocation/service_layer/messagebus.py)
 ====
-[source,python,highlight=4;7]
+[source,python,highlight=8;12]
 ----
 def handle_event(
     event: events.Event,
@@ -492,6 +492,8 @@ def handle_event(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):
 // stick to it
 // also no reason to split it out. if you use lazy formatting, you can just
 // neatly distribute it over multiple lines
+
+// TODO (EJ1) Missing `queue` argument to `handle_event`
 
 <1> Tenacity is a Python library that implements common patterns for retrying.
 
