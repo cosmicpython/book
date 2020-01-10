@@ -41,7 +41,7 @@ image::images/message_bus_diagram.png[]
 |          |            |  Work  |
 +----------+            +--------+
                             |
-                        publishes
+                    collects + publishes
                           events
                             |
                             V
@@ -49,19 +49,16 @@ image::images/message_bus_diagram.png[]
         |     Message Bus      |
         +----------------------+
            |
-        handles
+       dispatches
         events
            |     +-----------------+
-           +---> |     Handlers    |-+
-                 +-----------------+ | +
-                   +-----------------+ |
+           +---> |     Handlers    |-+    
+                 +-----------------+ | +  handle
+                   +-----------------+ |  events
                      +-----------------+
 ----
 
 
-// TODO (DS) does the messagebus "handle" events? isnt that the handlers?  maybe
-// "routes"?
-// (EJ2) messagebus "dispatches" events makes sense to me and is unambiguous.
 
 [TIP]
 ====

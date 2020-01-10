@@ -343,7 +343,7 @@ services. This piece of infrastructure is often called a Message Broker. The
 role of a message broker is to take messages from publishers and deliver them
 to subscribers.
 
-At MADE.com we use https://eventstore.org/[Eventstore]; Kafka or RabbitMQ
+At MADE.com we use https://eventstore.org/[Event Store]; Kafka or RabbitMQ
 are valid alternatives. A lightweight solution based on Redis
 https://redis.io/topics/pubsub[pubsub channels] can also work just fine, and since
 Redis is much more generally familiar to people, we thought we'd use it for this
@@ -537,7 +537,7 @@ class Allocated(Event):
 It captures everything we need to know about an allocation: the details of the
 order line, and which batch it was allocated to.
 
-We use add it into our model's `allocate()` method (having added a test
+We add it into our model's `allocate()` method (having added a test
 first, naturally)
 
 [[model_emits_allocated_event]]
@@ -602,8 +602,9 @@ TIP: Outbound events are one of the places it's important to apply some validati
 It's a good idea to keep the distinction between internal and external events
 clear.  Some events may come from the outside, and some events may get upgraded
 and published externally, but not all of them.  This is particularly important
-if you get into [event sourcing](https://io.made.com/blog/2018-04-28-eventsourcing-101.html) (very
-much a topic for another book though).
+if you get into
+https://io.made.com/blog/2018-04-28-eventsourcing-101.html[event sourcing]
+(very much a topic for another book though).
 
 *******************************************************************************
 
@@ -615,7 +616,7 @@ much a topic for another book though).
 
 TODO: more here
 
-[quote, Martin Fowler, https://martinfowler.com/articles/201701-event-driven.html [What do you mean by “Event-Driven”?]]
+[quote, Martin Fowler, What do you mean by “Event-Driven”? (martinfowler.com)]
 ____
 Event notification is nice because it implies a low level of coupling, and is
 pretty simple to set up. It can become problematic, however, if there is
