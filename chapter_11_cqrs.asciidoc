@@ -7,6 +7,8 @@ should be treated differently. Then we're going to push that insight as far
 as we can. If you're anything like Harry, this will all seem crazy at first,
 but hopefully we can make the argument that it's not *totally* insane.
 
+// TODO (hynek) (re "crazy") Hmmm, people react poorly to this kind of ablesim nowadays. I’d looks for better words.
+
 Firstly though, why bother?
 
 === Domain models are for writing
@@ -67,8 +69,8 @@ Each time somebody visits a product page, or a product listing page, we need
 to figure out whether the product is still in stock, and how long it will take
 us to deliver it.
 
-The _domain_ is the same - we're concerned with batches of stock, and their
-arrival date, and the amount that's still available - but the access pattern
+The _domain_ is the same--we're concerned with batches of stock, and their
+arrival date, and the amount that's still available--but the access pattern
 is very different. For example, our customers won't notice if the query
 is a few seconds out of date, but if our `allocate` service is inconsistent
 we'll make a mess of their orders. We can take advantage of this difference by
@@ -178,15 +180,15 @@ Both these problems happen because we're returning data in response to a write
 operation. Post/Redirect/Get side-steps the issue by separating the read and
 write phases of our operation.
 
-This technique is a simple example of CQS - Command-Query Separation. In CQS we
+This technique is a simple example of Command-Query Separation (CQS). In CQS we
 follow one simple rule: functions should either modify state, or answer
 questions, but never both. This makes software easier to reason about: we should
 always be able to ask "are the lights on?" without flicking the light switch.
 
 NOTE: When building APIs we can apply the same design technique by returning a
-201 Created, or a 202 Accepted, with a Location header containing the URI of our
-new resources. What's important here isn't the status code we use, but the
-logical separation of work into a write phase and a query phase.
+    201 Created, or a 202 Accepted, with a Location header containing the URI
+    of our new resources. What's important here isn't the status code we use,
+    but the logical separation of work into a write phase and a query phase.
 
 As we'll see, we can use the CQS principle to make our systems faster and more
 scalable, but first, let's fix the CQS violation in our existing code. A few
@@ -195,6 +197,7 @@ calls our service layer to allocate some stock. At the end of the call, we
 return a 200 OK and the batch id. That's led to some ugly design flaws so that
 we can get the data we need. Let's change it to return a simple OK message, and
 instead provide a new read-only endpoint to retrieve allocation state.
+
 
 [[api_test_does_get_after_post]]
 .API test does a GET after the POST (tests/e2e/test_api.py)
@@ -387,6 +390,8 @@ your permanent storage and the logic of your read-only views.
 
 === "Sane" Alternative 1: Using the Existing Repository
 
+// TODO (hynek) (re "sane") yeah find a better word
+
 How about adding a helper method to our products repository?
 
 
@@ -510,6 +515,13 @@ But the ORM can also expose us to performance problems.
 
 === SELECT N+1, and Other Performance Considerations
 
+////
+TODO (hynek)
+this seems like a PERFECT opportunity to talk about SQLAlchemy Core API. If you
+have questions, pls talk to me. But jumping from ORM directly to raw SQL is
+baby/bathwater.
+////
+
 The so-called
 https://secure.phabricator.com/book/phabcontrib/article/n_plus_one/[SELECT N+1]
 problem is a common performance problem with ORMs: when retrieving a list of
@@ -532,6 +544,8 @@ build read replicas, or even add caching layers.
 
 
 === Doubling Down on the Madness.
+
+// TODO (hynek) re "madness" yeah really don't.  this them won't do you any good.
 
 //
 // (ej) Thinking back to some comments Bob made in another PR, maybe "simple" vs. "complex"
@@ -567,7 +581,7 @@ def allocations(orderid: str, uow: unit_of_work.SqlAlchemyUnitOfWork):
 ----
 ====
 
-...by _keeping a totally separate, denormalized datastore for our view model?
+...by _keeping a totally separate, denormalized datastore for our view model?_
 
 [[new_table]]
 .Hee hee hee, no foreign keys, just strings, YOLO. (src/allocation/adapters/orm.py)
@@ -583,12 +597,16 @@ allocations_view = Table(
 ----
 ====
 
+
+// TODO (hynek) You NEED to mention materialized views ~somewhere~.
+
+
 OK, nicer-looking SQL queries wouldn't be a justification for anything really,
 but building a denormalized copy of your data that's optimized for read operations
 isn't uncommon, once you've reached the limits of what you can do with indexes.
 
 Even with well-tuned indexes, a relational database uses a lot of CPU to perform
-joins. The fastest queries will always be "SELECT * from MyTable WHERE key = :value"
+joins. The fastest queries will always be `SELECT * from MyTable WHERE key = :value`
 
 More than raw speed, though, this approach buys us scale. When we're writing
 data to a relational database, we need to make sure that we get a lock over the
@@ -819,19 +837,18 @@ TIP: Event handlers are a great way to manage updates to a read model,
 
 === But Would You Really?  CRUD versus CQRS.
 
+<<view_model_tradeoffs>> proposes some pros and cons for each of our options:
 
-As it happens, the allocation service at MADE.com does use "full blown" CQRS,
-with a read model stored in Redis, and even a second layer of cache provided
-by Varnish.  But its use cases are actually quite a bit different from what
-we've shown here. For the kind of allocation service we're building, it seems
-unlikely that you'd need to use a separate read model and event handlers for
-updating it.
-
+[[view_model_tradeoffs]]
+.Tradeoffs of various view model options
+|===
+[options="header"]
 | Option | Pros | Cons |
 | Just use repositories | Simple, consistent approach. | Expect performance issues with complex query patterns. |
 | Use custom queries with your ORM | Allows re-use of db configuration and model definitions | Adds another query language with its own quirks and syntax. |
 | Use hand-rolled SQL | Offers fine control over performance with a standard query syntax | Changes to db schema have to be made to your hand-rolled queries *and* your ORM definitions. Highly normalised schemas may stil have performance limitations |
 | Create separate read stores with events | Read-only copies are easy to scale out. Views can be constructed when data changes so that queries are as simple as possible. | Complex technique. Harry will be forever suspicious of your tastes and motives |
+|===
 
 // (ej) Might be useful to re-iterate what "full-blown" CQRS means vs simpler CQRS options.  I think
 //      most blog posts describe CQRS in terms of the "full-blown" version, while
@@ -841,18 +858,26 @@ updating it.
 //      it's insane/too complex/too-hard and want to fall back to a CRUD hammer.
 //
 
+As it happens, the allocation service at MADE.com does use "full blown" CQRS,
+with a read model stored in Redis, and even a second layer of cache provided
+by Varnish.  But its use cases are actually quite a bit different from what
+we've shown here. For the kind of allocation service we're building, it seems
+unlikely that you'd need to use a separate read model and event handlers for
+updating it.
+
+
 But as your domain model becomes richer and more complex, a simplified read
 model become ever more compelling.
 
-Often, your read operations will acting on the same conceptual objects as your
+Often, your read operations will be acting on the same conceptual objects as your
 write model, so using the ORM, adding some read methods to your repositories,
 and using Domain Model classes for your read operations is _just fine_. 
 
-As it happens in our case, our read operations act on quite different
-conceptual entities to our Domain Model.  The allocation service thinks
-in terms of `Batches` for a single sku, but users care about allocations
-for a whole order, with multiple skus, so using the ORM ends up being a little
-awkward.  We'd be quite tempted to go with the raw-SQL view we showed right
-at the beginning of the chapter.
+In our book example, the read operations act on quite different conceptual
+entities to our Domain Model.  The allocation service thinks in terms of
+`Batches` for a single sku, but users care about allocations for a whole order,
+with multiple skus, so using the ORM ends up being a little awkward.  We'd be
+quite tempted to go with the raw-SQL view we showed right at the beginning of
+the chapter.
 
-OK.  On that note, let's sally forth into our final chapter.
+On that note, let's sally forth into our final chapter.
