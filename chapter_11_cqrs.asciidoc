@@ -840,14 +840,30 @@ TIP: Event handlers are a great way to manage updates to a read model,
 <<view_model_tradeoffs>> proposes some pros and cons for each of our options:
 
 [[view_model_tradeoffs]]
+[options="header"]
 .Tradeoffs of various view model options
 |===
-[options="header"]
-| Option | Pros | Cons |
-| Just use repositories | Simple, consistent approach. | Expect performance issues with complex query patterns. |
-| Use custom queries with your ORM | Allows re-use of db configuration and model definitions | Adds another query language with its own quirks and syntax. |
-| Use hand-rolled SQL | Offers fine control over performance with a standard query syntax | Changes to db schema have to be made to your hand-rolled queries *and* your ORM definitions. Highly normalised schemas may stil have performance limitations |
-| Create separate read stores with events | Read-only copies are easy to scale out. Views can be constructed when data changes so that queries are as simple as possible. | Complex technique. Harry will be forever suspicious of your tastes and motives |
+| Option | Pros | Cons
+
+| Just use repositories
+| Simple, consistent approach. 
+| Expect performance issues with complex query patterns.
+
+| Use custom queries with your ORM 
+| Allows re-use of db configuration and model definitions 
+| Adds another query language with its own quirks and syntax.
+
+| Use hand-rolled SQL 
+| Offers fine control over performance with a standard query syntax 
+| Changes to db schema have to be made to your hand-rolled queries *and* your
+  ORM definitions. Highly normalised schemas may stil have performance
+  limitations
+
+| Create separate read stores with events 
+| Read-only copies are easy to scale out. Views can be constructed when data
+  changes so that queries are as simple as possible. 
+| Complex technique. Harry will be forever suspicious of your tastes and
+  motives
 |===
 
 // (ej) Might be useful to re-iterate what "full-blown" CQRS means vs simpler CQRS options.  I think
