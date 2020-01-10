@@ -430,20 +430,32 @@ def test_allocate_returns_allocation():
     our service layer, instead of a repository and a session,
     which is considerably less cumbersome.
 
+.Don't Mock What You Don't Own
+********************************************************************************
+Why do we feel more comfortable mocking the Unit of Work than the Session?
+Both of our fakes achieve the same thing: they give us a way to swap out our
+persistence layer so that we can run tests in memory instead of needing to
+talk to a real database. The difference is in the resulting design.
 
+If we only cared about writing tests that ran quickly, we could create mocks
+that replaced SQLAlchemy and use those throughout our codebase. The problem is
+that the Session is a complex object that exposes lots of persistence-related
+functionality. It's easy to use the Session to make arbitrary queries against
+the database, but that quickly leads to data access code being sprinkled all
+over the codebase. To avoid that, we want to limit access to our persistence
+layer, so that each component has exactly what it needs, and nothing more.
 
-////
-TODO (BOB): Defend the mocking point
+By coupling to the Session interface, you're choosing to couple to all the
+complexity of SQLAlchemy. Instead, we want to choose a simpler abstraction and
+use that to clearly separate responsibilities. Our Unit of Work is much simpler
+than a session, and we feel comfortable with the service layer being able to
+start and stop units of work.
 
-(EJ3):
-
-https://github.com/cosmicpython/book/blame/master/chapter_05_uow.asciidoc#L238
-Maybe "Only mock your immediate neighbors" is more applicable?
-
-I think of "Don't mock what you don't own" as referring specifically to "mock verification" (e.g. assert mock_session.commit.assert_called_once()), with the reason for this advice being that you cannot change those interfaces. So the mock has no value in providing feedback to your design.
-
-https://github.com/cosmicpython/book/issues/44
-////
+"Don't Mock What You Don't Own" is a rule of thumb that forces us to build
+these simple abstractions over messy subsystems. This has the same performance
+benefit as mocking the SQLAlchemy Session, but encourages us to think carefully
+about our designs.
+********************************************************************************
 
 === Using the UoW in the Service Layer
 
