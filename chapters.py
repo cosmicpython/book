@@ -29,7 +29,6 @@ NO_EXERCISE = [
     "appendix_project_structure",
     'appendix_django',
     "appendix_csvs",
-    "chapter_07_events_and_message_bus",
     "chapter_08_all_messagebus",
     "chapter_09_commands",
     "chapter_10_external_events",
