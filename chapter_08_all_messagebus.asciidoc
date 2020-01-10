@@ -685,8 +685,9 @@ class AbstractRepository(abc.ABC):
     @abc.abstractmethod
     def _get_by_batchref(self, batchref) -> model.Product:
         raise NotImplementedError
+    ...
 
-
+class SqlAlchemyRepository(AbstractRepository):
     ...
 
     def _get(self, sku):
