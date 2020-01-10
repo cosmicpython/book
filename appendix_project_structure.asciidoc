@@ -385,13 +385,13 @@ CMD flask run --host=0.0.0.0 --port=80
 
 <1> Installing system-level dependencies.
 <2> Installing our Python dependencies (you may want to split out your dev from
-    prod dependencies, we haven't here, for simplicity).
+    prod dependencies; we haven't here, for simplicity).
 <3> Copying and installing our source.
 <4> Optionally configuring a default startup command (you'll probably override
     this a lot from the command-line)
 
 TIP: One thing to note is that we install things in the order of how frequently they
-    are likely to change.  This allows us to maximise docker build cache reuse. I
+    are likely to change.  This allows us to maximize docker build cache reuse. I
     can't tell you how much pain and frustration belies this lesson.
 
 
