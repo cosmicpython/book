@@ -392,8 +392,9 @@ CMD flask run --host=0.0.0.0 --port=80
 
 TIP: One thing to note is that we install things in the order of how frequently they
     are likely to change.  This allows us to maximize docker build cache reuse. I
-    can't tell you how much pain and frustration belies this lesson.
-
+    can't tell you how much pain and frustration belies this lesson.  For this,
+    and many more Python Dockerfile improvement tips, check out
+    https://pythonspeed.com/docker/[Production-ready Docker packaging].
 
 === Tests
 
