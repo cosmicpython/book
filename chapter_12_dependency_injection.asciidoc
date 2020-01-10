@@ -522,6 +522,10 @@ fine although it makes pylint unhappy.  You might also check out
 https://pypi.org/project/punq/[Punq], as written by Bob himself.
 
 // TODO: discuss/define what a DI container is
+
+// TODO (hynek) you should mention https://github.com/dry-python/dependencies –
+// they are very active and giving talks etc
+
 *******************************************************************************
 
 
@@ -570,6 +574,13 @@ class MessageBus:  #<1>
 
 // Note for DS, I did try a diff here but it was unreadable. too many changes.
 
+////
+TODO (hynek) (re self.qeue)
+this makes me very uneasy and I’m almost certain it won’t work.
+
+Your MessageBus is a global object and putting queue on it – and clearing it
+out when handle is called is both hard to follow and 100% not thread safe.
+////
 
 What else changes in the bus?
 
