@@ -375,7 +375,8 @@ return bus
 
 
 //TODO: we can definitely get rid of _commit() now right?
-
+// (EJ2) at this point _commit() doesn't serve any purpose, so it could be deleted.
+//       unsure if deleting it would be confusing at this point.
 
 ==== Our Tests Are All Written in Terms of Events Too:
 
@@ -405,6 +406,10 @@ class TestAllocate:
         assert result == "b1"
 ----
 ====
+
+// TODO: (DS) why staticmethod?
+// TODO (hynek) why staticmethod?
+// TODO: (EJ1) Why TestAllocate and TestAddBatch?
 
 
 [[temporary_ugly_hack]]
@@ -464,6 +469,10 @@ We'll come back to fix this wart in <<chapter_11_cqrs>>.
 ----
 ====
 
+// TODO: (EJ1) Should the line `batchref = results.pop()` be `batchref = results.pop(0)` instead?
+//             Otherwise you get the result of the last event handler, instead of the handler
+//             triggered by AllocationRequired.
+
 <1> Instead of calling the service layer with a bunch of primitives extracted
     from the request JSON...
 
@@ -520,19 +529,15 @@ end
 
 @enduml
 ----
+// TODO: (EJ1) See https://github.com/cosmicpython/book/issues/169
+//             I think it's worth mentioning here that the message could
+//             get dropped if you have a prolonged
+//             outage that starts after uow1 but before uow2 completes.
+//
+//             Then do some hand-waving about how distributed
+//             systems are hard, and make a forward reference to the appendix on 
+//             footguns.
 
-
-////
-TODO (ej)  There is a minor but important technical point here, I think, that
-could be a source of confusion.  The UoW and session commit are not exactly
-synonymous as the events are not actually emitted until after the UoW "ends".
-Otherwise you could end up with a race or skew on the persisted state. (Or
-would that be prevented by re-using the same uow+session instance in the event
-handlers?)
-
-I am unsure how to present that information without adding a lot of
-detail to the sequence diagram.
-////
 
 
 [TIP]
@@ -617,6 +622,9 @@ class TestChangeBatchQuantity:
 //TODO: (DS) why * 1?
 //TODO: (hynek) why * 1?
 //TODO: (hynek) s/we"ll/we'll/
+// (EJ3) I'd just remove the "* 1", since it's causing confusion. 
+//   (If you adjusted the # events or counts, it might be clearer.)
+
 
 <1> The simple case would be trivially easy to implement, we just
     modify a quantity.
@@ -951,6 +959,7 @@ a|
   and now to domain events, which feels flip-floppey.
 
 //TODO (DS): i feel you  made the case that this isn't actually a con
+// (EJ1): agree with DS. The text actually explains this as a "Pro".
 
 * duplication / maintenance cost of having model objects _and_ events
   now.  adding a field to one usually means adding a field to at least

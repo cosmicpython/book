@@ -64,7 +64,7 @@ e|      e| Event e| Command
 
 // TODO: Diagram of user "buy stock" -> "stock purchased"
 //                       "create batch" -> "batch created"
-
+// (EJ3) "ChangeBatchQuantity" -> "AllocationRequired" will be a less trivial example
 
 What kinds of commands do we have in our system right now?
 
@@ -297,7 +297,8 @@ Using the techniques we've already discussed in this book, we decide that we
 want to build a new `History` aggregate that records orders and can raise domain
 events when rules are met. We will structure the code like this:
 
-
+// TODO: (EJ2) The Aggregate base class doesn't add anything here and could be confusing.
+//       Better to just do class History: # Aggregate
 
 [[vip_customer_listing]]
 .VIP Customer (example code for a different project)
@@ -452,6 +453,9 @@ For most of those cases, we can recover elegantly by trying again. As the
 proverb says, "if at first you don't succeed, retry the operation with an
 exponentially increasing back-off period".
 
+// TODO: (EJ1) Retry is OK, but you'll have to quit eventually and drop the message.
+//       I think you can just mention that reliable messaging in distributed systems is hard
+//       and forward reference material in the appendix.
 
 [[messagebus_handle_event_with_retry]]
 .Handle with Retry (src/allocation/service_layer/messagebus.py)
@@ -464,6 +468,7 @@ from tenacity import Retrying, RetryError, stop_after_attempt, wait_exponential 
 ...
 
 def handle_event(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):
+
     for handler in EVENT_HANDLERS[type(event)]:
         try:
             for attempt in Retrying(  #<2>
@@ -497,6 +502,10 @@ Retrying operations that might fail is probably the single best way to improve
 the resilience of our software. Again, the unit of work and command handler
 patterns mean that each attempt starts from a consistent state, and won't leave
 things half-finished.
+
+// (EJ1) I don't think you've ever mentioned how to handle a failure of the version
+//       number check for concurrency control. Might want to mention how/where
+//       that retry would be handled.
 
 
 [[chapter_09_commands_and_events_tradeoffs]]

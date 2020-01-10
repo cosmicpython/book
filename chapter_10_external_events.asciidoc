@@ -148,10 +148,10 @@ database CRM
 
 ////
 
-TODO (EJ)
+TODO (EJ1)
 
-I'm having a little bit of trouble understanding the sequence diagrams because
-I'm unsure what the arrow semantics are. The couple things I've noticed are:
+I'm having a little bit of trouble understanding the sequence diagrams in this section
+because I'm unsure what the arrow semantics are. The couple things I've noticed are:
 
 * PlantUML renders synchronous messages with a non-standard arrowhead that
   looks like a cross between the synch/async messages in standard UML. Other
@@ -332,6 +332,7 @@ need to change the order of operations, or to introduce new steps in the process
 we can do that locally.
 
 // TODO: need to add an example of a process change.  And/or explain "locally"
+// (EJ3) I think this is clear enough.  Not sure about for a junior dev.
 
 
 === Using a Redis Pubsub Channel for Integration
@@ -352,6 +353,9 @@ NOTE: We're glossing over the complexity involved in choosing the right messagin
     platform.  Concerns like message ordering, failure handling and idempotency
     all need to be thought through.  For a few pointers, see the
     <<footguns,Footguns>> section in <<epilogue_1_how_to_get_there_from_here>>.
+
+// (EJ1) "For example, in Redis,  RPOPLPUSH provides reliable messaging ...  For pointers, see"
+
 
 Our new flow will look like this:
 
@@ -444,7 +448,7 @@ def test_change_batch_quantity_leading_to_reallocation():
     because it won't be the only message on that channel.
 
 ////
-TODO (ej) Minor comment: This e2e test might not be safe or repeatable as part of a
+TODO (EJ3) Minor comment: This e2e test might not be safe or repeatable as part of a
      larger test suite, since test run data is being persisted in redis.
      Purging the queue as part of setup will help, but it would still have problems
      with running tests in parallel. Not sure if it's worth bringing up as it might
@@ -602,9 +606,6 @@ if you get into [event sourcing](https://io.made.com/blog/2018-04-28-eventsourci
 much a topic for another book though).
 
 *******************************************************************************
-
-// TODO (EJ) Some discussion of idempotency and at-most-once, vs at-least-once
-// delivery might be good.
 
 === Wrap-Up
 
