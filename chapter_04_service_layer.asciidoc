@@ -454,77 +454,9 @@ class FakeSession():
 ----
 ====
 
-(The fake session is only a temporary solution.  We'll get rid of it and make
-things even nicer in the next chapter, <<chapter_05_uow>>)
-
-.Mocks vs Fakes; Classic Style vs London School TDD
-*******************************************************************************
-
-// TODO (hynek) this should be unified with the previous mock-hating section.
-// also the semicolon looks weird.
-
-Couldn't we have used a mock (from `unittest.mock`) instead of building our
-own `FakeSession`, or instead of `FakeRepository`?  What's the difference
-between a fake and a mock anyway?
-
-We tend to find that building our own fakes is an excellent way of exercising
-design pressure against our abstractions.  If our abstractions are nice and
-simple, then they should be easy to fake.
-
-In fact in the case of `FakeRepository`, because our fake has actual behavior,
-using a magic mock from `unittest.mock` wouldn't really help.
-
-In the case of `FakeSession`, the `session` object isn't one of our own
-abstractions, so the argument doesn't apply;  in fact, a `unittest.mock` mock
-would have been just fine, but out of habit we avoided using one;  in any case,
-we'll be getting rid of it in the next chapter.
-
-//TODO (hynek) you could mention Alex Gaynor's `pretend` which gives you
-// stubs without mocks error-prone magic.
-
-In general we try and avoid using mocks, and the associated `mock.patch`.
-Whenever we find ourselves reaching for them, we often see it as an indication
-that something is missing from our design.  You'll see a good example of that
-in <<chapter_07_events_and_message_bus>> when we mock out an email-sending
-module, but eventually we replace it with an explicit bit of dependency injection.
-That's discussed in <<chapter_12_dependency_injection>>.
-
-Regarding the definition of fakes vs mocks, the short but simplistic answer is:
-
-* Mocks are used to verify _how_ something gets used;  they have methods
-  like `assert_called_once_with()`.  They're associated with London-school
-  TDD.
-
-* Fakes are working implementations of the thing they're replacing, but
-  they're only designed for use in tests; they wouldn't work "in real life",
-  like our in-memory repository. But you can use them to make assertions about
-  the end state of a system, rather than the behaviors along the way, so
-  they're associated with classic-style TDD.
-
-(We're slightly conflating mocks with spies and fakes with stubs here, and you
-can read the long, correct answer in Martin Fowler's classic essay on the subject
-called https://martinfowler.com/articles/mocksArentStubs.html[Mocks aren't Stubs])
-
-(It also probably doesn't help that the `MagicMock` objects provided by
-`unittest.mock` aren't, strictly speaking, mocks, they're spies if anything.
-But they're also often used as stubs or dummies.  There, promise we're done with
-the test double terminology nitpicks now.)
-
-What about London-school vs classic-style TDD?  You can read more about those
-two in Martin Fowler's article just cited, as well as https://softwareengineering.stackexchange.com/questions/123627/what-are-the-london-and-chicago-schools-of-tdd[on stackoverflow],
-but in this book we're pretty firmly in the classicist camp.  We like to
-build our tests around state, both in setup and assertions, and we like
-to work at the highest level of abstraction possible rather than doing
-checks on the behavior of intermediary collaborators.footnote:[
-Which is not to say that we think the London School people are wrong. There
-are some insanely smart people that work that way.  It's just not what we're
-used to].
-
-Read more on this shortly, in the <<kinds_of_tests,"high gear vs low gear">> section.
-
-*******************************************************************************
-
-The fake `.commit()` lets us migrate a third test from the E2E layer:
+This fake session is only a temporary solution.  We'll get rid of it and make
+things even nicer in the next chapter, <<chapter_05_uow>>. But in the meantime
+the fake `.commit()` lets us migrate a third test from the E2E layer:
 
 
 [[second_services_test]]

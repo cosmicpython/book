@@ -580,7 +580,12 @@ Instead, we like to clearly identify the responsibilities in our codebase, and t
 separate those responsibilities out into small, focused objects that are easy to
 replace with a test double.
 
-There are three closely related reasons for that:
+NOTE: You can see an example in <<chapter_07_events_and_message_bus>>
+    where we `mock.patch()` out an email-sending module, but eventually we
+    replace that with an explicit bit of dependency injection, in
+    <<chapter_12_dependency_injection>>.
+
+There are three closely related reasons for our preference:
 
 1.  Patching out the dependency you're using makes it possible to unit test the
 code, but it does nothing to improve the design. Using mock.patch won't let your
@@ -591,9 +596,6 @@ server. For that, you'll need to introduce abstractions.
 of the codebase. That's because mock tests verify the interactions between
 things: did we call `shutil.copy` with the right arguments? This coupling between
 code and test _tends_ to make tests more brittle in our experience.
-+
-Martin Fowler wrote about this in his 2007 blog post
-https://www.martinfowler.com/articles/mocksArentStubs.html[Mocks Aren't Stubs]
 
 3.  Over-use of mocks leads to complicated test suites that fail to explain the
 code.
@@ -601,6 +603,50 @@ code.
 NOTE: Designing for testability really means designing for
     extensibility. We trade off a little more complexity for a cleaner design
     that admits novel use-cases.
+
+.Mocks vs Fakes; Classic Style vs London School TDD
+*******************************************************************************
+
+Here's a short and somewhat simplistic definition of the difference between
+mocks and fakes.
+
+* Mocks are used to verify _how_ something gets used;  they have methods
+  like `assert_called_once_with()`.  They're associated with London-school
+  TDD.
+
+* Fakes are working implementations of the thing they're replacing, but
+  they're only designed for use in tests; they wouldn't work "in real life",
+  like our in-memory repository. But you can use them to make assertions about
+  the end state of a system, rather than the behaviors along the way, so
+  they're associated with classic-style TDD.
+
+(We're slightly conflating mocks with spies and fakes with stubs here, and you
+can read the long, correct answer in Martin Fowler's classic essay on the subject
+called https://martinfowler.com/articles/mocksArentStubs.html[Mocks aren't Stubs])
+
+(It also probably doesn't help that the `MagicMock` objects provided by
+`unittest.mock` aren't, strictly speaking, mocks, they're spies if anything.
+But they're also often used as stubs or dummies.  There, promise we're done with
+the test double terminology nitpicks now.)
+
+//TODO (hynek) you could mention Alex Gaynor's `pretend` which gives you
+// stubs without mocks error-prone magic.
+
+What about London-school vs classic-style TDD?  You can read more about those
+two in Martin Fowler's article just cited, as well as
+https://softwareengineering.stackexchange.com/questions/123627/what-are-the-london-and-chicago-schools-of-tdd[on stackoverflow],
+but in this book we're pretty firmly in the classicist camp.  We like to
+build our tests around state, both in setup and assertions, and we like
+to work at the highest level of abstraction possible rather than doing
+checks on the behavior of intermediary collaborators.footnote:[
+Which is not to say that we think the London School people are wrong. There
+are some insanely smart people that work that way.  It's just not what we're
+used to].
+
+Read more on this shortly, in the <<kinds_of_tests,"high gear vs low gear">>
+section.
+
+*******************************************************************************
 
 We view TDD as a design practice first, and a testing practice second. The tests
 act as a record of our design choices, and serve to explain the system to us
@@ -631,8 +677,8 @@ TIP: In this chapter we've spent a lot of time replacing end-to-end tests with
 .So Which Do We Use in this Book? FCIS or DI?
 ******************************************************************************
 //TODO (hynek) not sure you can rely on people remembering those acronyms just yet
-//(EJ2) Agree with above. Instead of talking about "FCIS" vs "DI", talking about 
-//      "functional" vs "object-oriented" style of composition will be easier to remember. 
+//(EJ2) Agree with above. Instead of talking about "FCIS" vs "DI", talking about
+//      "functional" vs "object-oriented" style of composition will be easier to remember.
 //       And also, talking about side-effect free functions instead of avoiding state
 //       will be helfpul, because that's the main point with FCIS.
 //
