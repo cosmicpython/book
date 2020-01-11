@@ -167,8 +167,8 @@ developing examples over the preceding chapters would build familiarity with
 the different symbols.
 ////
 
-We can think of each of these steps as a Command in our system: `Reserve_Stock`,
-`Confirm_Reservation`, `Dispatch_Goods`, `Make_Customer_VIP`...
+We can think of each of these steps as a Command in our system: `ReserveStock`,
+`ConfirmReservation`, `DispatchGoods`, `MakeCustomerVIP`...
 
 This style of architecture, where we create a microservice per database table,
 and treat our HTTP APIs as CRUD interfaces to anemic models is the most common
