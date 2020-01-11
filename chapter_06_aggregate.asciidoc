@@ -8,12 +8,6 @@ discuss the concept of a _consistency boundary_, and show how making it
 explicit can help us to build high-performance software without compromising
 maintainability.
 
-// TODO (hynek) no you don't (discuss the concept of a consistency boundary),
-// that term doesn't come up until chapter 9
-// (EJ1) I think you can limbo your way out of this by saying 
-//          "an aggregate as a unit of consistency" instead of "consistency boundary."
-
-
 Here's a preview of where we're headed: we're going to move from the model in 
 <<before_aggregates_diagram>>, where we need to retrieve all the batches and
 pass them to the `allocate()` domain service...
