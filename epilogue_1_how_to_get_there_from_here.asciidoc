@@ -239,7 +239,15 @@ class Workspace:
 ```
 
 If we needed to _read_ data, we avoided writing complex loops and transforms and
-tried to replace them with straight SQL.
+tried to replace them with straight SQL. For example, one of our screens was a
+tree view of folders and documents.
+
+This screen was _incredibly_ heavy on the database, because it relied on nested
+for loops that triggered a lazy-loaded ORM.
+
+After a lot of head-scratching, we replaced the ORM code with a big, ugly stored
+procedure. The code looked horrible, but it was much faster and it helped us
+to break the links between Folder and Document.
 
 When we needed to _write_ data, we changed a single aggregate at a time, and we
 introduced a message bus to handle events. For example, in the new model, when
@@ -329,6 +337,14 @@ replace.
 own domain model.
 
 3. Replace the older system with the new.
+
+We used change data capture to move from this:
+
+TODO: Context diagram, E-commerce and Fulfilment over XMLRPC
+
+to this
+
+TODO: Context diagram, E-Commerce, Availability, Fulfilment, Event-Broker
 
 * decide on a piece of the old system to carve out.
 * get your system to produce events
