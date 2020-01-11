@@ -142,31 +142,6 @@ but concretely, how do we implement it in our code and our containers?
 
 === Config.py
 
-////
-TODO:
-Ed:
-
-Would you consider this a singleton?
-
-I have some past negative experiences with this style of configuration, because
-it can be easily abused. The env var mitigates against that, and I suppose this
-varies from codebase to codebase.
-
-Bob:
-Not strictly. It's possible to create more than one of them, but it's unlikely
-that I'd do so outside of unit tests. I more or less think of these config
-classes as part of my composition root. They tend only to be used by the entry
-point to the application.
-
-Ed:
-"Entry point to the application" is key, I think. The anti-pattern I've seen is
-where the config just gets imported anywhere, and anything remotely related to
-configuration gets put in there.
-
-https://github.com/cosmicpython/book/issues/52
-////
-// TODO (DS): I reckon configuration patterns are an important part of the architecture your outlining, i wonder if they belong in the main book?
-
 Whenever our application code needs access to some config, it's going to
 get it from a file called __config.py__. Here are a couple of examples from our
 app:
@@ -207,12 +182,11 @@ There is an elegant Python package called
 https://github.com/hynek/environ-config[environ-config] which is worth looking
 at if you get tired of hand-rolling your own environment-based config functions.
 
-// TODO (DS): The way config interacts with dependency injection might be worth
-// a diagram (ie the layers)
-
-// TODO (DS): Say something about mutability of config here? I tend to think
-// it's good for it to be immutable in runtime environments, but mutable in
-// tests... Not sure though
+TIP: Don't let this config module become a dumping ground full of things that
+    are only vaguely related to config, and is then imported all over the place.
+    Keep things immutable and only modify them via environment variables.
+    If you decide to use a <<chapter_12_dependency_injection,bootstrap script>>,
+    you can make it the only place (other than tests) that config is imported.
 
 === Docker-Compose and Containers Config
 
