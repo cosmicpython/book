@@ -54,6 +54,49 @@ we'll need to start separating responsibilities out and introducing some clear
 boundaries. One of the first things we can do is to start building a service
 layer.
 
+.Case Study: Layering an over-grown system
+********************************************************************************
+Many years ago, Bob worked for a software company that had outsourced the first
+version of their application, an online collaboration platform for sharing and
+working on files.
+
+When the company brought development in-house, it passed through several
+generations of developers' hands, and each wave of new developers added more
+complexity to the code's structure.
+
+At it's heart, the system was an ASP.Net Web Forms application, built with an
+NHibernate ORM. Users would upload documents into workspaces, where they could
+invite other workspace members to review, comment, or modify their work.
+
+Most of the complexity of the application was in the permissions model since
+each document was contained in a folder, and folders allowed read, write, and
+edit permissions, much like a linux filesystem.
+
+Additionally, each workspace belonged to an account, and the account had quotas
+attached to it via a billing package.
+
+As a result, every read or write operation against a document had to load an
+enormous number of objects from the database in order to test permissions and
+quotas. Creating a new workspace involved hundreds of database queries as we set
+up the permissions structure, invited users, and set up sample content. 
+
+Some of the code for operations was in page objects, and ran when a user clicked
+a button or submitted a form, some of it was in "manager" objects that held
+code for orchestrating work, and some of it was in the domain model. Model
+objects would make database calls, or copy files on disk, and the test coverage
+was abysmal.
+
+To fix the problem, we first introduced a service layer so that all of the code
+for creating a document or workspace was _in one place_ and could be understood.
+This involved pulling data access code out of the domain model and into
+command handlers. Likewise, we pulled orchestration code out of the managers and
+the page objects, and pushed it into handlers.
+
+The resulting command handlers were _long_ and messy, but we'd made a start at
+introducing order to the chaos.
+
+********************************************************************************
+
 Start by working out the _use cases_ of your system. If you have a
 user-inteface, what actions does it perform? If you've got some back-end
 processing component, then maybe each cron job or celery job is a single
@@ -100,18 +143,115 @@ https://www.oreilly.com/library/view/working-effectively-with/0131177052/
 
 === Identifying Aggregates and Bounded Contexts
 
+Part of the problem with the codebase in our case study was that the object
+graph was highly connected. Each account had many workspaces, each workspace had
+many members, all of whom had their own accounts. Each workspace contained many
+documents, which had many versions.
 
-* Is it that there's no domain model because everything is trying to be all
-  things to all people?
+The codebase made it easy to "dot" your way through these objects like so:
 
---> you need to carve out bounded contexts and probably microservices
+```
+user.account.workspaces[0].documents.versions[1].owner.account.workspaces[0].settings;
+```
+
+It's easy to build a system this way with Django ORM or SQLAlchemy but it's
+to be avoided. While it's _convenient_, it makes it very hard to reason about
+performance because each property might trigger a lookup to the database.
+
+There were a bunch of operations that required us to loop over objects this way,
+for example:
+
+```
+# Lock a user's workspaces for non-payment
+
+def lock_account(user):
+    for workspace in user.account.workspaces:
+        workspace.archive()
+```
+
+Or even recurse over collections of folders and documents:
+
+```
+def lock_documents_in_folder(folder):
+
+    for doc in folder.documents:
+         doc.archive()
+        
+     for child in folder.children:
+         lock_documents_in_folder(child)
+
+```
 
 
-* Is it that all the logic is hard to find because it's mixed between all the
-  layers?
+These operations _killed_ performance but fixing them meant giving up our single
+object graph. Instead we began to identify aggregates and to break the direct
+links between objects.
 
---> try to move towards Domain Model  and Service Layer.
+Mostly we did this by replacing direct references with identifiers:
 
+Before: 
+
+```
+class Workspace:
+
+   folders:  List[Folder]
+
+
+class Folder:
+
+   permissions: PermissionSet
+   documents: List[Document]
+   parent: Folder
+   children: List[Folder]
+
+
+class Document:
+
+    parent: Folder
+    workspace: Workspace
+    version: List[DocumentVersion]
+```
+
+After:
+
+```
+class Document:
+
+   id: int
+   workspace_id: int
+   parent_id: int
+   
+   # Note that our Document Aggregate continued to hold all its versions
+   # so that we could treat the whole document as a single unit.
+   versions: List[DocumentVersion]
+
+
+class Folder:
+
+   id: int
+   permissions: PermissionSet
+   workspace_id: int
+
+
+class Workspace:
+   
+    id: int
+```
+
+If we needed to _read_ data, we avoided writing complex loops and transforms and
+tried to replace them with straight SQL.
+
+When we needed to _write_ data, we changed a single aggregate at a time, and we
+introduced a message bus to handle events. For example, in the new model, when
+we locked an account, we could first query for all the affected workspaces
+`SELECT id FROM workspace WHERE account_id = ?`.
+
+We could then raise a new command for each workspace:
+
+```
+for workspace_id in workspaces:
+    bus.handle(LockWorkspace(workspace_id))
+```
 
 // (DS) the big benefit of our monolith, which has always caused pushback
 // at the mention of breaking it up, is that other people in the company can do
