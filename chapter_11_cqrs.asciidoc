@@ -618,16 +618,12 @@ of clients that can concurrently execute. For this reason read-only stores can
 be horizontally scaled out.
 
 TIP: Because read replicas can be inconsistent, there's no limit to how many we
-can have. If you're struggling to scale a system with a complex data store, ask
-whether you could build a simpler read model.
+    can have. If you're struggling to scale a system with a complex data store,
+    ask whether you could build a simpler read model.
 
-TODO: Diagram (cmd -> handler (single DB instance) -> event; event -> handler (multiple db instances); view -> read instances )
-// Do we need this? It might actually be covered by the seuqnce diagram futher
-down
-
-Keeping them up to date is the challenge!  Postgres views and triggers are a
-common solution, but that limits you to Postgres. We'd like to show you how we
-can reuse our event-driven architecture instead.
+Keeping them up to date is the challenge!  Database views (materialized or
+otherwise) and triggers are a common solution, but that limits you to your database.
+We'd like to show you how we can reuse our event-driven architecture instead.
 
 
 ==== Updating a Read Model Table Using an Event Handler
