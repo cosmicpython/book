@@ -712,10 +712,6 @@ def test_concurrent_updates_to_version_are_not_allowed(postgres_session_factory)
 ----
 ====
 
-// TODO (hynek) (re # type: List[Exception]) why don't you use the proper syntax
-// for variable type annotations
-// (HP) because its hella ugly.
-
 <1> We start two threads that will reliably produce the concurrency behavior we
     want:  `read1, read2, write1, write2`.
 
