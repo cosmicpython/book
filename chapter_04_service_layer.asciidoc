@@ -1029,10 +1029,6 @@ def test_returns_allocation():
 ====
 
 
-// TODO (hynek) would @classmethod and use cls be more idiomatic?
-// (EJ) re: @classmethod, I don't think it's necessary unless you wanted to have
-//      a shared variable amongst all class instances.
-
 At least that would move all of our tests' dependencies on the domain
 into one place.
 
