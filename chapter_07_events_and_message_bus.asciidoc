@@ -41,7 +41,7 @@ image::images/message_bus_diagram.png[]
 |          |            |  Work  |
 +----------+            +--------+
                             |
-                        publishes
+                    collects + publishes
                           events
                             |
                             V
@@ -49,18 +49,16 @@ image::images/message_bus_diagram.png[]
         |     Message Bus      |
         +----------------------+
            |
-        handles
+       dispatches
         events
            |     +-----------------+
-           +---> |     Handlers    |-+
-                 +-----------------+ | +
-                   +-----------------+ |
+           +---> |     Handlers    |-+    
+                 +-----------------+ | +  handle
+                   +-----------------+ |  events
                      +-----------------+
 ----
 
 
-// TODO (DS) does the messagebus "handle" events? isnt that the handlers?  maybe
-// "routes"?
 
 [TIP]
 ====
@@ -70,7 +68,7 @@ https://github.com/cosmicpython/code/tree/chapter_07_events_and_message_bus[gith
 ----
 git clone https://github.com/cosmicpython/code.git && cd code
 git checkout chapter_07_events_and_message_bus
-# or, if you want to code along, checkout the previous chapter.
+# or, if you want to code along, checkout the previous chapter:
 git checkout chapter_06_aggregate
 ----
 ====
@@ -212,6 +210,9 @@ job is to know that we're out of stock, but the responsibility of sending an
 alert belongs elsewhere. We should be able to turn this feature on or off, or to
 switch to SMS notifications instead, without needing to change the rules of our
 domain model.
+
+//(EJ1) Suggestion: Consider using the terms "orchestration" vs "choreography" will help
+//      in this chapter to contrast the imperative vs event based approaches.
 
 We'd also like to keep the service layer free of implementation details. We
 want to apply the Dependency Inversion Principle to notifications, so that our
@@ -379,6 +380,21 @@ NOTE: Note that the messagebus as implemented is entirely synchronous--our
     execution in time, we're only aiming to separate tasks conceptually.
     See <<celery_sidebar>>.
 
+// TODO (EJ1)  I think this NOTE is conflating a couple concepts. 
+// 
+//        I'd argue that the messagebus is actually async, and you
+//        absolutely want to defer processing until later in time, 
+//        (after the current message handler is completed.) 
+
+//        The deferred processing lets you reason about the
+//        handlers behavior more easily since you have to process
+//        a single message to completion.
+//
+//        May be better to rephrase as:
+//       "Note that the messagebus as implemented isn't intended to support
+//        concurrent or parallel execution, we're only aiming to separate tasks 
+//        conceptually.  See <<celery_sidebar>>."
+//
 
 [[celery_sidebar]]
 .Is this like Celery?
@@ -386,6 +402,8 @@ NOTE: Note that the messagebus as implemented is entirely synchronous--our
 Celery is a popular tool in the Python world for deferring self-contained
 chunks of work to an asynchronous task queue. The messagebus we're
 presenting here is very different, so the short answer is no.
+
+// TODO (EJ1) The messagebus has more in common with a node.js, a UI event loop, or an actor framework.
 
 // (hynek) preceding sentence is completely superflous yet so funny that i love
 // it so much that i want to marry it.
@@ -483,9 +501,10 @@ def allocate(
         if product is None:
             raise InvalidSku(f'Invalid sku {line.sku}')
         batchref = product.allocate(line)
+        uow.commit()
+
         if batchref is None:
             messagebus.handle(events.OutOfStock(line.sku))
-        uow.commit()
         return batchref
 ----
 ====
@@ -602,6 +621,10 @@ class SqlAlchemyRepository(AbstractRepository):
 // to the base class and yeah it's gross ;) In both cases you do something in the base
 // and then something else additionally.  this IMHO should be a wrapper and not a
 // base class
+// (EJ3) I think this pattern (._foo, .foo) is ideologically sound, but looks really gross
+//       if you do have never attended the Church of Enterprise Java.  Either wrapper
+//       or override + extend could be other options but it would probably create cascading
+//       changes.
 
 <1> For the UoW to be able to publish new events, it needs to be able to ask
     the repository for which `Product` objects have been used during this session.

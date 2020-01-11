@@ -31,7 +31,7 @@ https://github.com/cosmicpython/code/tree/chapter_12_dependency_injection[github
 ----
 git clone https://github.com/cosmicpython/code.git && cd code
 git checkout chapter_12_dependency_injection
-# or, if you want to code along, checkout the previous chapter.
+# or, if you want to code along, checkout the previous chapter:
 git checkout chapter_11_cqrs
 ----
 ====
@@ -42,6 +42,7 @@ TIP: If you haven't already, it's worth reading <<chapter_03_abstractions>>
     before continuing with this chapter, particularly the discussion of
     FCIS vs DI.
 
+// TODO (hynek) you _need_ to spell this out, no-one will remember what FCIS means
 
 For our database dependency, we've built a careful framework of explicit
 dependencies and easy options for overriding them in tests. Our main handler
@@ -91,7 +92,7 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 ----
 ====
 
-We take advantage of it in our integration tests to be able to use sqlite
+We take advantage of it in our integration tests to be able to use SQLite
 instead of Postgres, sometimes
 
 [[existing_integration_test]]
@@ -106,12 +107,11 @@ def test_rolls_back_uncommitted_work_by_default(sqlite_session_factory):
 ====
 
 <1> Integration tests swap out the default postgres session_factory for a
-    sqlite one.
+    SQLite one.
 
 
 
-
-=== Explicit Dependencies Are Totally Weird an Java-Ey Tho
+=== Aren't Explicit Dependencies Totally Weird and Java-Ey Tho?
 
 If you're used to the way things normally happen in Python, you'll be thinking
 all this is a bit weird.  The standard way to do things is to declare our
@@ -181,6 +181,10 @@ we have an (explicit) dependency on an _abstraction_:
 
 // (DS) great section
 
+
+// TODO (hynek) write out DIP
+
+
 [quote, The Zen of Python]
 ____
 Explicit Is Better Than Implicit
@@ -235,6 +239,10 @@ Because Python is not a "pure" OO language, Python developers aren't necessarily
 used to the concept of needing to "compose" a set of objects into a working
 application.  We just pick our entrypoint and run code from top to bottom.],
 and we'll do a bit of "Poor Man's DI" (dependency injection without a framework).
+
+
+// TODO (hynek) Not urgent, but maybe try to find a better (neither gendered
+// nor racist [don’t come up with Ghetto] ಠ_ಠ) idiom?
 
 ----
 Flask + Redis
@@ -387,6 +395,15 @@ Use whichever you and your team feel more comfortable with.
 
 === A Bootstrap Script
 
+////
+TODO (hynek)
+I find all of this following section very convoluted TBH. You also screw up
+your types and signatures by passing around partial methods.
+
+I’d always prefer to either make the necessary argument available or use
+classes that carry the dependency.
+////
+
 Here's what we want from our bootstrap script:
 
 1. It should declare default dependencies but allow us to override them.
@@ -436,12 +453,14 @@ def bootstrap(
 
 <1>  `orm.start_mappers()` is our example of initialization work that needs
     to be done once at the beginning of an app.  We also see things like
-    setting up the `logging` module, TODO more examples
+    setting up the `logging` module
 
 <2> We build up our injected versions of the handlers mappings using
     a function called `inject_dependencies()` which we'll show next.
 
 <3> And we return a configured message bus ready to use.
+
+// TODO more examples of init stuff
 
 // TODO: show option of bootstrapper as class instead?
 
@@ -553,7 +572,10 @@ https://pypi.org/project/punq/[Punq], as written by Bob himself.
 //   ===
 //  So then what you get is a nice, relatively noise-free declaration of your event handler routing.
 //  Injecting the handler dictionaries in the constructor doesn't really get you much.
-*******************************************************************************
+
+// TODO (hynek) you should mention https://github.com/dry-python/dependencies –
+// they are very active and giving talks etc
+
 
 
 === Messagebus Gets Given Handlers at Runtime
@@ -601,6 +623,13 @@ class MessageBus:  #<1>
 
 // Note for DS, I did try a diff here but it was unreadable. too many changes.
 
+////
+TODO (hynek) (re self.qeue)
+this makes me very uneasy and I’m almost certain it won’t work.
+
+Your MessageBus is a global object and putting queue on it – and clearing it
+out when handle is called is both hard to follow and 100% not thread safe.
+////
 
 What else changes in the bus?
 
@@ -892,11 +921,11 @@ and use it in our tests:
 ====
 [source,python]
 ----
-    def test_sends_email_on_out_of_stock_error():
-        fake_notifs = fakes.FakeNotifications()
+    def test_sends_email_on_out_of_stock_error(self):
+        fake_notifs = FakeNotifications()
         bus = bootstrap.bootstrap(
             start_orm=False,
-            uow=fakes.FakeUnitOfWork(),
+            uow=FakeUnitOfWork(),
             notifications=fake_notifs,
             publish=lambda *args: None,
         )

@@ -65,7 +65,7 @@ and cannot encourage you enough to go on and read a proper DDD book.
 
 * The original https://domainlanguage.com/ddd/["blue book"],
   _Domain-Driven Design_ by Eric Evans (Addison-Wesley, 2003)
-* Or, some people prefer the "red book", _Implementing Domain-Driven Design_,
+* Or, some people prefer the https://learning.oreilly.com/library/view/implementing-domain-driven-design/9780133039900/["red book"], _Implementing Domain-Driven Design_,
   by Vaughn Vernon (Addison-Wesley, 2013).
 
 *****************************************************************
@@ -172,7 +172,7 @@ Time for some domain modeling.
 
 === Exploring the Domain Language
 
-Understanding the Domain Model takes time, and patience, and Post-It notes. We
+Understanding the Domain Model takes time, and patience, and Post-it notes. We
 have an initial conversation with our business experts and we agree on a glossary
 and some rules for the first minimal version of the domain model. Wherever
 possible, we ask for concrete examples to illustrate each rule.
@@ -181,66 +181,64 @@ We make sure to express those rules in the business jargon (the _ubiquitous
 language_ in DDD terminology). We choose memorable identifiers for our objects
 so that the examples are easier to talk about.
 
-Here are some notes we might have taken while having a conversation with our
-domain experts about allocation:
+<<allocation_notes>> shows some notes we might have taken while having a
+conversation with our domain experts about allocation:
 
-* A _product_ is identified by a _sku_, pronounced "skew," which is short for
+[[allocation_notes]]
+.Some Notes on Allocation
+|===
+
+a| A _product_ is identified by a _sku_, pronounced "skew," which is short for
   "stock keeping unit."
 
-* _Customers_ place _orders_. An order is identified by an _order reference_,
+a| _Customers_ place _orders_. An order is identified by an _order reference_,
   and comprises multiple _order lines_, where each line has a _sku_, and a
-  _quantity_.
-+
-.Example:
-** 10 units of RED-CHAIR
-** 1 unit of TASTELESS-LAMP
+  _quantity_.  Example:
 
-* The purchasing department orders small _batches_ of stock. A _batch_ of stock
+----
+- 10 units of RED-CHAIR
+- 1 unit of TASTELESS-LAMP
+----
+
+a| The purchasing department orders small _batches_ of stock. A _batch_ of stock
   has a unique id which they call a _reference_, a _sku_ and a _quantity_.
 
-* We need to _allocate_ _order lines_ to _batches_. When we've allocated an
+a| We need to _allocate_ _order lines_ to _batches_. When we've allocated an
   order line to a batch, we will send stock from that specific batch to the
   customer's delivery address.
 
-* When we allocate x units of stock to a batch, the _available quantity_ is
-  reduced by x.
-+
-.Example:
-** We have a batch of 20 SMALL-TABLE, and we allocate an order line for 2
-   SMALL-TABLE.
-** The batch should have 18 SMALL-TABLE remaining.
+a| When we allocate x units of stock to a batch, the _available quantity_ is
+  reduced by x. Example:
 
-* We can't allocate to a batch if the available quantity is less than the
-  quantity of the order line.
-+
-.Example:
-** We have a batch of 1 BLUE-CUSHION, and an order line for 2
-   BLUE-CUSHION.
-** We should not be able to allocate the line to the batch.
+----
+- We have a batch of 20 SMALL-TABLE, and we allocate an order line for 2 SMALL-TABLE.
+- The batch should have 18 SMALL-TABLE remaining.
+----
 
-* We can't allocate the same line twice.
-+
-.Example:
-** We have a batch of 10 BLUE-VASE, and we allocate an order line for 2
-   BLUE-VASE.
-** If we allocate the order line again to the same batch, the batch
-   should still have an available quantity of 8.
+a| We can't allocate to a batch if the available quantity is less than the
+  quantity of the order line. Example:
 
-* Batches have an _ETA_ if they are currently shipping, or they may be in
+----
+- We have a batch of 1 BLUE-CUSHION, and an order line for 2 BLUE-CUSHION.
+- We should not be able to allocate the line to the batch.
+----
+
+a| We can't allocate the same line twice.  Example:
+
+----
+- We have a batch of 10 BLUE-VASE, and we allocate an order line for 2 BLUE-VASE.
+- If we allocate the order line again to the same batch, the batch should still
+  have an available quantity of 8.
+----
+
+a| Batches have an _ETA_ if they are currently shipping, or they may be in
   _Warehouse stock_.
 
-* We allocate to warehouse stock in preference to shipment batches
+a| We allocate to warehouse stock in preference to shipment batches
 
-* We allocate to shipment batches in order of which has the earliest ETA.
+a| We allocate to shipment batches in order of which has the earliest ETA.
+|===
 
-// TODO: this list of examples is massive in the pdf.  try using a table
-// to make it smaller.
-// EJ2: agree with above. maybe organizing in terms of a single high level scenario:
-//      "A customer places an order for 2 chairs, an an order for red sofa. 
-//       Each order line in an order must be allocated to a batch of stock from
-//       the warehouse. If stock is not available, the purchasing department should
-//       purchase a new batch, and customers should receive an ETA...."
-//     Then you can just have a bullet list of rules.  I think people can fill in the blanks.
 
 .Exercise for the Reader
 ******************************************************************************
@@ -482,7 +480,7 @@ class Batch {
 }
 
 class OrderLine {
-    order_id
+    orderid
     sku
     qty
 }
@@ -785,28 +783,29 @@ class Batch:
 ----
 ====
 
-Python's `__eq__` magic method defines the behavior of the class for the
-`==` operator.
+Python's +++<code>__eq__</code>+++ magic methodfootnote:[Pronounced "dunder-EQ". By some, at least.]
+defines the behavior of the class for the`==` operator.
 
 For both Entity and Value Objects it's also worth thinking through how
-`__hash__` will work.  It's the magic method Python uses to control the
++++<code>__hash__</code>+++ will work.  It's the magic method Python uses to control the
 behavior of objects when you add them to sets or use them as dict keys;
 more info https://docs.python.org/3/glossary.html#term-hashable[in the Python docs].
 
-For Value Objects, the hash should be based on all the value attributes.
-For entities, the hash should either be `None`, or it should be based
-on the attribute(s), like `.reference`, that define identity over time.
+For Value Objects, the hash should be based on all the value attributes,
+and we should ensure that the objects are immutable.  We get this for
+free by specifying `@frozen=True` on the dataclass.
 
-//TODO (DS) Getting hash values right for these kinds of objects is quite
-//important (e.g. if you're using them in dictionaries or sets). I reckon it
-//might be worth spending more time on this.
-// (HP): if we get into this, it links into the hack in next chapter required
-// by sqlalchemy, `@dataclass(frozen=True)` -> `dataclass(unsafe_hash=True)`
-// (EJ1) Agree with the above points, and would hope that readers are aware.
-//       I think it's adequate to point out that if you override
-//       __hash__, you should also override __eq__; then wave your hands in the air,
-//      warn that there are other important details, and leave a breadcrumb to 
-//      something like https://www.journaldev.com/17357/python-hash-function
+For entities, the simplest option is to say that the hash is ++None++, meaning
+that the object is not hashable and cannot, for example, be used in a set.
+If for some reason you decide you really do want to use set or dict operations
+with Entities, then the hash should be based on the attribute(s), like
+`.reference`, that define the Entity's unique identity over time. You should
+also try to somehow make _that_ attribute read-only.
+
+WARNING: This is tricky territory; you shouldn't modify +++<code>__hash__</code>+++ without
+    also modifying +++<code>__eq__</code>+++.  If you're not sure what you're doing, some
+    further reading is suggested.  https://hynek.me/articles/hashes-and-equality/[
+    Hashes and Equality] by our tech reviewer Hynek is a good place to start.
 
 
 
@@ -897,7 +896,8 @@ You may or may not like the use of `next()` above, but we're pretty
 sure you'll agree that being able to use `sorted()` on our list of
 batches is nice, idiomatic Python.
 
-To make it work we implement `__gt__` on our domain model:
+To make it work we implement +++<code>__gt__</code>+++ on our domain model:
+
 
 
 [[dunder_gt]]
@@ -994,8 +994,8 @@ Not everything has to be an object::
 // [HP] A *class* called Factory is a code smell.  A function called
 // factory _might_ be fine.
 // (EJ3) Manager, Builder, and Factory are code smells for very different reasons.
-//  I'm not sure that calling them out here adds much, and just potentially adds to confusion. 
-//  Maybe just say that not everything has to be class, unlike in some other caffeine-inspired 
+//  I'm not sure that calling them out here adds much, and just potentially adds to confusion.
+//  Maybe just say that not everything has to be class, unlike in some other caffeine-inspired
 //  languages.
 
 This is the time to apply your best OO design principles::

@@ -124,7 +124,7 @@ https://github.com/cosmicpython/code/tree/appendix_csvs[github.com/cosmicpython/
 ----
 git clone https://github.com/cosmicpython/code.git && cd code
 git checkout appendix_csvs
-# or, if you want to code along, checkout the previous chapter.
+# or, if you want to code along, checkout the previous chapter:
 git checkout chapter_05_uow
 ----
 ====
@@ -222,6 +222,7 @@ got tens of thousands of orders per hour, and hundreds of thousands of
 order lines, we can't hold a lock over the whole `batches` table for
 every single one--we'll get deadlocks or performance problems at the very least.
 
+
 === What is an Aggregate?
 
 Okay, so if we can't lock the whole database every time we want to allocate an
@@ -242,6 +243,14 @@ other domain objects and lets us treat the whole collection as a single unit.
 The only way to modify the objects inside the aggregate is to load the whole
 thing, and to call methods on the aggregate itself.
 
+As a model gets more complex and grows more Entity and Value Objects,
+referencing each other in a tangled graph, it can be hard to keep track of who
+can modify what. Especially when we have _collections_ in the model like we do
+(our batches are a collection), it's a good idea to nominate some entities to be
+the single entrypoint for modifying their related objects. It makes the system
+conceptually simpler and easy to reason about if you nominate some objects to be
+in charge of consistency for the others.
+
 For example, if we're building a shopping site, the "Cart" might make a good
 aggregate: it's a collection of items that I can treat as a single unit.
 Importantly, I want to load the entire basket as a single blob from my data
@@ -249,10 +258,33 @@ store. I don't want two requests to modify my basket at the same time, or I
 run the risk of weird concurrency errors. Instead, I want each change to my
 basket to run in a single database transaction.
 
-I don't want to modify multiple baskets in a transaction, because there's no
+We don't want to modify multiple baskets in a transaction, because there's no
 use-case for changing the baskets of several customers at the same time. Each
 basket is a single _consistency boundary_ responsible for maintaining its own
 invariants.
+
+[quote, Eric Evans, DDD blue book]
+____
+// We need an abstraction for encapsulating references within the model.
+An AGGREGATE is a cluster of associated objects that we treat as a unit for the
+purpose of data changes.
+// Each AGGREGATE has a root and a boundary. The boundary
+// defines what is inside the AGGREGATE. The root is a single, specific ENTITY
+// contained in the AGGREGATE. The root is the only member of the AGGREGATE that
+// outside objects are allowed to hold references to, although objects within the
+// boundary may hold references to each other. ENTITIES other than the root have
+// local identity, but that identity needs to be distinguishable only within the
+// AGGREGATE, because no outside object can ever see it out of the context of the
+// root ENTITY.
+____
+
+Per Evans, our aggregate has a root entity (the cart) which encapsulates access
+to items. Each item has its own identity, but other parts of the system will only
+ever refer to the cart as an indivisible whole.
+
+TIP: Just like we sometimes use `_leading_underscores` to mark methods or functions
+    as "private", you can think of aggregates as being the "public" classes of our
+    model, and the rest of the Entities and Value Objects are "private".
 
 === Choosing an Aggregate
 

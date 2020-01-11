@@ -430,6 +430,12 @@ SCARCE-CLOCK to order 76543", the message is *syntactically* valid, and
 *semantically* valid, but we're unable to comply because we don't have the stock
 available.
 
+
+TODO: more here, but basically the message is: we validate pragmatics in the 
+model layer, yes?
+
+
+
 .Validation Wrap-Up
 *****************************************************************
 
@@ -454,5 +460,10 @@ Spend time writing helpers for validation::
     Having a nice declarative way to validate incoming messages and apply
     preconditions to your handlers will make your codebase much cleaner.
     It's worth investing time to make boring code easy to maintain.
+
+Locate each of the three types of validation in the right place::
+    Validating syntax can happen on message classes, validating
+    semantics can happen in the service layer / on the message bus,
+    and validating pragmatics belongs in the domain model.
 
 *****************************************************************

@@ -63,7 +63,7 @@ https://github.com/cosmicpython/code/tree/chapter_10_external_events[github.com/
 ----
 git clone https://github.com/cosmicpython/code.git && cd code
 git checkout chapter_10_external_events
-# or, if you want to code along, checkout the previous chapter.
+# or, if you want to code along, checkout the previous chapter:
 git checkout chapter_09_commands
 ----
 ====
@@ -148,10 +148,10 @@ database CRM
 
 ////
 
-TODO (EJ)
+TODO (EJ1)
 
-I'm having a little bit of trouble understanding the sequence diagrams because
-I'm unsure what the arrow semantics are. The couple things I've noticed are:
+I'm having a little bit of trouble understanding the sequence diagrams in this section
+because I'm unsure what the arrow semantics are. The couple things I've noticed are:
 
 * PlantUML renders synchronous messages with a non-standard arrowhead that
   looks like a cross between the synch/async messages in standard UML. Other
@@ -332,6 +332,7 @@ need to change the order of operations, or to introduce new steps in the process
 we can do that locally.
 
 // TODO: need to add an example of a process change.  And/or explain "locally"
+// (EJ3) I think this is clear enough.  Not sure about for a junior dev.
 
 
 === Using a Redis Pubsub Channel for Integration
@@ -342,7 +343,7 @@ services. This piece of infrastructure is often called a Message Broker. The
 role of a message broker is to take messages from publishers and deliver them
 to subscribers.
 
-At MADE.com we use https://eventstore.org/[Eventstore]; Kafka or RabbitMQ
+At MADE.com we use https://eventstore.org/[Event Store]; Kafka or RabbitMQ
 are valid alternatives. A lightweight solution based on Redis
 https://redis.io/topics/pubsub[pubsub channels] can also work just fine, and since
 Redis is much more generally familiar to people, we thought we'd use it for this
@@ -352,6 +353,9 @@ NOTE: We're glossing over the complexity involved in choosing the right messagin
     platform.  Concerns like message ordering, failure handling and idempotency
     all need to be thought through.  For a few pointers, see the
     <<footguns,Footguns>> section in <<epilogue_1_how_to_get_there_from_here>>.
+
+// (EJ1) "For example, in Redis,  RPOPLPUSH provides reliable messaging ...  For pointers, see"
+
 
 Our new flow will look like this:
 
@@ -444,7 +448,7 @@ def test_change_batch_quantity_leading_to_reallocation():
     because it won't be the only message on that channel.
 
 ////
-TODO (ej) Minor comment: This e2e test might not be safe or repeatable as part of a
+TODO (EJ3) Minor comment: This e2e test might not be safe or repeatable as part of a
      larger test suite, since test run data is being persisted in redis.
      Purging the queue as part of setup will help, but it would still have problems
      with running tests in parallel. Not sure if it's worth bringing up as it might
@@ -533,7 +537,7 @@ class Allocated(Event):
 It captures everything we need to know about an allocation: the details of the
 order line, and which batch it was allocated to.
 
-We use add it into our model's `allocate()` method (having added a test
+We add it into our model's `allocate()` method (having added a test
 first, naturally)
 
 [[model_emits_allocated_event]]
@@ -598,13 +602,11 @@ TIP: Outbound events are one of the places it's important to apply some validati
 It's a good idea to keep the distinction between internal and external events
 clear.  Some events may come from the outside, and some events may get upgraded
 and published externally, but not all of them.  This is particularly important
-if you get into [event sourcing](https://io.made.com/blog/2018-04-28-eventsourcing-101.html) (very
-much a topic for another book though).
+if you get into
+https://io.made.com/blog/2018-04-28-eventsourcing-101.html[event sourcing]
+(very much a topic for another book though).
 
 *******************************************************************************
-
-// TODO (EJ) Some discussion of idempotency and at-most-once, vs at-least-once
-// delivery might be good.
 
 === Wrap-Up
 
@@ -614,7 +616,7 @@ much a topic for another book though).
 
 TODO: more here
 
-[quote, Martin Fowler, https://martinfowler.com/articles/201701-event-driven.html [What do you mean by “Event-Driven”?]]
+[quote, Martin Fowler, What do you mean by “Event-Driven”? (martinfowler.com)]
 ____
 Event notification is nice because it implies a low level of coupling, and is
 pretty simple to set up. It can become problematic, however, if there is

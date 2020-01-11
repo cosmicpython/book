@@ -375,7 +375,8 @@ return bus
 
 
 //TODO: we can definitely get rid of _commit() now right?
-
+// (EJ2) at this point _commit() doesn't serve any purpose, so it could be deleted.
+//       unsure if deleting it would be confusing at this point.
 
 ==== Our Tests Are All Written in Terms of Events Too:
 
@@ -387,8 +388,7 @@ return bus
 ----
 class TestAddBatch:
 
-    @staticmethod
-    def test_for_new_product():
+    def test_for_new_product(self):
         uow = FakeUnitOfWork()
         messagebus.handle(events.BatchCreated("b1", "CRUNCHY-ARMCHAIR", 100, None), uow)
         assert uow.products.get("CRUNCHY-ARMCHAIR") is not None
@@ -399,8 +399,7 @@ class TestAddBatch:
 
 class TestAllocate:
 
-    @staticmethod
-    def test_returns_allocation():
+    def test_returns_allocation(self):
         uow = FakeUnitOfWork()
         messagebus.handle(events.BatchCreated("b1", "COMPLICATED-LAMP", 100, None), uow)
         result = messagebus.handle(events.AllocationRequired("o1", "COMPLICATED-LAMP", 10), uow)
@@ -408,8 +407,7 @@ class TestAllocate:
 ----
 ====
 
-// TODO: (DS) why staticmethod?
-// TODO (hynek) why staticmethod?
+// TODO: (EJ2) Why TestAllocate and TestAddBatch?
 
 
 [[temporary_ugly_hack]]
@@ -469,6 +467,10 @@ We'll come back to fix this wart in <<chapter_11_cqrs>>.
 ----
 ====
 
+// TODO: (EJ1) Should the line `batchref = results.pop()` be `batchref = results.pop(0)` instead?
+//             Otherwise you get the result of the last event handler, instead of the handler
+//             triggered by AllocationRequired.
+
 <1> Instead of calling the service layer with a bunch of primitives extracted
     from the request JSON...
 
@@ -525,19 +527,15 @@ end
 
 @enduml
 ----
+// TODO: (EJ1) See https://github.com/cosmicpython/book/issues/169
+//             I think it's worth mentioning here that the message could
+//             get dropped if you have a prolonged
+//             outage that starts after uow1 but before uow2 completes.
+//
+//             Then do some hand-waving about how distributed
+//             systems are hard, and make a forward reference to the appendix on 
+//             footguns.
 
-
-////
-TODO (ej)  There is a minor but important technical point here, I think, that
-could be a source of confusion.  The UOW and session commit are not exactly
-synonymous as the events are not actually emitted until after the UOW "ends".
-Otherwise you could end up with a race or skew on the persisted state. (Or
-would that be prevented by re-using the same uow+session instance in the event
-handlers?)
-
-I am unsure how to present that information without adding a lot of
-detail to the sequence diagram.
-////
 
 
 [TIP]
@@ -548,7 +546,7 @@ https://github.com/cosmicpython/code/tree/chapter_08_all_messagebus[github.com/c
 ----
 git clone https://github.com/cosmicpython/code.git && cd code
 git checkout chapter_08_all_messagebus
-# or, if you want to code along, checkout the previous chapter.
+# or, if you want to code along, checkout the previous chapter:
 git checkout chapter_07_events_and_message_bus
 ----
 ====
@@ -587,8 +585,7 @@ look like:
 ----
 class TestChangeBatchQuantity:
 
-    @staticmethod
-    def test_changes_available_quantity():
+    def test_changes_available_quantity(self):
         uow = FakeUnitOfWork()
         messagebus.handle(events.BatchCreated("batch1", "ADORABLE-SETTEE", 100, None), uow)
         [batch] = uow.products.get(sku="ADORABLE-SETTEE").batches
@@ -599,8 +596,7 @@ class TestChangeBatchQuantity:
         assert batch.available_quantity == 50  #<1>
 
 
-    @staticmethod
-    def test_reallocates_if_necessary():
+    def test_reallocates_if_necessary(self):
         uow = FakeUnitOfWork()
         messagebus.handle(events.BatchCreated("batch1", "INDIFFERENT-TABLE", 50, None), uow)
         messagebus.handle(events.BatchCreated("batch2", "INDIFFERENT-TABLE", 50, date.today()), uow)
@@ -624,6 +620,9 @@ class TestChangeBatchQuantity:
 //TODO: (DS) why * 1?
 //TODO: (hynek) why * 1?
 //TODO: (hynek) s/we"ll/we'll/
+// (EJ3) I'd just remove the "* 1", since it's causing confusion. 
+//   (If you adjusted the # events or counts, it might be clearer.)
+
 
 <1> The simple case would be trivially easy to implement, we just
     modify a quantity.
@@ -685,8 +684,9 @@ class AbstractRepository(abc.ABC):
     @abc.abstractmethod
     def _get_by_batchref(self, batchref) -> model.Product:
         raise NotImplementedError
+    ...
 
-
+class SqlAlchemyRepository(AbstractRepository):
     ...
 
     def _get(self, sku):
@@ -957,6 +957,7 @@ a|
   and now to domain events, which feels flip-floppey.
 
 //TODO (DS): i feel you  made the case that this isn't actually a con
+// (EJ1): agree with DS. The text actually explains this as a "Pro".
 
 * duplication / maintenance cost of having model objects _and_ events
   now.  adding a field to one usually means adding a field to at least
