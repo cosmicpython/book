@@ -793,14 +793,22 @@ NOTE: Some people refer to this as the "read-modify-write" failure mode.
 
 .Recap: Aggregates and Consistency Boundaries
 *****************************************************************
-Choose the right aggregate::
-    bla
+Aggregates are your entrypoints into the Domain Model::
+    By restricting the number of ways that things can be changed,
+    we make the system easier to reason about.
 
-Something something transactions::
-    bla bla.
+Aggregates are in charge of a consistency boundary::
+    An aggregate's job is to be able to manage our business rules
+    about invariants as they apply to a group of related objects.
+    It's the aggregate's job to check that the objects within its
+    remit are consistent with each other and with our rules, and
+    to reject changes that would break the rules
 
-// TODO (hynek) ehm.
-// (EJ1) bla
+Aggregates and concurrency issues go together::
+    When thinking about implementing these consistency checks, we
+    end up thinking about transactions and locks.  Choosing the
+    right aggregate is about performance as well as conceptual
+    organization of your domain.
 
 *****************************************************************
 
