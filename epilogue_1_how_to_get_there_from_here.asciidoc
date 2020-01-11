@@ -245,6 +245,10 @@ tree view of folders and documents.
 This screen was _incredibly_ heavy on the database, because it relied on nested
 for loops that triggered a lazy-loaded ORM.
 
+TIP: We use this same technique in the book in Chapter 11 where we replace a
+nested loop over ORM objects with a simple SQL query. It's the first step in
+a CQRS approach.
+
 After a lot of head-scratching, we replaced the ORM code with a big, ugly stored
 procedure. The code looked horrible, but it was much faster and it helped us
 to break the links between Folder and Document.
