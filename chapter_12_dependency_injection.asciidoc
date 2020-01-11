@@ -644,7 +644,7 @@ What else changes in the bus?
                 logger.debug('handling event %s with handler %s', event, handler)
                 handler(event)  #<2>
                 self.queue.extend(self.uow.collect_new_events())
-            except:
+            except Exception:
                 logger.exception('Exception handling event %s', event)
                 continue
 

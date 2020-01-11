@@ -158,14 +158,11 @@ def handle_event(
             logger.debug('handling event %s with handler %s', event, handler)
             handler(event, uow=uow)
             queue.extend(uow.collect_new_events())
-        except:
+        except Exception:
             logger.exception('Exception handling event %s', event)
             continue  #<2>
 ----
 ====
-
-// TODO (hynek): change except to except Exception to avoid catching eg
-// KeyboardInterrupt
 
 <1> Events go to a dispatcher that can delegate to multiple handlers per
     event.
@@ -417,7 +414,7 @@ def handle_event(
             logger.debug('handling event %s with handler %s', event, handler)
             handler(event, uow=uow)
             queue.extend(uow.collect_new_events())
-        except:
+        except Exception:
             logger.exception('Exception handling event %s', event)
             continue
 ----
@@ -467,7 +464,11 @@ from tenacity import Retrying, RetryError, stop_after_attempt, wait_exponential 
 
 ...
 
-def handle_event(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):
+def handle_event(
+    event: events.Event,
+    queue: List[Message],
+    uow: unit_of_work.AbstractUnitOfWork
+):
 
     for handler in EVENT_HANDLERS[type(event)]:
         try:
@@ -481,19 +482,14 @@ def handle_event(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):
                     handler(event, uow=uow)
                     queue.extend(uow.collect_new_events())
         except RetryError as retry_failure:
-            n = retry_failure.last_attempt.attempt_number
-            logger.error(f'Failed to handle event {n} times, giving up!')
+            logger.error(
+                'Failed to handle event %s times, giving up!,
+                retry_failure.last_attempt.attempt_number
+            )
             continue
 
 ----
 ====
-
-// TODO (hynek) you've used the "correct" logger formatting before – you should
-// stick to it
-// also no reason to split it out. if you use lazy formatting, you can just
-// neatly distribute it over multiple lines
-
-// TODO (EJ1) Missing `queue` argument to `handle_event`
 
 <1> Tenacity is a Python library that implements common patterns for retrying.
 
@@ -505,9 +501,9 @@ the resilience of our software. Again, the unit of work and command handler
 patterns mean that each attempt starts from a consistent state, and won't leave
 things half-finished.
 
-// (EJ1) I don't think you've ever mentioned how to handle a failure of the version
-//       number check for concurrency control. Might want to mention how/where
-//       that retry would be handled.
+// TODO (EJ1) I don't think you've ever mentioned how to handle a failure of
+// the version number check for concurrency control. Might want to mention
+// how/where that retry would be handled.
 
 
 [[chapter_09_commands_and_events_tradeoffs]]

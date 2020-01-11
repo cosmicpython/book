@@ -603,25 +603,16 @@ class TestChangeBatchQuantity:
         messagebus.handle(events.AllocationRequired("order2", "INDIFFERENT-TABLE", 20), uow)
         [batch1, batch2] = uow.products.get(sku="INDIFFERENT-TABLE").batches
         assert batch1.available_quantity == 10
+        assert batch2.available_quantity == 50
 
         messagebus.handle(events.BatchQuantityChanged("batch1", 25), uow)
 
-        # order1 or order2 will be deallocated, so we"ll have 25 - 20 * 1
+        # order1 or order2 will be deallocated, so we"ll have 25 - 20
         assert batch1.available_quantity == 5  #<2>
         # and 20 will be reallocated to the next batch
         assert batch2.available_quantity == 30  #<2>
 ----
 ====
-
-// TODO (hynek) might be useful to add an assert about batch2 too to make it
-// clearer what's happening
-
-//TODO: (DS) why * 1?
-//TODO: (hynek) why * 1?
-//TODO: (hynek) s/we"ll/we'll/
-// (EJ3) I'd just remove the "* 1", since it's causing confusion. 
-//   (If you adjusted the # events or counts, it might be clearer.)
-
 
 <1> The simple case would be trivially easy to implement, we just
     modify a quantity.
@@ -629,8 +620,6 @@ class TestChangeBatchQuantity:
 <2> But if we try and change the quantity so that there's less than
     has been allocated, we'll need to deallocate at least one order,
     and we expect to reallocated it to a new batch
-
-
 
 
 
@@ -650,6 +639,7 @@ def change_batch_quantity(
         uow.commit()
 ----
 ====
+
 // TODO (DS): Indentation looks off
 
 
