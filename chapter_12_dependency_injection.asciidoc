@@ -207,6 +207,20 @@ def send_out_of_stock_notification(
 ----
 ====
 
+// TODO (EJ2) "DI" and "Composition Root" are Object-Oriented concepts, specifically.
+//            So it's a little bit off, but not unreasonable, to talk about 
+//            Poor Man's DI with partials.
+//
+//            "Explicit Dependencies are Weird and Java-y" is a common reaction,
+//            I think, for someone who has is used to thinking in procedural style, and is
+//            unfamiliar with higher-order functions (hofs).
+//            
+//            The functional equivalent of DI is to use closures, hofs, and composition.
+//
+//            The common outcome between the two styles is that you end up programming
+//            in a compositional, declarative style.
+//
+
 
 But if we do change to declaring all these dependencies explicitly, who will
 inject them and how? So far, we've only really been dealing with passing the
@@ -252,15 +266,21 @@ TODO: betterify diagram
 
 
 
-=== Preparing Handlers: Poor Man's DI with Partial Functions
+=== Preparing Handlers: Poor Man's DI with Closures and Partials
 
 One way to turn a function with dependencies into one that's ready to be
-called later with those dependencies _aleady injected_, is to use partial
-functions:
+called later with those dependencies _aleady injected_, is to use closures or
+partial functions to compose the function with its dependencies:
+
+//TODO (EJ1) Re the following examples, there is a difference
+//           in the way closures vs partials behave WRT to early
+//           vs. late binding. https://docs.python-guide.org/writing/gotchas/
+//           So it's better not to refer to them interchangeably.
+//
 
 
 [[di_with_partial_functions_examples]]
-.Examples of DI using partial functions
+.Examples of DI using closures or partial functions
 ====
 [source,python]
 [role="skip"]
@@ -275,19 +295,24 @@ def allocate(
 
 # bootstrap script prepares actual UoW
 
-uow = unit_of_work.SqlAlchemyUnitOfWork()
+def bootstrap(..):
+    uow = unit_of_work.SqlAlchemyUnitOfWork()
 
-# then prepares a version of the allocate fn with dependencies already injected
-allocate_partial = lambda cmd: allocate(cmd, uow)
+    # then prepares a version of the allocate fn with uow dependency captured in a closure
+    allocate_composed = lambda cmd: allocate(cmd, uow)
 
-#  or, alternatively
-import functools
-allocate_partial = functools.partial(allocate, uow=uow)
+    # or, equivalently (this gets you a nicer stack trace)
+    def allocate_composed(cmd):
+        return allocate(cmd, uow)
+
+    # alternatively with a partial
+    import functools
+    allocate_composed = functools.partial(allocate, uow=uow)
 
 ...
-# later at runtime, we can call the partial function, and it will have
-# the UoW already injected
-allocate_partial(cmd)
+    # later at runtime, we can call the partial function, and it will have
+    # the UoW already bound
+allocate_composed(cmd)
 ----
 ====
 
@@ -296,7 +321,7 @@ Here's the same pattern again for the `send_out_of_stock_notification()` handler
 which has different dependencies:
 
 [[partial_functions_2]]
-.Another partial functions example
+.Another closure and partial functions example
 ====
 [source,python]
 [role="skip"]
@@ -310,18 +335,18 @@ def send_out_of_stock_notification(
 
 
 # prepare a version of the send_out_of_stock_notification with dependencies
-sosn_partial = lambda event: send_out_of_stock_notification(event, email.send_mail)
+sosn_composed  = lambda event: send_out_of_stock_notification(event, email.send_mail)
 
 ...
 # later, at runtime:
-sosn_partial(event)  # will have email.send_mail already injected in
+sosn_composed(event)  # will have email.send_mail already injected in
 ----
 ====
 
 
 === An Alternative Using Classes
 
-Partial functions will feel familiar to people who've done a bit of functional
+Closures and partial functions will feel familiar to people who've done a bit of functional
 programming.   Here's an alternative using classes, which may appeal to other
 people.   It requires rewriting all our handler functions as classes though:
 
@@ -475,6 +500,8 @@ overengineering and writing his own DI framework.
 It honestly didn't even occur to Harry that you could do it any more plainly,
 but in fact of course you can, like this:
 
+// (EJ3) I don't know if I'd even call this DI, it's just straight meta-programming.
+
 
 [[nomagic_di]]
 .Manually creating partial functions inline (src/allocation/bootstrap.py)
@@ -522,11 +549,33 @@ fine although it makes pylint unhappy.  You might also check out
 https://pypi.org/project/punq/[Punq], as written by Bob himself.
 
 // TODO: discuss/define what a DI container is
+//
+// (EJ2) based on the whatsapp thread, what I'd imagined is:
+// ===
+// class MessageBus:
+//     ...
+//     def register_event_handler(self, event_type, handler, *args, **kwargs):
+//         f = partial(handler, *args, **kwargs)
+//         self.event_handlers[event_type].append(f) # assuming defaultdict(list)
+//         return self # optional builder sugar
+//
+//     def register_command_handler(command_type, func):
+//         # similar to above
+//
+//  # Then in bootstrap:
+//  def bootstrap(...):
+//      bus = MessageBus(uow)
+//      bus.register_event_handler(events.Allocated, handlers.publish_allocated, publish=publish) \
+//         .register_event_handler(events.Allocated, handlers.add_allocation_to_read_model, uow=uow) \
+//         .register_event_handler(events.Deallocated, handlers.remove_allocation_from_read_model, uow=uow)
+//      ...
+//   ===
+//  So then what you get is a nice, relatively noise-free declaration of your event handler routing.
+//  Injecting the handler dictionaries in the constructor doesn't really get you much.
 
 // TODO (hynek) you should mention https://github.com/dry-python/dependencies –
 // they are very active and giving talks etc
 
-*******************************************************************************
 
 
 === Messagebus Gets Given Handlers at Runtime
@@ -661,7 +710,10 @@ rest of it.
 
 <3> And our messagebus is now a specific instance rather than the module global.
 
-// (ej) The "Flask-onic" version of bootstrap is the application factory pattern w/ blueprints.
+// TODO (EJ3) bus is still a module global, it's now just an instance of an class instead of a module.
+
+// TODO (EJ2) The "Flask-onic" version of bootstrap is the application factory pattern w/ blueprints.
+//      It is worth at least mentioning here.
 //
 // The issue that the style above (where app is a module variable) can raise, is that the import will
 // have side-effects, because it inits the bus.  In the worst case, someone may have decided to add
@@ -991,6 +1043,7 @@ And, erm, that's it really.
 .Exercise for the Reader
 ******************************************************************************
 NOTE: TODO, under construction
+// (EJ2) Maybe LocalStack here https://github.com/localstack/localstack?
 
 Why not have a go at changing from email to, idk, twilio or slack
 notifications or something?
