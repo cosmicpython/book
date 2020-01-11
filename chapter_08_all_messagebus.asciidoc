@@ -407,8 +407,6 @@ class TestAllocate:
 ----
 ====
 
-// TODO: (EJ2) Why TestAllocate and TestAddBatch?
-
 
 [[temporary_ugly_hack]]
 ==== A Temporary Ugly Hack: The Messagebus Has to Return Results
@@ -527,6 +525,7 @@ end
 
 @enduml
 ----
+
 // TODO: (EJ1) See https://github.com/cosmicpython/book/issues/169
 //             I think it's worth mentioning here that the message could
 //             get dropped if you have a prolonged
