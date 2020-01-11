@@ -703,6 +703,56 @@ it's not a lot of work.  Once your project is up and running, the interface for
 your repository and UoW abstractions really don't change much.  And if you're
 using ABC's, they'll help remind you when things get out of sync.
 
+.Exercise for the Reader
+******************************************************************************
+
+Are you finding all those `_add()` and `_commit()` methods "super-gross", in
+the words of our beloved tech reviewer Hynek?  Does it "make you want to beat
+Harry around the head with a plushie snake?" Hey, our code listings are
+only meant to be examples, not the perfect solution!  Why not go see if you
+can do better?
+
+One _composition over inheritance_ way to go would be to implement a
+wrapper class:
+
+
+[[tracking_repo_wrapper]]
+.A wrapper adds functionality and then delegates (src/adapters/repository.py)
+====
+[source,python]
+[role="skip"]
+----
+class TrackingRepository:
+    seen: Set[model.Product]
+
+    def __init__(self, repo: AbstractRepository):
+        self.seen = set()  # type: Set[model.Product]
+        self._repo = repo
+
+    def add(self, product: model.Product):  #<1>
+        self._repo.add(product)  #<1>
+        self.seen.add(product)
+
+    def get(self, sku) -> model.Product:
+        product = self._repo.get(sku)
+        if product:
+            self.seen.add(product)
+        return product
+----
+====
+
+<1> By wrapping the repository, we can call the actual `.add()`
+    and `.get()` methods, avoiding weird underscore methods.
+
+See if you can apply a similar pattern to our Unit of Work class, in
+order to get rid of those Java-ey `_commit()` methods too?
+
+https://github.com/cosmicpython/code/tree/chapter_07_events_and_message_bus_exercise
+
+switching all the ABCs to `typing.Protocol` is a good way to force yourself
+to avoid using inheritance.  Let us know if you come up with something nice!
+
+******************************************************************************
 
 === Wrap-Up
 
