@@ -281,6 +281,55 @@ see <<appendix_django>>
 
 === an event-driven approach to go microservices via strangler pattern
 
+.Case Study: Carving out a microservice to replace a domain
+********************************************************************************
+MADE.com started out with _two_ monoliths: one for the front-end e-commerce
+application, and one for the back-end fulfilment system.
+
+The two systems communicated through XML-RPC. Periodically, the back-end system
+would wake up and query the front-end system to find out about new orders. When
+it had imported all the new orders, it would send RPC commands to update the
+stock levels.
+
+Over time this synchronisation process became slower and slower until, one
+Christmas, it took longer than 24 hours to import a single day's orders. Bob was
+hired to break the system into a set of event-driven services.
+
+Firstly we identified that the slowest part of the process was calculating and
+synchronising the available stock. What we needed was a system that could listen
+to external events, and keep a running total of how much stock was available.
+
+We exposed that information via an API, so that the user's browser could ask
+how much stock was available for each product, and how long it would take to
+deliver to their house.
+
+Whenever a product ran out of stock completely, we would raise a new event that
+the e-commerce platform could use to take a product off sale. Because we didn't
+know how much load we would need to handle, we wrote the system with a CQRS
+pattern. Whenever the amount of stock changed, we would update a redis database
+with a cached view model. Our flask API queried these "view models" instead of
+running the complex domain model.
+
+As a result, we could answer the question "How much stock is available" in two
+to three milliseconds and the API frequently handles hundreds of requests a
+second for sustained periods.
+
+If this all sounds a little familiar, well, now you know where our example app
+came from!
+********************************************************************************
+
+When building the availability service we used a technique called _change event
+capture_ to move functionality from one place to another. This is a three step
+process:
+
+1. Raise events to represent the changes happening in a system you want to
+replace.
+
+2. Build a second system that consumes those events and uses them to build its
+own domain model.
+
+3. Replace the older system with the new.
+
 * decide on a piece of the old system to carve out.
 * get your system to produce events
     - as its main outputs
