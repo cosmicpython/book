@@ -373,7 +373,7 @@ HANDLERS = {
 ----
 ====
 
-// TODO (hynek) Dunno if you wanna go there but we've got TypedDict in 3.8 now
+// IDEA (hynek) Dunno if you wanna go there but we've got TypedDict in 3.8 now
 
 NOTE: Note that the messagebus as implemented is entirely synchronous--our
     objective isn't to create an async/nonblocking task queue to defer
