@@ -598,9 +598,6 @@ allocations_view = Table(
 ====
 
 
-// TODO (hynek) You NEED to mention materialized views ~somewhere~.
-
-
 OK, nicer-looking SQL queries wouldn't be a justification for anything really,
 but building a denormalized copy of your data that's optimized for read operations
 isn't uncommon, once you've reached the limits of what you can do with indexes.
