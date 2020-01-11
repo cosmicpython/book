@@ -416,7 +416,7 @@ elsewhere.  The Fowler link earlier is a good starting point, and either
 
 === 1 Aggregate = 1 Repository
 
-Once you define certain entities to be Aggregates, we need to apply the
+Once you define certain entities to be aggregates, we need to apply the
 rule that they are the only entities that are publicly accessible to the
 outside world.  In other words, the only repositories we are allowed should
 be repositories that return aggregates.
