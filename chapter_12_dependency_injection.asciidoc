@@ -43,6 +43,8 @@ TIP: If you haven't already, it's worth reading <<chapter_03_abstractions>>
     FCIS vs DI.
 
 // TODO (hynek) you _need_ to spell this out, no-one will remember what FCIS means
+// (EJ2) Suggest recasting this contrast to "composition in a functional vs. object-oriented style."
+// Mentioning FCIS is still fine in Ch3.
 
 For our database dependency, we've built a careful framework of explicit
 dependencies and easy options for overriding them in tests. Our main handler
@@ -183,6 +185,8 @@ we have an (explicit) dependency on an _abstraction_:
 
 
 // TODO (hynek) write out DIP
+// (EJ3) Also consider using "Inversion of Control" instead of DIP in some places.
+// (They are very closely related, so the the distinction is a little academic for the purpose of the book.)
 
 
 [quote, The Zen of Python]
@@ -403,6 +407,13 @@ your types and signatures by passing around partial methods.
 I’d always prefer to either make the necessary argument available or use
 classes that carry the dependency.
 ////
+
+////
+(EJ2) re: hynek's comment, there is a valuable point.  Composition by injecting a class
+    is more explicit.  But it's also more verbose, and sometimes excessive for very small
+    code fragments.  IMHO which one to use is a judgement call, and in either case you should
+    be mindful of whether the code is more or less maintainable as a result.
+///
 
 Here's what we want from our bootstrap script:
 
@@ -629,6 +640,18 @@ this makes me very uneasy and I’m almost certain it won’t work.
 
 Your MessageBus is a global object and putting queue on it – and clearing it
 out when handle is called is both hard to follow and 100% not thread safe.
+////
+
+////
+ (EJ1) re: above comment, there's just *A BUG YOU MUST FIX*. It should be:
+
+def handle(self, message):
+    queue = [message]
+    while queue:
+        # go do it to it ...
+
+Then each thread can get its own queue/execution context, and the globality
+of the bus doesn't matter.
 ////
 
 What else changes in the bus?
