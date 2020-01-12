@@ -177,17 +177,9 @@ strictly speaking, and using them would make our application code marginally
 more complex.  But in return, we'd get tests that are easier to write and
 manage.
 
-On top of which, declaring an explicit dependency is an implementation of
-the DIP--rather than having an (implicit) dependency on a _specific_ detail,
-we have an (explicit) dependency on an _abstraction_:
-
-// (DS) great section
-
-
-// TODO (hynek) write out DIP
-// (EJ3) Also consider using "Inversion of Control" instead of DIP in some places.
-// (They are very closely related, so the the distinction is a little academic for the purpose of the book.)
-
+On top of which, declaring an explicit dependency is an example of the
+dependency inversion principle -- rather than having an (implicit) dependency on
+a _specific_ detail, we have an (explicit) dependency on an _abstraction_:
 
 [quote, The Zen of Python]
 ____
