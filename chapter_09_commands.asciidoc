@@ -100,9 +100,6 @@ class ChangeBatchQuantity(Command):  #<3>
 <2> `commands.CreateBatch` will replace `events.BatchCreated`
 <3> `commands.ChangeBatchQuantity` will replace `events.BatchQuantityChanged`
 
-//TODO: consider keeping BatchQuantityChanged as an event?
-
-
 
 === Differences in Exception-handling
 
