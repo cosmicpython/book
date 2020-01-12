@@ -7,6 +7,15 @@ that's highly compatible with TDD.  We'll discuss _why_ domain modeling
 matters, and we'll look at a few key patterns for modeling domains: Entities,
 Value Objects, and Domain Services.
 
+<<maps_chapter_01_notext>> is a simple visual placeholder for our Domain
+Model.  We'll fill in some details in this chapter, and as we move on to
+other chapters, we'll build things around the Domain Model, but you should
+always be able to find these little shapes at the core.
+
+[[maps_chapter_01_notext]]
+.A placeholder illustration of our domain model
+image::images/maps_chapter_01_notext.png[]
+
 
 === What Is a Domain Model?
 
@@ -459,11 +468,11 @@ class Batch:
 
 // TODO explain why harry refuses to use the inline type hints syntax
 
-<<model_diagram>> shows the model in diagram form.
+<<model_diagram>> shows the model in UML.
 
 
 [[model_diagram]]
-.Our model
+.Our model in UML
 image::images/model_diagram.png[]
 [role="image-source"]
 ----
@@ -967,8 +976,15 @@ def allocate(line: OrderLine, batches: List[Batch]) -> str:
 ----
 ====
 
+
+<<maps_chapter_01_withtext>> is a visual representation of where we ended up:
+
+[[maps_chapter_01_withtext]]
+.Our domain model at the end of the chapter
+image::images/maps_chapter_01_withtext.png[]
+
 That'll probably do for now! We have a Domain Service which we can use for our
-first use case.   But first we'll need a database.
+first use case.   But first we'll need a database...
 
 
 .Domain Modelling Wrap-Up
