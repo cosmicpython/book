@@ -436,11 +436,6 @@ shell to recreate the object.
 When an error occurs, we can use the logged data to either reproduce the problem
 in a unit test, or replay the message into the system.
 
-NOTE: In the next chapter we'll show how ports and adapters makes it easy for us
-      to replay messages for testing or administrative tasks!
-
-//TODO: will we??
-
 Manual replay works well for cases where we need to fix a bug before we can
 re-process an event, but our systems will _always_ experience some background
 level of transient failure. This includes things like network hiccups, table
@@ -449,6 +444,11 @@ deadlocks, and brief downtime caused by deployments.
 For most of those cases, we can recover elegantly by trying again. As the
 proverb says, "if at first you don't succeed, retry the operation with an
 exponentially increasing back-off period".
+
+NOTE: At some point, regardless of tenacity, we'll have to give up trying to
+process the message. Building reliable systems with distributed messages is
+hard. There's pointers to reference materials in the next chapter and the
+epilogue.
 
 // TODO: (EJ1) Retry is OK, but you'll have to quit eventually and drop the message.
 //       I think you can just mention that reliable messaging in distributed systems is hard
