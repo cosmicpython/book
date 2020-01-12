@@ -373,28 +373,13 @@ HANDLERS = {
 ----
 ====
 
-// IDEA (hynek) Dunno if you wanna go there but we've got TypedDict in 3.8 now
-
-NOTE: Note that the messagebus as implemented is entirely synchronous--our
-    objective isn't to create an async/nonblocking task queue to defer
-    execution in time, we're only aiming to separate tasks conceptually.
+NOTE: Note that the messagebus as implemented doesn't give us concurrency since  
+    only one handler will run at a time.
+    Our objective isn't to support parallel threads, but to separate
+    tasks conceptually, and keep each unit of work as small as possible.
+    This helps us to understand the code base because the "recipe" for how to
+    run each use-case is written in a single place.
     See <<celery_sidebar>>.
-
-// TODO (EJ1)  I think this NOTE is conflating a couple concepts. 
-// 
-//        I'd argue that the messagebus is actually async, and you
-//        absolutely want to defer processing until later in time, 
-//        (after the current message handler is completed.) 
-
-//        The deferred processing lets you reason about the
-//        handlers behavior more easily since you have to process
-//        a single message to completion.
-//
-//        May be better to rephrase as:
-//       "Note that the messagebus as implemented isn't intended to support
-//        concurrent or parallel execution, we're only aiming to separate tasks 
-//        conceptually.  See <<celery_sidebar>>."
-//
 
 [[celery_sidebar]]
 .Is this like Celery?
