@@ -40,11 +40,7 @@ git checkout chapter_11_cqrs
 
 TIP: If you haven't already, it's worth reading <<chapter_03_abstractions>>
     before continuing with this chapter, particularly the discussion of
-    FCIS vs DI.
-
-// TODO (hynek) you _need_ to spell this out, no-one will remember what FCIS means
-// (EJ2) Suggest recasting this contrast to "composition in a functional vs. object-oriented style."
-// Mentioning FCIS is still fine in Ch3.
+    functional vs object-oriented dependency management.
 
 For our database dependency, we've built a careful framework of explicit
 dependencies and easy options for overriding them in tests. Our main handler
