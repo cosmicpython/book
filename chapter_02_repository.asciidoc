@@ -9,47 +9,13 @@ allowing us to decouple our model layer from the data layer.  We'll see a
 concrete example of how this simplifying abstraction makes our system more
 testable by hiding the complexities of the database.
 
-<<repository_class_diagram>> shows a little preview of what we're going to
-build: a `Repository` class that sits between `SqlAlchemy` (our ORM) and our
-Domain Model's `Batch` classes.
+<<maps_chapter_02>> shows a little preview of what we're going to build:
+a `Repository` object that sits between our Domain Model and the database.
 
-[[repository_class_diagram]]
-.Batch, Repository and SqlAlchemy
-image::images/repository_class_diagram.png[]
-[role="image-source"]
-----
-[plantuml, repository_class_diagram, config=plantuml.cfg]
-@startuml
+[[maps_chapter_02]]
+.Before and after Repository Pattern
+image::images/maps_chapter_02.png[]
 
-package allocation {
-
-  class BatchRepository {
-    add (batch)
-    get (reference)
-    list ()
-  }
-
-  class Batch {
-    allocate ()
-    ...
-  }
-
-
-}
-
-package SqlAlchemy {
-  class Session {
-    query ()
-    add ()
-  }
-
-}
-
-  BatchRepository o--- Session : abstracts >
-  BatchRepository -> Batch : fetches >
-
-@enduml
-----
 
 [TIP]
 ====
@@ -162,14 +128,14 @@ image::images/onion_architecture.png[]
 +------------------------+
            |
            V
-   +---------------------------------------------------+
-   |                   Domain Model                    |
-   +---------------------------------------------------+
++--------------------------------------------------+
+|                  Domain Model                    |
++--------------------------------------------------+
                                         ^
                                         |
-                               +-------------------+
-                               |   Database Layer  |
-                               +-------------------+
+                             +---------------------+
+                             |    Database Layer   |
+                             +---------------------+
 ----
 
 
