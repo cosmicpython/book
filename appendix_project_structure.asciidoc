@@ -77,7 +77,7 @@ git checkout appendix_project_structure
     ends up being more trouble than it's worth; the cost in terms of complexity
     and longer rebuild/CI times is too high. YMMV.]
 
-<2> A __Makefile__footnote:[A pure-Python alternative to Makefiles is 
+<2> A __Makefile__footnote:[A pure-Python alternative to Makefiles is
     http://www.pyinvoke.org/[Invoke]; worth checking out if everyone in your
     team knows Python (or at least knows it better than Bash!)]
     provides the entrypoint for all the typical commands a developer
@@ -107,15 +107,7 @@ TIP:  The https://docs.pytest.org/en/latest/goodpractices.html#choosing-a-test-l
     are really good on test layout and importability.
 
 
-
 Let's look at a few of these in more detail.
-
-////
-TODO (DS): All this seems sensible. It would be nice to include a dependency
-graph so we can see the layering within src/allocation.
-
-Maybe should include message bus too?
-////
 
 
 

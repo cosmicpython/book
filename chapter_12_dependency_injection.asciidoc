@@ -321,7 +321,7 @@ sosn_composed(event)  # will have email.send_mail already injected in
 
 Closures and partial functions will feel familiar to people who've done a bit
 of functional programming.   Here's an alternative using classes, which may
-appeal to other people.   It requires rewriting all our handler functions as
+appeal to others.   It requires rewriting all our handler functions as
 classes though:
 
 [[di_with_classes]]
@@ -369,21 +369,6 @@ Use whichever you and your team feel more comfortable with.
 
 === A Bootstrap Script
 
-////
-TODO (hynek)
-I find all of this following section very convoluted TBH. You also screw up
-your types and signatures by passing around partial methods.
-
-I’d always prefer to either make the necessary argument available or use
-classes that carry the dependency.
-////
-
-////
-(EJ2) re: hynek's comment, there is a valuable point.  Composition by injecting a class
-    is more explicit.  But it's also more verbose, and sometimes excessive for very small
-    code fragments.  IMHO which one to use is a judgement call, and in either case you should
-    be mindful of whether the code is more or less maintainable as a result.
-///
 
 Here's what we want from our bootstrap script:
 
@@ -464,9 +449,9 @@ def inject_dependencies(handler, dependencies):
 ----
 ====
 
-<1> We inspect our command/event handler's arguments
-<2> We match them by name to our dependencies
-<3> And we inject them in as kwargs to a produce a partial
+<1> We inspect our command/event handler's arguments.
+<2> We match them by name to our dependencies.
+<3> And we inject them in as kwargs to a produce a partial.
 
 
 .Even-More-Manual DI with Less Magic.
