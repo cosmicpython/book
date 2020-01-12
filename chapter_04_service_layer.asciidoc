@@ -744,9 +744,6 @@ If we accidentally change one of those behaviors, our tests will break. The
 flip side, though, is that if we want to change the design of our code, any
 tests relying directly on that code will also fail.
 
-NOTE: Every line of code that we put in a test is like a blob of glue, holding
-    the system in a particular shape.
-
 As we get further into the book, we'll see how the service layer forms an API
 for our system that we can drive in multiple ways. Testing against this API
 reduces the amount of code that we need to change when we refactor our domain
