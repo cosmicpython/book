@@ -445,14 +445,10 @@ For most of those cases, we can recover elegantly by trying again. As the
 proverb says, "if at first you don't succeed, retry the operation with an
 exponentially increasing back-off period".
 
-NOTE: At some point, regardless of tenacity, we'll have to give up trying to
+WARNING: At some point, regardless of tenacity, we'll have to give up trying to
 process the message. Building reliable systems with distributed messages is
-hard. There's pointers to reference materials in the next chapter and the
-epilogue.
-
-// TODO: (EJ1) Retry is OK, but you'll have to quit eventually and drop the message.
-//       I think you can just mention that reliable messaging in distributed systems is hard
-//       and forward reference material in the appendix.
+hard and we have to skim over some tricky bits.
+There's pointers to more reference materials in chapter 10 and the epilogue.
 
 [[messagebus_handle_event_with_retry]]
 .Handle with Retry (src/allocation/service_layer/messagebus.py)
