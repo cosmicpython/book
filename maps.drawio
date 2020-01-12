@@ -1,4 +1,4 @@
-<mxfile host="www.draw.io" modified="2020-01-12T23:50:16.084Z" agent="Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:72.0) Gecko/20100101 Firefox/72.0" etag="FUhrbA_87PiQRkX_5yOG" version="12.5.1" type="github" pages="10">
+<mxfile host="www.draw.io" modified="2020-01-12T23:55:58.201Z" agent="Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:72.0) Gecko/20100101 Firefox/72.0" etag="8s1SGKG71xS-LoDhvVC5" version="12.5.1" type="github" pages="10">
   <diagram id="rh1DttEXYZF73mCXou3R" name="Chapter 1">
     <mxGraphModel dx="1115" dy="628" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
@@ -1055,7 +1055,7 @@
     </mxGraphModel>
   </diagram>
   <diagram name="Chapter 10" id="uloHF3oTohPtsYz8bfXU">
-    <mxGraphModel dx="1115" dy="628" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="637" dy="359" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="glnVcpvA8bHsyrLV4RX5-0"/>
         <mxCell id="glnVcpvA8bHsyrLV4RX5-1" parent="glnVcpvA8bHsyrLV4RX5-0"/>
@@ -1122,19 +1122,19 @@
             <mxPoint x="302" y="345" as="targetPoint"/>
           </mxGeometry>
         </mxCell>
-        <mxCell id="aOpChjktBB4jcuNQKIP--7" value="&lt;div&gt;External Message Bus&lt;/div&gt;&lt;div&gt;(eg Redis, Event Store)&lt;br&gt;&lt;/div&gt;" style="shape=cylinder;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;rounded=1;shadow=0;glass=0;dashed=1;comic=0;strokeColor=#F7A072;fillColor=#EDDEA4;gradientColor=#ffffff;fontFamily=Guardian Sans Cond Light;fontSize=10;fontColor=#000000;align=center;" vertex="1" parent="glnVcpvA8bHsyrLV4RX5-1">
-          <mxGeometry x="100" y="160" width="700" height="80" as="geometry"/>
+        <mxCell id="aOpChjktBB4jcuNQKIP--7" value="&lt;div&gt;External Message Bus&lt;/div&gt;&lt;div&gt;(eg Redis, Event Store)&lt;br&gt;&lt;/div&gt;" style="shape=loopLimit;whiteSpace=wrap;html=1;shadow=0;dashed=1;fontFamily=Guardian Sans Cond Light;fontSize=10;fontColor=#000000;align=center;strokeColor=#F7A072;fillColor=#EDDEA4;gradientColor=none;size=11;" vertex="1" parent="glnVcpvA8bHsyrLV4RX5-1">
+          <mxGeometry x="270" y="240" width="340" height="30" as="geometry"/>
         </mxCell>
-        <mxCell id="aOpChjktBB4jcuNQKIP--9" value="external events" style="edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#F7A072;fillColor=#B5E2FA;fontFamily=Guardian Sans Cond Light;fontSize=12;fontColor=#212A2E;verticalAlign=middle;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.094;exitY=0.942;exitDx=0;exitDy=0;labelBackgroundColor=#ffffff;exitPerimeter=0;" edge="1" parent="glnVcpvA8bHsyrLV4RX5-1" source="aOpChjktBB4jcuNQKIP--7" target="aOpChjktBB4jcuNQKIP--1">
+        <mxCell id="aOpChjktBB4jcuNQKIP--9" value="external events" style="edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#F7A072;fillColor=#B5E2FA;fontFamily=Guardian Sans Cond Light;fontSize=12;fontColor=#212A2E;verticalAlign=middle;entryX=0.5;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;" edge="1" parent="glnVcpvA8bHsyrLV4RX5-1" source="aOpChjktBB4jcuNQKIP--7" target="aOpChjktBB4jcuNQKIP--1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="160" y="235"/>
+              <mxPoint x="160" y="255"/>
             </Array>
             <mxPoint x="290" y="280.33333333333337" as="sourcePoint"/>
             <mxPoint x="210" y="335" as="targetPoint"/>
           </mxGeometry>
         </mxCell>
-        <mxCell id="aOpChjktBB4jcuNQKIP--10" value="external events" style="edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#F7A072;fillColor=#B5E2FA;fontFamily=Guardian Sans Cond Light;fontSize=12;fontColor=#212A2E;verticalAlign=middle;entryX=0.913;entryY=0.952;entryDx=0;entryDy=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryPerimeter=0;" edge="1" parent="glnVcpvA8bHsyrLV4RX5-1" source="COUvA0_Sbrjylx--tMv7-3" target="aOpChjktBB4jcuNQKIP--7">
+        <mxCell id="aOpChjktBB4jcuNQKIP--10" value="external events" style="edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#F7A072;fillColor=#B5E2FA;fontFamily=Guardian Sans Cond Light;fontSize=12;fontColor=#212A2E;verticalAlign=middle;entryX=1;entryY=0.5;entryDx=0;entryDy=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" edge="1" parent="glnVcpvA8bHsyrLV4RX5-1" source="COUvA0_Sbrjylx--tMv7-3" target="aOpChjktBB4jcuNQKIP--7">
           <mxGeometry relative="1" as="geometry">
             <Array as="points"/>
             <mxPoint x="310" y="110.33333333333337" as="sourcePoint"/>
