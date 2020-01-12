@@ -211,21 +211,6 @@ def send_out_of_stock_notification(
 ----
 ====
 
-// TODO (EJ2) "DI" and "Composition Root" are Object-Oriented concepts, specifically.
-//            So it's a little bit off, but not unreasonable, to talk about 
-//            Poor Man's DI with partials.
-//
-//            "Explicit Dependencies are Weird and Java-y" is a common reaction,
-//            I think, for someone who has is used to thinking in procedural style, and is
-//            unfamiliar with higher-order functions (hofs).
-//            
-//            The functional equivalent of DI is to use closures, hofs, and composition.
-//
-//            The common outcome between the two styles is that you end up programming
-//            in a compositional, declarative style.
-//
-
-
 But if we do change to declaring all these dependencies explicitly, who will
 inject them and how? So far, we've only really been dealing with passing the
 UoW around:  our tests use a `FakeUnitOfWork` while Flask and Redis eventconsumer
@@ -242,11 +227,9 @@ script to you and me)footnote:[
 Because Python is not a "pure" OO language, Python developers aren't necessarily
 used to the concept of needing to "compose" a set of objects into a working
 application.  We just pick our entrypoint and run code from top to bottom.],
-and we'll do a bit of "Poor Man's DI" (dependency injection without a framework).
+and we'll do a bit of "Manual DI" (dependency injection without a
+frameworkfootnote:[Mark Seeman calls this https://blog.ploeh.dk/2012/11/06/WhentouseaDIContainer/[Pure DI].]).
 
-
-// TODO (hynek) Not urgent, but maybe try to find a better (neither gendered
-// nor racist [don’t come up with Ghetto] ಠ_ಠ) idiom?
 
 ----
 Flask + Redis
@@ -270,17 +253,11 @@ TODO: betterify diagram
 
 
 
-=== Preparing Handlers: Poor Man's DI with Closures and Partials
+=== Preparing Handlers: Manual DI with Closures and Partials
 
 One way to turn a function with dependencies into one that's ready to be
 called later with those dependencies _aleady injected_, is to use closures or
 partial functions to compose the function with its dependencies:
-
-//TODO (EJ1) Re the following examples, there is a difference
-//           in the way closures vs partials behave WRT to early
-//           vs. late binding. https://docs.python-guide.org/writing/gotchas/
-//           So it's better not to refer to them interchangeably.
-//
 
 
 [[di_with_partial_functions_examples]]
@@ -311,15 +288,19 @@ def bootstrap(..):
 
     # alternatively with a partial
     import functools
-    allocate_composed = functools.partial(allocate, uow=uow)
+    allocate_composed = functools.partial(allocate, uow=uow)  #<1>
 
-...
-    # later at runtime, we can call the partial function, and it will have
-    # the UoW already bound
+# later at runtime, we can call the partial function, and it will have
+# the UoW already bound
 allocate_composed(cmd)
 ----
 ====
 
+<1> The difference between closures (lambdas or named functions) and
+    `functools.partial` is that the former use
+    https://docs.python-guide.org/writing/gotchas/#late-binding-closures[late
+    binding of variables], which can be a source of source of confusion if
+    any of the dependencies are mutable.
 
 Here's the same pattern again for the `send_out_of_stock_notification()` handler,
 which has different dependencies:
@@ -350,9 +331,10 @@ sosn_composed(event)  # will have email.send_mail already injected in
 
 === An Alternative Using Classes
 
-Closures and partial functions will feel familiar to people who've done a bit of functional
-programming.   Here's an alternative using classes, which may appeal to other
-people.   It requires rewriting all our handler functions as classes though:
+Closures and partial functions will feel familiar to people who've done a bit
+of functional programming.   Here's an alternative using classes, which may
+appeal to other people.   It requires rewriting all our handler functions as
+classes though:
 
 [[di_with_classes]]
 .DI using classes
@@ -499,7 +481,7 @@ def inject_dependencies(handler, dependencies):
 <3> And we inject them in as kwargs to a produce a partial
 
 
-.An Even-poorer Man's DI, With Even Less Magic.
+.Even-More-Manual DI with Less Magic.
 *******************************************************************************
 If you're finding the `inspect` code above a little harder to grok, this
 even-simpler version may appeal.
@@ -512,7 +494,6 @@ It honestly didn't even occur to Harry that you could do it any more plainly,
 but in fact of course you can, like this:
 
 // (EJ3) I don't know if I'd even call this DI, it's just straight meta-programming.
-
 
 [[nomagic_di]]
 .Manually creating partial functions inline (src/allocation/bootstrap.py)
@@ -545,13 +526,13 @@ but in fact of course you can, like this:
 
 Harry says he couldn't even imagine writing out that many lines of code
 and having to look up that many function arguments manually.
-manually.  This is a perfectly viable solution though, since it's only one
+This is a perfectly viable solution though, since it's only one
 line of code or so per handler you add, so not a massive maintenance burden
 even if you have dozens of handlers.
 
 Our app is structured in such a way that we only ever want to do dependency
 injection in one place, the handler functions, so this super-manual solution
-and Harry's `inspect()` based one will work fine.
+and Harry's `inspect()` based one will both work fine.
 
 If you find yourself wanting to do DI into more things and at different times,
 you may get some mileage out of a "real" DI framework.  At MADE we've
@@ -560,7 +541,7 @@ fine although it makes pylint unhappy.  You might also check out
 https://pypi.org/project/punq/[Punq], as written by Bob himself, or
 the DRY-Python crew's https://github.com/dry-python/dependencies[dependencies].
 
-// TODO: discuss/define what a DI container is
+// IDEA: discuss/define what a DI container is
 //
 // (EJ2) based on the whatsapp thread, what I'd imagined is:
 // ===
