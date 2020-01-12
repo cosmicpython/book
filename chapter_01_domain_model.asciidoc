@@ -1004,16 +1004,9 @@ Distinguish Entities from Value Objects::
 
 Not everything has to be an object::
     Python is a multi-paradigm language, so let the "verbs" in your
-    code be functions.  Classes called "Manager" or "Builder" or
-    "Factory" are a code smell.
-
-// [SG] Why is a Factory a code smell?
-// [HP] A *class* called Factory is a code smell.  A function called
-// factory _might_ be fine.
-// (EJ3) Manager, Builder, and Factory are code smells for very different reasons.
-//  I'm not sure that calling them out here adds much, and just potentially adds to confusion.
-//  Maybe just say that not everything has to be class, unlike in some other caffeine-inspired
-//  languages.
+    code be functions.  For every `FooManager`, `BarBUilder` or `BazFactory`,
+    there's often a more expressive and readable `manage_foo()`, `build_bar()`
+    or `get_baz()` waiting to happen.
 
 This is the time to apply your best OO design principles::
     Revisit the SOLID principles, and all the other good heuristics like "-a vs is-a",
