@@ -12,33 +12,14 @@ will allow us to finally, fully, decouple our Service Layer from the data layer.
 <<before_uow_diagram>> shows that, currently, there is a lot of communication
 across the layers of our infrastructure:  the API talks directly to the DB
 layer to start a session, it talks to the repository layer to initialize a
-`BatchRepository`, and it talks to the service layer to ask it to allocate.
+`SQLAlchemyRepository`, and it talks to the service layer to ask it to allocate.
 
 [[before_uow_diagram]]
 .Without UoW: API talks directly to 3 layers
-image::images/before_uow_diagram.png[]
-[role="image-source"]
-----
-[plantuml, before_uow_diagram, config=plantuml.cfg]
-@startuml
-
-participant "Flask API" as API
-participant Services
-participant BatchRepository
-participant DB
-
-API -> DB : start session
-API -> BatchRepository : init BatchRepository(session)
-API -> Services: allocate(orderline, repo)
-Services -> BatchRepository : list batches
-Services -> DB: session.commit()
-Services -> API: OK
-
-@enduml
-----
+image::images/maps_chapter_05_before.png[]
 
 <<after_uow_diagram>> shows our target state: the Flask API now only does two
-things: it initializes a unit of work, and it invokes the service.  The service
+things: it initializes a Unit of Work, and it invokes a service.  The service
 collaborates with the UoW (we like to think of the UoW as being part of the
 service layer), but neither the service function itself nor Flask longer needs
 to talk directly to the DB.
@@ -46,89 +27,10 @@ to talk directly to the DB.
 
 [[after_uow_diagram]]
 .With UoW: UoW now manages DB state
-image::images/after_uow_diagram.png[]
-[role="image-source"]
-----
-[plantuml, after_uow_diagram, config=plantuml.cfg]
-@startuml
-
-participant "Flask API" as API
-box "Service Layer"
-    participant Services
-    participant UoW
-endbox
-participant DB
-
-API -> UoW : init UoW
-API -> Services : allocate(orderline, uow)
-group Unit of Work
-    Services -> UoW : start UoW
-    UoW -> DB: start session
-    Services -> UoW : list batches
-    Services -> Services: allocate(orderline, batches)
-    Services -> UoW: commit()
-    UoW -> DB: session.commit()
-end
-Services -> API: OK
-
-@enduml
-----
-
-////
-TODO (EJ1) WRT BOB's comment below, I think it makes sense and the example would be a good
-alternative. If I were learning about this for the first time, I might find the current
-UoW sequence diagram confusing, as it seems to me that it doesn't exatly match the source
-code at the detail level.
-
-However, if you definitely want to use a sequence diagram, there are a couple things that might help:
-
-*   Use Session instead of DB as the participant. That will make the syntax of
-    the sequence diagram clearer, as well as matching the source code better.
-    (The service layer creates a Session, which implicitly starts a transaction
-    with the DB. Then Service sends a commit message to Session, as opposed to
-    asking DB to commit a session).
-
-*   This will also make the second diagram clearer, as the diagram conflicts
-    with some details around how SqlAlchemy sessions work. (The SQL transaction
-    doesn't actually start until the first request to the DB, so it's not clear
-    if "Start Session" means start a transaction, or create a SqlAlchemy
-    Session object.)
-
-*   On the second diagram, if you include the repo as a a participant, it may
-    help. Otherwise it looks like it has just disappeared and has no role in
-    the interaction.
-
-*   Some small tweaks to the implementation may help with the diagrams. If
-    instead of injecting a uow instance, you inject a factory, like this:
-
-def foo(stuff, uow_klass):
-    with uow_klass() as uow:
-        # do something
-
-Then the lifecycle of the UoW instance will be the same as the context manager.
-That may have a clearer diagram, because it will let you use the "Create and
-Destroy" symbols on a diagram. See the "Bob" and "George" examples Shortcut
-syntax for activation, deactivation, creation
-
-
-(BOB)
-
-I'm not convinced that a sequence diagram is the right way to show the
-interaction here because we're not really interested in a flow of events. The
-change we've made is about the structure of things and relationships, rather
-than the process or order of things.
-
-Maybe something like https://vivekcek.files.wordpress.com/2013/06/2.png would
-be better? How would you sketch this change if you were explaining it to a
-junior developer?
-////
+image::images/maps_chapter_05_after.png[]
 
 And we'll do it all using a lovely piece of Python syntax, a context manager.
 
-
-
-// TODO: I feel like maybe we should waffle a bit more in this chapter? We
-// could talk about guidelines for what to mock?
 
 [TIP]
 ====
