@@ -1,27 +1,42 @@
 [[chapter_12_dependency_injection]]
 == Dependency Injection (And Bootstrapping)
 
-//TODO get rid of bullets
+Dependency Injection (DI) is regarded with suspicion in the Python world.  And
+we've managed _just fine_ without it so far in the example code for this
+book!
 
-.In this chapter
-********************************************************************************
+In this chapter we'd like to explore some of the pain points in our code
+that lead us to consider using DI, and we'll present some different options
+for how to do it, leaving it to you to pick which you think is most Pythonic
 
-* We'll show how dependency injection supports our architectural goals.
-* We'll introduce a _composition root_ pattern to bootstrap our system.
-* We'll offer some guidance on managing application configuration.
-* We'll compare different approaches to dependency injection and discuss their
-  trade-offs.
+We'll also add a new component to our architecture called __bootstrap.py__;
+it will be in charge of dependency injection, and some other initialisation
+stuff that we often need.  We'll explain why this sort of thing is called
+a _Composition Root_ in OO langauges, and why "bootstrap script" is just fine
+for our purposes.
 
-  // DIAGRAM GOES HERE
+<<bootstrap_chapter_before_diagram>> shows what our app looks like without
+a bootstrapper: the entrypoints do a lot of initialisation and passing around
+of our main dependency, the UoW.
 
-********************************************************************************
+[[bootstrap_chapter_before_diagram]]
+.Without bootstrap: entrypoints do a lot
+image::images/maps_chapter_12_before.png[]
 
-NOTE: chapter under construction
+<<bootstrap_chapter_after_diagram>> shows our bootstrapper taking over those
+responsibilities.
 
-Depending on your particular brain type, you may have a slight feeling of
-unease at the back of your mind at this point.  Let's bring it out into the
-open. We've currently shown two different ways of managing dependencies, and
-testing them.
+[[bootstrap_chapter_after_diagram]]
+.Bootstrap takes care of all that in one place
+image::images/maps_chapter_12_after.png[]
+
+
+=== Implicit vs Explicit Dependencies
+
+Depending on your particular brain type, you may have already had a slight
+feeling of unease at the back of your mind at this point.  Let's bring it out
+into the open. We've currently shown two different ways of managing
+dependencies, and testing them.
 
 [TIP]
 ====
@@ -36,7 +51,6 @@ git checkout chapter_11_cqrs
 ----
 ====
 
-=== Implicit vs Explicit Dependencies
 
 TIP: If you haven't already, it's worth reading <<chapter_03_abstractions>>
     before continuing with this chapter, particularly the discussion of
