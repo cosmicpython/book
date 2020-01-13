@@ -153,6 +153,8 @@ class DjangoRepository(AbstractRepository):
 You can see that the implementation relies on the Django models having
 some custom methods for translating to and from our domain model.
 
+// TODO: point people at https://mappers.readthedocs.io/en/latest/
+
 
 ==== Custom Methods on Django ORM Classes to Translate To/From Our Domain Model
 
