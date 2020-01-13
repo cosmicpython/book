@@ -216,7 +216,7 @@ Because Python is not a "pure" OO language, Python developers aren't necessarily
 used to the concept of needing to "compose" a set of objects into a working
 application.  We just pick our entrypoint and run code from top to bottom.],
 and we'll do a bit of "Manual DI" (dependency injection without a
-frameworkfootnote:[Mark Seeman calls this https://blog.ploeh.dk/2012/11/06/WhentouseaDIContainer/[Pure DI].]).
+frameworkfootnote:[Mark Seeman calls this https://blog.ploeh.dk/2012/11/06/WhentouseaDIContainer/[Pure DI], or sometimes "Vanilla DI".]).
 
 
 ----
@@ -236,7 +236,7 @@ Messagebus
 V
 ----
 
-TODO: betterify diagram
+TODO: betterify diagram? or just get rid of, in favour of the first?
 
 
 
@@ -508,37 +508,16 @@ injection in one place, the handler functions, so this super-manual solution
 and Harry's `inspect()` based one will both work fine.
 
 If you find yourself wanting to do DI into more things and at different times,
-you may get some mileage out of a "real" DI framework.  At MADE we've
-used https://pypi.org/project/Inject/[Inject] in a few places, and it's
-fine although it makes pylint unhappy.  You might also check out
-https://pypi.org/project/punq/[Punq], as written by Bob himself, or
-the DRY-Python crew's https://github.com/dry-python/dependencies[dependencies].
+or if you ever get into _dependency chains_ (where your dependencies have their
+own dependencies, and so on), you may get some mileage out of a "real" DI
+framework.
 
 // IDEA: discuss/define what a DI container is
-//
-// (EJ2) based on the whatsapp thread, what I'd imagined is:
-// ===
-// class MessageBus:
-//     ...
-//     def register_event_handler(self, event_type, handler, *args, **kwargs):
-//         f = partial(handler, *args, **kwargs)
-//         self.event_handlers[event_type].append(f) # assuming defaultdict(list)
-//         return self # optional builder sugar
-//
-//     def register_command_handler(command_type, func):
-//         # similar to above
-//
-//  # Then in bootstrap:
-//  def bootstrap(...):
-//      bus = MessageBus(uow)
-//      bus.register_event_handler(events.Allocated, handlers.publish_allocated, publish=publish) \
-//         .register_event_handler(events.Allocated, handlers.add_allocation_to_read_model, uow=uow) \
-//         .register_event_handler(events.Deallocated, handlers.remove_allocation_from_read_model, uow=uow)
-//      ...
-//   ===
-//  So then what you get is a nice, relatively noise-free declaration of your event handler routing.
-//  Injecting the handler dictionaries in the constructor doesn't really get you much.
 
+At MADE we've used https://pypi.org/project/Inject/[Inject] in a few places,
+and it's fine although it makes pylint unhappy.  You might also check out
+https://pypi.org/project/punq/[Punq], as written by Bob himself, or the
+DRY-Python crew's https://github.com/dry-python/dependencies[dependencies].
 
 *******************************************************************************
 
