@@ -97,17 +97,32 @@ introducing order to the chaos.
 
 ********************************************************************************
 
+TODO: Add diagram
+
+This was the system where I first learned how to break apart a monolith, and it
+was a doozy. There was logic _everywhere_ - in the web pages, in "manager"
+objects, in spurious "helpers", in fat "service" classes that we'd written to
+abstract the mess, and in hairy "command" objects that we'd written to break
+apart the services.
+
+If you're working in a system that's reached this point, it can feel hopeless,
+but it's never too late to start weeding an overgrown garden. Eventually we
+hired an architect who knew what he was doing, and he helped up get things
+back under control.
+
 Start by working out the _use cases_ of your system. If you have a
 user-inteface, what actions does it perform? If you've got some back-end
 processing component, then maybe each cron job or celery job is a single
 use-case. Each of your use cases needs to have an imperative name: "Apply
 Billing Charges", "Clean Abandoned Accounts", or "Raise Purchase Order".
 
-We should _try_ to adopt names from the jargon of our business users, but the
-only important thing right now is that we start to define some discrete units of
-work that our application needs to support. Out goal is to create a single
-function or class for each of these supported operations that deals with
-_orchestrating_ the work to be done. Each use case should:
+In our case, most of our use-cases were part of the manager classes and had
+names like "Create Workspace" or "Delete Document Version". Each use-case
+was invoked from a web front end.
+
+Our goal is to create a single function or class for each of these supported
+operations that deals with _orchestrating_ the work to be done. Each use case
+should:
 
 * Start its own database transaction if needed
 * Fetch any required data
@@ -118,6 +133,13 @@ _orchestrating_ the work to be done. Each use case should:
 Each use case should succeed or fail as an atomic unit. You might need to call
 one use case from another - that's okay, just make a note of it, and try to
 avoid long-running database transactions.
+
+NOTE: One of the biggest problems we had was that manager methods called other
+manager methods, and data access could happen from the model objects themselves.
+It was hard to understand what each operation did without going on a treasure-
+hunt across the codebase. Pulling all the logic into a single method, and using
+a unit of work to control our transactions, made the system, easier to reason
+about.
 
 This is a good opportunity to pull any data-access or orchestration code out of
 the domain model and up into the use-cases. We should also try to pull IO
@@ -147,6 +169,20 @@ Part of the problem with the codebase in our case study was that the object
 graph was highly connected. Each account had many workspaces, each workspace had
 many members, all of whom had their own accounts. Each workspace contained many
 documents, which had many versions.
+
+TODO: Diagram
+
+You can't express the full horror of the thing in an ERD diagram.
+For one thing, there wasn't really a single account related to a user. Instead
+there was some bizarre rule where you had to enumerate all of the accounts
+associated to the user via the workspaces and take the one with the earliest
+creation date.
+
+Every object in the system was part of an inheritance hierarchy that included
+SecureObject and Version, and this inheritance hierarchy was mirrored directly
+in the database schema, so that every query had to join across ten different
+tables and look at a discriminator column just to tell what kind of objects
+you were working with.
 
 The codebase made it easy to "dot" your way through these objects like so:
 
@@ -237,6 +273,11 @@ class Workspace:
    
     id: int
 ```
+
+TIP: Bi-directional links are often a sign that your aggregates aren't right.
+In our original code, a Document knew about its containing Folder, and the Folder
+had a collection of Documents. This makes it easy to traverse the object graph
+but stops us from thinking properly about the consistency boundaries we need.
 
 If we needed to _read_ data, we avoided writing complex loops and transforms and
 tried to replace them with straight SQL. For example, one of our screens was a
