@@ -14,45 +14,14 @@ In this chapter we'd like to show how the events metaphor can be extended
 to encompass the way that we handle incoming and outgoing messages from the
 system. Internally, the core of our application is now a message processor.
 Let's follow through on that so it becomes a message processor _externally_ as
-well.  The application can receive events from external sources, via an
-external message bus (we'll use Redis pubsub queues as an example), and publish
-its outputs, in the form of events, back there as well.
+well. As shown in <<message_processor_diagram>>, our application will receive
+events from external sources via an external message bus (we'll use Redis pubsub
+queues as an example), and publish its outputs, in the form of events, back
+there as well.
 
 [[message_processor_diagram]]
 .Our application is a Message Processor
-image::images/message_processor_diagram.png[]
-[role="image-source"]
-----
-[ditaa, message_processor_diagram]
-
-
-+-----------------------------------------------------------------------+
-|{s}                                                                    |
-|                         External Message Bus                          |
-|                         (eg Redis, Evenstore)                         |
-+-----------------------------------------------------------------------+
-      |                                                      ^
-      |                                                      |
-events|in                                              events|out
-      |                                                      |
-+=----|-=--------------------------------------------------=-|-=--------+
-:     |                 Allocation Service                   |          :
-|     V                                                      |          |
-|  /----------\                                              |          |
-|  | Event    | commands   +---------------+                 |          |
-|  | Consumer |----------> |               |                 |          |
-|  \----------/            |               | internal   /-----------\   |
-|                          |   Internal    |----------> | Event     |   |
-|  /----------\            |  Message Bus  |  events    | Publisher |   |
-|  | Flask    | commands   |               |            \-----------/   |
-|  | API      |----------> |               |                            |
-|  \----------/            +---------------+                            |
-|     ^                                                                 |
-:     |                                                                 :
-+=----|----------------------------------------------------------------=+
-      |
- HTTP requests
-----
+image::images/maps_chapter_10.png[]
 
 
 [TIP]
