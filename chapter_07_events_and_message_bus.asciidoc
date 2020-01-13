@@ -25,39 +25,15 @@ Then we'll show how to use _Domain Events_ to separate side-effects from our
 use cases, and how to build a simple _Message Bus_ for triggering behavior
 based on those events.  We'll show a few different options for creating
 those events and how to pass them to the message bus, and finally we'll show
-how the Unit of Work can be modified to connect the two together elegantly.
+how the Unit of Work can be modified to connect the two together elegantly,
+as previewed in <<message_bus_diagram>>.
 
 
 [[message_bus_diagram]]
 .Events flowing through the system
-image::images/message_bus_diagram.png[]
-[role="image-source"]
-----
-[ditaa, message_bus_diagram]
+image::images/maps_chapter_07.png[]
 
-+----------+            +--------+
-|          |  raises    |  Unit  |
-|  Domain  |--events--> |   of   |
-|          |            |  Work  |
-+----------+            +--------+
-                            |
-                    collects + publishes
-                          events
-                            |
-                            V
-        +----------------------+
-        |     Message Bus      |
-        +----------------------+
-           |
-       dispatches
-        events
-           |     +-----------------+
-           +---> |     Handlers    |-+    
-                 +-----------------+ | +  handle
-                   +-----------------+ |  events
-                     +-----------------+
-----
-
+// TODO: add before diagram for contrast (?)
 
 
 [TIP]
@@ -76,11 +52,12 @@ git checkout chapter_06_aggregate
 
 === Avoiding Making a Mess.
 
-==== First, Avoid Making a Mess of of Our Web Controllers
-
 So.  Email alerts when we run out of stock. When we have a new requirement like
 this, that's not _really_ to do with the core domain, it's all too easy to
 start dumping these things into our web controllers:
+
+
+==== First, Avoid Making a Mess of of Our Web Controllers
 
 [[email_in_flask]]
 .Just whack it in the endpoint, what could go wrong? (src/allocation/entrypoints/flask_app.py)

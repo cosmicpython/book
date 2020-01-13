@@ -3,51 +3,21 @@
 
 In this chapter we'll start to make events more fundamental to the internal
 structure of our application. We'll move from the current state in
-<<all_in_on_messagebus_before_diagram>> where events are an optional
+<<maps_chapter_08_before>> where events are an optional
 side-effect...
 
+[[maps_chapter_08_before]]
+.Before: the message bus is an optional add-on
+image::images/maps_chapter_08_before.png[]
 
-[[all_in_on_messagebus_before_diagram]]
-.Before: Service Layer, with optional events, bus and handlers
-image::images/all_in_on_messagebus_before_diagram.png[]
-[role="image-source"]
-----
-[graphviz, all_in_on_messagebus_before_diagram]
-digraph G {
-rankdir=LR;
-service [label="service-layer function"];
-handlers [label="handler functions"];
-
-flask -> service [label="request params\n(as primitives)"]
-service -> model
-model -> events -> messagebus -> handlers [style=dotted]
-
-}
-----
-
-...to the situation in <<all_in_on_messagebus_after_diagram>> where
+...to the situation in <<map_chapter_08_after>> where
 everything goes via the message bus, and our app has been transformed
 fundamentally into a message-processor.
 
-[[all_in_on_messagebus_after_diagram]]
-.After: everything goes via the Message Bus
-image::images/all_in_on_messagebus_after_diagram.png[]
-[role="image-source"]
-----
-[graphviz, all_in_on_messagebus_after_diagram]
-digraph G {
-rankdir=LR;
-flask [pos="0,0!"];
-handler [label="handler function"];
+[[map_chapter_08_after]]
+.The Message Bus is now the main entrypoint to the service layer
+image::images/maps_chapter_08_after.png[]
 
-flask -> event  [weight=10]
-event -> messagebus  [weight=10]
-messagebus -> handler  [weight=10]
-handler -> model [weight=10]
-model -> event [style=dotted, len=100]
-
-}
-----
 
 
 === A New Requirement Leads Us to Consider a New Architecture
@@ -113,9 +83,9 @@ transactions and data integrity.
 But before we jump in, think about where we're headed.  There are two
 kinds of flows through our system:
 
-* API calls that are handled by a service-layer function,
+1. API calls that are handled by a service-layer function,
 
-* Internal events (which might be raised as a side-effect of a service-layer function)
+2. Internal events (which might be raised as a side-effect of a service-layer function)
   and their handlers (which in turn call service-layer functions).
 
 Wouldn't it be easier if everything was an event handler?  If we rethink our API
@@ -150,15 +120,15 @@ https://martinfowler.com/articles/preparatory-refactoring-example.html[Preparato
 Refactoring] workflow, AKA "make the change easy, then make the easy change":
 
 
-* We'll start by refactoring our service layer into event handlers.  We can
+1. We'll start by refactoring our service layer into event handlers.  We can
   get used to the idea of events being the way we describe inputs to the
   system.  In particular, the existing `services.allocate()` function will
   become the handler for an event called `AllocationRequired`.
 
-* Then we'll build an end-to-end test that puts `BatchQuantityChanged` events
+2. Then we'll build an end-to-end test that puts `BatchQuantityChanged` events
   into the system, and looks for `Allocated` events coming out.
 
-* And then our actual implementation will be conceptually very simple: a new
+3. And then our actual implementation will be conceptually very simple: a new
   handler for `BatchQuantityChanged` events, whose implementation will emit
   `AllocationRequired` events, which in turn will be handled by the exact same
   handler for allocations that the API uses.

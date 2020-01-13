@@ -17,74 +17,12 @@ By the end of this chapter, we'll have added a Flask API that will talk to
 the Service Layer, which will serve as the entrypoint to our Domain Model.
 By making the service layer depend on the `AbstractRepository`, we'll be
 able to unit test it using `FakeRepository`, and then run it in real life
-using `SqlAlchemyRepository`.  <<service_layer_class_diagram>> is a class
+using `SqlAlchemyRepository`.  <<service_layer_before_after>> is a class
 diagram showing where we're heading.
 
-[[service_layer_class_diagram]]
-.Our target architecture for the end of this chapter
-image::images/service_layer_class_diagram.png[]
-[role="image-source"]
-----
-[plantuml, service_layer_class_diagram, config=plantuml.cfg]
-@startuml
-hide empty members
-left to right direction
-
-package "Flask API" as api {
-
-  class "allocate_endpoint()" as allocate_endpoint {
-  }
-  hide allocate_endpoint circle
-}
-
-
-package allocation {
-
-  package services {
-    class "allocate(line, repository, session)" as allocate {
-    }
-    hide allocate circle
-  }
-
-  abstract class AbstractRepository {
-    add ()
-    get ()
-    list ()
-  }
-
-  class Batch {
-    allocate ()
-  }
-
-
-  class FakeRepository {
-    batches: List[Batch]
-  }
-
-  class BatchRepository {
-    session: Session
-  }
-
-}
-
-package sqlalchemy {
-  class Session {
-    query()
-    add()
-  }
-}
-
-
-allocate -> AbstractRepository: uses
-AbstractRepository -> Batch : stores
-
-AbstractRepository <|-- FakeRepository : implements
-AbstractRepository <|-- BatchRepository : implements
-allocate_endpoint --> allocate : invokes
-
-BatchRepository --> Session : abstracts
-@enduml
-----
+[[service_layer_before_after]]
+.Adding the Service Layer to our Architecture
+image::images/maps_chapter_04.png[]
 
 
 [TIP]
