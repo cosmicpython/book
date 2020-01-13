@@ -8,104 +8,14 @@ discuss the concept of a _consistency boundary_, and show how making it
 explicit can help us to build high-performance software without compromising
 maintainability.
 
-Here's a preview of where we're headed: we're going to move from the model in 
-<<before_aggregates_diagram>>, where we need to retrieve all the batches and
-pass them to the `allocate()` domain service...
+<<maps_chapter_06>> shows a preview of where we're headed: we'll introduce
+a new model object called `Product` to wrap multiple batches, and make
+the old `allocate()` domain service available as a method on Product instead.
 
+[[maps_chapter_06]]
+.Adding the Product Aggregate
+image::images/maps_chapter_06.png[]
 
-[[before_aggregates_diagram]]
-.Before: allocate against all batches using domain service
-image::images/before_aggregates_diagram.png[]
-[role="image-source"]
-----
-[plantuml, before_aggregates_diagram, config=plantuml.cfg]
-@startuml
-
-hide empty members
-
-package "Service Layer" as services {
-    class "allocate()" as allocate {
-    }
-    hide allocate circle
-    hide allocate members
-}
-
-
-
-package "Domain Model" as domain_model {
-
-  class Batch {
-  }
-
-  class "allocate()" as allocate_domain_service {
-  }
-    hide allocate_domain_service circle
-    hide allocate_domain_service members
-}
-
-
-package repositories {
-
-  class BatchRepository {
-    list()
-  }
-
-}
-
-allocate -> BatchRepository: list all batches
-allocate --> allocate_domain_service: allocate(orderline, batches)
-
-@enduml
-----
-
-...to a world like <<after_aggregates_diagram>>, in which there is a new
-_Aggregate_ class named `Product` that will be in charge of allocation, and
-choosing which batches to allocate against:
-
-[[after_aggregates_diagram]]
-.After: ask Product to allocate against its batches
-image::images/after_aggregates_diagram.png[]
-[role="image-source"]
-----
-[plantuml, after_aggregates_diagram, config=plantuml.cfg]
-@startuml
-
-hide empty members
-
-package "Service Layer" as services {
-    class "allocate()" as allocate {
-    }
-}
-
-hide allocate circle
-hide allocate members
-
-
-package "Domain Model" as domain_model {
-
-  class Product {
-    allocate()
-  }
-
-  class Batch {
-  }
-}
-
-
-package repositories {
-
-  class ProductRepository {
-    get()
-  }
-
-}
-
-allocate -> ProductRepository: get me the product for this sku
-allocate --> Product: product.allocate(orderline)
-Product o- Batch: has
-
-@enduml
-----
 
 Why?  Let's find out.
 
