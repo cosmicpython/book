@@ -5,13 +5,20 @@ In this chapter we're going to start with a fairly uncontroversial insight:
 reads (commands) and writes (queries) are different, so they
 should be treated differently. Then we're going to push that insight as far
 as we can. If you're anything like Harry, this will all seem crazy at first,
-but hopefully we can make the argument that it's not *totally* insane.
+but hopefully we can make the argument that it's not _totally_ insane.
 
 // TODO (hynek) (re "crazy") Hmmm, people react poorly to this kind of ablesim nowadays. I’d looks for better words.
 
-Firstly though, why bother?
+[[maps_chapter_11]]
+.Separating reads from writes
+image::images/maps_chapter_11.png[]
+
+<<maps_chapter_11>> shows where we might end up. Firstly though, why bother?
+
 
 === Domain models are for writing
+
+// TODO: maybe move this section to later in the chapter?
 
 We've spent a lot of time in this book talking about how to build software that
 enforces the rules of our domain. These rules, or constraints, will be different
