@@ -447,9 +447,14 @@ with a repo and domain objects under the hood.
 
 * What if I have a read-only but business-logic heavy system?
 
-View models can have complex logic in them. I've written systems where the view
-models needed extensive unit tests. In those systems, we split a _view builder_
-from a _view fetcher_.
+View models can have complex logic in them. In this book we've encouraged you to
+separate your read and write models because they have different consistency and
+throughput requirements. Mostly, we can use simpler logic for reads, but that's
+not always true. In particular, permissions and authorization models can add a
+lot of complexity to our read-side.
+
+We've written systems where the view models needed extensive unit tests. In
+those systems, we split a _view builder_ from a _view fetcher_.
 
 TODO: Diagram
 
@@ -470,27 +475,6 @@ that's not a requirement.
 * I'm using Django, can I still do this?
 
 We have an entire appendix, just for you! <<appendix_django>>
-
-////
-TODO (DS)
-Missing pieces
-
-What's still worth doing, even in half measures? E.g. is it worth having a
-service layer even if the domain is still coupled to persistence? Repositories
-without CQRS?
-
-What size of systems are these helpful within? For example, do they work in the context of a monolith?
-
-How should use cases interact across a larger system? For example, is it a
-problem for a use case to call another use case?
-
-Is it a smell for a use case to interact with multiple repositories, and if so,
-why?
-
-How do read-only, but business logic heavy things fit into all this? Use cases
-or not? (This relates to what these patterns might look like if we didn't
-bother with CQRS.)
-////
 
 TODO: point people at https://leanpub.com/clean-architectures-in-python
 
