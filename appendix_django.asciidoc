@@ -383,15 +383,76 @@ to a Django app?  We'd say:
   decouple your app from Django and the database, so if you anticipate wanting
   to migrate away from either of those, Repository and UoW are a good idea.
 
-* You can still do DDD and domain modelling with Django models, tightly coupled
-  as they are to the database; you may be slowed down by migrations, but
-  it shouldn't be fatal.  So, as long as your apps is not too complex and your tests not too slow, you may
-  be able to get something out of the "fat models" approach: push as much
-  logic down to your models as possible, and apply patterns like Entity,
-  Value Object and Aggregate
+* You can still theoretically do DDD and domain modelling with Django models,
+  tightly coupled as they are to the database; you may be slowed down by
+  migrations, but it shouldn't be fatal.  So, as long as your apps is not too
+  complex and your tests not too slow, you may be able to get something out of
+  the "fat models" approach: push as much logic down to your models as possible,
+  and apply patterns like Entity, Value Object and Aggregate
+
+* With that said, https://forum.djangoproject.com/t/where-to-put-business-logic-in-django/282/7[word in the Django community] is that people find that "fat
+  models" runs into scalability problems of its own, particularly around
+  managing interdependencies between apps.  In those cases, there's a lot
+  to be said for extracting out a "business logic" or "domain" layer to sit
+  between your views and forms, and your models.py which you can then keep
+  as minimal as possible.
+
+* A business logic layer might start out working with Django model objects,
+  and only later become fully decoupled from the framework and work on
+  plain Python data structures.
 
 * Service Layer might be of interest if you're seeing a lot of duplication in
   your views.py.  It can be a good way of thinking about your use cases,
   separately from your web endpoints.
 
-// TODO: Expand on this wrap-up?
+* For the read-side, you can get some of the benefits of CQS by putting reads
+  into one place, avoiding ORM calls sprinkled all over the place
+
+* When separating out modules for reads and modules for domain logic, it
+  may be worth decoupling yourself from the django apps hierarchy.  Business
+  concerns will cut across them.
+
+NOTE: We'd like to give a shout out to David Seddon and Ashia Zawaduk for
+    talking through some of the ideas in this chapter.  They did their best to
+    stop us from saying anything really stupid about a topic we don't really
+    have enough personal experience of, but they may have failed.
+
+For more thoughts and actual lived experience dealing with existing applications, read
+on to <<epilogue_1_how_to_get_there_from_here>>.
+
+  
+////
+conversation with ashia
+
+-> i like separating a pure domain
+
+why? when you add an api.  if it's in the view, or in a form, it's hard to get out
+
+ok so logic in the models?  yes, but then you see increasing interconnectedness
+between apps, they get tightly coupled
+
+it's hard to find  where the logic is.  it would be nice to have it all in one place!
+
+mentioned David W.  and his layers.  d is strict, a more relaxed.  modelforms
+can be useful!
+
+-> could get a long way from just telling people to add a logic.py in every app
+
+we came up with "handlers".  it was great.  you could see all the steps
+
+CQRS chat
+
+- is all business logic really on the write side?  what about "who is allowed
+  to see what?"
+
+
+short-term django advice:
+- use model as minimal data layer
+- add a domain layer between views and model that does all the business logic
+- build a fetchers module for read-only queries, keep filtering and perms logic in here
+- decouple yourself from django apps and models.
+- at the beginning, you can maybe pass django model objects down from
+  views/forms to domain layer.  later you can deconstruct (or never construct)
+  them, and reconstruct them at the data layer
+
+////
