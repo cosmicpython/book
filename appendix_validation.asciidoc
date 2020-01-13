@@ -62,7 +62,7 @@ from schema import And, Schema, Use
 @dataclass
 class Allocate(Command):
 
-    __schema = Schema({ #<1>
+    _schema = Schema({ #<1>
         'orderid': int,
          sku: str,
          qty: And(Use(int), lambda n: n > 0)
@@ -75,15 +75,20 @@ class Allocate(Command):
     @classmethod
     def from_json(cls, data): #<2>
        data = json.loads(data)
-       return cls(**__schema.validate(data))
+       return cls(**_schema.validate(data))
 ----
 ====
+
+
 
 <1> The ++schema++footnote:[https://pypi.org/project/schema/] library lets us
     describe the structure and validation of our messages in a nice declarative way.
 
+
 <2> The `from_json` method reads a string as JSON, and turns it into our message
     type.
+
+// TODO hynek doesn't like the inline call to json.loads
 
 This can get repetitive, though,  since we need to specify our fields twice,
 so we might want to introduce a helper library that can unify the validation and
@@ -119,17 +124,19 @@ AddStock = command(
 ====
 
 <1> The `command` function takes a message name, plus kwargs for the fields of
-the message payload, where the name of the kwarg is the name of the field, and
-the value is the parser.
+    the message payload, where the name of the kwarg is the name of the field, and
+    the value is the parser.
 <2> We use the make_dataclass function from the dataclass module to dynamically
-create our message type.
+    create our message type.
 <3> We patch the `from_json` method onto our dynamic dataclass
 <4> We can create reusable parsers for quantity, or sku, etc to keep things DRY.
 <5> Declaring a message type becomes a one-liner
 
-********************************************************************************
+This comes at the expense of losing the types on your dataclass, so bear that
+trade-off in mind.
 
-=== Postel's Law and the Tolerant Reader Pattern
+.Postel's Law and the Tolerant Reader Pattern
+********************************************************************************
 
 Postel's law, or the Robustness Principle, tells us "Be liberal in what you
 accept, and conservative in what you emit". The idea here is that we should be
@@ -170,10 +177,36 @@ This pattern, where we extract only the fields we care about, and do minimal
 validation of them is the Tolerant Reader pattern.
 
 TIP: Validate as little as possible. Only read the fields you need, and don't
-over-specify their contents. This will help you to stay robust when other
-systems change over time. Resist the temptation to share message definitions
-between systems, instead make it easy to define the data you depend on. For more
-on the Tolerant Reader pattern, see Martin Fowler's article https://martinfowler.com/bliki/TolerantReader.html
+    over-specify their contents. This will help you to stay robust when other
+    systems change over time. Resist the temptation to share message
+    definitions between systems, instead make it easy to define the data you
+    depend on. For more info, see Martin Fowler's article on the
+    https://martinfowler.com/bliki/TolerantReader.html[Tolerant Reader pattern].
+
+////
+TODO (hynek)
+
+Oof so both this and the Fowler article are full of non-sequiturs.
+
+For one: Postel was wrong. We see it every day. Postel’s law is why the
+internet if fucked in so many ways. We should’ve been conservative at receiving
+from the get go.Then maybe we wouldn’t have to support 20 variants of
+everything, just because some stupid server supported it in 1995.
+
+Secondly and more concretely: ignoring extra keys makes the system not more
+robust. It makes it more brittle and confusing for the future. Two random
+examples:
+
+1. You have an optional field abc and the user passes abcc. You ignore it, the
+user is surprised why shit doesn’t work how they thought it will because you
+don’t help them with an error message.
+
+2. Users accidentally pass a field abc=True (maybe copy pasta who knows). It
+works well for years und you introduce a field abc that deletes an account or
+transfers money around. Boom, stuff broke over night.
+
+The broader your feature envelope, the more nightmares await you down the road.
+////
 
 ********************************************************************************
 
@@ -186,6 +219,10 @@ Instead, we want to make sure that requests are known to be valid before our
 domain model or use-case handlers see them. This helps our code to stay clean
 and maintainable over the long-term. We sometimes refer to this as "validating
 at the edge of the system".
+
+// TODO (hynek) an even better argument is that invalid data wanders through
+// your system is a time bomb, and the deeper it gets the more damage it can
+// do, and the less reasonable tools you have to respond to it.
 
 Back in Chapter 6 we said that the message bus was a great place to put
 cross-cutting concerns, and validation is a perfect example of that. Here's how
@@ -262,11 +299,16 @@ care of validating our requests, and routing them to the correct handler, and
 our handlers are exclusively focused on the logic of our use case.
 
 TIP: Usually when you receive an invalid message there's little you can do but
-log the error and continue. At MADE we use metrics to count how many messages a
-system receives, and how many of those are successfully processed, skipped, or
-invalid. Our monitoring tools will alert us if we see spikes in the numbers of
-bad messages. Ignoring unrecognised fields and being liberal about the format of
-data helps to keep us robust when things change.
+    log the error and continue. At MADE we use metrics to count how many
+    messages a system receives, and how many of those are successfully
+    processed, skipped, or invalid. Our monitoring tools will alert us if we
+    see spikes in the numbers of bad messages. Ignoring unrecognised fields and
+    being liberal about the format of data helps to keep us robust when things
+    change.
+
+
+// TODO (hynek) hynek dont like this neither
+
 
 === Validating Semantics
 
