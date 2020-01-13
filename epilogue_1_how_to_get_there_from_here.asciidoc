@@ -99,15 +99,15 @@ introducing order to the chaos.
 
 TODO: Add diagram
 
-This was the system where I first learned how to break apart a monolith, and it
-was a doozy. There was logic _everywhere_ - in the web pages, in "manager"
-objects, in spurious "helpers", in fat "service" classes that we'd written to
-abstract the mess, and in hairy "command" objects that we'd written to break
-apart the services.
+This was the system where Bob first learned how to break apart a monolith, and
+it was a doozy. There was logic _everywhere_ - in the web pages, in "manager"
+objects, in "helpers", in fat "service" classes that we'd written to abstract
+the managers and helpers, and in hairy "command" objects that we'd written to
+break apart the services.
 
 If you're working in a system that's reached this point, it can feel hopeless,
 but it's never too late to start weeding an overgrown garden. Eventually we
-hired an architect who knew what he was doing, and he helped up get things
+hired an architect who knew what he was doing, and he helped us get things
 back under control.
 
 Start by working out the _use cases_ of your system. If you have a
@@ -138,16 +138,13 @@ NOTE: One of the biggest problems we had was that manager methods called other
 manager methods, and data access could happen from the model objects themselves.
 It was hard to understand what each operation did without going on a treasure-
 hunt across the codebase. Pulling all the logic into a single method, and using
-a unit of work to control our transactions, made the system, easier to reason
+a unit of work to control our transactions, made the system easier to reason
 about.
 
 This is a good opportunity to pull any data-access or orchestration code out of
 the domain model and up into the use-cases. We should also try to pull IO
 concerns (eg. sending emails, writing files) out of the domain model and up into
 the use-case functions.
-
-We should try to push business logic out of our entrypoints and down into the
-use-cases. For now, it's okay if the domain model is dumb.
 
 TIP: It's fine if you've got duplication in the use-case functions. We're not
 trying to write perfect code, we're just trying to extract some meaningful
@@ -193,6 +190,12 @@ user.account.workspaces[0].documents.versions[1].owner.account.workspaces[0].set
 It's easy to build a system this way with Django ORM or SQLAlchemy but it's
 to be avoided. While it's _convenient_, it makes it very hard to reason about
 performance because each property might trigger a lookup to the database.
+
+TIP: Aggregates are a _consistency boundary_. In general each use-case should
+update a single aggregate at a time. One handler fetches one aggregate from a
+repository, modifies its state, and raises any events that happen as a result.
+If you need data from another part of the system, it's totally find to use a
+read model, but avoid updating multiple aggregates in a single transaction.
 
 There were a bunch of operations that required us to loop over objects this way,
 for example:
@@ -278,6 +281,8 @@ TIP: Bi-directional links are often a sign that your aggregates aren't right.
 In our original code, a Document knew about its containing Folder, and the Folder
 had a collection of Documents. This makes it easy to traverse the object graph
 but stops us from thinking properly about the consistency boundaries we need.
+We break apart aggregates by using references instead. In the new model, a
+Document had a folder_id but no way to directly access the Folder.
 
 If we needed to _read_ data, we avoided writing complex loops and transforms and
 tried to replace them with straight SQL. For example, one of our screens was a
@@ -305,32 +310,6 @@ We could then raise a new command for each workspace:
 for workspace_id in workspaces:
     bus.handle(LockWorkspace(workspace_id))
 ```
-
-// (DS) the big benefit of our monolith, which has always caused pushback
-// at the mention of breaking it up, is that other people in the company can do
-// clever things with the data,  which is all in one place.
-
-
-
-=== A django story
-
-* introducing a Service Layer first
-    - define use cases
-    - messagebus can come later
-    - push all the logic down into the models
-
-* once we have rich django models
-    - migrate them one by one to POPO classes
-    - add repository to translate
-    - => now we can refactor the model (semi/more) independently from the DB
-
-* and we can keep going and add UoW and a messagebus
-    - now we have the event-driven / command handler pattern
-    - almost any business requirement can be decomposed sensibly
-
-see <<appendix_django>>
-
-
 
 === an event-driven approach to go microservices via strangler pattern
 
@@ -410,6 +389,87 @@ TODO: Context diagram, E-Commerce, Availability, Fulfilment, Event-Broker
    _Building Microservices_
 
 Stangler (Fig) pattern is mentioned as a favorite, also many others.
+
+=== Questions our Tech Reviewers Asked That We Couldn't Work Into Prose
+
+* Do I need to do all of this at once? Can I just do a bit at a time?
+
+No, you can absolutely adopt these techniques bit by bit. We recommend, if you
+have an existing system, building a service layer to try and keep orchestration
+in one place. Once you have that, it's much easier to push logic into the model
+and edge concerns like validation, or error handling, to the entry points.
+
+It's worth having a service layer even if you still have a big messy Django ORM
+because it's a way to start understanding the boundaries of operations.
+
+* Extracting use-cases will break a lot of my existing code, it's too tangled
+
+Just copy-paste. It's okay to cause more duplication in the short-term. Think of
+this as a multi-step process. Your code is in a bad state now, so copy and paste
+it to a new place, and then make that new code clean and tidy.
+
+Once you've done that, you can replace uses of the old code with calls to your
+new code and finally delete the mess. Fixing large code bases is a messy and
+painful process. Don't expect things to get instantly better, and don't worry if
+some bits of your application stay messy.
+
+* Do I need to do CQRS? That sounds weird, can't I just use repositories for
+  reads?
+
+Of course you can! The techniques we're presenting in this book are intended to
+make your life _easier_, they're not some kind of ascetic discipline with which
+to punish yourself.
+
+In our first case-study system, we had a lot of "View Builder" objects that used
+repositories to fetch data and then performed some transformations to return
+dumb read models. The advantage is that when you hit a performance problem, it's
+easy to rewrite a view builder to use custom queries or raw SQL.
+
+* How should use cases interact across a larger system? Is it a problem for one
+  to call another?
+
+This might be an interim step. Again, in the first case-study, we had handlers
+that would need to invoke other handlers. This gets _really_ messy, though, and
+it's much better to move to using a message bus to separate these concerns.
+
+Generally, your system will have a single message bus implementation, and a
+bunch of different subdomains that center on a particular aggregate or set of
+aggregates. When your use case has finished, it can raise an event, and a
+handler elsewhere can run.
+
+* Is it a smell for a use case to use multiple repositories, and why?
+
+Yes! A repository is a pattern that we use for reading _aggregates_ from our
+persistent store. By definition, we should only ever be updating one aggregate
+at a time. If you need to read data to figure out what to do, then consider a
+read-model that returns just the data you need, even if you cheat and build it
+with a repo and domain objects under the hood.
+
+* What if I have a read-only but business-logic heavy system?
+
+View models can have complex logic in them. I've written systems where the view
+models needed extensive unit tests. In those systems, we split a _view builder_
+from a _view fetcher_.
+
+TODO: Diagram
+
+This makes it easy to test the view builder by giving it mocked data, eg. a list
+of dicts.
+
+"Fancy CQRS" with event handlers is really a way of running our complex view
+logic whenever we write so that we can avoid running it when we read.
+
+* Do I need to build microservices to do this stuff?
+
+Egads, no! These techniques pre-date microservices by a decade or so. Aggregates,
+domain events, and dependency inversion are ways to control complexity in large
+systems. It so happens that when you've built a set of use cases and a model
+for a business process, it's relatively easy to move it to its own service, but
+that's not a requirement.
+
+* I'm using Django, can I still do this?
+
+We have an entire appendix, just for you! <<appendix_django>>
 
 ////
 TODO (DS)
