@@ -194,7 +194,7 @@ implementation.
 // layer
 
 
-=== Low and High Gear
+=== High and Low Gear
 
 Most of the time, when we are adding a new feature, or fixing a bug, we don't
 need to make extensive changes to the domain model. In these cases, we prefer
@@ -395,6 +395,7 @@ This is a really nice place to be in.  Our service-layer tests only depend on
 the services layer itself, leaving us completely free to refactor the model as
 we see fit.
 
+
 === Carrying the Improvement Through to the E2E Tests
 
 In the same way that adding `add_batch` helped decouple our services-layer
@@ -475,9 +476,10 @@ things will help along the way
 
 * Express your service layer in terms of primitives rather than domain objects
 
-* Add any additional services you need to be able to test entirely against the
-  service layer, rather than hacking state in via repositories or the DB. This
-  will pay off in your end-to-end tests as well.
+* In an ideal world, you'll have all the services you need to be able to test
+  entirely against the service layer, rather than hacking state in via
+  repositories or the DB. This pays off in your end-to-end tests as well.
+
 
 
 [[types_of_test_rules_of_thumb]]
