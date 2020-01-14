@@ -443,14 +443,10 @@ We'll come back to fix this wart in <<chapter_12_cqrs>>.
 +            request.json['orderid'], request.json['sku'], request.json['qty'],
          )
 +        results = messagebus.handle(event, unit_of_work.SqlAlchemyUnitOfWork())  #<3>
-+        batchref = results.pop()
++        batchref = results.pop(0)
      except InvalidSku as e:
 ----
 ====
-
-// TODO: (EJ1) Should the line `batchref = results.pop()` be `batchref = results.pop(0)` instead?
-//             Otherwise you get the result of the last event handler, instead of the handler
-//             triggered by AllocationRequired.
 
 <1> Instead of calling the service layer with a bunch of primitives extracted
     from the request JSON...
