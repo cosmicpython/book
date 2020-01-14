@@ -385,6 +385,7 @@ and structure helps us to reason about our systems as they grow larger and more
 complex.
 
 
+[[recovering_from_errors]]
 === Recovering From Errors Synchronously
 
 Hopefully we've convinced you that it's okay for events to fail independently
@@ -442,11 +443,6 @@ For most of those cases, we can recover elegantly by trying again. As the
 proverb says, "if at first you don't succeed, retry the operation with an
 exponentially increasing back-off period".
 
-WARNING: At some point, regardless of tenacity, we'll have to give up trying to
-process the message. Building reliable systems with distributed messages is
-hard and we have to skim over some tricky bits.
-There's pointers to more reference materials in chapter 10 and the epilogue.
-
 [[messagebus_handle_event_with_retry]]
 .Handle with Retry (src/allocation/service_layer/messagebus.py)
 ====
@@ -493,6 +489,11 @@ Retrying operations that might fail is probably the single best way to improve
 the resilience of our software. Again, the unit of work and command handler
 patterns mean that each attempt starts from a consistent state, and won't leave
 things half-finished.
+
+WARNING: At some point, regardless of tenacity, we'll have to give up trying to
+    process the message. Building reliable systems with distributed messages is
+    hard and we have to skim over some tricky bits. There's pointers to more
+    reference materials in chapter 10 and the epilogue.
 
 
 [[chapter_10_commands_and_events_tradeoffs]]
