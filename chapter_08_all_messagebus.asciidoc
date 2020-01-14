@@ -682,8 +682,13 @@ class FakeRepository(repository.AbstractRepository):
 ====
 
 
-// TODO: discuss finder methods on repository.
-
+NOTE: We're adding a query to our repository to make this use case easier to
+implement. So long as our query is returning a single aggregate, we're not
+bending any rules. If you find yourself writing complex queries on your
+repositories, you might want to think about a different design. In particular, a
+method like 'get_most_popular_products', or 'find_products_by_order_id' would
+definitely trigger our spidey sense. Chapter 11 and the Epilogue have some tips
+on managing complex queries.
 
 ==== A New Method on the Domain Model
 
