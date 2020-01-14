@@ -494,10 +494,6 @@ the resilience of our software. Again, the unit of work and command handler
 patterns mean that each attempt starts from a consistent state, and won't leave
 things half-finished.
 
-// TODO (EJ1) I don't think you've ever mentioned how to handle a failure of
-// the version number check for concurrency control. Might want to mention
-// how/where that retry would be handled.
-
 
 [[chapter_10_commands_and_events_tradeoffs]]
 [options="header"]
