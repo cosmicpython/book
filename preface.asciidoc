@@ -165,7 +165,7 @@ and which chapters they live in.
 
 ==== Part 1: Dependency Inversion and Domain Modelling
 
-Domain Modelling and DDD (Chapters 1 and 6)::
+Domain Modelling and DDD (Chapters 1 and 7)::
     At some level, everyone has learned the lesson that complex business
     problems need to be reflected in code, in the form of a model of the domain.
     But why does it always seem to be so hard to do it, without getting tangled
@@ -188,16 +188,18 @@ Repository, Service Layer and Unit of Work Patterns (Chapter 2, 4 and 5)::
 // [SG] Bit of pedantry - this is the first time you have used CLI acronym,
 // should be spelled out?
 
-An Aside on Coupling and Abstractions (Chapter 3)::
+Some thoughts on Testing and Abstractions (Chapters 3 + 6)::
     After presenting the first abstraction (Repository pattern), we take the
     opportunity for a general discussion of how to choose abstractions, and
-    what their role is in choosing how our software is coupled together.
+    what their role is in choosing how our software is coupled together. After
+    we introduce Service Layer, we talk a bit about achieving a _test pyramid_
+    and writing unit tests at the highest possible level of abstraction.
 
 
 
 ==== Part 2: Event-Driven Architecture
 
-Chapters 7, 8 and 9: Event-Driven Architecture::
+Chapters 8-11: Event-Driven Architecture::
     We introduce three more mutually-reinforcing patterns, starting with
     the concept of _Domain Events_, a vehicle for capturing the idea that some
     interactions with a system are triggers for others.  We use  a _Message
@@ -207,18 +209,18 @@ Chapters 7, 8 and 9: Event-Driven Architecture::
     distinction between _Commands_ and _Events_.  Our application is now
     fundamentally a message-processing system.
 
-Chapter 10: CQRS::
+Chapter 12: CQRS::
     An example of _command-query responsibility segregation_, with and without
     events.
 
-Chapter 11 Dependency Injection::
+Chapter 13 Dependency Injection::
     We tidy up our explicit and implicit dependencies, and implement a very
     simple dependency injection framework.
 
 
 ==== Epilogue
 
-How Do I Get There From Here? (Chapter 12)::
+How Do I Get There From Here? (Chapter 14)::
     Implementing architectural patterns always looks easy when you show a simple
     example, starting from scratch, but many of you will probably be wondering how
     to apply these principles to existing software.  We'll attempt to provide a
