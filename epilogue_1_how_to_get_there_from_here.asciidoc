@@ -45,6 +45,14 @@ the foundations. With a six month project to deliver, it's easier to make the
 argument for three weeks of clean-up work. Bob refers to this as "architecture
 tax".
 
+// (EJ2) Might be good to say something about selling DDD and/or these patterns
+//       to the engineering team as well.  That can also be a point of resistance
+//       as it may seem overly complex/too hard. (More of a people-problem than a tech one.) 
+//
+//       The domain model vs. ORM plot in Ch 2. Domain Model tradeoffs as a diagram
+//       is helpful in this regard for justifying value.
+
+
 === Separating entangled responsibilities
 
 At the beginning of the book, we said that the main characteristic of a big ball
@@ -70,7 +78,7 @@ invite other workspace members to review, comment, or modify their work.
 
 Most of the complexity of the application was in the permissions model since
 each document was contained in a folder, and folders allowed read, write, and
-edit permissions, much like a linux filesystem.
+edit permissions, much like a Linux filesystem.
 
 Additionally, each workspace belonged to an account, and the account had quotas
 attached to it via a billing package.
@@ -80,6 +88,8 @@ enormous number of objects from the database in order to test permissions and
 quotas. Creating a new workspace involved hundreds of database queries as we set
 up the permissions structure, invited users, and set up sample content. 
 
+// (EJ3) * Is a "page object" an Asp.Net concept, and does it correspond to
+//       to some more generic concept in MVC or MVP?
 Some of the code for operations was in page objects, and ran when a user clicked
 a button or submitted a form, some of it was in "manager" objects that held
 code for orchestrating work, and some of it was in the domain model. Model
@@ -104,6 +114,10 @@ it was a doozy. There was logic _everywhere_ - in the web pages, in "manager"
 objects, in "helpers", in fat "service" classes that we'd written to abstract
 the managers and helpers, and in hairy "command" objects that we'd written to
 break apart the services.
+
+// (EJ3) In reference to "breaking apart a monolith", the implication
+// is that the refactoring was to microservices. Or was it just refactoring 
+// to a proper Domain Model in a monolith?  Maybe "breaking apart a Big Ball of Mud" is better?
 
 If you're working in a system that's reached this point, it can feel hopeless,
 but it's never too late to start weeding an overgrown garden. Eventually we
@@ -146,10 +160,14 @@ the domain model and up into the use-cases. We should also try to pull IO
 concerns (eg. sending emails, writing files) out of the domain model and up into
 the use-case functions.
 
+// (EJ2) This would be a good point to refer back to port+adapters and DI.
+
 TIP: It's fine if you've got duplication in the use-case functions. We're not
 trying to write perfect code, we're just trying to extract some meaningful
 layers. It's better to duplicate some code in a few places than to have use-case
 functions calling one another in a long chain.
+
+// (EJ2) Deliberate copy+paste can be a very useful technique for refactoring.
 
 These use-case functions will mostly be about logging, data access, and error
 handling. Once you've done this step, you'll have a grasp of what your program
@@ -168,6 +186,12 @@ many members, all of whom had their own accounts. Each workspace contained many
 documents, which had many versions.
 
 TODO: Diagram
+
+// (EJ2) In lieu of the ERD diagram, maybe something similar to this:
+// http://www.informit.com/articles/article.aspx?p=2020371&seqNum=4
+//
+// The messy "Before" version would just have an object graph, and the
+// "After" version with have the aggregate boundaries and roots.
 
 You can't express the full horror of the thing in an ERD diagram.
 For one thing, there wasn't really a single account related to a user. Instead
@@ -191,11 +215,20 @@ It's easy to build a system this way with Django ORM or SQLAlchemy but it's
 to be avoided. While it's _convenient_, it makes it very hard to reason about
 performance because each property might trigger a lookup to the database.
 
+//(EJ2) Opportunity to refer back to Select N+1.
+
 TIP: Aggregates are a _consistency boundary_. In general each use-case should
 update a single aggregate at a time. One handler fetches one aggregate from a
 repository, modifies its state, and raises any events that happen as a result.
 If you need data from another part of the system, it's totally find to use a
 read model, but avoid updating multiple aggregates in a single transaction.
+
+//(EJ2) * Opportunity to refer back to the idea of "public vs. private" methods analogy with Aggregates.
+//      * An explicit mention of eventual consistency here would be good (What data has to be synchronized,
+//        and where can we tolerate EC data?). The use of events, read-models, and CQRS 
+//        imply eventual consistency, but don't necessarily require it.
+//
+
 
 There were a bunch of operations that required us to loop over objects this way,
 for example:
@@ -364,6 +397,7 @@ own domain model.
 
 We used change data capture to move from this:
 
+
 TODO: Context diagram, E-commerce and Fulfilment over XMLRPC
 
 to this
@@ -380,8 +414,13 @@ TODO: Context diagram, E-Commerce, Availability, Fulfilment, Event-Broker
     - or new ones, and we switch over the downstream things progressively
 
 
-
 //TODO: event capture and all that jazz
+
+// (EJ1) * "Event Capture" and "Data Capture" are used interchangeably.  Is it supposed to be
+//       CDC consistently?
+//       * Thoughworks recently put CDC on "Hold" status (https://www.thoughtworks.com/radar/techniques/puncturing-encapsulation-with-change-data-capture).  Most tools + ref material I've seen on CDC focus on row level ops which
+//       may be too low-level (e.g. Debezium), so a warning to project Domain Events here may be warranted. Mention
+//       of Outbox pattern here could be useful.
 
 === More required reading
 
@@ -389,6 +428,8 @@ TODO: Context diagram, E-Commerce, Availability, Fulfilment, Event-Broker
    _Building Microservices_
 
 Stangler (Fig) pattern is mentioned as a favorite, also many others.
+
+// (EJ3) "Evolutionary Architecture" also?  I have yet to read it but am on-board with the general philosophy.
 
 === Questions our Tech Reviewers Asked That We Couldn't Work Into Prose
 
@@ -407,6 +448,12 @@ because it's a way to start understanding the boundaries of operations.
 Just copy-paste. It's okay to cause more duplication in the short-term. Think of
 this as a multi-step process. Your code is in a bad state now, so copy and paste
 it to a new place, and then make that new code clean and tidy.
+
+// (EJ2) This is really a handy technique for dealing with a module that has low cohesion 
+//       but creates high-coupling. An anti-pattern I've noticed is that sometimes people will
+//       try to religiously apply DRY and maximize re-use, but create "low-value" modules.
+//       Examples include stuff like IO related code for reading/writing, metrics logging,
+//       data munging, log formatting.
 
 Once you've done that, you can replace uses of the old code with calls to your
 new code and finally delete the mess. Fixing large code bases is a messy and
@@ -444,6 +491,8 @@ persistent store. By definition, we should only ever be updating one aggregate
 at a time. If you need to read data to figure out what to do, then consider a
 read-model that returns just the data you need, even if you cheat and build it
 with a repo and domain objects under the hood.
+
+// (EJ3) This makes sense, but what about the pattern where a UoW has multiple repos?
 
 * What if I have a read-only but business-logic heavy system?
 
@@ -485,9 +534,14 @@ This is a part 2 thing really, but basically, don't sally forth and implement
 your own event-driven microservices architecture without reading lots, lots
 more on the subject.
 
+
 https://martinfowler.com/books/eip.html[Enterprise Integration Patterns] by
 (as always) Martin Fowler is a pretty good start.
 
+// (EJ2) It would be worth saying something about NoSql here (or in "Questions our Tech Reviwers..?"). 
+//  The concepts behind aggregates and consistency boundaries are helpful for reasoning about the 
+//  behavior of NoSql stores which shard their documents across a cluster, and do not support transactions.  
+//  You can run into many "microservice like" problems if you implement a data model which does not align with your aggregates.  A good reference is "Designing Data Intesive Systems" by Martin Kleppmann https://dataintensive.net/
 
 //TODO: add some footgun examples.
 
