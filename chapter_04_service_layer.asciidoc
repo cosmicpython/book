@@ -544,7 +544,6 @@ session management, parsing information out of POST parameters, response status
 codes and JSON.  All the orchestration logic is in the use case / service layer,
 and the domain logic stays in the domain.
 
-
 Finally we can confidently strip down our E2E tests to just two, one for
 the happy path and one for the unhappy path:
 

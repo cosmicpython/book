@@ -15,17 +15,19 @@ some more general testing guidelines.
 
 .Harry Says: Seeing a Test Pyramid in Action Made me a Convert
 *******************************************************************************
-I was initially skeptical of all Bob's architectural patterns, but seeing
-an actual Test Pyramid made me a convert.
+A few words from Harry directly:
 
-Once you implement domain modelling and service layer, you really actually can
+_I was initially skeptical of all Bob's architectural patterns, but seeing
+an actual Test Pyramid made me a convert._
+
+_Once you implement domain modelling and service layer, you really actually can
 get to a stage where unit tests outnumber integration and end-to-end tests by
 an order of magnitude.  Having worked in places where the e2e test build would
 take hours ("wait 'til tomorrow", essentially), I can't tell you what a
-difference it makes to be able to run all your tests in minutes or seconds.
+difference it makes to be able to run all your tests in minutes or seconds._
 
-Read on for some guidelines on how to decide what kinds of tests to write,
-and at which level.  They changed my testing-life.
+_Read on for some guidelines on how to decide what kinds of tests to write,
+and at which level.  They changed my testing-life._
 *******************************************************************************
 
 
@@ -55,7 +57,7 @@ tests/e2e/test_api.py:2
 //NICE-TO-HAVE: test listing this too?
 
 Not bad!  15 unit tests, 8 integration tests, and just 2 end-to-end tests.  That's
-a healthy-looking test pyramid.
+already a healthy-looking test pyramid.
 
 
 
@@ -192,7 +194,7 @@ implementation.
 // layer
 
 
-==== Low and High Gear
+=== Low and High Gear
 
 Most of the time, when we are adding a new feature, or fixing a bug, we don't
 need to make extensive changes to the domain model. In these cases, we prefer
@@ -212,34 +214,6 @@ and running, we can go faster and more efficiently by changing into a high gear;
 but if we suddenly encounter a steep hill, or we're forced to slow down by a
 hazard, we again drop down to a low gear until we can pick up speed again.
 
-
-
-[[types_of_test_rules_of_thumb]]
-.Different Types of Test: Rules of Thumb
-******************************************************************************
-
-* Write one end-to-end test per featurefootnote:[What about happy path and
-  unhappy path? We say, error-handling is a feature, so yes you need one E2E
-  test for error handling, but probably not one unhappy-path test per feature]
-  to demonstrate that the feature exists and is working. This might be written
-  against an HTTP api. These tests cover an entire feature at a time.
-
-* Write the bulk of the tests for your system against the service layer. This
-  offers a good trade-off between coverage, run-time, and efficiency. These
-  tests tend to cover one code path of a feature and use fakes for IO.
-footnote:[
-A valid concern about writing tests at a higher level is that it can lead to
-combinatorial explosion, for more complex use cases.  In these cases dropping
-down to lower-level unit tests of the various collaborating domain objects
-can be useful.  But see also <<chapter_07_events_and_message_bus>> and
-<<fake_message_bus>>]
-
-* Maintain a small core of tests written against your domain model. These tests
-  have highly-focused coverage, and are more brittle, but have the highest
-  feedback. Don't be afraid to delete these tests if the functionality is
-  later covered by tests at the service layer.
-
-******************************************************************************
 
 
 [[primitive_obsession]]
@@ -492,4 +466,50 @@ def test_happy_path_returns_201_and_allocated_batch():
 ----
 ====
 
-TODO: wrap-up
+
+=== Wrap-Up
+
+Once you have a service layer in place, you really can move the vast majority
+of your tests to being unit tests, and develop a healthy test pyramid.  A few
+things will help along the way
+
+* Express your service layer in terms of primitives rather than domain objects
+
+* Add any additional services you need to be able to test entirely against the
+  service layer, rather than hacking state in via repositories or the DB. This
+  will pay off in your end-to-end tests as well.
+
+
+[[types_of_test_rules_of_thumb]]
+.Different Types of Test: Rules of Thumb
+******************************************************************************
+
+Aim for one end-to-end test per feature::
+    This might be written against an HTTP API for example.  The objective
+    is to demonstrate that the feature works, and that all the moving parts
+    are glued together correctly.
+
+Write the bulk of your tests against the service layer::
+    These edge-to-edge tests offer a good trade-off between coverage,
+    run-time, and efficiency. Each tests tend to cover one code path of a
+    feature and use fakes for IO.  This is the place to exhaustivelyfootnote:[
+A valid concern about writing tests at a higher level is that it can lead to
+combinatorial explosion, for more complex use cases.  In these cases dropping
+down to lower-level unit tests of the various collaborating domain objects
+can be useful.  But see also <<chapter_07_events_and_message_bus>> and
+<<fake_message_bus>>]
+    cover all the edge cases and ins+outs of your business logic.
+
+Maintain a small core of tests written against your domain model::
+    These tests have highly-focused coverage, and are more brittle, but have
+    the highest feedback. Don't be afraid to delete these tests if the
+    functionality is later covered by tests at the service layer.
+
+Error handling counts as a feature::
+    Ideally your application will be structured such that all errors that
+    bubble up to your entrypoints (eg Flask) are handled in the same way.
+    This means you only need to test the happy path for each feature, and
+    reserve one end-to-end test for all unhappy paths (and many unhappy path
+    unit tests of course)
+
+******************************************************************************
