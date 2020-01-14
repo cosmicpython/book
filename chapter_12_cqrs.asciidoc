@@ -129,26 +129,17 @@ read side, because stale data is essentially unavoidable.
 *******************************************************************************
 
 We can think of these these requirements as forming two halves of a system:
-the read side, and the write side.
+the read side, and the write side, shown in <<read_and_write_table>>.
 
-TODO: Diagram
-
-  Commands
-     |
-     v
-[ Handlers ]
-     v
- ( domain )
-     ^
-[  Views   ]
-     ^
-     |
-  Queries
-
-|| Read side | Write side |
-| Behaviour | Simple read | Complex business logic |
-| Cacheability | Highly cacheable | Uncacheable |
-| Consistency | Can be stale | Must be transactionally consistent |
+[[read_and_write_table]]
+.Read vs Write
+[options="header"]
+|===
+| | Read side | Write side
+| Behaviour | Simple read | Complex business logic
+| Cacheability | Highly cacheable | Uncacheable
+| Consistency | Can be stale | Must be transactionally consistent
+|===
 
 
 For the write side, our fancy domain architectural patterns help us to evolve
