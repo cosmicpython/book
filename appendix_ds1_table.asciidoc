@@ -1,0 +1,58 @@
+[[appendix_ds1_table]]
+[appendix]
+== Summary diagram and table
+
+[[recap_diagram]]
+.Our architecture by the end of the book
+image::images/maps_chapter_12_after.png[]
+
+// TODO: make a version without the yellow bits 
+
+
+[[ds1_table]]
+.The components of our architecture and what they all do.
+[cols="3"]
+|===
+| Layer | Component | Description
+
+.5+a| Domain 
+
+* Defines the business logic.
+
+
+| Entity | A domain object whose attributes may change, but that has a recognizable identity over time.
+
+| Value Object | An immutable domain object whose attributes entirely define it. It is fungible with other identical objects.
+
+| Aggregate | Cluster of associated objects that we treat as a unit for the purpose of data changes.
+
+| Event | Represents something that happened, emitted by or stored on domain objects.
+
+| Command | Represents a job the system should perform.
+
+.3+a| Service layer
+
+* Defines the jobs the system should perform and orchestrates different components.  
+
+| Command/Event Handler | Receives a Command or Event and performs what needs to happen.
+| Unit of Work | Abstraction around data integrity. Each unit of work represents an atomic update.
+| Message Bus (Internal) | Handles Commands and Events by routing them to the appropriate Handler.
+
+.2+a| Adapters (Secondary)
+
+* Concrete implementations of an interface that goes from our system out
+to the outside world / I/O
+
+| Repository | Abstraction around persistent storage. Each Aggregate has its own Repository.
+| Event Publisher | Pushes Events onto the external message bus.
+
+.2+a| Entrypoints (Primary adapters)
+
+* Translate external inputs into calls into the service layer.
+
+| Web | Receives web requests and translates them into Commands, passing them to the Internal Message Bus.
+| Event Consumer | Reads Events from the External Message Bus and translates them into Commands, passing them to the Internal Message Bus.
+
+| n/a | External Message Bus (Message Broker) | A piece of infrastructure that different services use to intercommunicate, via Events.
+|===
+

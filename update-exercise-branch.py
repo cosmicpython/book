@@ -10,6 +10,7 @@ def run(cmds):
         cmds,
         cwd=Path(__file__).parent / 'code',
         capture_output=True,
+        check=True
     )
     if p.returncode:
         raise Exception(p.stderr.decode())

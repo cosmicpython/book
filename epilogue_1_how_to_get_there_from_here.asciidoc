@@ -1,4 +1,6 @@
 [[epilogue_1_how_to_get_there_from_here]]
+[appendix]
+[role="afterword"]
 == Epilogue: What now?
 
 Phew! We've covered a lot of ground in this book and for most of our audience
@@ -80,7 +82,7 @@ enormous number of objects from the database in order to test permissions and
 quotas. Creating a new workspace involved hundreds of database queries as we set
 up the permissions structure, invited users, and set up sample content. 
 
-Some of the code for operations was in page objects, and ran when a user clicked
+Some of the code for operations was in web handlers, and ran when a user clicked
 a button or submitted a form, some of it was in "manager" objects that held
 code for orchestrating work, and some of it was in the domain model. Model
 objects would make database calls, or copy files on disk, and the test coverage
@@ -90,7 +92,7 @@ To fix the problem, we first introduced a service layer so that all of the code
 for creating a document or workspace was _in one place_ and could be understood.
 This involved pulling data access code out of the domain model and into
 command handlers. Likewise, we pulled orchestration code out of the managers and
-the page objects, and pushed it into handlers.
+the web handlers, and pushed it into handlers.
 
 The resulting command handlers were _long_ and messy, but we'd made a start at
 introducing order to the chaos.
@@ -99,11 +101,11 @@ introducing order to the chaos.
 
 TODO: Add diagram
 
-This was the system where Bob first learned how to break apart a monolith, and
-it was a doozy. There was logic _everywhere_ - in the web pages, in "manager"
-objects, in "helpers", in fat "service" classes that we'd written to abstract
-the managers and helpers, and in hairy "command" objects that we'd written to
-break apart the services.
+This was the system where Bob first learned how to break apart a ball of mud,
+and it was a doozy. There was logic _everywhere_ - in the web pages, in
+"manager" objects, in "helpers", in fat "service" classes that we'd written to
+abstract the managers and helpers, and in hairy "command" objects that we'd
+written to break apart the services.
 
 If you're working in a system that's reached this point, it can feel hopeless,
 but it's never too late to start weeding an overgrown garden. Eventually we
@@ -111,7 +113,7 @@ hired an architect who knew what he was doing, and he helped us get things
 back under control.
 
 Start by working out the _use cases_ of your system. If you have a
-user-inteface, what actions does it perform? If you've got some back-end
+user interface, what actions does it perform? If you've got some back-end
 processing component, then maybe each cron job or celery job is a single
 use-case. Each of your use cases needs to have an imperative name: "Apply
 Billing Charges", "Clean Abandoned Accounts", or "Raise Purchase Order".
@@ -147,9 +149,9 @@ concerns (eg. sending emails, writing files) out of the domain model and up into
 the use-case functions.
 
 TIP: It's fine if you've got duplication in the use-case functions. We're not
-trying to write perfect code, we're just trying to extract some meaningful
-layers. It's better to duplicate some code in a few places than to have use-case
-functions calling one another in a long chain.
+    trying to write perfect code, we're just trying to extract some meaningful
+    layers. It's better to duplicate some code in a few places than to have
+    use-case functions calling one another in a long chain.
 
 These use-case functions will mostly be about logging, data access, and error
 handling. Once you've done this step, you'll have a grasp of what your program
@@ -159,6 +161,8 @@ start and finish. We'll have taken a step toward building a pure domain model.
 Read Working Effectively With Legacy Code for guidance on how to get legacy code
 under test, and how to start separating responsibilities.
 https://www.oreilly.com/library/view/working-effectively-with/0131177052/
+
+
 
 === Identifying Aggregates and Bounded Contexts
 
@@ -183,9 +187,10 @@ you were working with.
 
 The codebase made it easy to "dot" your way through these objects like so:
 
-```
+[source,python]
+----
 user.account.workspaces[0].documents.versions[1].owner.account.workspaces[0].settings;
-```
+----
 
 It's easy to build a system this way with Django ORM or SQLAlchemy but it's
 to be avoided. While it's _convenient_, it makes it very hard to reason about
@@ -200,17 +205,19 @@ read model, but avoid updating multiple aggregates in a single transaction.
 There were a bunch of operations that required us to loop over objects this way,
 for example:
 
-```
+[source,python]
+----
 # Lock a user's workspaces for non-payment
 
 def lock_account(user):
     for workspace in user.account.workspaces:
         workspace.archive()
-```
+----
 
 Or even recurse over collections of folders and documents:
 
-```
+[source,python]
+----
 def lock_documents_in_folder(folder):
 
     for doc in folder.documents:
@@ -218,8 +225,7 @@ def lock_documents_in_folder(folder):
         
      for child in folder.children:
          lock_documents_in_folder(child)
-
-```
+----
 
 
 These operations _killed_ performance but fixing them meant giving up our single
@@ -230,14 +236,13 @@ Mostly we did this by replacing direct references with identifiers:
 
 Before: 
 
-```
+[source,python]
+----
 class Workspace:
-
    folders:  List[Folder]
 
 
 class Folder:
-
    permissions: PermissionSet
    documents: List[Document]
    parent: Folder
@@ -245,17 +250,16 @@ class Folder:
 
 
 class Document:
-
     parent: Folder
     workspace: Workspace
     version: List[DocumentVersion]
-```
+----
 
 After:
 
-```
+[source,python]
+----
 class Document:
-
    id: int
    workspace_id: int
    parent_id: int
@@ -266,23 +270,22 @@ class Document:
 
 
 class Folder:
-
    id: int
    permissions: PermissionSet
    workspace_id: int
 
 
 class Workspace:
-   
     id: int
-```
+----
 
 TIP: Bi-directional links are often a sign that your aggregates aren't right.
-In our original code, a Document knew about its containing Folder, and the Folder
-had a collection of Documents. This makes it easy to traverse the object graph
-but stops us from thinking properly about the consistency boundaries we need.
-We break apart aggregates by using references instead. In the new model, a
-Document had a folder_id but no way to directly access the Folder.
+    In our original code, a Document knew about its containing Folder, and the
+    Folder had a collection of Documents. This makes it easy to traverse the
+    object graph but stops us from thinking properly about the consistency
+    boundaries we need. We break apart aggregates by using references instead.
+    In the new model, a Document had a `folder_id` but no way to directly access
+    the Folder.
 
 If we needed to _read_ data, we avoided writing complex loops and transforms and
 tried to replace them with straight SQL. For example, one of our screens was a
@@ -292,8 +295,8 @@ This screen was _incredibly_ heavy on the database, because it relied on nested
 for loops that triggered a lazy-loaded ORM.
 
 TIP: We use this same technique in the book in Chapter 11 where we replace a
-nested loop over ORM objects with a simple SQL query. It's the first step in
-a CQRS approach.
+    nested loop over ORM objects with a simple SQL query. It's the first step
+    in a CQRS approach.
 
 After a lot of head-scratching, we replaced the ORM code with a big, ugly stored
 procedure. The code looked horrible, but it was much faster and it helped us
@@ -306,12 +309,15 @@ we locked an account, we could first query for all the affected workspaces
 
 We could then raise a new command for each workspace:
 
-```
+[source,python]
+----
 for workspace_id in workspaces:
     bus.handle(LockWorkspace(workspace_id))
-```
+----
 
-=== an event-driven approach to go microservices via strangler pattern
+
+=== An Event-driven Approach to go Microservices Via Strangler Pattern
+
 
 .Case Study: Carving out a microservice to replace a domain
 ********************************************************************************
@@ -350,7 +356,7 @@ If this all sounds a little familiar, well, now you know where our example app
 came from!
 ********************************************************************************
 
-When building the availability service we used a technique called _change event
+When building the availability service we used a technique called _event
 capture_ to move functionality from one place to another. This is a three step
 process:
 
@@ -370,6 +376,75 @@ to this
 
 TODO: Context diagram, E-Commerce, Availability, Fulfilment, Event-Broker
 
+
+
+=== Convincing your stakeholders to try something new
+
+If you're thinking about carving a new system out of a big ball of mud, you're
+probably suffering problems with reliability, performance, maintainability or
+all three simultaneously. Deep intractable problems call for drastic measures!
+
+We recommend _domain modelling_ as a first step. In many over-grown systems, the
+engineers, product owners, and customers no longer speak the same language.
+Business stakeholders speak about the system in abstract, process-focused terms
+while developers are forced to speak about the system as it physically exists in
+its wild and chaotic state.
+
+.Case Study: The user model
+********************************************************************************
+We mentioned earlier that the account and user model in our first system were
+bound together by a "bizarre rule". This is a perfect example of how engineering
+and business stakeholders can drift apart.
+
+In this system, _accounts_ parented _workspaces_, and users were _members_ of
+workspaces. Workspaces were the fundamental unit for applying permissions and
+quotas. If a user _joined_ a workspace, and didn't already have an _account_ we
+would associate them with the account that owned that workspace.
+
+This was messy and ad-hoc, but it worked fine until the day a product owner
+asked for a new feature:
+
+> When a user joins a company, we want to add them to some default workspaces
+  for the company, like the HR workspace or the Company Announcements workspace.
+
+We had to explain to them that there was _no such thing_ as a company, and there
+was no sense in which a user joined an account. Moreover, a "company" might have
+_many_ accounts, owned by different users, and a new user might be invited to
+any one of them.
+
+Years of adding hacks and workarounds to a broken model caught up with us, and
+we had to rewrite the entire user management function as a brand new system.
+
+********************************************************************************
+
+Figuring out how to model your domain is a complex task, and the subject of many
+decent books in its own right. We like to use interactive techniques like Event
+Storming, and CRC modelling, because humans are good at collaborating through
+play. 
+
+Event Modelling is a technique that brings engineers and product owners together
+to understand a system in terms of commands, queries, and events.
+
+TODO: Link event modelling
+
+The goal is to be able to talk about the system using the same ubiquitous
+language, so that you can agree on where the complexity lies.
+
+We've found a lot of value in treating domain problems as TDD kata. For example,
+the first code we wrote for the availability service was the batch and order
+line model. You can treat this as a lunch time workshop, or as a spike at the
+beginning of a project. Once you can demonstrate the value of modelling, it's
+easier to make the argument for structuring the project to make modelling easy.
+
+
+
+=== Getting started
+
+Once you've managed to convince your team to try a new way of building software
+it's easy to get overwhelmed by the sheer number of new things to think about.
+
+What message broker should we use? How should we 
+
 * decide on a piece of the old system to carve out.
 * get your system to produce events
     - as its main outputs
@@ -379,8 +454,6 @@ TODO: Context diagram, E-Commerce, Availability, Fulfilment, Event-Broker
     - either the same events the old one did (and we can switch those old parts off)
     - or new ones, and we switch over the downstream things progressively
 
-
-//TODO: event capture and all that jazz
 
 .Case Study: David on Taking Small Steps
 *******************************************************************************
@@ -398,7 +471,7 @@ They started using the message broker we were using for Celery as an external
 message bus for a separate service, via domain events. They're also using a lot
 of the same ideas as in your book though with much less OO)._
 
-[quote, Our Readers]
+[quote, David]
 ____
 Don't be afraid to try these things in small places
 ____
@@ -410,111 +483,155 @@ it._
 
 *******************************************************************************
 
+
+
 === More required reading
 
 * _Monolith to Microservices_ by Sam Newman, and his original book,
-   _Building Microservices_
+  _Building Microservices_. Strangler (Fig) pattern is mentioned as a
+  favorite, also many others.  Good if you're thinking of moving to
+  microservices, and also on integration patterns and the considerations
+  of async messaging-based integration.
 
-Stangler (Fig) pattern is mentioned as a favorite, also many others.
+* https://leanpub.com/clean-architectures-in-python[Clean Architectures in Python]
+  by Leonardo Giordani, which came out in 2019, is one of the few previous
+  books on application architecture in Python.
 
 === Questions our Tech Reviewers Asked That We Couldn't Work Into Prose
 
-* Do I need to do all of this at once? Can I just do a bit at a time?
+Do I need to do all of this at once? Can I just do a bit at a time?::
+    No, you can absolutely adopt these techniques bit by bit. We recommend, if you
+    have an existing system, building a service layer to try and keep orchestration
+    in one place. Once you have that, it's much easier to push logic into the model
+    and edge concerns like validation, or error handling, to the entry points.
+    +++<br />+++
+    It's worth having a service layer even if you still have a big messy Django ORM
+    because it's a way to start understanding the boundaries of operations.
 
-No, you can absolutely adopt these techniques bit by bit. We recommend, if you
-have an existing system, building a service layer to try and keep orchestration
-in one place. Once you have that, it's much easier to push logic into the model
-and edge concerns like validation, or error handling, to the entry points.
+Extracting use-cases will break a lot of my existing code, it's too tangled::
+    Just copy-paste. It's okay to cause more duplication in the short-term. Think of
+    this as a multi-step process. Your code is in a bad state now, so copy and paste
+    it to a new place, and then make that new code clean and tidy.
+    +++<br />+++
+    Once you've done that, you can replace uses of the old code with calls to your
+    new code and finally delete the mess. Fixing large code bases is a messy and
+    painful process. Don't expect things to get instantly better, and don't worry if
+    some bits of your application stay messy.
 
-It's worth having a service layer even if you still have a big messy Django ORM
-because it's a way to start understanding the boundaries of operations.
+Do I need to do CQRS? That sounds weird, can't I just use repositories for::
+    Of course you can! The techniques we're presenting in this book are intended to
+    make your life _easier_, they're not some kind of ascetic discipline with which
+    to punish yourself.
+    +++<br />+++
+    In our first case-study system, we had a lot of "View Builder" objects that used
+    repositories to fetch data and then performed some transformations to return
+    dumb read models. The advantage is that when you hit a performance problem, it's
+    easy to rewrite a view builder to use custom queries or raw SQL.
 
-* Extracting use-cases will break a lot of my existing code, it's too tangled
+How should use cases interact across a larger system? Is it a problem for one to call another?::
+    This might be an interim step. Again, in the first case-study, we had handlers
+    that would need to invoke other handlers. This gets _really_ messy, though, and
+    it's much better to move to using a message bus to separate these concerns.
+    +++<br />+++
+    Generally, your system will have a single message bus implementation, and a
+    bunch of different subdomains that center on a particular aggregate or set of
+    aggregates. When your use case has finished, it can raise an event, and a
+    handler elsewhere can run.
 
-Just copy-paste. It's okay to cause more duplication in the short-term. Think of
-this as a multi-step process. Your code is in a bad state now, so copy and paste
-it to a new place, and then make that new code clean and tidy.
+Is it a smell for a use case to use multiple repositories, and why?::
+    Yes! A repository is a pattern that we use for reading _aggregates_ from our
+    persistent store. By definition, we should only ever be updating one aggregate
+    at a time. If you need to read data to figure out what to do, then consider a
+    read-model that returns just the data you need, even if you cheat and build it
+    with a repo and domain objects under the hood.
 
-Once you've done that, you can replace uses of the old code with calls to your
-new code and finally delete the mess. Fixing large code bases is a messy and
-painful process. Don't expect things to get instantly better, and don't worry if
-some bits of your application stay messy.
+What if I have a read-only but business-logic heavy system?::
+    View models can have complex logic in them. In this book we've encouraged you to
+    separate your read and write models because they have different consistency and
+    throughput requirements. Mostly, we can use simpler logic for reads, but that's
+    not always true. In particular, permissions and authorization models can add a
+    lot of complexity to our read-side.
+    +++<br />+++
+    We've written systems where the view models needed extensive unit tests. In
+    those systems, we split a _view builder_ from a _view fetcher_.
+    +++<br />+++
+    +++<br />+++
+    TODO: Diagram
+    +++<br />+++
+    +++<br />+++
+    This makes it easy to test the view builder by giving it mocked data, eg. a list
+    of dicts.
+    +++<br />+++
+    "Fancy CQRS" with event handlers is really a way of running our complex view
+    logic whenever we write so that we can avoid running it when we read.
 
-* Do I need to do CQRS? That sounds weird, can't I just use repositories for
-  reads?
+Do I need to build microservices to do this stuff?::
+    Egads, no! These techniques pre-date microservices by a decade or so. Aggregates,
+    domain events, and dependency inversion are ways to control complexity in large
+    systems. It so happens that when you've built a set of use cases and a model
+    for a business process, it's relatively easy to move it to its own service, but
+    that's not a requirement.
 
-Of course you can! The techniques we're presenting in this book are intended to
-make your life _easier_, they're not some kind of ascetic discipline with which
-to punish yourself.
-
-In our first case-study system, we had a lot of "View Builder" objects that used
-repositories to fetch data and then performed some transformations to return
-dumb read models. The advantage is that when you hit a performance problem, it's
-easy to rewrite a view builder to use custom queries or raw SQL.
-
-* How should use cases interact across a larger system? Is it a problem for one
-  to call another?
-
-This might be an interim step. Again, in the first case-study, we had handlers
-that would need to invoke other handlers. This gets _really_ messy, though, and
-it's much better to move to using a message bus to separate these concerns.
-
-Generally, your system will have a single message bus implementation, and a
-bunch of different subdomains that center on a particular aggregate or set of
-aggregates. When your use case has finished, it can raise an event, and a
-handler elsewhere can run.
-
-* Is it a smell for a use case to use multiple repositories, and why?
-
-Yes! A repository is a pattern that we use for reading _aggregates_ from our
-persistent store. By definition, we should only ever be updating one aggregate
-at a time. If you need to read data to figure out what to do, then consider a
-read-model that returns just the data you need, even if you cheat and build it
-with a repo and domain objects under the hood.
-
-* What if I have a read-only but business-logic heavy system?
-
-View models can have complex logic in them. In this book we've encouraged you to
-separate your read and write models because they have different consistency and
-throughput requirements. Mostly, we can use simpler logic for reads, but that's
-not always true. In particular, permissions and authorization models can add a
-lot of complexity to our read-side.
-
-We've written systems where the view models needed extensive unit tests. In
-those systems, we split a _view builder_ from a _view fetcher_.
-
-TODO: Diagram
-
-This makes it easy to test the view builder by giving it mocked data, eg. a list
-of dicts.
-
-"Fancy CQRS" with event handlers is really a way of running our complex view
-logic whenever we write so that we can avoid running it when we read.
-
-* Do I need to build microservices to do this stuff?
-
-Egads, no! These techniques pre-date microservices by a decade or so. Aggregates,
-domain events, and dependency inversion are ways to control complexity in large
-systems. It so happens that when you've built a set of use cases and a model
-for a business process, it's relatively easy to move it to its own service, but
-that's not a requirement.
-
-* I'm using Django, can I still do this?
-
-We have an entire appendix, just for you! <<appendix_django>>
-
-TODO: point people at https://leanpub.com/clean-architectures-in-python
+I'm using Django, can I still do this?::
+    We have an entire appendix, just for you! <<appendix_django>>
 
 
+How can I convince other engineers to try this stuff?::
+    tbc
+
+[[footguns]]
 === Footguns
 
-This is a part 2 thing really, but basically, don't sally forth and implement
-your own event-driven microservices architecture without reading lots, lots
-more on the subject.
+Okay, so we've give you a whole bunch of new toys to play with, here's the
+fine print. Harry and Bob do not recommend that you copy-paste our code into
+a production system and rebuild your automated trading platform on Redis
+pub-sub. For reasons of brevity and simplicity, we've hand-waved a lot of tricky
+subjects. Here's a list of things we think you should know before trying this
+for real.
+
+==== Reliable messaging is hard
+
+Redis PUBSUB is not reliable and shouldn't be used as a general purpose
+messaging tool. We picked it because it's familiar and easy to run. At MADE we
+run Eventstore as our messaging tool, but we've had experience with Rabbit and
+AWS EventBridge.
+
+Tyler Treat has some excellent blog posts on his site bravenewgeek.com and you
+should read at least:
+ * https://bravenewgeek.com/you-cannot-have-exactly-once-delivery/
+ * https://bravenewgeek.com/what-you-want-is-what-you-dont-understanding-trade-offs-in-distributed-messaging/
+
+==== We explicitly choose small, focused transactions that can fail independently
+
+In chapter 8 we update our process so that _deallocating_ an order line and
+_reallocating_ the line happen in two separate units of work.
+You will need monitoring to know when these transactions fail, and tooling to
+replay events. Some of this is made easier by using a transaction log as your
+message broker (eg. Kafka, EventStore). You might also look at the Outbox
+pattern:
+* https://microservices.io/patterns/data/transactional-outbox.html
+
+==== We don't discuss idempotency
+
+We haven't given any real thought to what happens when handlers are retried.
+In practice you will want to make handlers idempotent so that calling them
+repeatedly with the same message will not make repeated changes to state.
+This is a key technique for building reliability, because it enables us to
+safely retry events when they fail.
+
+There's a lot of good material on idempotent message handling, try starting
+here:
+* https://blog.sapiensworks.com/post/2015/08/26/How-To-Ensure-Idempotency
+* https://lostechies.com/jimmybogard/2013/06/03/un-reliability-in-messaging-idempotency-and-de-duplication/
+
+==== Your events will need to change their schema over time
+
+You'll need to find some way of documenting your events and sharing schema
+with consumers. We like using JSON schema and markdown because it's simple but
+there is other prior art.
+
+Greg Young wrote an entire book on managing event-driven systems over time:
+https://www.goodreads.com/book/show/34327067-versioning-in-an-event-sourced-system
 
 https://martinfowler.com/books/eip.html[Enterprise Integration Patterns] by
-(as always) Martin Fowler is a pretty good start.
-
-
-//TODO: add some footgun examples.
-
+(as always) Martin Fowler is a pretty good start for messaging patterns.

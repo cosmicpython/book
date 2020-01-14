@@ -1,4 +1,4 @@
-[[chapter_06_aggregate]]
+[[chapter_07_aggregate]]
 == Aggregates and Consistency Boundaries
 
 In this chapter we'd like to revisit our domain model to talk about invariants
@@ -29,7 +29,7 @@ https://github.com/cosmicpython/code/tree/appendix_csvs[github.com/cosmicpython/
 git clone https://github.com/cosmicpython/code.git && cd code
 git checkout appendix_csvs
 # or, if you want to code along, checkout the previous chapter:
-git checkout chapter_05_uow
+git checkout chapter_06_uow
 ----
 ====
 
@@ -499,7 +499,7 @@ if you do that, you'll still have to solve a few challenges on your own,
 like adding the model to the ORM and making sure all the moving parts can
 talk to each other, which we hope will be instructive.
 
-https://github.com/cosmicpython/code/tree/chapter_06_aggregate_exercise
+https://github.com/cosmicpython/code/tree/chapter_07_aggregate_exercise
 
 We've put in a "cheating" implementation in that delegates to the existing
 `allocate()` function, so you should be able to evolve that towards the real
@@ -513,14 +513,7 @@ do them for you by magic!
 ******************************************************************************
 
 
-=== Version Numbers
-
-// TODO (DS) this is really about concurrency, not version numbers.  it might
-// be worth mentioning that this is optimistic locking, and also give a nod
-// to pessimistic locking
-// (EJ1) Agree with above. Could just change the section title to 
-//       "Optimistic Concurrency Control with Version Numbers". That
-//       will give anyone who's curious a good search term to Google.
+=== Optimistic Concurrency With Version Numbers
 
 We've got our new aggregate so we've solved the conceptual problem of choosing
 an object to be in charge of consistency boundaries.  Let's now spend a little
@@ -572,6 +565,15 @@ Database -[#red]>x Transaction2: Error! version is already 4
 
 @enduml
 ----
+
+TIP: When two operations conflict in this way we usually retry the failed
+operation from the beginning. Imagine we have two customers, Harry and Bob, and
+both submit orders for 'SHINY-TABLE'. Both threads load the product at version 1
+and allocate stock. The database prevents the concurrent update, and Bob's order
+fails with an error. When we _retry_ the operation, Bob's order loads the
+product at version 2, and tries to allocate again. If there is enough stock left
+all is well, otherwise he'll receive OutOfStock. Most operations can be retried
+this way in the case of a concurrency problem.
 
 ==== Implementation Options for Version Numbers
 
@@ -815,7 +817,7 @@ Aggregates and concurrency issues go together::
 *****************************************************************
 
 
-[[chapter_06_aggregate_tradoffs]]
+[[chapter_07_aggregate_tradoffs]]
 [options="header"]
 .Aggregates: The Trade-Offs
 |===

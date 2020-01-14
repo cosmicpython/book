@@ -1,4 +1,4 @@
-[[chapter_11_cqrs]]
+[[chapter_12_cqrs]]
 == Command-Query Responsibility Separation (CQRS)
 
 In this chapter we're going to start with a fairly uncontroversial insight:
@@ -15,6 +15,18 @@ image::images/maps_chapter_11.png[]
 
 <<maps_chapter_11>> shows where we might end up. Firstly though, why bother?
 
+[TIP]
+====
+You can find our code for this chapter at
+https://github.com/cosmicpython/code/tree/chapter_12_cqrs[github.com/cosmicpython/code/tree/chapter_12_cqrs].
+
+----
+git clone https://github.com/cosmicpython/code.git && cd code
+git checkout chapter_12_cqrs
+# or, if you want to code along, checkout the previous chapter:
+git checkout chapter_11_external_events
+----
+====
 
 === Domain models are for writing
 
@@ -129,26 +141,17 @@ read side, because stale data is essentially unavoidable.
 *******************************************************************************
 
 We can think of these these requirements as forming two halves of a system:
-the read side, and the write side.
+the read side, and the write side, shown in <<read_and_write_table>>.
 
-TODO: Diagram
-
-  Commands
-     |
-     v
-[ Handlers ]
-     v
- ( domain )
-     ^
-[  Views   ]
-     ^
-     |
-  Queries
-
-|| Read side | Write side |
-| Behaviour | Simple read | Complex business logic |
-| Cacheability | Highly cacheable | Uncacheable |
-| Consistency | Can be stale | Must be transactionally consistent |
+[[read_and_write_table]]
+.Read vs Write
+[options="header"]
+|===
+| | Read side | Write side
+| Behaviour | Simple read | Complex business logic
+| Cacheability | Highly cacheable | Uncacheable
+| Consistency | Can be stale | Must be transactionally consistent
+|===
 
 
 For the write side, our fancy domain architectural patterns help us to evolve
@@ -156,18 +159,6 @@ our system over time, but the complexity we've built so far doesn't buy
 anything for reading data. The service layer, the unit of work,  and the clever
 domain model are just bloat.
 
-[TIP]
-====
-You can find our code for this chapter at
-https://github.com/cosmicpython/code/tree/chapter_11_cqrs[github.com/cosmicpython/code/tree/chapter_11_cqrs].
-
-----
-git clone https://github.com/cosmicpython/code.git && cd code
-git checkout chapter_11_cqrs
-# or, if you want to code along, checkout the previous chapter:
-git checkout chapter_10_external_events
-----
-====
 
 === Post/Redirect/Get and CQS
  

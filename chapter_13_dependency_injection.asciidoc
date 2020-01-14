@@ -1,4 +1,4 @@
-[[chapter_12_dependency_injection]]
+[[chapter_13_dependency_injection]]
 == Dependency Injection (And Bootstrapping)
 
 Dependency Injection (DI) is regarded with suspicion in the Python world.  And
@@ -12,7 +12,7 @@ for how to do it, leaving it to you to pick which you think is most Pythonic
 We'll also add a new component to our architecture called __bootstrap.py__;
 it will be in charge of dependency injection, and some other initialisation
 stuff that we often need.  We'll explain why this sort of thing is called
-a _Composition Root_ in OO langauges, and why "bootstrap script" is just fine
+a _Composition Root_ in OO languages, and why "bootstrap script" is just fine
 for our purposes.
 
 <<bootstrap_chapter_before_diagram>> shows what our app looks like without
@@ -41,13 +41,13 @@ dependencies, and testing them.
 [TIP]
 ====
 You can find our code for this chapter at
-https://github.com/cosmicpython/code/tree/chapter_12_dependency_injection[github.com/cosmicpython/code/tree/chapter_12_dependency_injection].
+https://github.com/cosmicpython/code/tree/chapter_13_dependency_injection[github.com/cosmicpython/code/tree/chapter_13_dependency_injection].
 
 ----
 git clone https://github.com/cosmicpython/code.git && cd code
-git checkout chapter_12_dependency_injection
+git checkout chapter_13_dependency_injection
 # or, if you want to code along, checkout the previous chapter:
-git checkout chapter_11_cqrs
+git checkout chapter_12_cqrs
 ----
 ====
 
@@ -562,7 +562,7 @@ class MessageBus:  #<1>
         self.command_handlers = command_handlers
 
     def handle(self, message: Message):  #<3>
-        self.queue = [message]
+        self.queue = [message]  #<4>
         while self.queue:
             message = self.queue.pop(0)
             if isinstance(message, events.Event):
@@ -578,28 +578,10 @@ class MessageBus:  #<1>
 <2> ...which is given its already-dependency-injected handlers.
 <3> The main `handle()` function is substantially the same, just
     moving a few attributes and methods onto `self`.
+<4> Using `self.queue` like this is not thread-safe, which might
+    be a problem if you're using threads, because the bus instance is a global
+    in the Flask app context, as we've written it.  Just something to watch out for.
 
-// Note for DS, I did try a diff here but it was unreadable. too many changes.
-
-////
-TODO (hynek) (re self.qeue)
-this makes me very uneasy and I’m almost certain it won’t work.
-
-Your MessageBus is a global object and putting queue on it – and clearing it
-out when handle is called is both hard to follow and 100% not thread safe.
-////
-
-////
- (EJ1) re: above comment, there's just *A BUG YOU MUST FIX*. It should be:
-
-def handle(self, message):
-    queue = [message]
-    while queue:
-        # go do it to it ...
-
-Then each thread can get its own queue/execution context, and the globality
-of the bus doesn't matter.
-////
 
 What else changes in the bus?
 
@@ -678,27 +660,12 @@ rest of it.
 <2> We no longer need to explicit build a particular type of UoW, the bootstrap
     script defaults take care of it
 
-<3> And our messagebus is now a specific instance rather than the module global.
-
-// TODO (EJ3) bus is still a module global, it's now just an instance of an class instead of a module.
-
-// TODO (EJ2) The "Flask-onic" version of bootstrap is the application factory pattern w/ blueprints.
-//      It is worth at least mentioning here.
-//
-// The issue that the style above (where app is a module variable) can raise, is that the import will
-// have side-effects, because it inits the bus.  In the worst case, someone may have decided to add
-// network calls to retrieve config.
-//
-// If you end up needing to unit test somethihng in this module, or use the flask test client,
-// it can then lead you down the path to patching the configuration, which defeats the composition root.
-//
-// I think Docker helps mitigate this problem, with the cost of potentially increasing the complexity.
-//
-//  Reference:
-//  https://flask.palletsprojects.com/en/1.1.x/patterns/appfactories/#
-//  https://flask.palletsprojects.com/en/1.1.x/testing/#other-testing-tricks
-//  https://flask.palletsprojects.com/en/1.1.x/blueprints/#blueprints
-
+<3> And our messagebus is now a specific instance rather than the global module:footnote:[
+    Although it's still a global in the flask_app module scope, if that makes sense.  This
+    may cause problems if you ever find yourself wanting to test your flask app
+    in-process using the Flask Test Client instead of using Docker as we do.
+    It's worth researching https://flask.palletsprojects.com/en/1.1.x/patterns/appfactories/[Flask app factories]
+    if you get into this].
 
 
 === Initializing DI in Our Tests
@@ -1013,6 +980,7 @@ And, erm, that's it really.
 .Exercise for the Reader
 ******************************************************************************
 NOTE: TODO, under construction
+
 // (EJ2) Maybe LocalStack here https://github.com/localstack/localstack?
 
 Why not have a go at changing from email to, idk, twilio or slack

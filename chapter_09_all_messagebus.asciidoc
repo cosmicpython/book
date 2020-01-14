@@ -1,4 +1,4 @@
-[[chapter_08_all_messagebus]]
+[[chapter_09_all_messagebus]]
 == Going to Town on the Message Bus
 
 In this chapter we'll start to make events more fundamental to the internal
@@ -19,6 +19,19 @@ fundamentally into a message-processor.
 image::images/maps_chapter_08_after.png[]
 
 
+[TIP]
+====
+You can find our code for this chapter at
+https://github.com/cosmicpython/code/tree/chapter_09_all_messagebus[github.com/cosmicpython/code/tree/chapter_09_all_messagebus].
+
+----
+git clone https://github.com/cosmicpython/code.git && cd code
+git checkout chapter_09_all_messagebus
+# or, if you want to code along, checkout the previous chapter:
+git checkout chapter_08_events_and_message_bus
+----
+====
+
 
 === A New Requirement Leads Us to Consider a New Architecture
 
@@ -29,13 +42,13 @@ warehouse-management systems, logistics schedulers, and payroll systems.
 This software is tricky to write because unexpected things happen all the time
 in the real world of physical objects and unreliable humans. For example:
 
-* during a stock-take, we discover that three SPRINGY-MATTRESSes have been
-water damaged by a leaky roof.
-* a consignment of RELIABLE-FORKs is missing the required documentation and is
-held in customs for several weeks. Three RELIABLE-FORKs subsequently fail safety
-testing, and are destroyed.
-* a global shortage of sequins means we're unable to manufacture our next batch
-of SPARKLY-BOOKCASE.
+* During a stock-take, we discover that three SPRINGY-MATTRESSes have been
+  water damaged by a leaky roof.
+* A consignment of RELIABLE-FORKs is missing the required documentation and is
+  held in customs for several weeks. Three RELIABLE-FORKs subsequently fail safety
+  testing, and are destroyed.
+* A global shortage of sequins means we're unable to manufacture our next batch
+  of SPARKLY-BOOKCASE.
 
 In all of these situations,  we learn about the need to change batch quantities
 when they're already in the system.  Perhaps someone made a mistake on the number
@@ -100,7 +113,7 @@ event handlers:
   event.footnote:[If you've done a bit of reading around event-driven
     architectures, you may be thinking "some of these events sound more like
     commands!". Bear with us!  We're trying to introduce one concept at a time.
-    In the <<chapter_09_commands,next chapter>> we'll introduce the distinction
+    In the <<chapter_10_commands,next chapter>> we'll introduce the distinction
     between command and events.]
 
 Our new requirement will fit the same pattern:
@@ -408,7 +421,7 @@ a temporary hack on our messagebus to let it return events.
 
 
 It's because we're mixing the read and write responsibilities in our system.
-We'll come back to fix this wart in <<chapter_11_cqrs>>.
+We'll come back to fix this wart in <<chapter_12_cqrs>>.
 
 
 ==== Modifying Our API to Do Events
@@ -430,14 +443,10 @@ We'll come back to fix this wart in <<chapter_11_cqrs>>.
 +            request.json['orderid'], request.json['sku'], request.json['qty'],
          )
 +        results = messagebus.handle(event, unit_of_work.SqlAlchemyUnitOfWork())  #<3>
-+        batchref = results.pop()
++        batchref = results.pop(0)
      except InvalidSku as e:
 ----
 ====
-
-// TODO: (EJ1) Should the line `batchref = results.pop()` be `batchref = results.pop(0)` instead?
-//             Otherwise you get the result of the last event handler, instead of the handler
-//             triggered by AllocationRequired.
 
 <1> Instead of calling the service layer with a bunch of primitives extracted
     from the request JSON...
@@ -461,7 +470,7 @@ fully event-driven.
 
 * The entire app is now best described as a message processor (or event processor
   if you prefer.  We'll talk about the distinction in the
-  <<chapter_09_commands, next chapter>>.
+  <<chapter_10_commands, next chapter>>.
 
 
 
@@ -506,19 +515,6 @@ end
 //             footguns.
 
 
-
-[TIP]
-====
-You can find our code for this chapter at
-https://github.com/cosmicpython/code/tree/chapter_08_all_messagebus[github.com/cosmicpython/code/tree/chapter_08_all_messagebus].
-
-----
-git clone https://github.com/cosmicpython/code.git && cd code
-git checkout chapter_08_all_messagebus
-# or, if you want to code along, checkout the previous chapter:
-git checkout chapter_07_events_and_message_bus
-----
-====
 
 ==== Our New Event
 
@@ -682,8 +678,13 @@ class FakeRepository(repository.AbstractRepository):
 ====
 
 
-// TODO: discuss finder methods on repository.
-
+NOTE: We're adding a query to our repository to make this use case easier to
+implement. So long as our query is returning a single aggregate, we're not
+bending any rules. If you find yourself writing complex queries on your
+repositories, you might want to think about a different design. In particular, a
+method like 'get_most_popular_products', or 'find_products_by_order_id' would
+definitely trigger our spidey sense. Chapter 11 and the Epilogue have some tips
+on managing complex queries.
 
 ==== A New Method on the Domain Model
 
@@ -855,7 +856,7 @@ class FakeMessageBus(messagebus.AbstractMessageBus):
 ----
 ====
 
-We use a class-based messagebus in <<chapter_12_dependency_injection>>,
+We use a class-based messagebus in <<chapter_13_dependency_injection>>,
 if you need more inspiration.  The "simple" implementation in this
 chapter essentially uses the `messagebus.py` module itself to implement
 Singleton Pattern.
@@ -896,10 +897,10 @@ side-effects.
 
 Now, you may be wondering, where are those `BatchQuantityChanged` events actually
 going to come from?  The answer is coming up in a couple of chapters' time.  But
-first, let's talk about <<chapter_09_commands,Events versus Commands>>.
+first, let's talk about <<chapter_10_commands,Events versus Commands>>.
 
 
-[[chapter_08_all_messagebus_tradeoffs]]
+[[chapter_09_all_messagebus_tradeoffs]]
 [options="header"]
 .Whole app is a Message Bus: The Trade-Offs
 |===
@@ -911,12 +912,6 @@ a|
 a|
 * Messagebus is still a slightly unpredictable way of doing things from
   a web point of view.  You don't know in advance when things are going to end
-
-* We've gone from domain objects in service layer calls, to primitives,
-  and now to domain events, which feels flip-floppey.
-
-//TODO (DS): i feel you  made the case that this isn't actually a con
-// (EJ1): agree with DS. The text actually explains this as a "Pro".
 
 * duplication / maintenance cost of having model objects _and_ events
   now.  adding a field to one usually means adding a field to at least

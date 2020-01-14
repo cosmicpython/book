@@ -1,4 +1,4 @@
-[[chapter_09_commands]]
+[[chapter_10_commands]]
 == Commands and Command Handler
 
 In the previous chapter we talked about using events as a way of representing
@@ -16,13 +16,13 @@ message bus, but with slightly different rules.
 [TIP]
 ====
 You can find our code for this chapter at
-https://github.com/cosmicpython/code/tree/chapter_09_commands[github.com/cosmicpython/code/tree/chapter_09_commands].
+https://github.com/cosmicpython/code/tree/chapter_10_commands[github.com/cosmicpython/code/tree/chapter_10_commands].
 
 ----
 git clone https://github.com/cosmicpython/code.git && cd code
-git checkout chapter_09_commands
+git checkout chapter_10_commands
 # or, if you want to code along, checkout the previous chapter:
-git checkout chapter_08_all_messagebus
+git checkout chapter_09_all_messagebus
 ----
 ====
 
@@ -197,7 +197,7 @@ def handle_command(
 
 <3> `return result` is only temporary; as mentioned in <<temporary_ugly_hack>>,
     it's a temporary hack to allow the message bus to return the batch
-    reference for the API to use.  We'll fix this in <<chapter_11_cqrs>>.
+    reference for the API to use.  We'll fix this in <<chapter_12_cqrs>>.
 
 
 We also change the single `HANDLERS` dict into different ones for
@@ -499,7 +499,7 @@ things half-finished.
 // how/where that retry would be handled.
 
 
-[[chapter_09_commands_and_events_tradeoffs]]
+[[chapter_10_commands_and_events_tradeoffs]]
 [options="header"]
 .Splitting commands and events: The trade-offs
 |===

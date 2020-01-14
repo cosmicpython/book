@@ -1,4 +1,4 @@
-[[chapter_05_uow]]
+[[chapter_06_uow]]
 == Unit of Work Pattern
 
 In this chapter we'll introduce the final piece of the puzzle that ties
@@ -35,11 +35,11 @@ And we'll do it all using a lovely piece of Python syntax, a context manager.
 [TIP]
 ====
 You can find our code for this chapter at
-https://github.com/cosmicpython/code/tree/chapter_05_uow[github.com/cosmicpython/code/tree/chapter_05_uow].
+https://github.com/cosmicpython/code/tree/chapter_06_uow[github.com/cosmicpython/code/tree/chapter_06_uow].
 
 ----
 git clone https://github.com/cosmicpython/code.git && cd code
-git checkout chapter_05_uow
+git checkout chapter_06_uow
 # or, if you want to code along, checkout the previous chapter:
 git checkout chapter_04_service_layer
 ----
@@ -436,7 +436,7 @@ def test_rolls_back_on_error(session_factory):
 TIP: We haven't shown it here, but it can be worth testing some of the more
     "obscure" database behavior, like transactions, against the "real"
     database, ie the same engine.  For now we're getting away with using
-    SQLite instead of Postgres, but in <<chapter_06_aggregate>> we'll switch
+    SQLite instead of Postgres, but in <<chapter_07_aggregate>> we'll switch
     some of the tests to using the real DB.  It's convenient that our UoW
     class makes that easy!
 
@@ -594,10 +594,9 @@ it's doing are covered in _test_repository.py_.  That last you might keep around
 but we could certainly see an argument for just keeping everything at the highest
 possible level of abstraction (just as we did for the unit tests).
 
-TIP: Every line of code that we put in a test is like a blob of glue, holding
-    the system in a particular shape. The more tests we have, the harder it will
-    be to change things. As we build better abstractions, we can move our tests
-    to run against them, which leaves us free to change the underlying details.
+TIP: This is another example of the lesson from <<chapter_05_high_gear_low_gear>>:
+    As we build better abstractions, we can move our tests to run against them,
+    which leaves us free to change the underlying details.
 
 
 .Exercise for the Reader
@@ -611,7 +610,7 @@ or rollback on exit.  If you feel like going all-functional rather than
 messing about with all these classes, you could use `@contextmanager` from
 `contextlib`.
 
-https://github.com/cosmicpython/code/tree/chapter_05_uow_exercise
+https://github.com/cosmicpython/code/tree/chapter_06_uow_exercise
 
 We've stripped out both the actual UoW and the fakes, as well as paring back
 the abstract UoW.  Why not send us a link to your repo if you come up with
@@ -657,7 +656,7 @@ SQLAlchemy's own recommendations:
 > as far as possible from the details of the program doing its work.
 
 
-//TODO:  not sure where, but we should maybe talk about the option of separating
+//IDEA:  not sure where, but we should maybe talk about the option of separating
 // the uow into a uow plus a uowm.
 
 
@@ -686,7 +685,7 @@ SQLAlchemy already implements this pattern::
 *****************************************************************
 
 
-[[chapter_05_uow_tradeoffs]]
+[[chapter_06_uow_tradeoffs]]
 [options="header"]
 .Unit of Work: The Trade-Offs
 |===

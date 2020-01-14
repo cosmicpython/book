@@ -7,10 +7,10 @@ if [[ $# -eq 0 ]] ; then
 fi
 
 cd code
-git co chapter_12_dependency_injection
+git co chapter_13_dependency_injection
 git irebase $1
 
 git co master
-git reset --hard chapter_12_dependency_injection
+git reset --hard chapter_13_dependency_injection
 
 cd ..
