@@ -181,15 +181,14 @@ One formulation of the SRP is that each class should only have a single reason
 to change. When we switch from email to SMS, we shouldn't have to update our
 "allocate" function, because that's clearly a separate responsibility.
 
-To solve the problem, we're going to split the orchestration into separate
-steps, so that the different concerns don't get tangled up. The domain model's
-job is to know that we're out of stock, but the responsibility of sending an
-alert belongs elsewhere. We should be able to turn this feature on or off, or to
-switch to SMS notifications instead, without needing to change the rules of our
-domain model.
-
-//(EJ1) Suggestion: Consider using the terms "orchestration" vs "choreography" will help
-//      in this chapter to contrast the imperative vs event based approaches.
+To solve the problem, we're going to split the orchestrationfootnote:[
+Our tech reviewer Ed likes to say that the move from imperative to event-based
+flow control changes what used to be _orchestration_ into _choreography_.]
+into separate steps, so that the different concerns don't get tangled up. The
+domain model's job is to know that we're out of stock, but the responsibility
+of sending an alert belongs elsewhere. We should be able to turn this feature
+on or off, or to switch to SMS notifications instead, without needing to change
+the rules of our domain model.
 
 We'd also like to keep the service layer free of implementation details. We
 want to apply the Dependency Inversion Principle to notifications, so that our
