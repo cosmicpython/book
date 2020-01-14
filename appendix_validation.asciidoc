@@ -430,9 +430,10 @@ SCARCE-CLOCK to order 76543", the message is *syntactically* valid, and
 *semantically* valid, but we're unable to comply because we don't have the stock
 available.
 
-
-TODO: more here, but basically the message is: we validate pragmatics in the 
-model layer, yes?
+TIP: Once you've validated the syntax and semantics of your commands
+    at the edges of your system, the domain is the place for the rest
+    of your validation.  Validation of pragmatics is often a core part
+    of your business rules.
 
 
 
