@@ -744,13 +744,12 @@ workflow with our new message bus.
 
 .Recap: Domain Events and the Message Bus
 *****************************************************************
-Events can help with SRP::
+Events can help with the Single Responsibility Principle::
     Code gets tangled up when we mix multiple concerns in one place. Events can
     help us to keep things tidy by separating primary use-cases from secondary
     ones.
     We also use events for communicating between aggregates so that we don't
     need to run long-running transactions that lock against multiple tables.
-// TODO (hynek) there's enough space to write out SRP
 
 A Message Bus routes messages to handlers::
     You can think of a message bus as a dict that maps from events to their
