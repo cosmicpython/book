@@ -80,7 +80,7 @@ enormous number of objects from the database in order to test permissions and
 quotas. Creating a new workspace involved hundreds of database queries as we set
 up the permissions structure, invited users, and set up sample content. 
 
-Some of the code for operations was in page objects, and ran when a user clicked
+Some of the code for operations was in web handlers, and ran when a user clicked
 a button or submitted a form, some of it was in "manager" objects that held
 code for orchestrating work, and some of it was in the domain model. Model
 objects would make database calls, or copy files on disk, and the test coverage
@@ -90,7 +90,7 @@ To fix the problem, we first introduced a service layer so that all of the code
 for creating a document or workspace was _in one place_ and could be understood.
 This involved pulling data access code out of the domain model and into
 command handlers. Likewise, we pulled orchestration code out of the managers and
-the page objects, and pushed it into handlers.
+the web handlers, and pushed it into handlers.
 
 The resulting command handlers were _long_ and messy, but we'd made a start at
 introducing order to the chaos.
@@ -98,12 +98,11 @@ introducing order to the chaos.
 ********************************************************************************
 
 TODO: Add diagram
-
-This was the system where Bob first learned how to break apart a monolith, and
-it was a doozy. There was logic _everywhere_ - in the web pages, in "manager"
-objects, in "helpers", in fat "service" classes that we'd written to abstract
-the managers and helpers, and in hairy "command" objects that we'd written to
-break apart the services.
+This was the system where Bob first learned how to break apart a ball of mud,
+and it was a doozy. There was logic _everywhere_ - in the web pages, in
+"manager" objects, in "helpers", in fat "service" classes that we'd written to
+abstract the managers and helpers, and in hairy "command" objects that we'd
+written to break apart the services.
 
 If you're working in a system that's reached this point, it can feel hopeless,
 but it's never too late to start weeding an overgrown garden. Eventually we
