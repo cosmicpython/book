@@ -30,6 +30,7 @@ In the meantime, pull requests, typofixes, and more substantial feedback + sugge
 | [Chapter 12: CQRS](chapter_12_cqrs.asciidoc) | [![Build Status](https://travis-ci.org/cosmicpython/code.svg?branch=chapter_12_cqrs)](https://travis-ci.org/cosmicpython/code) |
 | [Chapter 13: Dependency Injection](chapter_13_dependency_injection.asciidoc) | [![Build Status](https://travis-ci.org/cosmicpython/code.svg?branch=chapter_13_dependency_injection)](https://travis-ci.org/cosmicpython/code) |
 | [Epilogue: How do I get there from here?](epilogue_1_how_to_get_there_from_here.asciidoc) | |
+| [Appendix A: Recap table](appendix_ds1_table.asciidoc) | |
 | [Appendix B: Project Structure](appendix_project_structure.asciidoc) | [![Build Status](https://travis-ci.org/cosmicpython/code.svg?branch=appendix_project_structure)](https://travis-ci.org/cosmicpython/code) |
 | [Appendix C: A major infrastructure change, made easy](appendix_csvs.asciidoc) | [![Build Status](https://travis-ci.org/cosmicpython/code.svg?branch=appendix_csvs)](https://travis-ci.org/cosmicpython/code) |
 | [Appendix D: Django](appendix_django.asciidoc) | [![Build Status](https://travis-ci.org/cosmicpython/code.svg?branch=appendix_django)](https://travis-ci.org/cosmicpython/code) |

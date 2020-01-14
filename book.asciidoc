@@ -2,7 +2,7 @@
 :source-highlighter: pygments
 :icons: font
 
-= Pythonic Application Architecture Patterns
+= Architecture Patterns with Python
 :toc:
 
 
@@ -21,11 +21,8 @@ include::chapter_01_domain_model.asciidoc[]
 
 include::chapter_02_repository.asciidoc[]
 
-:sectnums!:
-
 include::chapter_03_abstractions.asciidoc[]
 
-:sectnums:
 
 include::chapter_04_service_layer.asciidoc[]
 
@@ -50,6 +47,14 @@ include::chapter_12_cqrs.asciidoc[]
 
 include::chapter_13_dependency_injection.asciidoc[]
 
+
+:sectnums!:
+
+include::epilogue_1_how_to_get_there_from_here.asciidoc[]
+
+:sectnums:
+
+include::appendix_ds1_table.asciidoc[]
 
 include::appendix_project_structure.asciidoc[]
 
