@@ -19,6 +19,19 @@ fundamentally into a message-processor.
 image::images/maps_chapter_08_after.png[]
 
 
+[TIP]
+====
+You can find our code for this chapter at
+https://github.com/cosmicpython/code/tree/chapter_09_all_messagebus[github.com/cosmicpython/code/tree/chapter_09_all_messagebus].
+
+----
+git clone https://github.com/cosmicpython/code.git && cd code
+git checkout chapter_09_all_messagebus
+# or, if you want to code along, checkout the previous chapter:
+git checkout chapter_08_events_and_message_bus
+----
+====
+
 
 === A New Requirement Leads Us to Consider a New Architecture
 
@@ -29,13 +42,13 @@ warehouse-management systems, logistics schedulers, and payroll systems.
 This software is tricky to write because unexpected things happen all the time
 in the real world of physical objects and unreliable humans. For example:
 
-* during a stock-take, we discover that three SPRINGY-MATTRESSes have been
-water damaged by a leaky roof.
-* a consignment of RELIABLE-FORKs is missing the required documentation and is
-held in customs for several weeks. Three RELIABLE-FORKs subsequently fail safety
-testing, and are destroyed.
-* a global shortage of sequins means we're unable to manufacture our next batch
-of SPARKLY-BOOKCASE.
+* During a stock-take, we discover that three SPRINGY-MATTRESSes have been
+  water damaged by a leaky roof.
+* A consignment of RELIABLE-FORKs is missing the required documentation and is
+  held in customs for several weeks. Three RELIABLE-FORKs subsequently fail safety
+  testing, and are destroyed.
+* A global shortage of sequins means we're unable to manufacture our next batch
+  of SPARKLY-BOOKCASE.
 
 In all of these situations,  we learn about the need to change batch quantities
 when they're already in the system.  Perhaps someone made a mistake on the number
@@ -506,19 +519,6 @@ end
 //             footguns.
 
 
-
-[TIP]
-====
-You can find our code for this chapter at
-https://github.com/cosmicpython/code/tree/chapter_09_all_messagebus[github.com/cosmicpython/code/tree/chapter_09_all_messagebus].
-
-----
-git clone https://github.com/cosmicpython/code.git && cd code
-git checkout chapter_09_all_messagebus
-# or, if you want to code along, checkout the previous chapter:
-git checkout chapter_08_events_and_message_bus
-----
-====
 
 ==== Our New Event
 
