@@ -1,5 +1,4 @@
 [[chapter_04_service_layer]]
-
 == Our First Use Case: Flask API and Service Layer
 
 Back to our allocations project!
@@ -63,10 +62,6 @@ plan:
 3. Experiment with different types of parameters for our service layer
    functions; show that using primitive data types allows the service-layer's
    clients (our tests and our flask API) to be decoupled from the model layer.
-
-4. Add an extra service called `add_stock` so that our service-layer
-   tests and end-to-end tests no longer need to go directly to the
-   storage layer to set up test data.
 
 
 === A First End-To-End (E2E) Test
@@ -900,7 +895,8 @@ a|
 
 * When combined with _Repository Pattern_ and a `FakeRepository`, we've got
   a nice way of writing tests at a higher level than the Domain Layer;
-  we can test more of our workflow without needing to go to integration tests.
+  we can test more of our workflow without needing to go to integration tests
+  (read on to <<chapter_04b_high_gear_low_gear>> for more elaboration on this).
 
 a|
 * If your app is _purely_ a web app, your controllers/view functions can be
