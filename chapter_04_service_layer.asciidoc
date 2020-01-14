@@ -16,8 +16,11 @@ By the end of this chapter, we'll have added a Flask API that will talk to
 the Service Layer, which will serve as the entrypoint to our Domain Model.
 By making the service layer depend on the `AbstractRepository`, we'll be
 able to unit test it using `FakeRepository`, and then run it in real life
-using `SqlAlchemyRepository`.  <<service_layer_before_after>> is a class
-diagram showing where we're heading.
+using `SqlAlchemyRepository`.  <<service_layer_before_after>> is a diagram
+showing where we're heading.
+
+NOTE: In our diagrams, we are using the convention that the _yellow/orange_
+    blocks mean new things that we are adding to our architecture.
 
 [[service_layer_before_after]]
 .Adding the Service Layer to our Architecture
