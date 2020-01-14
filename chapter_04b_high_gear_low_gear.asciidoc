@@ -128,6 +128,10 @@ model. If we restrict ourselves to only testing against the service layer,
 we won't have any tests that directly interact with "private" methods or
 attributes on our model objects, which leaves us more free to refactor them.
 
+TIP: Every line of code that we put in a test is like a blob of glue, holding
+    the system in a particular shape. The more low-level tests we have, the
+    harder it will be to change things.
+
 
 [[kinds_of_tests]]
 === On Deciding What Kind of Tests to Write
@@ -150,8 +154,6 @@ image::images/test_spectrum_diagram.png[]
 | <---------                                                       ----------> |
 | API tests                  service-layer tests                  domain tests |
 ----
-
-
 
 
 Extreme programming (XP) exhorts us to "listen to the code." When we're writing

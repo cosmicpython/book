@@ -594,10 +594,9 @@ it's doing are covered in _test_repository.py_.  That last you might keep around
 but we could certainly see an argument for just keeping everything at the highest
 possible level of abstraction (just as we did for the unit tests).
 
-TIP: Every line of code that we put in a test is like a blob of glue, holding
-    the system in a particular shape. The more tests we have, the harder it will
-    be to change things. As we build better abstractions, we can move our tests
-    to run against them, which leaves us free to change the underlying details.
+TIP: This is another example of the lesson from <<chapter_04b_high_gear_low_gear>>:
+    As we build better abstractions, we can move our tests to run against them,
+    which leaves us free to change the underlying details.
 
 
 .Exercise for the Reader
