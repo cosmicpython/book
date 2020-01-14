@@ -917,12 +917,6 @@ a|
 * Messagebus is still a slightly unpredictable way of doing things from
   a web point of view.  You don't know in advance when things are going to end
 
-* We've gone from domain objects in service layer calls, to primitives,
-  and now to domain events, which feels flip-floppey.
-
-//TODO (DS): i feel you  made the case that this isn't actually a con
-// (EJ1): agree with DS. The text actually explains this as a "Pro".
-
 * duplication / maintenance cost of having model objects _and_ events
   now.  adding a field to one usually means adding a field to at least
   on of the others
