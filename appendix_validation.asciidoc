@@ -3,7 +3,7 @@
 == Validation
 
 Whenever we're teaching and talking about these techniques, one question that
-comes up over and over is "where should I do validation? Does that belong with
+comes up over and over is "Where should I do validation? Does that belong with
 my business logic, in the domain model, or is that an infrastructural concern?"
 
 As with any architectural question, the answer is: it depends!
@@ -91,7 +91,7 @@ declaration of our message types.
 
 
 [[command_factory]]
-.A command factory with schema (src/allocation/commdands.py)
+.A command factory with schema (src/allocation/commands.py)
 ====
 [source,python]
 ----
@@ -159,7 +159,7 @@ schema, or to build libraries that validate incoming messages and share them
 among systems. This likewise fails the robustness test.
 
 Let's imagine, for example, that the procurement system adds new fields to the
-`change_batch_quantity` message that record the reason for the change, and the
+`ChangeBatchQuantity` message that record the reason for the change, and the
 email of the user responsible for the change.
 
 Since these fields don't matter to the allocation service, we should simply
@@ -289,7 +289,7 @@ teapot to order five", but it's meaningless.
 ----
 ====
 
-We can read this json blob as an Allocate command but we can't successfully
+We can read this json blob as an `Allocate` command but we can't successfully
 execute it, because it's _nonsense_.
 
 We tend to validate semantic concerns at the message handler layer with a kind
