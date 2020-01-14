@@ -12,6 +12,7 @@ directly on the model.  In this chapter we'll discuss the tradeoffs
 involved in moving those tests up to the service-layer level, and
 some more general testing guidelines.
 
+
 .Harry Says: Seeing a Test Pyramid in Action Made me a Convert
 *******************************************************************************
 I was initially skeptical of all Bob's architectural patterns, but seeing
@@ -40,14 +41,14 @@ does to our test pyramid:
 [role="skip"]
 ----
 $ grep -c test_ test_*.py
-test_allocate.py:4
-test_batches.py:8
-test_services.py:3
+tests/unit/test_allocate.py:4
+tests/unit/test_batches.py:8
+tests/unit/test_services.py:3
 
-test_orm.py:6
-test_repository.py:2
+tests/integration/test_orm.py:6
+tests/integration/test_repository.py:2
 
-test_api.py:2
+tests/e2e/test_api.py:2
 ----
 ====
 
@@ -66,7 +67,7 @@ model any more. Instead, we could rewrite all of the domain-level tests from
 Chapter 1 in terms of the service layer.
 
 
-.Rewriting a domain test at the service layer (test_services.py)
+.Rewriting a domain test at the service layer (tests/unit/test_services.py)
 ====
 [source,python]
 [role="skip"]
@@ -254,7 +255,7 @@ rewrite its API to work in terms of primitives.
 Our service layer currently takes an `OrderLine` domain object:
 
 [[service_domain]]
-.Before: allocate takes a domain object (services.py)
+.Before: allocate takes a domain object (service_layer/services.py)
 ====
 [source,python]
 [role="skip"]
@@ -266,7 +267,7 @@ def allocate(line: OrderLine, repo: AbstractRepository, session) -> str:
 How would it look if its parameters were all primitive types?
 
 [[service_takes_primitives]]
-.After: allocate takes strings and ints (services.py)
+.After: allocate takes strings and ints (service_layer/services.py)
 ====
 [source,python]
 ----
@@ -281,7 +282,7 @@ We rewrite the tests in those terms as well:
 
 
 [[tests_call_with_primitives]]
-.Tests now use primitives in function call (test_services.py)
+.Tests now use primitives in function call (tests/unit/test_services.py)
 ====
 [source,python]
 [role="non-head"]
@@ -308,7 +309,7 @@ function on `FakeRepository`:
 
 
 [[services_factory_function]]
-.Factory functions for fixtures are one possibility (test_services.py)
+.Factory functions for fixtures are one possibility (tests/unit/test_services.py)
 ====
 [source,python]
 [role="skip"]
@@ -345,7 +346,7 @@ on the domain:
 
 
 [[test_add_batch]]
-.Test for new add_batch service (test_services.py)
+.Test for new add_batch service (tests/unit/test_services.py)
 ====
 [source,python]
 ----
@@ -366,7 +367,7 @@ TIP: In general, if you find yourself needing to do domain-layer stuff directly
 And the implementation is just two lines
 
 [[add_batch_service]]
-.A new service for add_batch (services.py)
+.A new service for add_batch (service_layer/services.py)
 ====
 [source,python]
 ----
@@ -395,7 +396,7 @@ any dependencies on the model.
 
 
 [[services_tests_all_services]]
-.Services tests now only use services (test_services.py)
+.Services tests now only use services (tests/unit/test_services.py)
 ====
 [source,python]
 ----
@@ -432,7 +433,7 @@ json-wrangling and a single function call:
 
 
 [[api_for_add_batch]]
-.API for adding a batch (flask_app.py)
+.API for adding a batch (entrypoints/flask_app.py)
 ====
 [source,python]
 ----
@@ -462,7 +463,7 @@ API calls, meaning the API tests have no dependencies other than the API,
 which is also very nice:
 
 [[api_tests_with_no_sql]]
-.API tests can now add their own batches (test_api.py)
+.API tests can now add their own batches (tests/e2e/test_api.py)
 ====
 [source,python]
 ----
