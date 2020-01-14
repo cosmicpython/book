@@ -580,10 +580,10 @@ Instead, we like to clearly identify the responsibilities in our codebase, and t
 separate those responsibilities out into small, focused objects that are easy to
 replace with a test double.
 
-NOTE: You can see an example in <<chapter_07_events_and_message_bus>>
+NOTE: You can see an example in <<chapter_08_events_and_message_bus>>
     where we `mock.patch()` out an email-sending module, but eventually we
     replace that with an explicit bit of dependency injection, in
-    <<chapter_12_dependency_injection>>.
+    <<chapter_13_dependency_injection>>.
 
 There are three closely related reasons for our preference:
 
@@ -688,7 +688,7 @@ so that's our functional core.  The service layer that we build around it
 and we use dependency injection to provide those services with stateful
 components, so we can still unit test them.
 
-See <<chapter_12_dependency_injection>> for more exploration of making our
+See <<chapter_13_dependency_injection>> for more exploration of making our
 dependency injection more explicit and centralized.
 ******************************************************************************
 

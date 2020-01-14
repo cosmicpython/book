@@ -1,4 +1,4 @@
-[[chapter_04b_high_gear_low_gear]]
+[[chapter_05_high_gear_low_gear]]
 == TDD in High Gear and Low Gear
 
 We've introduced the service layer to capture some of the additional
@@ -501,7 +501,7 @@ Write the bulk of your tests against the service layer::
 A valid concern about writing tests at a higher level is that it can lead to
 combinatorial explosion, for more complex use cases.  In these cases dropping
 down to lower-level unit tests of the various collaborating domain objects
-can be useful.  But see also <<chapter_07_events_and_message_bus>> and
+can be useful.  But see also <<chapter_08_events_and_message_bus>> and
 <<fake_message_bus>>]
     cover all the edge cases and ins+outs of your business logic.
 

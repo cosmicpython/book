@@ -388,7 +388,7 @@ class FakeSession():
 ====
 
 This fake session is only a temporary solution.  We'll get rid of it and make
-things even nicer in the next chapter, <<chapter_05_uow>>. But in the meantime
+things even nicer in the next chapter, <<chapter_06_uow>>. But in the meantime
 the fake `.commit()` lets us migrate a third test from the E2E layer:
 
 
@@ -602,7 +602,7 @@ require any change to our service layer or domain layer!
 TIP: If you decide you want to build a read-only endpoint for retrieving allocation
     info, just do the simplest thing that can possibly work (TM), which is
     `repo.get()` right in the Flask handler.  We'll talk more about reads vs
-    writes in <<chapter_11_cqrs>>.
+    writes in <<chapter_12_cqrs>>.
 
 ******************************************************************************
 
@@ -868,10 +868,10 @@ Wonderful.  But there are still some bits of awkwardness to tidy up:
 
 * the service layer is still tightly coupled to the domain, because
   its API is expressed in terms of `OrderLine` objects.  In
-  <<chapter_04b_high_gear_low_gear>> we'll fix that, and talk about
+  <<chapter_05_high_gear_low_gear>> we'll fix that, and talk about
   the way that Service Layer enables more productive TDD.
 
-* The service layer is tightly coupled to a `session` object.  In <<chapter_05_uow>>
+* The service layer is tightly coupled to a `session` object.  In <<chapter_06_uow>>
   we'll introduce one more pattern that works closely with Repository and
   Service Layer, the Unit of Work, and everything will be absolutely lovely.
   You'll see!
@@ -897,7 +897,7 @@ a|
 * When combined with _Repository Pattern_ and a `FakeRepository`, we've got
   a nice way of writing tests at a higher level than the Domain Layer;
   we can test more of our workflow without needing to go to integration tests
-  (read on to <<chapter_04b_high_gear_low_gear>> for more elaboration on this).
+  (read on to <<chapter_05_high_gear_low_gear>> for more elaboration on this).
 
 a|
 * If your app is _purely_ a web app, your controllers/view functions can be

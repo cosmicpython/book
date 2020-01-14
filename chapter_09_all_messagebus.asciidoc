@@ -1,4 +1,4 @@
-[[chapter_08_all_messagebus]]
+[[chapter_09_all_messagebus]]
 == Going to Town on the Message Bus
 
 In this chapter we'll start to make events more fundamental to the internal
@@ -100,7 +100,7 @@ event handlers:
   event.footnote:[If you've done a bit of reading around event-driven
     architectures, you may be thinking "some of these events sound more like
     commands!". Bear with us!  We're trying to introduce one concept at a time.
-    In the <<chapter_09_commands,next chapter>> we'll introduce the distinction
+    In the <<chapter_10_commands,next chapter>> we'll introduce the distinction
     between command and events.]
 
 Our new requirement will fit the same pattern:
@@ -408,7 +408,7 @@ a temporary hack on our messagebus to let it return events.
 
 
 It's because we're mixing the read and write responsibilities in our system.
-We'll come back to fix this wart in <<chapter_11_cqrs>>.
+We'll come back to fix this wart in <<chapter_12_cqrs>>.
 
 
 ==== Modifying Our API to Do Events
@@ -461,7 +461,7 @@ fully event-driven.
 
 * The entire app is now best described as a message processor (or event processor
   if you prefer.  We'll talk about the distinction in the
-  <<chapter_09_commands, next chapter>>.
+  <<chapter_10_commands, next chapter>>.
 
 
 
@@ -510,13 +510,13 @@ end
 [TIP]
 ====
 You can find our code for this chapter at
-https://github.com/cosmicpython/code/tree/chapter_08_all_messagebus[github.com/cosmicpython/code/tree/chapter_08_all_messagebus].
+https://github.com/cosmicpython/code/tree/chapter_09_all_messagebus[github.com/cosmicpython/code/tree/chapter_09_all_messagebus].
 
 ----
 git clone https://github.com/cosmicpython/code.git && cd code
-git checkout chapter_08_all_messagebus
+git checkout chapter_09_all_messagebus
 # or, if you want to code along, checkout the previous chapter:
-git checkout chapter_07_events_and_message_bus
+git checkout chapter_08_events_and_message_bus
 ----
 ====
 
@@ -860,7 +860,7 @@ class FakeMessageBus(messagebus.AbstractMessageBus):
 ----
 ====
 
-We use a class-based messagebus in <<chapter_12_dependency_injection>>,
+We use a class-based messagebus in <<chapter_13_dependency_injection>>,
 if you need more inspiration.  The "simple" implementation in this
 chapter essentially uses the `messagebus.py` module itself to implement
 Singleton Pattern.
@@ -901,10 +901,10 @@ side-effects.
 
 Now, you may be wondering, where are those `BatchQuantityChanged` events actually
 going to come from?  The answer is coming up in a couple of chapters' time.  But
-first, let's talk about <<chapter_09_commands,Events versus Commands>>.
+first, let's talk about <<chapter_10_commands,Events versus Commands>>.
 
 
-[[chapter_08_all_messagebus_tradeoffs]]
+[[chapter_09_all_messagebus_tradeoffs]]
 [options="header"]
 .Whole app is a Message Bus: The Trade-Offs
 |===

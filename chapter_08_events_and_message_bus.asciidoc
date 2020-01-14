@@ -1,4 +1,4 @@
-[[chapter_07_events_and_message_bus]]
+[[chapter_08_events_and_message_bus]]
 == Events and the Message Bus
 
 So far we've spent a lot of time and energy on a simple problem that we could
@@ -39,13 +39,13 @@ image::images/maps_chapter_07.png[]
 [TIP]
 ====
 You can find our code for this chapter at
-https://github.com/cosmicpython/code/tree/chapter_07_events_and_message_bus[github.com/cosmicpython/code/tree/chapter_07_events_and_message_bus].
+https://github.com/cosmicpython/code/tree/chapter_08_events_and_message_bus[github.com/cosmicpython/code/tree/chapter_08_events_and_message_bus].
 
 ----
 git clone https://github.com/cosmicpython/code.git && cd code
-git checkout chapter_07_events_and_message_bus
+git checkout chapter_08_events_and_message_bus
 # or, if you want to code along, checkout the previous chapter:
-git checkout chapter_06_aggregate
+git checkout chapter_07_aggregate
 ----
 ====
 
@@ -373,7 +373,7 @@ presenting here is very different, so the short answer is no.
 If you do have a requirement for moving work off the main thread, you
 can still use our event-based metaphors, but we would suggest you
 use _external events_ for that.  There's more discussion in
-<<chapter_10_external_events_tradeoffs>>, but essentially, if you
+<<chapter_11_external_events_tradeoffs>>, but essentially, if you
 implement a way of persisting events to a centralised store, then you
 can subscribe other containers or other microservices to them. Then
 you can extend the same concept of using events to separate responsibilities
@@ -529,7 +529,7 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
     using a new attribute, `.seen`, as we'll see in the next listing.
 
 NOTE: Are you wondering about error-handling, what happens if one of the
-    handlers fails?  We'll discuss that in detail in <<chapter_09_commands>>.
+    handlers fails?  We'll discuss that in detail in <<chapter_10_commands>>.
 
 
 //TODO: can we get rid of _commit()?
@@ -709,7 +709,7 @@ class TrackingRepository:
 See if you can apply a similar pattern to our Unit of Work class, in
 order to get rid of those Java-ey `_commit()` methods too?
 
-https://github.com/cosmicpython/code/tree/chapter_07_events_and_message_bus_exercise
+https://github.com/cosmicpython/code/tree/chapter_08_events_and_message_bus_exercise
 
 switching all the ABCs to `typing.Protocol` is a good way to force yourself
 to avoid using inheritance.  Let us know if you come up with something nice!
@@ -777,7 +777,7 @@ Option 3: Unit of Work collects events from Aggregates and passes them to Messag
 
 *****************************************************************
 
-[[chapter_07_events_and_message_bus_tradeoffs]]
+[[chapter_08_events_and_message_bus_tradeoffs]]
 [options="header"]
 .Domain Events: The Trade-Offs
 |===

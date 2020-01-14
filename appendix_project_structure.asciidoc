@@ -177,7 +177,7 @@ at if you get tired of hand-rolling your own environment-based config functions.
 TIP: Don't let this config module become a dumping ground full of things that
     are only vaguely related to config, and is then imported all over the place.
     Keep things immutable and only modify them via environment variables.
-    If you decide to use a <<chapter_12_dependency_injection,bootstrap script>>,
+    If you decide to use a <<chapter_13_dependency_injection,bootstrap script>>,
     you can make it the only place (other than tests) that config is imported.
 
 === Docker-Compose and Containers Config

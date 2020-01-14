@@ -1,4 +1,4 @@
-[[chapter_06_aggregate]]
+[[chapter_07_aggregate]]
 == Aggregates and Consistency Boundaries
 
 In this chapter we'd like to revisit our domain model to talk about invariants
@@ -29,7 +29,7 @@ https://github.com/cosmicpython/code/tree/appendix_csvs[github.com/cosmicpython/
 git clone https://github.com/cosmicpython/code.git && cd code
 git checkout appendix_csvs
 # or, if you want to code along, checkout the previous chapter:
-git checkout chapter_05_uow
+git checkout chapter_06_uow
 ----
 ====
 
@@ -499,7 +499,7 @@ if you do that, you'll still have to solve a few challenges on your own,
 like adding the model to the ORM and making sure all the moving parts can
 talk to each other, which we hope will be instructive.
 
-https://github.com/cosmicpython/code/tree/chapter_06_aggregate_exercise
+https://github.com/cosmicpython/code/tree/chapter_07_aggregate_exercise
 
 We've put in a "cheating" implementation in that delegates to the existing
 `allocate()` function, so you should be able to evolve that towards the real
@@ -817,7 +817,7 @@ Aggregates and concurrency issues go together::
 *****************************************************************
 
 
-[[chapter_06_aggregate_tradoffs]]
+[[chapter_07_aggregate_tradoffs]]
 [options="header"]
 .Aggregates: The Trade-Offs
 |===
