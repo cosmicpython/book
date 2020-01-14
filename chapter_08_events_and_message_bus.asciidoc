@@ -181,15 +181,14 @@ One formulation of the SRP is that each class should only have a single reason
 to change. When we switch from email to SMS, we shouldn't have to update our
 "allocate" function, because that's clearly a separate responsibility.
 
-To solve the problem, we're going to split the orchestration into separate
-steps, so that the different concerns don't get tangled up. The domain model's
-job is to know that we're out of stock, but the responsibility of sending an
-alert belongs elsewhere. We should be able to turn this feature on or off, or to
-switch to SMS notifications instead, without needing to change the rules of our
-domain model.
-
-//(EJ1) Suggestion: Consider using the terms "orchestration" vs "choreography" will help
-//      in this chapter to contrast the imperative vs event based approaches.
+To solve the problem, we're going to split the orchestrationfootnote:[
+Our tech reviewer Ed likes to say that the move from imperative to event-based
+flow control changes what used to be _orchestration_ into _choreography_.]
+into separate steps, so that the different concerns don't get tangled up. The
+domain model's job is to know that we're out of stock, but the responsibility
+of sending an alert belongs elsewhere. We should be able to turn this feature
+on or off, or to switch to SMS notifications instead, without needing to change
+the rules of our domain model.
 
 We'd also like to keep the service layer free of implementation details. We
 want to apply the Dependency Inversion Principle to notifications, so that our
@@ -363,18 +362,14 @@ NOTE: Note that the messagebus as implemented doesn't give us concurrency since
 *******************************************************************************
 Celery is a popular tool in the Python world for deferring self-contained
 chunks of work to an asynchronous task queue. The messagebus we're
-presenting here is very different, so the short answer is no.
-
-// TODO (EJ1) The messagebus has more in common with a node.js, a UI event loop, or an actor framework.
-
-// (hynek) preceding sentence is completely superflous yet so funny that i love
-// it so much that i want to marry it.
+presenting here is very different, so the short answer is no; our messagebus
+has more in common with a node.js app, a UI event loop, or an actor framework.
 
 If you do have a requirement for moving work off the main thread, you
 can still use our event-based metaphors, but we would suggest you
 use _external events_ for that.  There's more discussion in
 <<chapter_11_external_events_tradeoffs>>, but essentially, if you
-implement a way of persisting events to a centralised store, then you
+implement a way of persisting events to a centralized store, then you
 can subscribe other containers or other microservices to them. Then
 you can extend the same concept of using events to separate responsibilities
 across units of work within a single process / service, to being across

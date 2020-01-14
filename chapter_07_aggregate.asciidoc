@@ -567,13 +567,15 @@ Database -[#red]>x Transaction2: Error! version is already 4
 ----
 
 TIP: When two operations conflict in this way we usually retry the failed
-operation from the beginning. Imagine we have two customers, Harry and Bob, and
-both submit orders for 'SHINY-TABLE'. Both threads load the product at version 1
-and allocate stock. The database prevents the concurrent update, and Bob's order
-fails with an error. When we _retry_ the operation, Bob's order loads the
-product at version 2, and tries to allocate again. If there is enough stock left
-all is well, otherwise he'll receive OutOfStock. Most operations can be retried
-this way in the case of a concurrency problem.
+    operation from the beginning. Imagine we have two customers, Harry and Bob,
+    and both submit orders for 'SHINY-TABLE'. Both threads load the product at
+    version 1 and allocate stock. The database prevents the concurrent update,
+    and Bob's order fails with an error. When we _retry_ the operation, Bob's
+    order loads the product at version 2, and tries to allocate again. If there
+    is enough stock left all is well, otherwise he'll receive OutOfStock. Most
+    operations can be retried this way in the case of a concurrency problem.
+    More on this in [[recovering_from_errors]] and [[footguns]].
+
 
 ==== Implementation Options for Version Numbers
 

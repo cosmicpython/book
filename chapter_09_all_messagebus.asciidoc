@@ -505,14 +505,12 @@ end
 @enduml
 ----
 
-// TODO: (EJ1) See https://github.com/cosmicpython/book/issues/169
-//             I think it's worth mentioning here that the message could
-//             get dropped if you have a prolonged
-//             outage that starts after uow1 but before uow2 completes.
-//
-//             Then do some hand-waving about how distributed
-//             systems are hard, and make a forward reference to the appendix on 
-//             footguns.
+WARNING: Whenever you split things out like this across two units of work,
+    you now have two database transactions, so you are opening yourself up
+    to integrity issues: something could happen that means the first completes
+    but the second does.  You'll need to think about whether this is acceptable,
+    and whether you need to notice when it happens and do something about it.
+    See the <<footguns>> section in the Epilogue for more discussion.
 
 
 

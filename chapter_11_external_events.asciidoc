@@ -136,6 +136,7 @@ developing examples over the preceding chapters would build familiarity with
 the different symbols.
 ////
 
+
 We can think of each of these steps as a Command in our system: `ReserveStock`,
 `ConfirmReservation`, `DispatchGoods`, `MakeCustomerVIP`...
 
@@ -322,8 +323,6 @@ NOTE: We're glossing over the complexity involved in choosing the right messagin
     platform.  Concerns like message ordering, failure handling and idempotency
     all need to be thought through.  For a few pointers, see the
     <<footguns,Footguns>> section in <<epilogue_1_how_to_get_there_from_here>>.
-
-// (EJ1) "For example, in Redis,  RPOPLPUSH provides reliable messaging ...  For pointers, see"
 
 
 Our new flow will look like this:
