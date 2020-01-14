@@ -4,10 +4,8 @@
 In this chapter we're going to start with a fairly uncontroversial insight:
 reads (commands) and writes (queries) are different, so they
 should be treated differently. Then we're going to push that insight as far
-as we can. If you're anything like Harry, this will all seem crazy at first,
-but hopefully we can make the argument that it's not _totally_ insane.
-
-// TODO (hynek) (re "crazy") Hmmm, people react poorly to this kind of ablesim nowadays. I’d looks for better words.
+as we can. If you're anything like Harry, this will all seem extreme at first,
+but hopefully we can make the argument that it's not _totally_ unreasonable.
 
 [[maps_chapter_11]]
 .Separating reads from writes
@@ -29,8 +27,6 @@ git checkout chapter_11_external_events
 ====
 
 === Domain models are for writing
-
-// TODO: maybe move this section to later in the chapter?
 
 We've spent a lot of time in this book talking about how to build software that
 enforces the rules of our domain. These rules, or constraints, will be different
@@ -386,9 +382,7 @@ your permanent storage and the logic of your read-only views.
 
 
 
-=== "Sane" Alternative 1: Using the Existing Repository
-
-// TODO (hynek) (re "sane") yeah find a better word
+=== "Obvious" Alternative 1: Using the Existing Repository
 
 How about adding a helper method to our products repository?
 
@@ -475,7 +469,7 @@ TIP: This justification for CQRS is related to the justification for Domain
     the more complex your domain, the more likely you are to need both.
 
 
-=== "Sane" Alternative 2: Using the ORM
+===  "Obvious" Alternative 2: Using the ORM
 
 You may be thinking, OK, if our repository is clunky, and working with 
 `Products` is clunky, then I can at least  use my ORM and work with `Batches`.
@@ -541,28 +535,13 @@ of JOINs can be slow.  It's common in such cases to add some denormalized views
 build read replicas, or even add caching layers.
 
 
-=== Doubling Down on the Madness.
+=== Time to completely jump the shark
 
-// TODO (hynek) re "madness" yeah really don't.  this them won't do you any good.
+On that note: have we convinced you that our raw SQL version isn't so weird as
+it first seemed?  Perhaps we were exaggerating for effect? Just you wait.
 
-//
-// TODO (EJ3) Thinking back to some comments Bob made in another PR, maybe "simple" vs. "complex"
-//     instead of "sane" vs. "insane" would be a better rhetorical device for organizing
-//     this chapter? It would tie back to previous discussions about Pros vs. Cons, and 
-//     why you would bother taking on this extra complexity.
-//
-//     The "sane"/simple approach that re-uses the domain model, even in the face of 
-//     SELECT N+1 considerations, etc. may
-//     be perfectly adequate compromise if you are just trying to validate a new product feature,
-//     or don't care about scaling past a certain point, etc.
-//
-
-On that note: have we convinced you that our raw SQL version isn't so crazy as
-it first seemed?  Perhaps we were exaggerating the craziness for effect? Just
-you wait.
-
-So. Crazy or not, that hardcoded SQL query is pretty ugly right?  What if we
-made it nicer...
+So. Reasonable or not, that hardcoded SQL query is pretty ugly right?  What if
+we made it nicer...
 
 [[much_nicer_query]]
 .A much nicer query (src/allocation/views.py)

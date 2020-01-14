@@ -72,7 +72,7 @@ invite other workspace members to review, comment, or modify their work.
 
 Most of the complexity of the application was in the permissions model since
 each document was contained in a folder, and folders allowed read, write, and
-edit permissions, much like a linux filesystem.
+edit permissions, much like a Linux filesystem.
 
 Additionally, each workspace belonged to an account, and the account had quotas
 attached to it via a billing package.
@@ -146,7 +146,8 @@ about.
 This is a good opportunity to pull any data-access or orchestration code out of
 the domain model and up into the use-cases. We should also try to pull IO
 concerns (eg. sending emails, writing files) out of the domain model and up into
-the use-case functions.
+the use-case functions. We apply the techniques from Chapter 3 on abstractions
+to keep our handlers unit testable even when they're performing IO.
 
 TIP: It's fine if you've got duplication in the use-case functions. We're not
     trying to write perfect code, we're just trying to extract some meaningful
@@ -171,7 +172,11 @@ graph was highly connected. Each account had many workspaces, each workspace had
 many members, all of whom had their own accounts. Each workspace contained many
 documents, which had many versions.
 
-TODO: Diagram
+// (EJ2) In lieu of the ERD diagram, maybe something similar to this:
+// http://www.informit.com/articles/article.aspx?p=2020371&seqNum=4
+//
+// The messy "Before" version would just have an object graph, and the
+// "After" version with have the aggregate boundaries and roots.
 
 You can't express the full horror of the thing in an ERD diagram.
 For one thing, there wasn't really a single account related to a user. Instead
@@ -194,13 +199,16 @@ user.account.workspaces[0].documents.versions[1].owner.account.workspaces[0].set
 
 It's easy to build a system this way with Django ORM or SQLAlchemy but it's
 to be avoided. While it's _convenient_, it makes it very hard to reason about
-performance because each property might trigger a lookup to the database.
+performance because each property might trigger a lookup to the database. 
 
 TIP: Aggregates are a _consistency boundary_. In general each use-case should
 update a single aggregate at a time. One handler fetches one aggregate from a
 repository, modifies its state, and raises any events that happen as a result.
 If you need data from another part of the system, it's totally find to use a
 read model, but avoid updating multiple aggregates in a single transaction.
+When we choose to separate code into different aggregates, we're explicitly
+choosing to make them _eventually consistent_ with one another. Chapter 6 has
+much more on this topic.
 
 There were a bunch of operations that required us to loop over objects this way,
 for example:
@@ -231,6 +239,10 @@ def lock_documents_in_folder(folder):
 These operations _killed_ performance but fixing them meant giving up our single
 object graph. Instead we began to identify aggregates and to break the direct
 links between objects.
+
+NOTE: We talked about the infamous "select N+1 problem" in chapter 11, and how
+we might choose to use different techniques when reading data for queries vs
+reading data for commands.
 
 Mostly we did this by replacing direct references with identifiers:
 
@@ -357,7 +369,7 @@ came from!
 ********************************************************************************
 
 When building the availability service we used a technique called _event
-capture_ to move functionality from one place to another. This is a three step
+interception_ to move functionality from one place to another. This is a three step
 process:
 
 1. Raise events to represent the changes happening in a system you want to
@@ -368,7 +380,7 @@ own domain model.
 
 3. Replace the older system with the new.
 
-We used change data capture to move from this:
+We used event interception move from this:
 
 TODO: Context diagram, E-commerce and Fulfilment over XMLRPC
 
