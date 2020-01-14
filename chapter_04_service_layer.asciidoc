@@ -17,76 +17,26 @@ By the end of this chapter, we'll have added a Flask API that will talk to
 the Service Layer, which will serve as the entrypoint to our Domain Model.
 By making the service layer depend on the `AbstractRepository`, we'll be
 able to unit test it using `FakeRepository`, and then run it in real life
-using `SqlAlchemyRepository`.  <<service_layer_class_diagram>> is a class
+using `SqlAlchemyRepository`.  <<service_layer_before_after>> is a class
 diagram showing where we're heading.
 
-[[service_layer_class_diagram]]
-.Our target architecture for the end of this chapter
-image::images/service_layer_class_diagram.png[]
+[[service_layer_before_after]]
+.Adding the Service Layer to our Architecture
+image::images/maps_chapter_04.png[]
 
-[role="image-source"]
+
+[TIP]
+====
+You can find our code for this chapter at
+https://github.com/cosmicpython/code/tree/chapter_04_service_layer[github.com/cosmicpython/code/tree/chapter_04_service_layer].
+
 ----
-[plantuml, service_layer_class_diagram, config=plantuml.cfg]
-@startuml
-hide empty members
-left to right direction
-
-package "Flask API" as api {
-
-  class "allocate_endpoint()" as allocate_endpoint {
-  }
-  hide allocate_endpoint circle
-}
-
-
-package allocation {
-
-  package services {
-    class "allocate(line, repository, session)" as allocate {
-    }
-    hide allocate circle
-  }
-
-  abstract class AbstractRepository {
-    add ()
-    get ()
-    list ()
-  }
-
-  class Batch {
-    allocate ()
-  }
-
-
-  class FakeRepository {
-    batches: List[Batch]
-  }
-
-  class BatchRepository {
-    session: Session
-  }
-
-}
-
-package sqlalchemy {
-  class Session {
-    query()
-    add()
-  }
-}
-
-
-allocate -> AbstractRepository: uses
-AbstractRepository -> Batch : stores
-
-AbstractRepository <|-- FakeRepository : implements
-AbstractRepository <|-- BatchRepository : implements
-allocate_endpoint --> allocate : invokes
-
-BatchRepository --> Session : abstracts
-@enduml
+git clone https://github.com/cosmicpython/code.git && cd code
+git checkout chapter_04_service_layer
+# or, if you want to code along, checkout the previous chapter:
+git checkout chapter_02_repository
 ----
-
+====
 
 
 === Connecting Our Application to the Real World
@@ -217,6 +167,7 @@ def allocate_endpoint():
 ----
 ====
 
+//TODO (hynek) pretty sure you can drop the jsonify call
 
 So far so good.  No need for too much more of your "architecture astronaut"
 nonsense, Bob and Harry, you may be thinking.
@@ -350,7 +301,7 @@ E2E tests is starting to get out of control, and soon we'll end up with an
 inverted test pyramid (or "ice cream cone model" as Bob likes to call it).
 
 
-=== Introducing a Service Layer, and Using Fakerepository to Unit Test It
+=== Introducing a Service Layer, and Using FakeRepository to Unit Test It
 
 If we look at what our Flask app is doing, there's quite a lot of what we
 might call __orchestration__—fetching stuff out of our repository, validating
@@ -415,11 +366,15 @@ def test_error_for_invalid_sku():
 ----
 ====
 
+
 <1> `FakeRepository` holds the `Batch` objects that will be used by our test.
 
 <2> Our services module (_services.py_) will define an `allocate()`
-    function. It will sit between our `allocate_endpoint()` in the API
-    layer and the `allocate()` domain service from our domain model.
+    service-layer function. It will sit between our `allocate_endpoint()`
+    function in the API layer and the `allocate()` domain service function from
+    our domain model.footnote:[Service-layer services and domain services do have
+    confusingly similar names. We have a sidebar on it later in the chapter
+    <<why_is_everything_a_service>>.].
 
 <3> We also need a `FakeSession` to fake out the database session, see below:
 
@@ -437,70 +392,9 @@ class FakeSession():
 ----
 ====
 
-(The fake session is only a temporary solution.  We'll get rid of it and make
-things even nicer in the next chapter, <<chapter_05_uow>>)
-
-.Mocks vs Fakes; Classic Style vs London School TDD
-*******************************************************************************
-Couldn't we have used a mock (from `unittest.mock`) instead of building our
-own `FakeSession`, or instead of `FakeRepository`?  What's the difference
-between a fake and a mock anyway?
-
-We tend to find that building our own fakes is an excellent way of exercising
-design pressure against our abstractions.  If our abstractions are nice and
-simple, then they should be easy to fake.
-
-In fact in the case of `FakeRepository`, because our fake has actual behavior,
-using a magic mock from `unittest.mock` wouldn't really help.
-
-In the case of `FakeSession`, the `session` object isn't one of our own
-abstractions, so the argument doesn't apply;  in fact, a `unittest.mock` mock
-would have been just fine, but out of habit we avoided using one;  in any case,
-we'll be getting rid of it in the next chapter.
-
-In general we try and avoid using mocks, and the associated `mock.patch`.
-Whenever we find ourselves reaching for them, we often see it as an indication
-that something is missing from our design.  You'll see a good example of that
-in <<chapter_07_events_and_message_bus>> when we mock out an email-sending
-module, but eventually we replace it with an explicit bit of dependency injection.
-That's discussed in <<chapter_12_dependency_injection>>.
-
-Regarding the definition of fakes vs mocks, the short but simplistic answer is:
-
-* Mocks are used to verify _how_ something gets used;  they have methods
-  like `assert_called_once_with()`.  They're associated with London-school
-  TDD.
-
-* Fakes are working implementations of the thing they're replacing, but
-  they're only designed for use in tests; they wouldn't work "in real life",
-  like our in-memory repository. But you can use them to make assertions about
-  the end state of a system, rather than the behaviors along the way, so
-  they're associated with classic-style TDD.
-
-(We're slightly conflating mocks with spies and fakes with stubs here, and you
-can read the long, correct answer in Martin Fowler's classic essay on the subject
-called https://martinfowler.com/articles/mocksArentStubs.html[Mocks aren't Stubs])
-
-(It also probably doesn't help that the `MagicMock` objects provided by
-`unittest.mock` aren't, strictly speaking, mocks, they're spies if anything.
-But they're also often used as stubs or dummies.  There, promise we're done with
-the test double terminology nitpicks now.)
-
-What about London-school vs classic-style TDD?  You can read more about those
-two in Martin Fowler's article just cited, as well as https://softwareengineering.stackexchange.com/questions/123627/what-are-the-london-and-chicago-schools-of-tdd[on stackoverflow],
-but in this book we're pretty firmly in the classicist camp.  We like to
-build our tests around state, both in setup and assertions, and we like
-to work at the highest level of abstraction possible rather than doing
-checks on the behavior of intermediary collaborators.footnote:[
-Which is not to say that we think the London School people are wrong. There
-are some insanely smart people that work that way.  It's just not what we're
-used to].
-
-Read more on this shortly, in the <<kinds_of_tests,"high gear vs low gear">> section.
-
-*******************************************************************************
-
-The fake `.commit()` lets us migrate a third test from the E2E layer:
+This fake session is only a temporary solution.  We'll get rid of it and make
+things even nicer in the next chapter, <<chapter_05_uow>>. But in the meantime
+the fake `.commit()` lets us migrate a third test from the E2E layer:
 
 
 [[second_services_test]]
@@ -592,6 +486,11 @@ decided this argument carries the day. What you decide to do in your own
 codebase is up to you.]
 This means it'll work both when the tests give it a `FakeRepository`, and
 when the flask app gives it a `SqlAlchemyRepository`.
+
+// TODO (hynek, re type-hating footnote: I feel like this meditation has already
+// come up a few times.  Maybe have a short section instead to get it out of
+// your system and be done?
+// Also: type haters have never had to maintain large apps over a long time.
 
 If you remember the <<dip,Dependency Inversion Principle section from the introduction>>,
 this is what we mean when we says we should "depend on abstractions". Our
@@ -770,7 +669,7 @@ we see teams writing too many tests against their domain model. This causes
 problems when they come to change their codebase, and find that they need to
 update tens or even hundreds of unit tests.
 
-// TODO (EJ)  I think this is one of those things that borders on a war of
+// TODO (EJ3)  I think this is one of those things that borders on a war of
 // religion.  Might want to have some sidebar on BDD, and the perils of test
 // coverage metrics.
 
@@ -782,9 +681,6 @@ database session continues to commit, and that orders are still being allocated.
 If we accidentally change one of those behaviors, our tests will break. The
 flip side, though, is that if we want to change the design of our code, any
 tests relying directly on that code will also fail.
-
-Every line of code that we put in a test is like a blob of glue, holding the
-system in a particular shape.
 
 As we get further into the book, we'll see how the service layer forms an API
 for our system that we can drive in multiple ways. Testing against this API
@@ -808,12 +704,12 @@ image::images/test_spectrum_diagram.png[]
 [role="image-source"]
 ----
 [ditaa, test_spectrum_diagram]
-| Low feedback                                                  High feedback |
-| Low barrier to change                                 High barrier to change|
-| High system coverage                                       Focused coverage |
-|                                                                             |
-| <---------                                                     ---------->  |
-| API tests                  service-layer tests                 domain tests |
+| Low feedback                                                   High feedback |
+| Low barrier to change                                 High barrier to change |
+| High system coverage                                        Focused coverage |
+|                                                                              |
+| <---------                                                       ----------> |
+| API tests                  service-layer tests                  domain tests |
 ----
 
 
@@ -849,8 +745,8 @@ When we want to improve the design of the code, though, we will need to replace
 or delete these tests, because they are tightly coupled to a particular
 implementation.
 
-// TODO: (EJ) an example that is overmocked would be good here if you decide to
-// add one.
+// TODO: (EJ3) an example that is overmocked would be good here if you decide to
+// add one. Ch12 already has one that could be expanded.
 
 // TODO (SG) - maybe we could do with a/some concrete examples here?  Eg an
 // example where a unit test would break but a service-layer test wouldn't?
@@ -863,7 +759,7 @@ implementation.
 
 Most of the time, when we are adding a new feature, or fixing a bug, we don't
 need to make extensive changes to the domain model. In these cases, we prefer
-to write tests against services for the lower-coupling and high-coverage.
+to write tests against services because of the lower coupling and higher coverage.
 
 For example, when writing an `add_stock` function, or a `cancel_order` feature,
 we can work more quickly and with less coupling by writing tests against the
@@ -885,7 +781,7 @@ hazard, we again drop down to a low gear until we can pick up speed again.
 .Different Types of Test: Rules of Thumb
 ******************************************************************************
 
-* Write one end-to-end test per featurefootnote:[what about happy path and
+* Write one end-to-end test per featurefootnote:[What about happy path and
   unhappy path? We say, error-handling is a feature, so yes you need one E2E
   test for error handling, but probably not one unhappy-path test per feature]
   to demonstrate that the feature exists and is working. This might be written
@@ -894,6 +790,12 @@ hazard, we again drop down to a low gear until we can pick up speed again.
 * Write the bulk of the tests for your system against the service layer. This
   offers a good trade-off between coverage, run-time, and efficiency. These
   tests tend to cover one code path of a feature and use fakes for IO.
+footnote:[
+A valid concern about writing tests at a higher level is that it can lead to
+combinatorial explosion, for more complex use cases.  In these cases dropping
+down to lower-level unit tests of the various collaborating domain objects
+can be useful.  But see also <<chapter_07_events_and_message_bus>> and
+<<fake_message_bus>>]
 
 * Maintain a small core of tests written against your domain model. These tests
   have highly-focused coverage, and are more brittle, but have the highest
@@ -992,6 +894,7 @@ def test_returns_allocation():
     assert result == "batch1"
 ----
 ====
+
 
 At least that would move all of our tests' dependencies on the domain
 into one place.
@@ -1167,11 +1070,12 @@ require any change to our service layer or domain layer!
 
 TIP: If you decide you want to build a read-only endpoint for retrieving allocation
     info, just do the simplest thing that can possibly work (TM), which is
-    `repo.get()` right in the flask handler.  We'll talk more about reads vs
+    `repo.get()` right in the Flask handler.  We'll talk more about reads vs
     writes in <<chapter_11_cqrs>>.
 
 ******************************************************************************
 
+[[why_is_everything_a_service]]
 === Why Is Everything Called A Service?
 
 Some of you are probably scratching your heads at this point trying to figure
@@ -1201,12 +1105,117 @@ part of the model, but it doesn't seem to right to have a persisted entity for
 the job. Instead a stateless TaxCalculator class, or a calculate_tax function
 can do the job.
 
+
+=== Putting things in folders to see where everything belongs
+
+[[nested_folder_tree]]
+.Some subfolders
+====
+[source,text]
+[role="skip"]
+----
+.
+├── config.py
+├── domain  #<1>
+│   ├── __init__.py
+│   └── model.py
+├── service_layer  #<2>
+│   ├── __init__.py
+│   └── services.py
+├── adapters  #<3>
+│   ├── __init__.py
+│   ├── orm.py
+│   └── repository.py
+├── entrypoints  <4>
+│   ├── __init__.py
+│   └── flask_app.py
+└── tests
+    ├── __init__.py
+    ├── conftest.py
+    ├── unit
+    │   ├── test_allocate.py
+    │   ├── test_batches.py
+    │   └── test_services.py
+    ├── integration
+    │   ├── test_orm.py
+    │   └── test_repository.py
+    └── e2e
+        └── test_api.py
+
+----
+====
+
+<1> Let's have a folder for our domain model.  Currently that's just one file,
+    but for a more complex application you might have one file per class, you
+    might have some helper parent classes for `Entity`, `ValueObject` and
+    `Aggregate`, you might add an __exceptions.py__ for domain-layer exceptions,
+    and as we'll see in Part 2, __commands.py__ and __events.py__.
+
+<2> We'll distinguish the service layer.  Currently that's just one file
+    called _services.py_ for our service-layer functions.  You could
+    add service-layer exceptions in here, and as we'll see in the next
+    chapter, we'll add __unit_of_work.py__
+
+<3> Adapters is a nod to the Ports and Adapters terminology.  This will fill
+    up with any other abstractions around external I/O, eg a __redis_client.py__.
+    Strictly speaking you would call these _secondary_ adapters or _driven_
+    adapters, or sometimes _inward-facing_ adapters.
+
+<4> Entrypoints are the places we drive our application from.  In the
+    official Ports & Adapters terminology, these are adapters too, and are
+    referred to as _primary_,  _driving_ or _outward-facing_ adapters.
+
+What about ports?  As you may remember, they are the abstract interfaces which the
+adapters implement. If you really wanted to go to town, you could split out the
+abstract repository (which is the Port) into its own file, along with any other
+ABCs for other adapters, and put them in a folder called __ports__footnote:[Our
+tech reviewer David Seddon would particularly enjoy that, because it would make
+our module dependency graph really neat, illustrating the "depend on abstractions"
+concept.].
+
+[[abstract_repo_own_file]]
+.Some subfolders
+====
+[source,text]
+[role="skip"]
+----
+.
+├── domain
+│   ├── __init__.py
+│   └── model.py
+├── adapters
+│   ├── __init__.py
+│   ├── orm.py
+│   └── sqlalchemy_repository.py
+├── ports
+│   ├── abstract_repository.py
+...
+----
+====
+
+The primary/upstream ports are harder to define at this stage, because
+the port is just "the service-layer function and its arguments". In
+later chapter, we build Command and Event classes, and you can call
+those ports in theory, but putting them into a _ports_ subfolder instead
+of inside the domain folder would feel weird to us.
+
+// TODO - this whole ports discussion feels a bit long-winded, maybe cut?
+// (EJ3) - I think this section could be shortened up a bit.  Re: the 'ports'
+//         package/folder, I get the value for pedagogical purposes here, but
+//         in general I'm ambivalent because:
+//         * in practice, someone may cargo-cult the 'adapters' + 'ports' structure naively,
+//           and end up sticking anything that is a port or adapter here. And then
+//           you will end up coincidental coupling.
+//         * any package structure is subjective and fail you eventually, which is the
+//           how you get crosscuts.
+
+
 === Wrap-Up
 
 
 Adding the service layer has really bought us quite a lot:
 
-* Our flask API endpoints become very thin and easy to write:  their
+* Our Flask API endpoints become very thin and easy to write:  their
   only responsibility is doing "web stuff," things like parsing JSON
   and producing the right HTTP codes for happy or unhappy cases.
 
@@ -1221,7 +1230,7 @@ Adding the service layer has really bought us quite a lot:
   designs without needing to rewrite a load of tests.
 
 * And our "test pyramid" is looking good--the bulk of our tests
-  are fast/unit tests, with just the bare minimum of E2E and integration
+  are fast unit tests, with just the bare minimum of E2E and integration
   tests.
 
 

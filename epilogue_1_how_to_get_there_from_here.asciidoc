@@ -1,66 +1,374 @@
 [[epilogue_1_how_to_get_there_from_here]]
-== Epilogue: How Do I Get There From Here?
+== Epilogue: What now?
 
-OK Bob and Harry, that's all well and good, and if I ever get hired to work
+Phew! We've covered a lot of ground in this book and for most of our audience
+all of these ideas are new. With that in mind, we can't hope to make you experts
+in these techniques. All we can really do is show you the broad-brush ideas, and
+just enough code for you to go ahead and write something from scratch.
+
+The code we've shown in this book isn't battle-hardened production code: it's a
+set of lego blocks that you can play with to make your first house, spaceship,
+and skyscraper.
+
+That leaves us with two big tasks left for our final chapter. We want to talk
+about how to start applying these ideas for real in an existing system, and we
+need to warn you about some of the things we had to skip. We've given you a
+whole new arsenal of ways to shoot yourself in the foot, so we should discuss
+some basic firearms safety.
+
+=== How do I get there from here?
+
+Chances are that a lot of you are thinking something like this:
+
+"OK Bob and Harry, that's all well and good, and if I ever get hired to work
 on a green-field new service, I know what to do.  But in the meantime, I'm
 here with my big ball of Django mud, and I don't see any way to get to your
-nice, clean, virginal, perfect, untainted, simplistic model.  Not from here.
+nice, clean, perfect, untainted, simplistic model.  Not from here."
+
+We hear you. Once you've already _built_ a big ball of mud, it's hard to know
+how to start improving things. Really, we need to tackle things step by step.
+
+First things first: what problem are you trying to solve? Is the software too
+hard to change? Is the performance unacceptable? Have you got weird inexplicable
+bugs?
+
+Having a clear goal in mind will help you to prioritise the work that needs to
+be done and, importantly, communicate the reasons for doing it to the rest of
+the team. Businesses tend to have very pragmatic approaches to technical debt
+and refactoring, so long as engineers can make a reasoned argument for fixing
+things.
+
+TIP: Making complex changes to a system is often an easier sell if you link it
+to feature work. Perhaps you're launching a new product, or opening your service
+to new markets? This is the right time to spend engineering resources on fixing
+the foundations. With a six month project to deliver, it's easier to make the
+argument for three weeks of clean-up work. Bob refers to this as "architecture
+tax".
+
+=== Separating entangled responsibilities
+
+At the beginning of the book, we said that the main characteristic of a big ball
+of mud is homogeneity: every part of the system looks the same, because we
+haven't been clear about the responsibilities of each component. To fix that,
+we'll need to start separating responsibilities out and introducing some clear
+boundaries. One of the first things we can do is to start building a service
+layer.
+
+.Case Study: Layering an over-grown system
+********************************************************************************
+Many years ago, Bob worked for a software company that had outsourced the first
+version of their application, an online collaboration platform for sharing and
+working on files.
+
+When the company brought development in-house, it passed through several
+generations of developers' hands, and each wave of new developers added more
+complexity to the code's structure.
+
+At it's heart, the system was an ASP.Net Web Forms application, built with an
+NHibernate ORM. Users would upload documents into workspaces, where they could
+invite other workspace members to review, comment, or modify their work.
+
+Most of the complexity of the application was in the permissions model since
+each document was contained in a folder, and folders allowed read, write, and
+edit permissions, much like a linux filesystem.
+
+Additionally, each workspace belonged to an account, and the account had quotas
+attached to it via a billing package.
+
+As a result, every read or write operation against a document had to load an
+enormous number of objects from the database in order to test permissions and
+quotas. Creating a new workspace involved hundreds of database queries as we set
+up the permissions structure, invited users, and set up sample content. 
+
+Some of the code for operations was in page objects, and ran when a user clicked
+a button or submitted a form, some of it was in "manager" objects that held
+code for orchestrating work, and some of it was in the domain model. Model
+objects would make database calls, or copy files on disk, and the test coverage
+was abysmal.
+
+To fix the problem, we first introduced a service layer so that all of the code
+for creating a document or workspace was _in one place_ and could be understood.
+This involved pulling data access code out of the domain model and into
+command handlers. Likewise, we pulled orchestration code out of the managers and
+the page objects, and pushed it into handlers.
+
+The resulting command handlers were _long_ and messy, but we'd made a start at
+introducing order to the chaos.
+
+********************************************************************************
+
+TODO: Add diagram
+
+This was the system where Bob first learned how to break apart a monolith, and
+it was a doozy. There was logic _everywhere_ - in the web pages, in "manager"
+objects, in "helpers", in fat "service" classes that we'd written to abstract
+the managers and helpers, and in hairy "command" objects that we'd written to
+break apart the services.
+
+If you're working in a system that's reached this point, it can feel hopeless,
+but it's never too late to start weeding an overgrown garden. Eventually we
+hired an architect who knew what he was doing, and he helped us get things
+back under control.
+
+Start by working out the _use cases_ of your system. If you have a
+user-inteface, what actions does it perform? If you've got some back-end
+processing component, then maybe each cron job or celery job is a single
+use-case. Each of your use cases needs to have an imperative name: "Apply
+Billing Charges", "Clean Abandoned Accounts", or "Raise Purchase Order".
+
+In our case, most of our use-cases were part of the manager classes and had
+names like "Create Workspace" or "Delete Document Version". Each use-case
+was invoked from a web front end.
+
+Our goal is to create a single function or class for each of these supported
+operations that deals with _orchestrating_ the work to be done. Each use case
+should:
+
+* Start its own database transaction if needed
+* Fetch any required data
+* Check any preconditions (see the _ensure_ pattern in the validation appendix)
+* Update the domain model
+* Persist any changes
+
+Each use case should succeed or fail as an atomic unit. You might need to call
+one use case from another - that's okay, just make a note of it, and try to
+avoid long-running database transactions.
+
+NOTE: One of the biggest problems we had was that manager methods called other
+manager methods, and data access could happen from the model objects themselves.
+It was hard to understand what each operation did without going on a treasure-
+hunt across the codebase. Pulling all the logic into a single method, and using
+a unit of work to control our transactions, made the system easier to reason
+about.
+
+This is a good opportunity to pull any data-access or orchestration code out of
+the domain model and up into the use-cases. We should also try to pull IO
+concerns (eg. sending emails, writing files) out of the domain model and up into
+the use-case functions.
+
+TIP: It's fine if you've got duplication in the use-case functions. We're not
+trying to write perfect code, we're just trying to extract some meaningful
+layers. It's better to duplicate some code in a few places than to have use-case
+functions calling one another in a long chain.
+
+These use-case functions will mostly be about logging, data access, and error
+handling. Once you've done this step, you'll have a grasp of what your program
+actually _does_, and a way to make sure each operation has a clearly defined
+start and finish. We'll have taken a step toward building a pure domain model.
+
+Read Working Effectively With Legacy Code for guidance on how to get legacy code
+under test, and how to start separating responsibilities.
+https://www.oreilly.com/library/view/working-effectively-with/0131177052/
+
+=== Identifying Aggregates and Bounded Contexts
+
+Part of the problem with the codebase in our case study was that the object
+graph was highly connected. Each account had many workspaces, each workspace had
+many members, all of whom had their own accounts. Each workspace contained many
+documents, which had many versions.
+
+TODO: Diagram
+
+You can't express the full horror of the thing in an ERD diagram.
+For one thing, there wasn't really a single account related to a user. Instead
+there was some bizarre rule where you had to enumerate all of the accounts
+associated to the user via the workspaces and take the one with the earliest
+creation date.
+
+Every object in the system was part of an inheritance hierarchy that included
+SecureObject and Version, and this inheritance hierarchy was mirrored directly
+in the database schema, so that every query had to join across ten different
+tables and look at a discriminator column just to tell what kind of objects
+you were working with.
+
+The codebase made it easy to "dot" your way through these objects like so:
+
+```
+user.account.workspaces[0].documents.versions[1].owner.account.workspaces[0].settings;
+```
+
+It's easy to build a system this way with Django ORM or SQLAlchemy but it's
+to be avoided. While it's _convenient_, it makes it very hard to reason about
+performance because each property might trigger a lookup to the database.
+
+TIP: Aggregates are a _consistency boundary_. In general each use-case should
+update a single aggregate at a time. One handler fetches one aggregate from a
+repository, modifies its state, and raises any events that happen as a result.
+If you need data from another part of the system, it's totally find to use a
+read model, but avoid updating multiple aggregates in a single transaction.
+
+There were a bunch of operations that required us to loop over objects this way,
+for example:
+
+```
+# Lock a user's workspaces for non-payment
+
+def lock_account(user):
+    for workspace in user.account.workspaces:
+        workspace.archive()
+```
+
+Or even recurse over collections of folders and documents:
+
+```
+def lock_documents_in_folder(folder):
+
+    for doc in folder.documents:
+         doc.archive()
+        
+     for child in folder.children:
+         lock_documents_in_folder(child)
+
+```
 
 
-NOTE: TODO, chapter under construction
+These operations _killed_ performance but fixing them meant giving up our single
+object graph. Instead we began to identify aggregates and to break the direct
+links between objects.
 
-OK, but how do I get there from here?
+Mostly we did this by replacing direct references with identifiers:
 
-1. Option 1: carve out microservices one by one
-2. Option 2: refactoring inside your monolith
+Before: 
 
-In either case, you'll need to figure out what the correct
-https://martinfowler.com/bliki/BoundedContext.html[Bounded Context]
-is.
+```
+class Workspace:
 
-* fork the repo and delete stuff that's not in your bounded context
-* strangler pattern.  can start with just an HTTP proxy
-* what are peloton doing?
+   folders:  List[Folder]
 
 
-=== What do you want to achieve?
+class Folder:
 
-What's the problem with a monolith?
-
-* Is it that there's no domain model because everything is trying to be all
-  things to all people?
-
---> you need to carve out bounded contexts and probably microservices
+   permissions: PermissionSet
+   documents: List[Document]
+   parent: Folder
+   children: List[Folder]
 
 
-* Is it that all the logic is hard to find because it's mixed between all the
-  layers?
+class Document:
 
---> try to move towards Domain Model  and Service Layer.
+    parent: Folder
+    workspace: Workspace
+    version: List[DocumentVersion]
+```
 
+After:
 
+```
+class Document:
 
-=== A django story
-
-* introducing a Service Layer first
-    - define use cases
-    - messagebus can come later
-    - push all the logic down into the models
-
-* once we have rich django models
-    - migrate them one by one to POPO classes
-    - add repository to translate
-    - => now we can refactor the model (semi/more) independently from the DB
-
-* and we can keep going and add UoW and a messagebus
-    - now we have the event-driven / command handler pattern
-    - almost any business requirement can be decomposed sensibly
-
-see <<appendix_django>>
+   id: int
+   workspace_id: int
+   parent_id: int
+   
+   # Note that our Document Aggregate continued to hold all its versions
+   # so that we could treat the whole document as a single unit.
+   versions: List[DocumentVersion]
 
 
+class Folder:
+
+   id: int
+   permissions: PermissionSet
+   workspace_id: int
+
+
+class Workspace:
+   
+    id: int
+```
+
+TIP: Bi-directional links are often a sign that your aggregates aren't right.
+In our original code, a Document knew about its containing Folder, and the Folder
+had a collection of Documents. This makes it easy to traverse the object graph
+but stops us from thinking properly about the consistency boundaries we need.
+We break apart aggregates by using references instead. In the new model, a
+Document had a folder_id but no way to directly access the Folder.
+
+If we needed to _read_ data, we avoided writing complex loops and transforms and
+tried to replace them with straight SQL. For example, one of our screens was a
+tree view of folders and documents.
+
+This screen was _incredibly_ heavy on the database, because it relied on nested
+for loops that triggered a lazy-loaded ORM.
+
+TIP: We use this same technique in the book in Chapter 11 where we replace a
+nested loop over ORM objects with a simple SQL query. It's the first step in
+a CQRS approach.
+
+After a lot of head-scratching, we replaced the ORM code with a big, ugly stored
+procedure. The code looked horrible, but it was much faster and it helped us
+to break the links between Folder and Document.
+
+When we needed to _write_ data, we changed a single aggregate at a time, and we
+introduced a message bus to handle events. For example, in the new model, when
+we locked an account, we could first query for all the affected workspaces
+`SELECT id FROM workspace WHERE account_id = ?`.
+
+We could then raise a new command for each workspace:
+
+```
+for workspace_id in workspaces:
+    bus.handle(LockWorkspace(workspace_id))
+```
 
 === an event-driven approach to go microservices via strangler pattern
+
+.Case Study: Carving out a microservice to replace a domain
+********************************************************************************
+MADE.com started out with _two_ monoliths: one for the front-end e-commerce
+application, and one for the back-end fulfilment system.
+
+The two systems communicated through XML-RPC. Periodically, the back-end system
+would wake up and query the front-end system to find out about new orders. When
+it had imported all the new orders, it would send RPC commands to update the
+stock levels.
+
+Over time this synchronisation process became slower and slower until, one
+Christmas, it took longer than 24 hours to import a single day's orders. Bob was
+hired to break the system into a set of event-driven services.
+
+Firstly we identified that the slowest part of the process was calculating and
+synchronising the available stock. What we needed was a system that could listen
+to external events, and keep a running total of how much stock was available.
+
+We exposed that information via an API, so that the user's browser could ask
+how much stock was available for each product, and how long it would take to
+deliver to their house.
+
+Whenever a product ran out of stock completely, we would raise a new event that
+the e-commerce platform could use to take a product off sale. Because we didn't
+know how much load we would need to handle, we wrote the system with a CQRS
+pattern. Whenever the amount of stock changed, we would update a redis database
+with a cached view model. Our flask API queried these "view models" instead of
+running the complex domain model.
+
+As a result, we could answer the question "How much stock is available" in two
+to three milliseconds and the API frequently handles hundreds of requests a
+second for sustained periods.
+
+If this all sounds a little familiar, well, now you know where our example app
+came from!
+********************************************************************************
+
+When building the availability service we used a technique called _change event
+capture_ to move functionality from one place to another. This is a three step
+process:
+
+1. Raise events to represent the changes happening in a system you want to
+replace.
+
+2. Build a second system that consumes those events and uses them to build its
+own domain model.
+
+3. Replace the older system with the new.
+
+We used change data capture to move from this:
+
+TODO: Context diagram, E-commerce and Fulfilment over XMLRPC
+
+to this
+
+TODO: Context diagram, E-Commerce, Availability, Fulfilment, Event-Broker
 
 * decide on a piece of the old system to carve out.
 * get your system to produce events
@@ -72,8 +380,35 @@ see <<appendix_django>>
     - or new ones, and we switch over the downstream things progressively
 
 
-
 //TODO: event capture and all that jazz
+
+.Case Study: David on Taking Small Steps
+*******************************************************************************
+
+Our tech reviewer David Seddon, says:
+
+_For me, one of the blockers of putting the ideas into action was a concern
+that I might not do it right / make things worse. Partly just because it
+wouldn't fit in with our wider architectural approach. Talking to you made me
+see that I could try introducing some of the ideas without necessarily trying
+to convert everything._
+
+_Indeed I realize now that someone else at my company has done exactly that.
+They started using the message broker we were using for Celery as an external
+message bus for a separate service, via domain events. They're also using a lot
+of the same ideas as in your book though with much less OO)._
+
+[quote, Our Readers]
+____
+Don't be afraid to try these things in small places
+____
+
+_So I think one good call to action is, don't be afraid to try these things in
+small places. Don't feel you need permission to rearchitect everything. And
+something you've already said, be solution-focused in where you choose to do
+it._
+
+*******************************************************************************
 
 === More required reading
 
@@ -82,26 +417,93 @@ see <<appendix_django>>
 
 Stangler (Fig) pattern is mentioned as a favorite, also many others.
 
-////
-TODO (DS)
-Missing pieces
+=== Questions our Tech Reviewers Asked That We Couldn't Work Into Prose
 
-What's still worth doing, even in half measures? E.g. is it worth having a
-service layer even if the domain is still coupled to persistence? Repositories
-without CQRS?
+* Do I need to do all of this at once? Can I just do a bit at a time?
 
-What size of systems are these helpful within? For example, do they work in the context of a monolith?
+No, you can absolutely adopt these techniques bit by bit. We recommend, if you
+have an existing system, building a service layer to try and keep orchestration
+in one place. Once you have that, it's much easier to push logic into the model
+and edge concerns like validation, or error handling, to the entry points.
 
-How should use cases interact across a larger system? For example, is it a
-problem for a use case to call another use case?
+It's worth having a service layer even if you still have a big messy Django ORM
+because it's a way to start understanding the boundaries of operations.
 
-Is it a smell for a use case to interact with multiple repositories, and if so,
-why?
+* Extracting use-cases will break a lot of my existing code, it's too tangled
 
-How do read-only, but business logic heavy things fit into all this? Use cases
-or not? (This relates to what these patterns might look like if we didn't
-bother with CQRS.)
-////
+Just copy-paste. It's okay to cause more duplication in the short-term. Think of
+this as a multi-step process. Your code is in a bad state now, so copy and paste
+it to a new place, and then make that new code clean and tidy.
+
+Once you've done that, you can replace uses of the old code with calls to your
+new code and finally delete the mess. Fixing large code bases is a messy and
+painful process. Don't expect things to get instantly better, and don't worry if
+some bits of your application stay messy.
+
+* Do I need to do CQRS? That sounds weird, can't I just use repositories for
+  reads?
+
+Of course you can! The techniques we're presenting in this book are intended to
+make your life _easier_, they're not some kind of ascetic discipline with which
+to punish yourself.
+
+In our first case-study system, we had a lot of "View Builder" objects that used
+repositories to fetch data and then performed some transformations to return
+dumb read models. The advantage is that when you hit a performance problem, it's
+easy to rewrite a view builder to use custom queries or raw SQL.
+
+* How should use cases interact across a larger system? Is it a problem for one
+  to call another?
+
+This might be an interim step. Again, in the first case-study, we had handlers
+that would need to invoke other handlers. This gets _really_ messy, though, and
+it's much better to move to using a message bus to separate these concerns.
+
+Generally, your system will have a single message bus implementation, and a
+bunch of different subdomains that center on a particular aggregate or set of
+aggregates. When your use case has finished, it can raise an event, and a
+handler elsewhere can run.
+
+* Is it a smell for a use case to use multiple repositories, and why?
+
+Yes! A repository is a pattern that we use for reading _aggregates_ from our
+persistent store. By definition, we should only ever be updating one aggregate
+at a time. If you need to read data to figure out what to do, then consider a
+read-model that returns just the data you need, even if you cheat and build it
+with a repo and domain objects under the hood.
+
+* What if I have a read-only but business-logic heavy system?
+
+View models can have complex logic in them. In this book we've encouraged you to
+separate your read and write models because they have different consistency and
+throughput requirements. Mostly, we can use simpler logic for reads, but that's
+not always true. In particular, permissions and authorization models can add a
+lot of complexity to our read-side.
+
+We've written systems where the view models needed extensive unit tests. In
+those systems, we split a _view builder_ from a _view fetcher_.
+
+TODO: Diagram
+
+This makes it easy to test the view builder by giving it mocked data, eg. a list
+of dicts.
+
+"Fancy CQRS" with event handlers is really a way of running our complex view
+logic whenever we write so that we can avoid running it when we read.
+
+* Do I need to build microservices to do this stuff?
+
+Egads, no! These techniques pre-date microservices by a decade or so. Aggregates,
+domain events, and dependency inversion are ways to control complexity in large
+systems. It so happens that when you've built a set of use cases and a model
+for a business process, it's relatively easy to move it to its own service, but
+that's not a requirement.
+
+* I'm using Django, can I still do this?
+
+We have an entire appendix, just for you! <<appendix_django>>
+
+TODO: point people at https://leanpub.com/clean-architectures-in-python
 
 
 === Footguns

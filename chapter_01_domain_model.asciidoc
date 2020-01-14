@@ -6,6 +6,15 @@ that's highly compatible with TDD.  We'll discuss _why_ domain modeling
 matters, and we'll look at a few key patterns for modeling domains: Entities,
 Value Objects, and Domain Services.
 
+<<maps_chapter_01_notext>> is a simple visual placeholder for our Domain
+Model.  We'll fill in some details in this chapter, and as we move on to
+other chapters, we'll build things around the Domain Model, but you should
+always be able to find these little shapes at the core.
+
+[[maps_chapter_01_notext]]
+.A placeholder illustration of our domain model
+image::images/maps_chapter_01_notext.png[]
+
 
 === What Is a Domain Model?
 
@@ -64,7 +73,7 @@ and cannot encourage you enough to go on and read a proper DDD book.
 
 * The original https://domainlanguage.com/ddd/["blue book"],
   _Domain-Driven Design_ by Eric Evans (Addison-Wesley, 2003)
-* Or, some people prefer the "red book", _Implementing Domain-Driven Design_,
+* Or, some people prefer the https://learning.oreilly.com/library/view/implementing-domain-driven-design/9780133039900/["red book"], _Implementing Domain-Driven Design_,
   by Vaughn Vernon (Addison-Wesley, 2013).
 
 *****************************************************************
@@ -171,7 +180,7 @@ Time for some domain modeling.
 
 === Exploring the Domain Language
 
-Understanding the Domain Model takes time, and patience, and Post-It notes. We
+Understanding the Domain Model takes time, and patience, and Post-it notes. We
 have an initial conversation with our business experts and we agree on a glossary
 and some rules for the first minimal version of the domain model. Wherever
 possible, we ask for concrete examples to illustrate each rule.
@@ -180,57 +189,63 @@ We make sure to express those rules in the business jargon (the _ubiquitous
 language_ in DDD terminology). We choose memorable identifiers for our objects
 so that the examples are easier to talk about.
 
-Here are some notes we might have taken while having a conversation with our
-domain experts about allocation:
+<<allocation_notes>> shows some notes we might have taken while having a
+conversation with our domain experts about allocation:
 
-* A _product_ is identified by a _sku_, pronounced "skew," which is short for
+[[allocation_notes]]
+.Some Notes on Allocation
+|===
+
+a| A _product_ is identified by a _sku_, pronounced "skew," which is short for
   "stock keeping unit."
 
-* _Customers_ place _orders_. An order is identified by an _order reference_,
+a| _Customers_ place _orders_. An order is identified by an _order reference_,
   and comprises multiple _order lines_, where each line has a _sku_, and a
-  _quantity_.
-+
-.Example:
-** 10 units of RED-CHAIR
-** 1 unit of TASTELESS-LAMP
+  _quantity_.  Example:
 
-* The purchasing department orders small _batches_ of stock. A _batch_ of stock
+----
+- 10 units of RED-CHAIR
+- 1 unit of TASTELESS-LAMP
+----
+
+a| The purchasing department orders small _batches_ of stock. A _batch_ of stock
   has a unique id which they call a _reference_, a _sku_ and a _quantity_.
 
-* We need to _allocate_ _order lines_ to _batches_. When we've allocated an
+a| We need to _allocate_ _order lines_ to _batches_. When we've allocated an
   order line to a batch, we will send stock from that specific batch to the
   customer's delivery address.
 
-* When we allocate x units of stock to a batch, the _available quantity_ is
-  reduced by x.
-+
-.Example:
-** We have a batch of 20 SMALL-TABLE, and we allocate an order line for 2
-   SMALL-TABLE.
-** The batch should have 18 SMALL-TABLE remaining.
+a| When we allocate x units of stock to a batch, the _available quantity_ is
+  reduced by x. Example:
 
-* We can't allocate to a batch if the available quantity is less than the
-  quantity of the order line.
-+
-.Example:
-** We have a batch of 1 BLUE-CUSHION, and an order line for 2
-   BLUE-CUSHION.
-** We should not be able to allocate the line to the batch.
+----
+- We have a batch of 20 SMALL-TABLE, and we allocate an order line for 2 SMALL-TABLE.
+- The batch should have 18 SMALL-TABLE remaining.
+----
 
-* We can't allocate the same line twice.
-+
-.Example:
-** We have a batch of 10 BLUE-VASE, and we allocate an order line for 2
-   BLUE-VASE.
-** If we allocate the order line again to the same batch, the batch
-   should still have an available quantity of 8.
+a| We can't allocate to a batch if the available quantity is less than the
+  quantity of the order line. Example:
 
-* Batches have an _ETA_ if they are currently shipping, or they may be in
+----
+- We have a batch of 1 BLUE-CUSHION, and an order line for 2 BLUE-CUSHION.
+- We should not be able to allocate the line to the batch.
+----
+
+a| We can't allocate the same line twice.  Example:
+
+----
+- We have a batch of 10 BLUE-VASE, and we allocate an order line for 2 BLUE-VASE.
+- If we allocate the order line again to the same batch, the batch should still
+  have an available quantity of 8.
+----
+
+a| Batches have an _ETA_ if they are currently shipping, or they may be in
   _Warehouse stock_.
 
-* We allocate to warehouse stock in preference to shipment batches
+a| We allocate to warehouse stock in preference to shipment batches
 
-* We allocate to shipment batches in order of which has the earliest ETA.
+a| We allocate to shipment batches in order of which has the earliest ETA.
+|===
 
 
 .Exercise for the Reader
@@ -246,6 +261,7 @@ You'll find some placeholder unit tests there, but you could just start from
 scratch, or combine/rewrite them however you like.
 
 //TODO: add test_cannot_allocate_same_line_twice ?
+//(EJ3): nice to have for completeness, but not necessary
 
 ******************************************************************************
 
@@ -449,12 +465,13 @@ class Batch:
 ----
 ====
 
+// TODO explain why harry refuses to use the inline type hints syntax
 
-<<model_diagram>> shows the model in diagram form.
+<<model_diagram>> shows the model in UML.
 
 
 [[model_diagram]]
-.Our model
+.Our model in UML
 image::images/model_diagram.png[]
 [role="image-source"]
 ----
@@ -472,7 +489,7 @@ class Batch {
 }
 
 class OrderLine {
-    order_id
+    orderid
     sku
     qty
 }
@@ -775,26 +792,29 @@ class Batch:
 ----
 ====
 
-Python's `__eq__` magic method defines the behavior of the class for the
-`==` operator.
-
-// TODO (EJ) The difference between "is" and "__eq__" might be a tripping point
-// for some people.]
+Python's +++<code>__eq__</code>+++ magic methodfootnote:[Pronounced "dunder-EQ". By some, at least.]
+defines the behavior of the class for the`==` operator.
 
 For both Entity and Value Objects it's also worth thinking through how
-`__hash__` will work.  It's the magic method Python uses to control the
++++<code>__hash__</code>+++ will work.  It's the magic method Python uses to control the
 behavior of objects when you add them to sets or use them as dict keys;
 more info https://docs.python.org/3/glossary.html#term-hashable[in the Python docs].
 
-For Value Objects, the hash should be based on all the value attributes.
-For entities, the hash should either be `None`, or it should be based
-on the attribute(s), like `.reference`, that define identity over time.
+For Value Objects, the hash should be based on all the value attributes,
+and we should ensure that the objects are immutable.  We get this for
+free by specifying `@frozen=True` on the dataclass.
 
-//TODO (DS) Getting hash values right for these kinds of objects is quite
-//important (e.g. if you're using them in dictionaries or sets). I reckon it
-//might be worth spending more time on this.
-// (HP): if we get into this, it links into the hack in next chapter required
-// by sqlalchemy, `@dataclass(frozen=True)` -> `dataclass(unsafe_hash=True)`
+For entities, the simplest option is to say that the hash is ++None++, meaning
+that the object is not hashable and cannot, for example, be used in a set.
+If for some reason you decide you really do want to use set or dict operations
+with Entities, then the hash should be based on the attribute(s), like
+`.reference`, that define the Entity's unique identity over time. You should
+also try to somehow make _that_ attribute read-only.
+
+WARNING: This is tricky territory; you shouldn't modify +++<code>__hash__</code>+++ without
+    also modifying +++<code>__eq__</code>+++.  If you're not sure what you're doing, some
+    further reading is suggested.  https://hynek.me/articles/hashes-and-equality/[
+    Hashes and Equality] by our tech reviewer Hynek is a good place to start.
 
 
 
@@ -885,7 +905,8 @@ You may or may not like the use of `next()` above, but we're pretty
 sure you'll agree that being able to use `sorted()` on our list of
 batches is nice, idiomatic Python.
 
-To make it work we implement `__gt__` on our domain model:
+To make it work we implement +++<code>__gt__</code>+++ on our domain model:
+
 
 
 [[dunder_gt]]
@@ -954,8 +975,15 @@ def allocate(line: OrderLine, batches: List[Batch]) -> str:
 ----
 ====
 
+
+<<maps_chapter_01_withtext>> is a visual representation of where we ended up:
+
+[[maps_chapter_01_withtext]]
+.Our domain model at the end of the chapter
+image::images/maps_chapter_01_withtext.png[]
+
 That'll probably do for now! We have a Domain Service which we can use for our
-first use case.   But first we'll need a database.
+first use case.   But first we'll need a database...
 
 
 .Domain Modelling Wrap-Up
@@ -975,15 +1003,12 @@ Distinguish Entities from Value Objects::
 
 Not everything has to be an object::
     Python is a multi-paradigm language, so let the "verbs" in your
-    code be functions.  Classes called "Manager" or "Builder" or
-    "Factory" are a code smell.
-
-// [SG] Why is a Factory a code smell?
-// [HP] A *class* called Factory is a code smell.  A function called
-// factory _might_ be fine.
+    code be functions.  For every `FooManager`, `BarBUilder` or `BazFactory`,
+    there's often a more expressive and readable `manage_foo()`, `build_bar()`
+    or `get_baz()` waiting to happen.
 
 This is the time to apply your best OO design principles::
-    Revise the SOLID principles, and all the other good heuristics like "-a vs is-a",
+    Revisit the SOLID principles, and all the other good heuristics like "-a vs is-a",
     "prefer composition over inheritance", and so on.
 
 You'll also want to think about consistency boundaries and Aggregates::

@@ -8,21 +8,51 @@ If the Repository is our abstraction over the idea of persistent storage,
 the Unit of Work is our abstraction over the idea of _atomic operations_. It
 will allow us to finally, fully, decouple our Service Layer from the data layer.
 
-And we'll do it using a lovely piece of Python syntax, a context manager.
 
-// TODO DIAGRAM GOES HERE
+<<before_uow_diagram>> shows that, currently, there is a lot of communication
+across the layers of our infrastructure:  the API talks directly to the DB
+layer to start a session, it talks to the repository layer to initialize a
+`SQLAlchemyRepository`, and it talks to the service layer to ask it to allocate.
 
-// TODO: I feel like maybe we should waffle a bit more in this chapter? We
-// could talk about guidelines for what to mock?
+[[before_uow_diagram]]
+.Without UoW: API talks directly to 3 layers
+image::images/maps_chapter_05_before.png[]
 
+<<after_uow_diagram>> shows our target state: the Flask API now only does two
+things: it initializes a Unit of Work, and it invokes a service.  The service
+collaborates with the UoW (we like to think of the UoW as being part of the
+service layer), but neither the service function itself nor Flask longer needs
+to talk directly to the DB.
+
+
+[[after_uow_diagram]]
+.With UoW: UoW now manages DB state
+image::images/maps_chapter_05_after.png[]
+
+And we'll do it all using a lovely piece of Python syntax, a context manager.
+
+
+[TIP]
+====
+You can find our code for this chapter at
+https://github.com/cosmicpython/code/tree/chapter_05_uow[github.com/cosmicpython/code/tree/chapter_05_uow].
+
+----
+git clone https://github.com/cosmicpython/code.git && cd code
+git checkout chapter_05_uow
+# or, if you want to code along, checkout the previous chapter:
+git checkout chapter_04_service_layer
+----
+====
 
 === The Unit of Work Collaborates with Repository(-Ies)
 
+//TODO (DS) do you talk anywhere about multiple repositories?
 
 Here's how it'll look in use, when it's finished:
 
 [[uow_preview]]
-.Preview of unit of work in action (src/allocation/services.py)
+.Preview of unit of work in action (src/allocation/service_layer/services.py)
 ====
 [source,python]
 ----
@@ -42,7 +72,7 @@ def allocate(
 <1> We'll start a unit of work as a context manager
 <2> `uow.batches` is the batches repo, so the unit of work provides us
     access to our permanent storage.
-<3> When we're done, we commit or roll back our work, using the UOW
+<3> When we're done, we commit or roll back our work, using the UoW
 
 The unit of work acts as a single entry point to our persistent storage, and
 keeps track of what objects were loaded and what the latest state is.footnote:[
@@ -109,7 +139,7 @@ def test_uow_can_retrieve_a_batch_and_allocate_to_it(session_factory):
 For the curious, the `insert_batch` and `get_allocated_batch_ref` helpers
 look like this:
 
-[[id_here]]
+[[sql_helpers]]
 .Helpers for doing SQL stuff (tests/integration/test_uow.py)
 ====
 [source,python]
@@ -120,6 +150,7 @@ def insert_batch(session, ref, sku, qty, eta):
         ' VALUES (:ref, :sku, :qty, :eta)',
         dict(ref=ref, sku=sku, qty=qty, eta=eta)
     )
+
 
 def get_allocated_batch_ref(session, orderid, sku):
     [[orderlineid]] = session.execute(
@@ -144,7 +175,7 @@ base class:
 
 
 [[abstract_unit_of_work]]
-.the Unit of Work context manager in the abstract (src/allocation/unit_of_work.py)
+.Abstract Unit of Work context manager (src/allocation/service_layer/unit_of_work.py)
 ====
 [source,python]
 ----
@@ -170,7 +201,7 @@ class AbstractUnitOfWork(abc.ABC):
 <1> The UoW provides an attribute called `.batches`, which will give us access
     to the batches repository.
 
-<2> If you've never seen a context manager, `__enter__` and `__exit__` are
+<2> If you've never seen a context manager, +++<code>__enter__</code>+++ and +++<code>__exit__</code>+++ are
     the two magic methods that execute when we enter the `with` block and
     when we exit it.  They're our setup and teardown phases.
 
@@ -184,14 +215,19 @@ class AbstractUnitOfWork(abc.ABC):
     called.  Read on for more discussion of this).
 
 
+NOTE: We've made the UoW part of the service layer, in our folder
+    hierarchy.  It is also an adapter, but as we'll see later in the
+    book, it often takes on more service-layer responsibilities to do with
+    domain events, so the service layer feels like the right place to us.
 
-==== The Real Unit of Work Uses Sqlalchemy Sessions
+
+==== The Real Unit of Work Uses SQLAlchemy Sessions
 
 The main thing that our concrete implementation adds is the
 database session:
 
 [[unit_of_work]]
-.the real SQLAlchemy Unit of Work (src/allocation/unit_of_work.py)
+.the real SQLAlchemy Unit of Work (src/allocation/service_layer/unit_of_work.py)
 ====
 [source,python]
 ----
@@ -235,6 +271,10 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
     use our database session.
 
 //TODO: why not swap out db using os.environ?
+// (EJ2) Could be a good idea to point out that this couples the unit of work to postgres.
+//         This does get dealt with in in bootstrap, so you could make a forward-reference.
+// (EJ3) IIRC using a factory like this is considered an anti-pattern ("Control-Freak" from M.Seeman's book)
+//         Is there a reason to inject a factory instead of a session?
 
 
 
@@ -292,20 +332,32 @@ def test_allocate_returns_allocation():
     our service layer, instead of a repository and a session,
     which is considerably less cumbersome.
 
+.Don't Mock What You Don't Own
+********************************************************************************
+Why do we feel more comfortable mocking the Unit of Work than the Session?
+Both of our fakes achieve the same thing: they give us a way to swap out our
+persistence layer so that we can run tests in memory instead of needing to
+talk to a real database. The difference is in the resulting design.
 
+If we only cared about writing tests that ran quickly, we could create mocks
+that replaced SQLAlchemy and use those throughout our codebase. The problem is
+that the Session is a complex object that exposes lots of persistence-related
+functionality. It's easy to use the Session to make arbitrary queries against
+the database, but that quickly leads to data access code being sprinkled all
+over the codebase. To avoid that, we want to limit access to our persistence
+layer, so that each component has exactly what it needs, and nothing more.
 
-////
-TODO (BOB): Defend the mocking point
+By coupling to the Session interface, you're choosing to couple to all the
+complexity of SQLAlchemy. Instead, we want to choose a simpler abstraction and
+use that to clearly separate responsibilities. Our Unit of Work is much simpler
+than a session, and we feel comfortable with the service layer being able to
+start and stop units of work.
 
-(EJ):
-
-https://github.com/cosmicpython/book/blame/master/chapter_05_uow.asciidoc#L238
-Maybe "Only mock your immediate neighbors" is more applicable?
-
-I think of "Don't mock what you don't own" as referring specifically to "mock verification" (e.g. assert mock_session.commit.assert_called_once()), with the reason for this advice being that you cannot change those interfaces. So the mock has no value in providing feedback to your design.
-
-https://github.com/cosmicpython/book/issues/44
-////
+"Don't Mock What You Don't Own" is a rule of thumb that forces us to build
+these simple abstractions over messy subsystems. This has the same performance
+benefit as mocking the SQLAlchemy Session, but encourages us to think carefully
+about our designs.
+********************************************************************************
 
 === Using the UoW in the Service Layer
 
@@ -313,7 +365,7 @@ And here's what our new service layer looks like:
 
 
 [[service_layer_with_uow]]
-.Service layer using UoW (src/allocation/services.py)
+.Service layer using UoW (src/allocation/service_layer/services.py)
 ====
 [source,python]
 ----
@@ -423,13 +475,13 @@ It would allow us to save a line of code, and remove the explicit commit from ou
 client code:
 
 [[add_batch_nocommit]]
-.\... would save us a line of code (src/allocation/services.py)
+.\... would save us a line of code (src/allocation/service_layer/services.py)
 ====
 [source,python]
 [role="skip"]
 ----
-def add_batch(ref: str, sku: str, qty: int, eta: Optional[date], start_uow):
-    with start_uow() as uow:
+def add_batch(ref: str, sku: str, qty: int, eta: Optional[date], uow):
+    with uow:
         uow.batches.add(model.Batch(ref, sku, qty, eta))
         # uow.commit()
 ----
@@ -542,7 +594,10 @@ it's doing are covered in _test_repository.py_.  That last you might keep around
 but we could certainly see an argument for just keeping everything at the highest
 possible level of abstraction (just as we did for the unit tests).
 
-// TODO: expand on this a bit?
+TIP: Every line of code that we put in a test is like a blob of glue, holding
+    the system in a particular shape. The more tests we have, the harder it will
+    be to change things. As we build better abstractions, we can move our tests
+    to run against them, which leaves us free to change the underlying details.
 
 
 .Exercise for the Reader
@@ -572,10 +627,10 @@ hopefully you'll agree that the context manager is a really nice Pythonic way
 of visually grouping code into blocks that we want to happen atomically.
 
 This pattern is so useful, in fact, that SQLAlchemy already uses a unit-of-work
-in the shape of the Session object. The Session object in SqlAlchemy is the way
+in the shape of the Session object. The Session object in SQLAlchemy is the way
 that your application loads data from the database.
 
-Every time you load a new entity from the db, the Session begins to _track_
+Every time you load a new entity from the database, the Session begins to _track_
 changes to the entity, and when the Session is _flushed_, all your changes are
 persisted together.
 
@@ -623,7 +678,7 @@ This is a lovely case for a context manager::
     context manager to automatically rollback our work at the end of request
     which means the system is safe by default.
 
-SqlAlchemy already implements this pattern::
+SQLAlchemy already implements this pattern::
     We introduce an even simpler abstraction over the SQLAlchemy Session object
     in order to "narrow" the interface between the ORM and our code. This helps
     to keep us loosely coupled.

@@ -6,6 +6,19 @@ We've talked about _abstractions_ quite a lot.  The Repository is an
 abstraction over permanent storage for example.  But what makes a good
 abstraction?  What do we want from them?  And how do they relate to testing?
 
+
+[TIP]
+====
+You can find our code for this chapter at
+https://github.com/cosmicpython/code/tree/appendix_project_structure[github.com/cosmicpython/code/tree/chapter_03_abstractions].
+
+----
+git clone https://github.com/cosmicpython/code.git
+git checkout chapter_03_abstractions
+----
+====
+
+
 A key theme in this book, hidden among the fancy patterns, is that we can use
 simple abstractions to hide messy details. When we're writing code for fun, or
 in a kata,footnote:[A code kata is a small contained programming challenge often
@@ -56,7 +69,7 @@ image::images/coupling_illustration2.png[]
 [ditaa,coupling_illustration2]
 +--------+                           +--------+
 | System |      /-------------\      | System |
-|   A    |      |             | ---> |   B    |
+|   A    | ---> |             | ---> |   B    |
 |        | ---> | Abstraction | ---> |        |
 |        |      |             | ---> |        |
 |        |      \-------------/      |        |
@@ -67,12 +80,16 @@ image::images/coupling_illustration2.png[]
 
 In both diagrams, we have a pair of subsystems, with the one dependent on
 the other. In the first diagram, there is a high degree of coupling between the
-two, because reasons. If we need to change system B, there's a good
-chance that the change will ripple through to system A.
+two; the number of arrows indicate lots of different kinds of dependencies
+between the two. If we need to change system B, there's a good chance that the
+change will ripple through to system A.
 
 In the second, though, we have reduced the degree of coupling by inserting a
-new, simpler, abstraction. This abstraction serves to protect us from change by
-hiding away the complex details of whatever system B does.
+new, simpler, abstraction. Because it is simpler, System A has fewer different
+kinds of dependencies on the abstraction. The abstraction serves to
+protect us from change by hiding away the complex details of whatever system B
+does--we can change the arrows on the right without changing the ones on the
+left.
 
 
 === Abstracting State Aids Testability
@@ -227,7 +244,7 @@ def test_when_a_file_has_been_renamed_in_the_source():
 Wowsers, that's a lot of setup for two very simple cases! The problem is that
 our domain logic, "figure out the difference between two directories," is tightly
 coupled to the IO code. We can't run our difference algorithm without calling
-the pathlib, shutil, and hashlib modules.
+the `pathlib`, `shutil`, and `hashlib` modules.
 
 And the trouble is, even with our current requirements, we haven't written
 enough tests: the current implementation actually has several bugs (the
@@ -543,8 +560,8 @@ def test_when_a_file_has_been_renamed_in_the_source():
 The advantage of this approach is that your tests act on the exact same function
 that's used by your production code.  The disadvantage is that we have to make
 our stateful components explicit and we have to pass them around.
-DHHfootnote:[David Heinemeier Hansson, the creator of Ruby on Rails]
-famously described this as "test damage".
+David Heinemeier Hansson, the creator of Ruby on Rails, famously described this
+as "test-induced design damage".
 
 In either case, we can now work on fixing all the bugs in our implementation;
 enumerating tests for all the edge cases is now much easier.
@@ -556,33 +573,80 @@ At this point you may be scratching your head and thinking
 "Why don't you just use `mock.patch` and save yourself the effort?
 
 We avoid using mocks in this book, and in our production code, too. We're not
-going to enter into a Holy War, but our instinct is that mocking frameworks are
-a code smell.
+going to enter into a Holy War, but our instinct is that mocking frameworks,
+particularly monkeypatching, are a code smell.
 
 Instead, we like to clearly identify the responsibilities in our codebase, and to
 separate those responsibilities out into small, focused objects that are easy to
 replace with a test double.
 
-There are three closely related reasons for that:
+NOTE: You can see an example in <<chapter_07_events_and_message_bus>>
+    where we `mock.patch()` out an email-sending module, but eventually we
+    replace that with an explicit bit of dependency injection, in
+    <<chapter_12_dependency_injection>>.
+
+There are three closely related reasons for our preference:
 
 1.  Patching out the dependency you're using makes it possible to unit test the
 code, but it does nothing to improve the design. Using mock.patch won't let your
 code work with a `--dry-run` flag, nor will it help you run against an ftp
 server. For that, you'll need to introduce abstractions.
-+
-Designing for testability really means designing for extensibility. We trade off
-a little more complexity for a cleaner design that admits novel use-cases.
 
 2.  Tests that use mocks _tend_ to be more coupled to the implementation details
 of the codebase. That's because mock tests verify the interactions between
 things: did we call `shutil.copy` with the right arguments? This coupling between
 code and test _tends_ to make tests more brittle in our experience.
-+
-Martin Fowler wrote about this in his 2007 blog post
-https://www.martinfowler.com/articles/mocksArentStubs.html[Mocks Aren't Stubs]
 
 3.  Over-use of mocks leads to complicated test suites that fail to explain the
 code.
+
+NOTE: Designing for testability really means designing for
+    extensibility. We trade off a little more complexity for a cleaner design
+    that admits novel use-cases.
+
+.Mocks vs Fakes; Classic Style vs London School TDD
+*******************************************************************************
+
+Here's a short and somewhat simplistic definition of the difference between
+mocks and fakes.
+
+* Mocks are used to verify _how_ something gets used;  they have methods
+  like `assert_called_once_with()`.  They're associated with London-school
+  TDD.
+
+* Fakes are working implementations of the thing they're replacing, but
+  they're only designed for use in tests; they wouldn't work "in real life",
+  like our in-memory repository. But you can use them to make assertions about
+  the end state of a system, rather than the behaviors along the way, so
+  they're associated with classic-style TDD.
+
+(We're slightly conflating mocks with spies and fakes with stubs here, and you
+can read the long, correct answer in Martin Fowler's classic essay on the subject
+called https://martinfowler.com/articles/mocksArentStubs.html[Mocks aren't Stubs])
+
+(It also probably doesn't help that the `MagicMock` objects provided by
+`unittest.mock` aren't, strictly speaking, mocks, they're spies if anything.
+But they're also often used as stubs or dummies.  There, promise we're done with
+the test double terminology nitpicks now.)
+
+//TODO (hynek) you could mention Alex Gaynor's `pretend` which gives you
+// stubs without mocks error-prone magic.
+
+What about London-school vs classic-style TDD?  You can read more about those
+two in Martin Fowler's article just cited, as well as
+https://softwareengineering.stackexchange.com/questions/123627/what-are-the-london-and-chicago-schools-of-tdd[on stackoverflow],
+but in this book we're pretty firmly in the classicist camp.  We like to
+build our tests around state, both in setup and assertions, and we like
+to work at the highest level of abstraction possible rather than doing
+checks on the behavior of intermediary collaborators.footnote:[
+Which is not to say that we think the London School people are wrong. There
+are some insanely smart people that work that way.  It's just not what we're
+used to].
+
+Read more on this shortly, in the <<kinds_of_tests,"high gear vs low gear">>
+section.
+
+*******************************************************************************
 
 We view TDD as a design practice first, and a testing practice second. The tests
 act as a record of our design choices, and serve to explain the system to us
@@ -593,8 +657,9 @@ story we care about.
 
 Steve Freeman has a great example of over-mocked tests in his talk
 https://www.youtube.com/watch?v=B48Exq57Zg8[Test Driven Development: That's Not What We Meant].
-You should also check out this https://www.youtube.com/watch?v=Ldlz4V-UCFw[Pycon talk on Mocking Pitfalls]
-by our esteemed tech reviewer, Ed Jung, which also addresses mocking and its alternatives.
+You should also check out this https://www.youtube.com/watch?v=Ldlz4V-UCFw[PyCon talk on Mocking Pitfalls]
+by our esteemed tech reviewer, Ed Jung, which also addresses mocking and its
+alternatives.
 
 And while we're recommending talks, don't miss
 https://www.youtube.com/watch?v=PBQN62oUnN8[Brandon Rhodes talking about "hoisting" I/O"],
@@ -611,6 +676,12 @@ TIP: In this chapter we've spent a lot of time replacing end-to-end tests with
 
 .So Which Do We Use in this Book? FCIS or DI?
 ******************************************************************************
+//TODO (hynek) not sure you can rely on people remembering those acronyms just yet
+//(EJ2) Agree with above. Instead of talking about "FCIS" vs "DI", talking about
+//      "functional" vs "object-oriented" style of composition will be easier to remember.
+//       And also, talking about side-effect free functions instead of avoiding state
+//       will be helfpul, because that's the main point with FCIS.
+//
 Both. Our domain model is entirely free of dependencies and side-effects,
 so that's our functional core.  The service layer that we build around it
 (in <<chapter_04_service_layer>>) allows us to drive the system edge-to-edge
@@ -649,5 +720,6 @@ Practice makes less-imperfect!
 // really on in the book. But it is also a bit of a brain dump of lots of deep,
 // amazing concepts. I don't think you've quite found the best structure here
 // yet. Perhaps it could be structured around these heuristics?
+// (EJ3) Not sure how to structure this better.
 
 And now back to our regular programming...

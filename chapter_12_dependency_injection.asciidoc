@@ -1,41 +1,67 @@
 [[chapter_12_dependency_injection]]
-== Dependency Injection (And Mocks)
+== Dependency Injection (And Bootstrapping)
 
-//TODO get rid of bullets
+Dependency Injection (DI) is regarded with suspicion in the Python world.  And
+we've managed _just fine_ without it so far in the example code for this
+book!
 
-.In this chapter
-********************************************************************************
+In this chapter we'd like to explore some of the pain points in our code
+that lead us to consider using DI, and we'll present some different options
+for how to do it, leaving it to you to pick which you think is most Pythonic
 
-* We'll show how dependency injection supports our architectural goals.
-* We'll introduce a _composition root_ pattern to bootstrap our system.
-* We'll offer some guidance on managing application configuration.
-* We'll compare different approaches to dependency injection and discuss their
-  trade-offs.
+We'll also add a new component to our architecture called __bootstrap.py__;
+it will be in charge of dependency injection, and some other initialisation
+stuff that we often need.  We'll explain why this sort of thing is called
+a _Composition Root_ in OO langauges, and why "bootstrap script" is just fine
+for our purposes.
 
-  // DIAGRAM GOES HERE
+<<bootstrap_chapter_before_diagram>> shows what our app looks like without
+a bootstrapper: the entrypoints do a lot of initialisation and passing around
+of our main dependency, the UoW.
 
-********************************************************************************
+[[bootstrap_chapter_before_diagram]]
+.Without bootstrap: entrypoints do a lot
+image::images/maps_chapter_12_before.png[]
 
-NOTE: chapter under construction
+<<bootstrap_chapter_after_diagram>> shows our bootstrapper taking over those
+responsibilities.
 
-Depending on your particular brain type, you may have a slight feeling of
-unease at the back of your mind at this point.  Let's bring it out into the
-open. We've currently shown two different ways of managing dependencies, and
-testing them.
-
-TIP: If you haven't already, it's worth reading <<chapter_03_abstractions>>
-    before continuing with this chapter, particularly the discussion of
-    FCIS vs DI.
+[[bootstrap_chapter_after_diagram]]
+.Bootstrap takes care of all that in one place
+image::images/maps_chapter_12_after.png[]
 
 
 === Implicit vs Explicit Dependencies
+
+Depending on your particular brain type, you may have already had a slight
+feeling of unease at the back of your mind at this point.  Let's bring it out
+into the open. We've currently shown two different ways of managing
+dependencies, and testing them.
+
+[TIP]
+====
+You can find our code for this chapter at
+https://github.com/cosmicpython/code/tree/chapter_12_dependency_injection[github.com/cosmicpython/code/tree/chapter_12_dependency_injection].
+
+----
+git clone https://github.com/cosmicpython/code.git && cd code
+git checkout chapter_12_dependency_injection
+# or, if you want to code along, checkout the previous chapter:
+git checkout chapter_11_cqrs
+----
+====
+
+
+TIP: If you haven't already, it's worth reading <<chapter_03_abstractions>>
+    before continuing with this chapter, particularly the discussion of
+    functional vs object-oriented dependency management.
 
 For our database dependency, we've built a careful framework of explicit
 dependencies and easy options for overriding them in tests. Our main handler
 functions declare an explicit dependency on the unit of work:
 
 [[existing_handler]]
-.Our handlers have an explicit dependency on the UoW (src/allocation/handlers.py)
+.Our handlers have an explicit dependency on the UoW (src/allocation/service_layer/handlers.py)
 ====
 [source,python]
 [role="existing"]
@@ -65,7 +91,7 @@ The UoW itself declares an explicit dependency on the session factory:
 
 
 [[existing_uow]]
-.The UoW depends on a session factory (src/allocation/unit_of_work.py)
+.The UoW depends on a session factory (src/allocation/service_layer/unit_of_work.py)
 ====
 [source,python]
 [role="existing"]
@@ -78,7 +104,7 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 ----
 ====
 
-We take advantage of it in our integration tests to be able to use sqlite
+We take advantage of it in our integration tests to be able to use SQLite
 instead of Postgres, sometimes
 
 [[existing_integration_test]]
@@ -93,12 +119,11 @@ def test_rolls_back_uncommitted_work_by_default(sqlite_session_factory):
 ====
 
 <1> Integration tests swap out the default postgres session_factory for a
-    sqlite one.
+    SQLite one.
 
 
 
-
-=== Explicit Dependencies Are Totally Weird an Java-Ey Tho
+=== Aren't Explicit Dependencies Totally Weird and Java-Ey Tho?
 
 If you're used to the way things normally happen in Python, you'll be thinking
 all this is a bit weird.  The standard way to do things is to declare our
@@ -108,12 +133,12 @@ languages:
 
 
 [[normal_implicit_dependency]]
-.Email-sending as a normal import-based dependency (src/allocation/handlers.py)
+.Email-sending as a normal import-based dependency (src/allocation/service_layer/handlers.py)
 ====
 [source,python]
 [role="existing"]
 ----
-from allocation import commands, events, email, exceptions, model, redis_pubsub  #<1>
+from allocation.adapters import email, redis_eventpublisher  #<1>
 ...
 
 def send_out_of_stock_notification(
@@ -140,7 +165,7 @@ sake of our tests? `mock.patch` makes monkeypatching nice and easy:
 [source,python]
 [role="existing"]
 ----
-    with mock.patch("allocation.email.send") as mock_send_mail:
+    with mock.patch("allocation.adapters.email.send") as mock_send_mail:
         ...
 ----
 ====
@@ -162,13 +187,18 @@ strictly speaking, and using them would make our application code marginally
 more complex.  But in return, we'd get tests that are easier to write and
 manage.
 
-On top of which, declaring an explicit dependency is an implementation of
-the DIP--rather than having an (implicit) dependency on a _specific_ detail,
-we have an (explicit) dependency on an _abstraction_:
+On top of which, declaring an explicit dependency is an example of the
+dependency inversion principle -- rather than having an (implicit) dependency on
+a _specific_ detail, we have an (explicit) dependency on an _abstraction_:
+
+[quote, The Zen of Python]
+____
+Explicit Is Better Than Implicit
+____
 
 
 [[handler_with_explicit_dependency]]
-.The explicit dependency is more abstract (src/allocation/handlers.py)
+.The explicit dependency is more abstract (src/allocation/service_layer/handlers.py)
 ====
 [source,python]
 [role="non-head"]
@@ -183,22 +213,338 @@ def send_out_of_stock_notification(
 ----
 ====
 
+But if we do change to declaring all these dependencies explicitly, who will
+inject them and how? So far, we've only really been dealing with passing the
+UoW around:  our tests use a `FakeUnitOfWork` while Flask and Redis eventconsumer
+entrypoints use the real UoW, and the messagebus passes them onto our command
+handlers.  If we add real and fake email classes, who will create them and
+pass them on?
 
-But if we do declare these dependencies explicitly, who will inject them and how?
-So far, we've only really been dealing with passing the UoW around.  What about
-all these other things?
+It's extra (duplicated) cruft for Flask, Redis and our tests.  Moreover,
+putting all the responsibility for passing dependencies to the right handler
+onto the messagebus feels like a violation of the SRP.
 
-Since we've now made the messagebus into the core of our application, it's the
-ideal place to manage these dependencies.
+Instead, we'll reach for a pattern called _Composition Root_ (a bootstrap
+script to you and me)footnote:[
+Because Python is not a "pure" OO language, Python developers aren't necessarily
+used to the concept of needing to "compose" a set of objects into a working
+application.  We just pick our entrypoint and run code from top to bottom.],
+and we'll do a bit of "Manual DI" (dependency injection without a
+frameworkfootnote:[Mark Seeman calls this https://blog.ploeh.dk/2012/11/06/WhentouseaDIContainer/[Pure DI], or sometimes "Vanilla DI".]).
 
 
-=== Messagebus Does DI
+----
+Flask + Redis
+|
+| call
+V
+Bootstraper:  prepares handlers with correct dependencies injected in
+|             (test bootstrapper will use fakes, prod one will use reals)
+|
+|  pass injected handlers to
+V
+Messagebus
+|
+|  dispatches events and commands to injected handlers
+|
+V
+----
 
-Here's one way to do it:
+TODO: betterify diagram? or just get rid of, in favour of the first?
+
+
+
+
+=== Preparing Handlers: Manual DI with Closures and Partials
+
+One way to turn a function with dependencies into one that's ready to be
+called later with those dependencies _aleady injected_, is to use closures or
+partial functions to compose the function with its dependencies:
+
+
+[[di_with_partial_functions_examples]]
+.Examples of DI using closures or partial functions
+====
+[source,python]
+[role="skip"]
+----
+# existing allocate function, with abstract uow dependency
+def allocate(
+        cmd: commands.Allocate, uow: unit_of_work.AbstractUnitOfWork
+):
+    line = OrderLine(cmd.orderid, cmd.sku, cmd.qty)
+    with uow:
+        ...
+
+# bootstrap script prepares actual UoW
+
+def bootstrap(..):
+    uow = unit_of_work.SqlAlchemyUnitOfWork()
+
+    # then prepares a version of the allocate fn with uow dependency captured in a closure
+    allocate_composed = lambda cmd: allocate(cmd, uow)
+
+    # or, equivalently (this gets you a nicer stack trace)
+    def allocate_composed(cmd):
+        return allocate(cmd, uow)
+
+    # alternatively with a partial
+    import functools
+    allocate_composed = functools.partial(allocate, uow=uow)  #<1>
+
+# later at runtime, we can call the partial function, and it will have
+# the UoW already bound
+allocate_composed(cmd)
+----
+====
+
+<1> The difference between closures (lambdas or named functions) and
+    `functools.partial` is that the former use
+    https://docs.python-guide.org/writing/gotchas/#late-binding-closures[late
+    binding of variables], which can be a source of source of confusion if
+    any of the dependencies are mutable.
+
+Here's the same pattern again for the `send_out_of_stock_notification()` handler,
+which has different dependencies:
+
+[[partial_functions_2]]
+.Another closure and partial functions example
+====
+[source,python]
+[role="skip"]
+----
+def send_out_of_stock_notification(
+        event: events.OutOfStock, send_mail: Callable,
+):
+    send_mail(
+        'stock@made.com',
+        ...
+
+
+# prepare a version of the send_out_of_stock_notification with dependencies
+sosn_composed  = lambda event: send_out_of_stock_notification(event, email.send_mail)
+
+...
+# later, at runtime:
+sosn_composed(event)  # will have email.send_mail already injected in
+----
+====
+
+
+=== An Alternative Using Classes
+
+Closures and partial functions will feel familiar to people who've done a bit
+of functional programming.   Here's an alternative using classes, which may
+appeal to others.   It requires rewriting all our handler functions as
+classes though:
+
+[[di_with_classes]]
+.DI using classes
+====
+[source,python]
+[role="skip"]
+----
+# we replace the old `def allocate(cmd, uow)` with:
+
+class AllocateHandler:
+
+    def __init__(self, uow: unit_of_work.AbstractUnitOfWork):  #<2>
+        self.uow = uow
+
+    def __call__(self, cmd: commands.Allocate):  #<1>
+        line = OrderLine(cmd.orderid, cmd.sku, cmd.qty)
+        with self.uow:
+            # rest of handler method as before
+            ...
+
+# bootstrap script prepares actual UoW
+uow = unit_of_work.SqlAlchemyUnitOfWork()
+
+# then prepares a version of the allocate fn with dependencies already injected
+allocate = AllocateHandler(uow)
+
+...
+# later at runtime, we can call the handler instance, and it will have
+# the UoW already injected
+allocate(cmd)
+----
+====
+
+<1> The class is designed to produce a callable function, so it has a
+    ++__call__++ method.
+
+<2> But we use the ++__init__++ to declare the dependencies it requires.
+    This sort of thing will feel familiar if you've ever made class-based
+    descriptors, or a class-based context manager that takes arguments.
+
+
+Use whichever you and your team feel more comfortable with.
+
+
+=== A Bootstrap Script
+
+
+Here's what we want from our bootstrap script:
+
+1. It should declare default dependencies but allow us to override them.
+2. It should do the "init" stuff that we need to get our app started.
+3. It should inject all the dependencies into our handlers.
+4. It should give us back the core object for our app, the message bus.
+
+Here's a first cut.
+
+
+[[bootstrap_script]]
+.A bootstrap function (src/allocation/bootstrap.py)
+====
+[source,python]
+[role="non-head"]
+----
+def bootstrap(
+    start_orm: bool = True,  #<1>
+    uow: unit_of_work.AbstractUnitOfWork = unit_of_work.SqlAlchemyUnitOfWork(),
+    send_mail: Callable = email.send,
+    publish: Callable = redis_eventpublisher.publish,
+) -> messagebus.MessageBus:
+
+    if start_orm:
+        orm.start_mappers()  #<1>
+
+    dependencies = {'uow': uow, 'send_mail': send_mail, 'publish': publish}
+    injected_event_handlers = {  #<2>
+        event_type: [
+            inject_dependencies(handler, dependencies)
+            for handler in event_handlers
+        ]
+        for event_type, event_handlers in handlers.EVENT_HANDLERS.items()
+    }
+    injected_command_handlers = {  #<2>
+        command_type: inject_dependencies(handler, dependencies)
+        for command_type, handler in handlers.COMMAND_HANDLERS.items()
+    }
+
+    return messagebus.MessageBus(  #<3>
+        uow=uow,
+        event_handlers=injected_event_handlers,
+        command_handlers=injected_command_handlers,
+    )
+----
+====
+
+<1>  `orm.start_mappers()` is our example of initialization work that needs
+    to be done once at the beginning of an app.  We also see things like
+    setting up the `logging` module
+
+<2> We build up our injected versions of the handlers mappings using
+    a function called `inject_dependencies()` which we'll show next.
+
+<3> And we return a configured message bus ready to use.
+
+// TODO more examples of init stuff
+
+// TODO: show option of bootstrapper as class instead?
+
+Here's how we inject dependencies into a handler function by inspecting
+it:
+
+[[di_by_inspection]]
+.DI by inspecting function signatures (src/allocation/bootstrap.py)
+====
+[source,python]
+----
+def inject_dependencies(handler, dependencies):
+    params = inspect.signature(handler).parameters  #<1>
+    deps = {
+        name: dependency
+        for name, dependency in dependencies.items()  #<2>
+        if name in params
+    }
+    return lambda message: handler(message, **deps)  #<3>
+----
+====
+
+<1> We inspect our command/event handler's arguments.
+<2> We match them by name to our dependencies.
+<3> And we inject them in as kwargs to a produce a partial.
+
+
+.Even-More-Manual DI with Less Magic.
+*******************************************************************************
+If you're finding the `inspect` code above a little harder to grok, this
+even-simpler version may appeal.
+
+Harry wrote the code for `inject_dependencies()` as a first cut of how to do
+"manual" dependency injection, and when he saw it, Bob accused him of
+overengineering and writing his own DI framework.
+
+It honestly didn't even occur to Harry that you could do it any more plainly,
+but in fact of course you can, like this:
+
+// (EJ3) I don't know if I'd even call this DI, it's just straight meta-programming.
+
+[[nomagic_di]]
+.Manually creating partial functions inline (src/allocation/bootstrap.py)
+====
+[source,python]
+[role="non-head"]
+----
+    injected_event_handlers = {
+        events.Allocated: [
+            lambda e: handlers.publish_allocated_event(e, publish),
+            lambda e: handlers.add_allocation_to_read_model(e, uow),
+        ],
+        events.Deallocated: [
+            lambda e: handlers.remove_allocation_from_read_model(e, uow),
+            lambda e: handlers.reallocate(e, uow),
+        ],
+        events.OutOfStock: [
+            lambda e: handlers.send_out_of_stock_notification(e, send_mail)
+        ]
+    }
+    injected_command_handlers = {
+        commands.Allocate: lambda c: handlers.allocate(c, uow),
+        commands.CreateBatch: \
+            lambda c: handlers.add_batch(c, uow),
+        commands.ChangeBatchQuantity: \
+            lambda c: handlers.change_batch_quantity(c, uow),
+    }
+----
+====
+
+Harry says he couldn't even imagine writing out that many lines of code
+and having to look up that many function arguments manually.
+This is a perfectly viable solution though, since it's only one
+line of code or so per handler you add, so not a massive maintenance burden
+even if you have dozens of handlers.
+
+Our app is structured in such a way that we only ever want to do dependency
+injection in one place, the handler functions, so this super-manual solution
+and Harry's `inspect()` based one will both work fine.
+
+If you find yourself wanting to do DI into more things and at different times,
+or if you ever get into _dependency chains_ (where your dependencies have their
+own dependencies, and so on), you may get some mileage out of a "real" DI
+framework.
+
+// IDEA: discuss/define what a DI container is
+
+At MADE we've used https://pypi.org/project/Inject/[Inject] in a few places,
+and it's fine although it makes pylint unhappy.  You might also check out
+https://pypi.org/project/punq/[Punq], as written by Bob himself, or the
+DRY-Python crew's https://github.com/dry-python/dependencies[dependencies].
+
+*******************************************************************************
+
+
+=== Messagebus Gets Given Handlers at Runtime
+
+Our messagebus will no longer be static, it needs to have the already-injected
+handlers given to it.  So we turn it from being a module into a configurable
+class:
 
 
 [[messagebus_as_class]]
-.MessageBus as a class (src/allocation/messagebus.py)
+.MessageBus as a class (src/allocation/service_layer/messagebus.py)
 ====
 [source,python]
 [role="non-head"]
@@ -206,208 +552,239 @@ Here's one way to do it:
 class MessageBus:  #<1>
 
     def __init__(
-            self,
-            uow: unit_of_work.AbstractUnitOfWork,  #<2>
-            send_mail: Callable,  #<2>
-            publish: Callable,  #<2>
+        self,
+        uow: unit_of_work.AbstractUnitOfWork,
+        event_handlers: Dict[Type[events.Event], List[Callable]],  #<2>
+        command_handlers: Dict[Type[commands.Command], Callable],  #<2>
     ):
         self.uow = uow
-        self.dependencies = dict(uow=uow, send_mail=send_mail, publish=publish)  #<3>
+        self.event_handlers = event_handlers
+        self.command_handlers = command_handlers
 
-    def handle(self, message: Message):
-        if isinstance(message, events.Event):
-            self.handle_event(message)
-        elif isinstance(message, commands.Command):
-            self.handle_command(message)
-        else:
-            raise Exception(f'{message} was not an Event or Command')
+    def handle(self, message: Message):  #<3>
+        self.queue = [message]
+        while self.queue:
+            message = self.queue.pop(0)
+            if isinstance(message, events.Event):
+                self.handle_event(message)
+            elif isinstance(message, commands.Command):
+                self.handle_command(message)
+            else:
+                raise Exception(f'{message} was not an Event or Command')
 ----
 ====
 
 <1> The messagebus becomes a class...
-<2> ...which asks for all our dependencies in one place
-<3> and stores them into a dict
+<2> ...which is given its already-dependency-injected handlers.
+<3> The main `handle()` function is substantially the same, just
+    moving a few attributes and methods onto `self`.
 
-What else changes in the bus? 
+// Note for DS, I did try a diff here but it was unreadable. too many changes.
 
-// TODO: print -> logging.debug
+////
+TODO (hynek) (re self.qeue)
+this makes me very uneasy and I’m almost certain it won’t work.
+
+Your MessageBus is a global object and putting queue on it – and clearing it
+out when handle is called is both hard to follow and 100% not thread safe.
+////
+
+////
+ (EJ1) re: above comment, there's just *A BUG YOU MUST FIX*. It should be:
+
+def handle(self, message):
+    queue = [message]
+    while queue:
+        # go do it to it ...
+
+Then each thread can get its own queue/execution context, and the globality
+of the bus doesn't matter.
+////
+
+What else changes in the bus?
 
 [[messagebus_handlers_change]]
-.Event and Command handler logic stays the same (src/allocation/messagebus.py)
+.Event and Command handler logic stays the same (src/allocation/service_layer/messagebus.py)
 ====
 [source,python]
 ----
-    def handle_event(self, event: events.Event):  #<1>
-        for handler in EVENT_HANDLERS[type(event)]:
+    def handle_event(self, event: events.Event):
+        for handler in self.event_handlers[type(event)]:  #<1>
             try:
-                print('handling event', event, 'with handler', handler, flush=True)
-                self.call_handler_with_dependencies(handler, event)  #<2>
-            except:
-                print(f'Exception handling event {event}\n:{traceback.format_exc()}')
+                logger.debug('handling event %s with handler %s', event, handler)
+                handler(event)  #<2>
+                self.queue.extend(self.uow.collect_new_events())
+            except Exception:
+                logger.exception('Exception handling event %s', event)
                 continue
 
-    def handle_command(self, command: commands.Command):  #<1>
-        print('handling command', command, flush=True)
+
+    def handle_command(self, command: commands.Command):
+        logger.debug('handling command %s', command)
         try:
-            handler = COMMAND_HANDLERS[type(command)]
-            self.call_handler_with_dependencies(handler, command)  #<2>
-        except Exception as e:
-            print(f'Exception handling command {command}: {e}')
-            raise e
+            handler = self.command_handlers[type(command)]  #<1>
+            handler(command)  #<2>
+            self.queue.extend(self.uow.collect_new_events())
+        except Exception:
+            logger.exception('Exception handling command %s', command)
+            raise
 ----
 ====
 
 <1> `handle_event` and `handle_command` are substantially the same, but instead
-    of calling handlers directly and only passing in the UoW, they call a new method:
+    of indexing into a static `EVENT_HANDLERS` or `COMMAND_HANDLERS` dict, they
+    use the versions on `self`.
 
-<2> `self.call_handler_with_dependencies()`, which takes the handler function and
-    the event we want to call:
+<2> Instead of passing a UoW into the handler, we expect the handlers
+    to already have all their dependencies, so all they need is a single argument,
+    the specific event or command.
 
 
-==== Dependency Injection with Minimal Magic
+=== Using Bootstrap in Our Entrypoints
 
-Here's the core of our dependency injection approach then.  As you'll see
-there's not much to it:
+In our application's entrypoints, we now just call `bootstrap.bootstrap()`
+and get a messagebus that's ready to go, rather than configuring a UoW and the
+rest of it.
 
-[[messagebus_does_DI0]]
-.Dependency injection in 3 lines of code (src/allocation/messagebus.py)
+[[flask_calls_bootstrap]]
+.Flask calls bootstrap (src/allocation/entrypoints/flask_app.py)
 ====
-[source,python]
+[source,diff]
 ----
-    def call_handler_with_dependencies(self, handler: Callable, message: Message):
-        params = inspect.signature(handler).parameters  #<1>
-        deps = {
-            name: dependency for name, dependency in self.dependencies.items()  #<2>
-            if name in params
-        }
-        handler(message, **deps)  #<3>
-----
-====
+-from allocation import views
++from allocation import bootstrap, views
 
-<1> We inspect our command/event handler's arguments
-<2> We match them by name to our dependencies
-<3> And we inject them in as kwargs when we actually call the handler
-
-//TODO: rename deps to kwargs?
-
-Note this is simple approach is only really possible because we've made the
-messagebus into the core of our app--if we still had a mixture of service
-functions and event handlers and other entrypoints, our dependencies would be
-all over the place.
+ app = Flask(__name__)
+-orm.start_mappers()  #<1>
++bus = bootstrap.bootstrap()
 
 
-=== Initializing DI in Our App Entrypoints
+ @app.route("/add_batch", methods=['POST'])
+@@ -19,8 +16,7 @@ def add_batch():
+     cmd = commands.CreateBatch(
+         request.json['ref'], request.json['sku'], request.json['qty'], eta,
+     )
+-    uow = unit_of_work.SqlAlchemyUnitOfWork()  #<2>
+-    messagebus.handle(cmd, uow)
++    bus.handle(cmd)  #<3>
+     return 'OK', 201
 
-In our flask app, we can just initialize the messagebus inline with
-the rest of our app config and setup, passing it in the actual
-dependencies we want to use:
-
-[[flask_initialises_bus]]
-.Flask initializes a bus with the production dependencies (src/allocation/flask_app.py)
-====
-[source,python]
-[role="non-head"]
-----
-from allocation import (
-    commands, email, exceptions, messagebus, orm, redis_pubsub, unit_of_work,
-    views,
-)
-
-app = Flask(__name__)
-orm.start_mappers()
-uow = unit_of_work.SqlAlchemyUnitOfWork()
-bus = messagebus.MessageBus(
-    uow=uow,
-    send_mail=email.send,
-    publish=redis_pubsub.publish
-)
-uow.bus = bus
 ----
 ====
 
+<1> We no longer need to call `start_orm()`, the bootstrap script's initialization
+    stages will do that
 
+<2> We no longer need to explicit build a particular type of UoW, the bootstrap
+    script defaults take care of it
 
-[[redis_initialises_bus]]
-.So does redis (src/allocation/redis_pubsub.py)
-====
-[source,python]
-[role="non-head"]
-----
-def get_bus():  #<1>
-    uow = unit_of_work.SqlAlchemyUnitOfWork()
-    bus = messagebus.MessageBus(
-        uow=uow,
-        notifications=email.send,
-        publish=publish
-    )
-    uow.bus = bus
-    return bus
+<3> And our messagebus is now a specific instance rather than the module global.
 
+// TODO (EJ3) bus is still a module global, it's now just an instance of an class instead of a module.
 
-def main():
-    pubsub = r.pubsub(ignore_subscribe_messages=True)
-    pubsub.subscribe('change_batch_quantity')
-    bus = get_bus()  #<1>
+// TODO (EJ2) The "Flask-onic" version of bootstrap is the application factory pattern w/ blueprints.
+//      It is worth at least mentioning here.
+//
+// The issue that the style above (where app is a module variable) can raise, is that the import will
+// have side-effects, because it inits the bus.  In the worst case, someone may have decided to add
+// network calls to retrieve config.
+//
+// If you end up needing to unit test somethihng in this module, or use the flask test client,
+// it can then lead you down the path to patching the configuration, which defeats the composition root.
+//
+// I think Docker helps mitigate this problem, with the cost of potentially increasing the complexity.
+//
+//  Reference:
+//  https://flask.palletsprojects.com/en/1.1.x/patterns/appfactories/#
+//  https://flask.palletsprojects.com/en/1.1.x/testing/#other-testing-tricks
+//  https://flask.palletsprojects.com/en/1.1.x/blueprints/#blueprints
 
-    for m in pubsub.listen():
-        handle_change_batch_quantity(m, bus)
-
-
-def handle_change_batch_quantity(m, bus: messagebus.MessageBus):
-----
-====
-
-<1> In the redis case we can't do the initialization at import-time,
-    because we have a circular dependency between flask and redis
-    (we'll look at fixing that in <<appendix_bootstrap>>.
 
 
 === Initializing DI in Our Tests
 
+In tests, we can use `bootstrap.bootstrap()` with overridden defaults to get a
+custom messagebus.  Here's an example in an integration test:
 
-[[fakebus]]
-.Handler tests just do their own bootstrap (tests/unit/test_handlers.py)
+
+[[bootstrap_view_tests]]
+.Overriding bootstrap defaults (tests/integration/test_views.py)
 ====
 [source,python]
 [role="non-head"]
 ----
-class FakeBus(messagebus.MessageBus):
-    def __init__(self):
-        uow = FakeUnitOfWork()
-        super().__init__(
-            uow=uow,
-            send_mail=mock.Mock(),
-            publish=mock.Mock(),
-        )
-        uow.bus = self
+@pytest.fixture
+def sqlite_bus(sqlite_session_factory):
+    bus = bootstrap.bootstrap(
+        start_orm=True,  #<1>
+        uow=unit_of_work.SqlAlchemyUnitOfWork(sqlite_session_factory),  #<2>
+        send_mail=lambda *args: None,  #<3>
+        publish=lambda *args: None,  #<4>
+    )
+    yield bus
+    clear_mappers()
 
-...
-
-class TestAddBatch:
-
-    @staticmethod
-    def test_for_new_product():
-        bus = FakeBus()
-        bus.handle(commands.CreateBatch("b1", "CRUNCHY-ARMCHAIR", 100, None))
-        assert bus.uow.products.get("CRUNCHY-ARMCHAIR") is not None
-        assert bus.uow.committed
+def test_allocations_view(sqlite_bus):
+    sqlite_bus.handle(commands.CreateBatch('sku1batch', 'sku1', 50, None))
+    sqlite_bus.handle(commands.CreateBatch('sku2batch', 'sku2', 50, date.today()))
+    ...
+    assert views.allocations('order1', sqlite_bus.uow) == [
+        {'sku': 'sku1', 'batchref': 'sku1batch'},
+        {'sku': 'sku2', 'batchref': 'sku2batch'},
+    ]
 ----
 ====
+
+<1> We do still want to start the ORM...
+<2> ...because we're going to use a real UoW, albeit with an in-memory database.
+<3> But we don't need to send emails or publish, so we make those noops.
+
+
+In our unit tests, in contrast, we can reuse our `FakeUnitOfWork`:
+
+[[bootstrap_tests]]
+.Bootstrap in unit test (tests/unit/test_handlers.py)
+====
+[source,python]
+[role="non-head"]
+----
+def bootstrap_test_app():
+    return bootstrap.bootstrap(
+        start_orm=False,  #<1>
+        uow=FakeUnitOfWork(),  #<2>
+        send_mail=lambda *args: None,  #<3>
+        publish=lambda *args: None,  #<3>
+    )
+----
+====
+
+<1> No need to start the ORM...
+<2> ...because the fake UoW doesn't use one
+<3> And we want to fake out our email and Redis adapters too.
+
+
+So that gets rid of a little duplication, and we've moved a bunch
+of setup and sensible defaults into a single place.
+
+//TODO weak segue
 
 
 === Building an Adapter "Properly": A Worked Example
 
-We've got two types of dependency:
+To really get a feel for how it all works, let's work through an example of how
+you might build an adapter, and do dependency injection for it, "properly".
 
-[[messagebus_does_DI]]
-.Two types of dependency (src/allocation/messagebus.py)
+At the moment we've got two types of dependency:
+
+[[two_types_of_dependency]]
+.Two types of dependency (src/allocation/service_layer/messagebus.py)
 ====
 [source,python]
-[role="non-head"]
+[role="skip"]
 ----
-            uow: unit_of_work.AbstractUnitOfWork,  #<1>
-            send_mail: Callable,  #<2>
-            publish: Callable,  #<2>
+    uow: unit_of_work.AbstractUnitOfWork,  #<1>
+    send_mail: Callable,  #<2>
+    publish: Callable,  #<2>
 ----
 ====
 
@@ -438,7 +815,7 @@ email, could be SMS, could be slack posts one day.
 
 
 [[notifications_dot_py]]
-.An ABC and a concrete implementation (src/allocation/notifications.py)
+.An ABC and a concrete implementation (src/allocation/adapters/notifications.py)
 ====
 [source,python]
 ----
@@ -467,73 +844,71 @@ class EmailNotifications(AbstractNotifications):
 ====
 
 
-we change the dependency in the messagebus:
+We change the dependency in the bootstrap script:
 
 [[notifications_in_bus]]
-.Notifications in messagebus (src/allocation/messagebus.py)
+.Notifications in messagebus (src/allocation/bootstrap.py)
 ====
 [source,python]
+[role="skip"]
 ----
-class MessageBus:
-
-    def __init__(
-            self,
-            uow: unit_of_work.AbstractUnitOfWork,
-            notifications: notifications.AbstractNotifications,
-            publish: Callable,
-    ):
+ def bootstrap(
+     start_orm: bool = True,
+     uow: unit_of_work.AbstractUnitOfWork = unit_of_work.SqlAlchemyUnitOfWork(),
+-    send_mail: Callable = email.send,
++    notifications: AbstractNotifications = EmailNotifications(),
+     publish: Callable = redis_eventpublisher.publish,
+ ) -> messagebus.MessageBus:
 ----
 ====
 
 
+==== Make a Fake Version for your Tests
 
 We work through and define a fake version for unit testing:
 
 
 [[fake_notifications]]
-.fake notifications (tests/unit/fakes.py)
+.fake notifications (tests/unit/test_handlers.py)
 ====
 [source,python]
 ----
 class FakeNotifications(notifications.AbstractNotifications):
 
     def __init__(self):
-        self.sent = defaultdict(list)  # type: Dict[str, str]
+        self.sent = defaultdict(list)  # type: Dict[str, List[str]]
 
     def send(self, destination, message):
         self.sent[destination].append(message)
-
 ...
-
-class FakeBus(messagebus.MessageBus):
-    def __init__(self):
-        uow = FakeUnitOfWork()
-        super().__init__(
-            uow=uow,
-            notifications=FakeNotifications(),
-            publish=mock.Mock(),
-        )
-        uow.bus = self
 ----
 ====
 
-we can use it in our tests:
+and use it in our tests:
 
 [[test_with_fake_notifs]]
 .Tests change slightly (tests/unit/test_handlers.py)
 ====
 [source,python]
 ----
-    def test_sends_email_on_out_of_stock_error():
-        bus = FakeBus()
+    def test_sends_email_on_out_of_stock_error(self):
+        fake_notifs = FakeNotifications()
+        bus = bootstrap.bootstrap(
+            start_orm=False,
+            uow=FakeUnitOfWork(),
+            notifications=fake_notifs,
+            publish=lambda *args: None,
+        )
         bus.handle(commands.CreateBatch("b1", "POPULAR-CURTAINS", 9, None))
         bus.handle(commands.Allocate("o1", "POPULAR-CURTAINS", 10))
-        assert bus.dependencies['notifications'].sent['stock@made.com'] == [
+        assert fake_notifs.sent['stock@made.com'] == [
             f"Out of stock for POPULAR-CURTAINS",
         ]
 ----
 ====
 
+
+==== Figure out how to Integration Test the Real Thing
 
 Now we test the real thing, usually with an end-to-end or integration
 test.  We've used https://github.com/mailhog/MailHog[MailHog] as a
@@ -587,45 +962,40 @@ talking to the MailHog server in the docker cluster:
 ====
 [source,python]
 ----
-cfg = config.get_email_host_and_port()
-
 @pytest.fixture
 def bus(sqlite_session_factory):
-    uow = unit_of_work.SqlAlchemyUnitOfWork(sqlite_session_factory)
-    bus = messagebus.MessageBus(
-        uow=uow,
-        notifications=notifications.EmailNotifications(
-            smtp_host=cfg['host'],
-            port=cfg['port'],
-        ),
-        publish=lambda *_, **__: None
+    bus = bootstrap.bootstrap(
+        start_orm=True,
+        uow=unit_of_work.SqlAlchemyUnitOfWork(sqlite_session_factory),
+        notifications=notifications.EmailNotifications(),  #<1>
+        publish=lambda *args: None,
     )
-    uow.bus = bus
-    return bus
+    yield bus
+    clear_mappers()
 
 
-def random_sku():
-    return uuid.uuid4().hex[:6]
+def get_email_from_mailhog(sku):  #<2>
+    host, port = map(config.get_email_host_and_port().get, ['host', 'http_port'])
+    all_emails = requests.get(f'http://{host}:{port}/api/v2/messages').json()
+    return next(m for m in all_emails['items'] if sku in str(m))
 
 
 def test_out_of_stock_email(bus):
     sku = random_sku()
-    bus.handle(commands.CreateBatch('batch1', sku, 9, None))
+    bus.handle(commands.CreateBatch('batch1', sku, 9, None))  #<3>
     bus.handle(commands.Allocate('order1', sku, 10))
-    messages = requests.get(
-        f'http://{cfg["host"]}:{cfg["http_port"]}/api/v2/messages'
-    ).json()
-    message = next(
-        m for m in messages['items']
-        if sku in str(m)
-    )
-    assert message['Raw']['From'] == 'allocations@example.com'
-    assert message['Raw']['To'] == ['stock@made.com']
-    assert f'Out of stock for {sku}' in message['Raw']['Data']
+    email = get_email_from_mailhog(sku)
+    assert email['Raw']['From'] == 'allocations@example.com'  #<4>
+    assert email['Raw']['To'] == ['stock@made.com']
+    assert f'Out of stock for {sku}' in email['Raw']['Data']
 ----
 ====
 
-against all the odds this actually worked, pretty much first go!
+<1> We use our bootstrapper to build a messagebus which talks to the
+    real notifications class
+<2> We figure out how to fetch emails from our "real" email server
+<3> We use the bus to do our test setup
+<4> And, against all the odds this actually worked, pretty much first go!
 
 
 And, erm, that's it really.
@@ -637,29 +1007,32 @@ And, erm, that's it really.
 5. Test the less-fake "real" thing
 6. Profit!
 
+// TODO this isn't really in the right TDD order is it?
 
-.Exercise for the Reader 
+
+.Exercise for the Reader
 ******************************************************************************
 NOTE: TODO, under construction
+// (EJ2) Maybe LocalStack here https://github.com/localstack/localstack?
 
 Why not have a go at changing from email to, idk, twilio or slack
 notifications or something?
 
 Oh yeah, step 4 is a bit challenging...
 
-Or, do the same thing for redis.  You'll need to split pub from sub.
+Or, do the same thing for redis_eventpublisher.
 ******************************************************************************
 
 
-=== DI wrap-up
+=== DI and bootstrap wrap-up
 
-* messagebus is a nice place to do DI. it becomes a composition root
-* but you don't have to.  it is a violation of the SRP after all. if you use
-  a <<appendix_bootstrap,bootstrap script>>, that can be a good place to
-  initialise some alternative DI tools
-* off-the-shelf, you could try https://pypi.org/project/Inject/[Inject]
-  (it's fine, we use it at MADE, it makes pylint complain) or 
-  https://pypi.org/project/punq/[Punq] (as written by Bob himself).
+* once you have more than one adapter, you start to feel a lot of pain unless
+  you do DI
+
+* bootstrap script as function works.  as class too
+
+* DI framework if you have more complex requirements. maybe?
+
+* you've now seen how you do an adapter properly
 
 TODO: expand on wrap-up
-

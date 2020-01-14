@@ -34,8 +34,8 @@ have domain knowledge, and send emails and perform logging; "business logic"
 classes that perform no calculations but do perform IO; and everything coupled
 to everything else so that changing any part of the system becomes fraught with
 danger. This is so common that software engineers have their own term for
-chaos: The Big Ball of Mud anti-pattern (<<bbom_image>>)footnote:[Big Ball of Mud
-illustration from
+chaos: The Big Ball of Mud (BBOM) anti-pattern (<<bbom_image>>)footnote:[Big
+Ball of Mud illustration from
 https://thedailywtf.com/articles/Enterprise-Dependency-Big-Ball-of-Yarn].
 
 [[bbom_image]]
@@ -62,6 +62,8 @@ behavior and hiding data. In this discussion, we're using the first sense. We
 encapsulate behavior by identifying a task that needs to be done in our code,
 and giving that task to a well defined object or function; we call that an
 _abstraction_.
+
+//DS: not sure I agree with this definition.  more about establishing boundaries?
 
 Take a look at the following two snippets of Python code:
 
@@ -166,8 +168,8 @@ architectures are one way of tackling this problem. In a layered architecture,
 we divide our code into discrete categories or roles and we introduce rules
 about which categories of code can call each other.
 
-For example most people are familiar with the three layered architecture shown
-in <<layered_architecture1>>.
+One of the most common examples is the _three layered architecture_ shown in
+<<layered_architecture1>>.
 
 [[layered_architecture1]]
 .Layered architecture

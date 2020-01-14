@@ -25,50 +25,42 @@ Then we'll show how to use _Domain Events_ to separate side-effects from our
 use cases, and how to build a simple _Message Bus_ for triggering behavior
 based on those events.  We'll show a few different options for creating
 those events and how to pass them to the message bus, and finally we'll show
-how the Unit of Work can be modified to connect the two together elegantly.
+how the Unit of Work can be modified to connect the two together elegantly,
+as previewed in <<message_bus_diagram>>.
 
 
 [[message_bus_diagram]]
 .Events flowing through the system
-image::images/message_bus_diagram.png[]
-[role="image-source"]
-----
-[ditaa, message_bus_diagram]
+image::images/maps_chapter_07.png[]
 
-+----------+            +--------+
-|          |  raises    |  Unit  |
-|  Domain  |--events--> |   of   |
-|          |            |  Work  |
-+----------+            +--------+
-                            |
-                        publishes
-                          events
-                            |
-                            V
-        +----------------------+
-        |     Message Bus      |
-        +----------------------+
-           |
-        handles
-        events
-           |     +-----------------+
-           +---> |     Handlers    |-+
-                 +-----------------+ | +
-                   +-----------------+ |
-                     +-----------------+
+// TODO: add before diagram for contrast (?)
+
+
+[TIP]
+====
+You can find our code for this chapter at
+https://github.com/cosmicpython/code/tree/chapter_07_events_and_message_bus[github.com/cosmicpython/code/tree/chapter_07_events_and_message_bus].
+
 ----
+git clone https://github.com/cosmicpython/code.git && cd code
+git checkout chapter_07_events_and_message_bus
+# or, if you want to code along, checkout the previous chapter:
+git checkout chapter_06_aggregate
+----
+====
 
 
 === Avoiding Making a Mess.
-
-==== First, Avoid Making a Mess of of Our Web Controllers
 
 So.  Email alerts when we run out of stock. When we have a new requirement like
 this, that's not _really_ to do with the core domain, it's all too easy to
 start dumping these things into our web controllers:
 
+
+==== First, Avoid Making a Mess of of Our Web Controllers
+
 [[email_in_flask]]
-.Just whack it in the endpoint, what could go wrong? (src/allocation/flask_app.py)
+.Just whack it in the endpoint, what could go wrong? (src/allocation/entrypoints/flask_app.py)
 ====
 [source,python]
 [role="skip"]
@@ -107,7 +99,7 @@ we want them to be as thin as possible, we may look at putting it right at
 the source, in the model:
 
 [[email_in_model]]
-.Email-sending code in our model isn't lovely either (src/allocation/model.py)
+.Email-sending code in our model isn't lovely either (src/allocation/domain/model.py)
 ====
 [source,python]
 [role="non-head"]
@@ -120,7 +112,7 @@ the source, in the model:
             #...
         except StopIteration:
             email.send_mail('stock@made.com', f'Out of stock for {line.sku}')
-            raise exceptions.OutOfStock(f'Out of stock for sku {line.sku}')
+            raise OutOfStock(f'Out of stock for sku {line.sku}')
 ----
 ====
 
@@ -147,7 +139,7 @@ We've written a service layer to manage orchestration for us, but even here
 the feature feels out of place:
 
 [[email_in_services]]
-.And in the services layer it's out of place (src/allocation/services.py)
+.And in the services layer it's out of place (src/allocation/service_layer/services.py)
 ====
 [source,python]
 [role="non-head"]
@@ -160,12 +152,12 @@ def allocate(
     with uow:
         product = uow.products.get(sku=line.sku)
         if product is None:
-            raise exceptions.InvalidSku(f'Invalid sku {line.sku}')
+            raise InvalidSku(f'Invalid sku {line.sku}')
         try:
             batchref = product.allocate(line)
             uow.commit()
             return batchref
-        except exceptions.OutOfStock:
+        except model.OutOfStock:
             email.send_mail('stock@made.com', f'Out of stock for {line.sku}')
             raise
 ----
@@ -195,6 +187,9 @@ job is to know that we're out of stock, but the responsibility of sending an
 alert belongs elsewhere. We should be able to turn this feature on or off, or to
 switch to SMS notifications instead, without needing to change the rules of our
 domain model.
+
+//(EJ1) Suggestion: Consider using the terms "orchestration" vs "choreography" will help
+//      in this chapter to contrast the imperative vs event based approaches.
 
 We'd also like to keep the service layer free of implementation details. We
 want to apply the Dependency Inversion Principle to notifications, so that our
@@ -226,7 +221,7 @@ We could store them in _model.py_, but we may as well keep them in their own fil
 "domain," so we have _domain/model.py_ and _domain/events.py_).
 
 [[events_dot_py]]
-.Event classes (src/allocation/events.py)
+.Event classes (src/allocation/domain/events.py)
 ====
 [source,python]
 ----
@@ -282,7 +277,7 @@ Here's what it looks like on the inside:
 
 
 [[domain_event]]
-.The model raises a domain event (src/allocation/model.py)
+.The model raises a domain event (src/allocation/domain/model.py)
 ====
 [source,python]
 [role="non-head"]
@@ -300,7 +295,7 @@ class Product:
             #...
         except StopIteration:
             self.events.append(events.OutOfStock(line.sku))  #<2>
-            # raise exceptions.OutOfStock(f'Out of stock for sku {line.sku}')  #<3>
+            # raise OutOfStock(f'Out of stock for sku {line.sku}')  #<3>
             return None
 ----
 ====
@@ -332,7 +327,7 @@ Handlers are _subscribed_ to receive events, which we publish to the bus. It
 sounds harder than it is, and we usually implement it with a dict:
 
 [[messagebus]]
-.Simple message bus (src/allocation/messagebus.py)
+.Simple message bus (src/allocation/service_layer/messagebus.py)
 ====
 [source,python]
 ----
@@ -355,11 +350,13 @@ HANDLERS = {
 ----
 ====
 
-NOTE: Note that the messagebus as implemented is entirely synchronous--our
-    objective isn't to create an async/nonblocking task queue to defer
-    execution in time, we're only aiming to separate tasks conceptually.
+NOTE: Note that the messagebus as implemented doesn't give us concurrency since  
+    only one handler will run at a time.
+    Our objective isn't to support parallel threads, but to separate
+    tasks conceptually, and keep each unit of work as small as possible.
+    This helps us to understand the code base because the "recipe" for how to
+    run each use-case is written in a single place.
     See <<celery_sidebar>>.
-
 
 [[celery_sidebar]]
 .Is this like Celery?
@@ -367,6 +364,11 @@ NOTE: Note that the messagebus as implemented is entirely synchronous--our
 Celery is a popular tool in the Python world for deferring self-contained
 chunks of work to an asynchronous task queue. The messagebus we're
 presenting here is very different, so the short answer is no.
+
+// TODO (EJ1) The messagebus has more in common with a node.js, a UI event loop, or an actor framework.
+
+// (hynek) preceding sentence is completely superflous yet so funny that i love
+// it so much that i want to marry it.
 
 If you do have a requirement for moving work off the main thread, you
 can still use our event-based metaphors, but we would suggest you
@@ -389,21 +391,24 @@ and Python-only.
 *******************************************************************************
 
 
-==== Option 1 : The Service Layer Takes Events from the Model and Puts them on the Message Bus
+=== Option 1 : The Service Layer Takes Events from the Model and Puts them on the Message Bus
 
 Our domain model raises events, and our message bus will call the right
 handlers whenever an event happens. Now all we need is to connect the two. We
-need something to catch events from the model and pass them to the message bus--
-the "publishing" step.
+need something to catch events from the model and pass them to the message
+bus--the "publishing" step.
 
 The simplest way to do this is by adding some code into our service layer.
 
 [[service_talks_to_messagebus]]
-.The service layer with an explicit message bus (src/allocation/services.py)
+.The service layer with an explicit message bus (src/allocation/service_layer/services.py)
 ====
 [source,python]
 [role="non-head"]
 ----
+from . import messagebus
+...
+
 def allocate(
         orderid: str, sku: str, qty: int,
         uow: unit_of_work.AbstractUnitOfWork
@@ -412,7 +417,7 @@ def allocate(
     with uow:
         product = uow.products.get(sku=line.sku)
         if product is None:
-            raise exceptions.InvalidSku(f'Invalid sku {line.sku}')
+            raise InvalidSku(f'Invalid sku {line.sku}')
         try:  #<1>
             batchref = product.allocate(line)
             uow.commit()
@@ -435,7 +440,7 @@ service layer explicitly collects events from aggregates, and passes them to
 the messagebus.
 
 
-==== Option 2: The Service Layer Raises Its Own Events
+=== Option 2: The Service Layer Raises Its Own Events
 
 Another variant on this which we've used is that you can have the service layer
 in charge of creating and raising events directly, rather than having them
@@ -443,7 +448,7 @@ raised by the domain model.
 
 
 [[service_layer_raises_events]]
-.Listing title
+.Service layer calls messagebus.handle directly (src/allocation/service_layer/services.py)
 ====
 [source,python]
 [role="skip"]
@@ -456,11 +461,12 @@ def allocate(
     with uow:
         product = uow.products.get(sku=line.sku)
         if product is None:
-            raise exceptions.InvalidSku(f'Invalid sku {line.sku}')
+            raise InvalidSku(f'Invalid sku {line.sku}')
         batchref = product.allocate(line)
+        uow.commit()
+
         if batchref is None:
             messagebus.handle(events.OutOfStock(line.sku))
-        uow.commit()
         return batchref
 ----
 ====
@@ -471,7 +477,7 @@ we'd like to show you what we think is the most elegant solution, in which we
 put the unit of work in charge of collecting and raising events.
 
 
-=== The Unit of Work Can Publish Events to the Message Bus
+=== Option 3: The Unit of Work Can Publish Events to the Message Bus
 
 The UoW already has a `try/finally`, and it knows about all the aggregates
 currently in play because it provides access to the Repository.  So it's
@@ -479,7 +485,7 @@ a good place to spot events and pass them to the message bus:
 
 
 [[uow_with_messagebus]]
-.The UoW meets the message bus (src/allocation/unit_of_work.py)
+.The UoW meets the message bus (src/allocation/service_layer/unit_of_work.py)
 ====
 [source,python]
 ----
@@ -510,8 +516,11 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 ----
 ====
 
+// TODO (hynek) this is super gross API design and makes me super of angry
+// and I'm personally offended.  Also, sentences end with a period.
+
 <1> We'll change our commit method to require a private `._commit()`
-    method from subclasses
+    method from subclasses.
 
 <2> After committing, we run through all the objects that our
     repository has seen and pass their events to the message bus.
@@ -523,8 +532,11 @@ NOTE: Are you wondering about error-handling, what happens if one of the
     handlers fails?  We'll discuss that in detail in <<chapter_09_commands>>.
 
 
+//TODO: can we get rid of _commit()?
+
+
 [[repository_tracks_seen]]
-.Repository tracks aggregates seen (src/allocation/repository.py)
+.Repository tracks aggregates that pass through it (src/allocation/adapters/repository.py)
 ====
 [source,python]
 ----
@@ -567,6 +579,14 @@ class SqlAlchemyRepository(AbstractRepository):
 ----
 ====
 
+// TODO (hynek) now I see what you meant in your email about adding functionality
+// to the base class and yeah it's gross ;) In both cases you do something in the base
+// and then something else additionally.  this IMHO should be a wrapper and not a
+// base class
+// (EJ3) I think this pattern (._foo, .foo) is ideologically sound, but looks really gross
+//       if you do have never attended the Church of Enterprise Java.  Either wrapper
+//       or override + extend could be other options but it would probably create cascading
+//       changes.
 
 <1> For the UoW to be able to publish new events, it needs to be able to ask
     the repository for which `Product` objects have been used during this session.
@@ -586,7 +606,7 @@ totally free of event-handling concerns:
 
 
 [[services_clean]]
-.Service layer is clean again (src/allocation/services.py)
+.Service layer is clean again (src/allocation/service_layer/services.py)
 ====
 [source,python]
 ----
@@ -598,7 +618,7 @@ def allocate(
     with uow:
         product = uow.products.get(sku=line.sku)
         if product is None:
-            raise exceptions.InvalidSku(f'Invalid sku {line.sku}')
+            raise InvalidSku(f'Invalid sku {line.sku}')
         batchref = product.allocate(line)
         uow.commit()
         return batchref
@@ -645,6 +665,56 @@ it's not a lot of work.  Once your project is up and running, the interface for
 your repository and UoW abstractions really don't change much.  And if you're
 using ABC's, they'll help remind you when things get out of sync.
 
+.Exercise for the Reader
+******************************************************************************
+
+Are you finding all those `_add()` and `_commit()` methods "super-gross", in
+the words of our beloved tech reviewer Hynek?  Does it "make you want to beat
+Harry around the head with a plushie snake?" Hey, our code listings are
+only meant to be examples, not the perfect solution!  Why not go see if you
+can do better?
+
+One _composition over inheritance_ way to go would be to implement a
+wrapper class:
+
+
+[[tracking_repo_wrapper]]
+.A wrapper adds functionality and then delegates (src/adapters/repository.py)
+====
+[source,python]
+[role="skip"]
+----
+class TrackingRepository:
+    seen: Set[model.Product]
+
+    def __init__(self, repo: AbstractRepository):
+        self.seen = set()  # type: Set[model.Product]
+        self._repo = repo
+
+    def add(self, product: model.Product):  #<1>
+        self._repo.add(product)  #<1>
+        self.seen.add(product)
+
+    def get(self, sku) -> model.Product:
+        product = self._repo.get(sku)
+        if product:
+            self.seen.add(product)
+        return product
+----
+====
+
+<1> By wrapping the repository, we can call the actual `.add()`
+    and `.get()` methods, avoiding weird underscore methods.
+
+See if you can apply a similar pattern to our Unit of Work class, in
+order to get rid of those Java-ey `_commit()` methods too?
+
+https://github.com/cosmicpython/code/tree/chapter_07_events_and_message_bus_exercise
+
+switching all the ABCs to `typing.Protocol` is a good way to force yourself
+to avoid using inheritance.  Let us know if you come up with something nice!
+
+******************************************************************************
 
 === Wrap-Up
 
@@ -680,6 +750,7 @@ Events can help with SRP::
     ones.
     We also use events for communicating between aggregates so that we don't
     need to run long-running transactions that lock against multiple tables.
+// TODO (hynek) there's enough space to write out SRP
 
 A Message Bus routes messages to handlers::
     You can think of a message bus as a dict that maps from events to their
@@ -720,8 +791,6 @@ a|
 
 * Domain events are a great way to model the real world, and we can use them
   as part of the business language we use when modeling with stakeholders.
-  (in fact an entire working practice called "eventstorming" has arisen out
-  of it).
 
 a|
 
@@ -737,8 +806,11 @@ a|
   (adding asynchronous processing is possible but makes things even *more* confusing.)
 
 * More generally, event-driven workflows can be confusing because once things
-  are split across a chain of multiple handlers, there no single place
+  are split across a chain of multiple handlers, there is no single place
   in the system where you can understand how a request will be fulfilled.
+
+* You also open yourself up to the possibility of circular dependencies between your
+  event handlers, and infinite loops.
 
 a|
 |===
