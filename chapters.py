@@ -2,6 +2,7 @@ CHAPTERS = [
     'chapter_01_domain_model',
     'chapter_02_repository',
     "chapter_04_service_layer",
+    "chapter_04b_high_gear_low_gear",
     "appendix_project_structure",
     'appendix_django',
     "chapter_05_uow",
@@ -26,6 +27,7 @@ STANDALONE = [
 
 NO_EXERCISE = [
     "chapter_03_abstractions",
+    "chapter_04b_high_gear_low_gear",
     "appendix_project_structure",
     'appendix_django',
     "appendix_csvs",
