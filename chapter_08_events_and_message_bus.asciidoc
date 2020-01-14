@@ -362,18 +362,14 @@ NOTE: Note that the messagebus as implemented doesn't give us concurrency since
 *******************************************************************************
 Celery is a popular tool in the Python world for deferring self-contained
 chunks of work to an asynchronous task queue. The messagebus we're
-presenting here is very different, so the short answer is no.
-
-// TODO (EJ1) The messagebus has more in common with a node.js, a UI event loop, or an actor framework.
-
-// (hynek) preceding sentence is completely superflous yet so funny that i love
-// it so much that i want to marry it.
+presenting here is very different, so the short answer is no; our messagebus
+has more in common with a node.js app, a UI event loop, or an actor framework.
 
 If you do have a requirement for moving work off the main thread, you
 can still use our event-based metaphors, but we would suggest you
 use _external events_ for that.  There's more discussion in
 <<chapter_11_external_events_tradeoffs>>, but essentially, if you
-implement a way of persisting events to a centralised store, then you
+implement a way of persisting events to a centralized store, then you
 can subscribe other containers or other microservices to them. Then
 you can extend the same concept of using events to separate responsibilities
 across units of work within a single process / service, to being across
