@@ -1,5 +1,5 @@
 [[chapter_04b_high_gear_low_gear]]
-== Testing Edge-to-Edge with Service Layer, and High Gear vs Low Gear
+== TDD in High Gear and Low Gear
 
 We've introduced the service layer to capture some of the additional
 orchestration responsibilities we need from a working application:
@@ -13,7 +13,7 @@ involved in moving those tests up to the service-layer level, and
 some more general testing guidelines.
 
 
-.Harry Says: Seeing a Test Pyramid in Action Made me a Convert
+.Harry Says: Seeing a Test Pyramid in Action was a Lightbulb Moment
 *******************************************************************************
 A few words from Harry directly:
 
@@ -27,7 +27,8 @@ take hours ("wait 'til tomorrow", essentially), I can't tell you what a
 difference it makes to be able to run all your tests in minutes or seconds._
 
 _Read on for some guidelines on how to decide what kinds of tests to write,
-and at which level.  They changed my testing-life._
+and at which level.  The high gear vs low gear way of thinking really changed
+my testing-life._
 *******************************************************************************
 
 

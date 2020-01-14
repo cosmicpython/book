@@ -19,7 +19,7 @@ In the meantime, pull requests, typofixes, and more substantial feedback + sugge
 | [Chapter 2: Repository](chapter_02_repository.asciidoc) | [![Build Status](https://travis-ci.org/cosmicpython/code.svg?branch=chapter_02_repository)](https://travis-ci.org/cosmicpython/code) |
 | [Chapter 3: Interlude: Abstractions](chapter_03_abstractions.asciidoc) | |
 | [Chapter 4: Service Layer (and Flask API)](chapter_04_service_layer.asciidoc) | [![Build Status](https://travis-ci.org/cosmicpython/code.svg?branch=chapter_04_service_layer)](https://travis-ci.org/cosmicpython/code) |
-| [Chapter 5: Testing Edge-to-Edge with Service Layer, and High Gear vs Low](chapter_04b_high_gear_low_gear.asciidoc) | [![Build Status](https://travis-ci.org/cosmicpython/code.svg?branch=chapter_04b_high_gear_low_gear)](https://travis-ci.org/cosmicpython/code) |
+| [Chapter 5: TDD in High Gear and Low Gear](chapter_04b_high_gear_low_gear.asciidoc) | [![Build Status](https://travis-ci.org/cosmicpython/code.svg?branch=chapter_04b_high_gear_low_gear)](https://travis-ci.org/cosmicpython/code) |
 | [Chapter 6: Unit of Work](chapter_05_uow.asciidoc) | [![Build Status](https://travis-ci.org/cosmicpython/code.svg?branch=chapter_05_uow)](https://travis-ci.org/cosmicpython/code) |
 | [Chapter 7: Aggregates](chapter_06_aggregate.asciidoc) | [![Build Status](https://travis-ci.org/cosmicpython/code.svg?branch=chapter_06_aggregate)](https://travis-ci.org/cosmicpython/code) |
 | [**Part 2 Intro**](part2.asciidoc) | |
