@@ -349,7 +349,7 @@ If this all sounds a little familiar, well, now you know where our example app
 came from!
 ********************************************************************************
 
-When building the availability service we used a technique called _change event
+When building the availability service we used a technique called _event
 capture_ to move functionality from one place to another. This is a three step
 process:
 
@@ -368,6 +368,71 @@ TODO: Context diagram, E-commerce and Fulfilment over XMLRPC
 to this
 
 TODO: Context diagram, E-Commerce, Availability, Fulfilment, Event-Broker
+
+=== Convincing your stakeholders to try something new
+
+If you're thinking about carving a new system out of a big ball of mud, you're
+probably suffering problems with reliability, performance, maintainability or
+all three simultaneously. Deep intractable problems call for drastic measures!
+
+We recommend _domain modelling_ as a first step. In many over-grown systems, the
+engineers, product owners, and customers no longer speak the same language.
+Business stakeholders speak about the system in abstract, process-focused terms
+while developers are forced to speak about the system as it physically exists in
+its wild and chaotic state.
+
+.Case Study: The user model
+********************************************************************************
+We mentioned earlier that the account and user model in our first system were
+bound together by a "bizarre rule". This is a perfect example of how engineering
+and business stakeholders can drift apart.
+
+In this system, _accounts_ parented _workspaces_, and users were _members_ of
+workspaces. Workspaces were the fundamental unit for applying permissions and
+quotas. If a user _joined_ a workspace, and didn't already have an _account_ we
+would associate them with the account that owned that workspace.
+
+This was messy and ad-hoc, but it worked fine until the day a product owner
+asked for a new feature:
+
+> When a user joins a company, we want to add them to some default workspaces
+  for the company, like the HR workspace or the Company Announcements workspace.
+
+We had to explain to them that there was _no such thing_ as a company, and there
+was no sense in which a user joined an account. Moreover, a "company" might have
+_many_ accounts, owned by different users, and a new user might be invited to
+any one of them.
+
+Years of adding hacks and workarounds to a broken model caught up with us, and
+we had to rewrite the entire user management function as a brand new system.
+
+********************************************************************************
+
+Figuring out how to model your domain is a complex task, and the subject of many
+decent books in its own right. We like to use interactive techniques like Event
+Storming, and CRC modelling, because humans are good at collaborating through
+play. 
+
+Event Modelling is a technique that brings engineers and product owners together
+to understand a system in terms of commands, queries, and events.
+
+TODO: Link event modelling
+
+The goal is to be able to talk about the system using the same ubiquitous
+language, so that you can agree on where the complexity lies.
+
+We've found a lot of value in treating domain problems as TDD kata. For example,
+the first code we wrote for the availability service was the batch and order
+line model. You can treat this as a lunch time workshop, or as a spike at the
+beginning of a project. Once you can demonstrate the value of modelling, it's
+easier to make the argument for structuring the project to make modelling easy.
+
+=== Getting started
+
+Once you've managed to convince your team to try a new way of building software
+it's easy to get overwhelmed by the sheer number of new things to think about.
+
+What message broker should we use? How should we 
 
 * decide on a piece of the old system to carve out.
 * get your system to produce events
@@ -504,16 +569,60 @@ We have an entire appendix, just for you! <<appendix_django>>
 
 TODO: point people at https://leanpub.com/clean-architectures-in-python
 
+* How can I convince other engineers to try this stuff?
 
 === Footguns
 
-This is a part 2 thing really, but basically, don't sally forth and implement
-your own event-driven microservices architecture without reading lots, lots
-more on the subject.
+Okay, so we've give you a whole bunch of new toys to play with, here's the
+fine print. Harry and Bob do not recommend that you copy-paste our code into
+a production system and rebuild your automated trading platform on Redis
+pub-sub. For reasons of brevity and simplicity, we've hand-waved a lot of tricky
+subjects. Here's a list of things we think you should know before trying this
+for real.
+
+* Reliable messaging is hard
+
+  Redis PUBSUB is not reliable and shouldn't be used as a general purpose
+  messaging tool. We picked it because it's familiar and easy to run. At MADE we
+  run Eventstore as our messaging tool, but we've had experience with Rabbit and
+  AWS EventBridge.
+
+  Tyler Treat has some excellent blog posts on his site bravenewgeek.com and you
+  should read at least:
+     * https://bravenewgeek.com/you-cannot-have-exactly-once-delivery/
+     * https://bravenewgeek.com/what-you-want-is-what-you-dont-understanding-trade-offs-in-distributed-messaging/
+
+* We explicitly choose small, focused transactions that can fail independently
+
+  In chapter 8 we update our process so that _deallocating_ an order line and
+  _reallocating_ the line happen in two separate units of work.
+  You will need monitoring to know when these transactions fail, and tooling to
+  replay events. Some of this is made easier by using a transaction log as your
+  message broker (eg. Kafka, EventStore). You might also look at the Outbox
+  pattern:
+    * https://microservices.io/patterns/data/transactional-outbox.html
+
+* We don't discuss idempotency
+
+  We haven't given any real thought to what happens when handlers are retried.
+  In practice you will want to make handlers idempotent so that calling them
+  repeatedly with the same message will not make repeated changes to state.
+  This is a key technique for building reliability, because it enables us to
+  safely retry events when they fail.
+  
+  There's a lot of good material on idempotent message handling, try starting
+  here:
+    * https://blog.sapiensworks.com/post/2015/08/26/How-To-Ensure-Idempotency
+    * https://lostechies.com/jimmybogard/2013/06/03/un-reliability-in-messaging-idempotency-and-de-duplication/
+
+* Your events will need to change their schema over time
+
+  You'll need to find some way of documenting your events and sharing schema
+  with consumers. We like using JSON schema and markdown because it's simple but
+  there is other prior art.
+
+  Greg Young wrote an entire book on managing event-driven systems over time:
+  https://www.goodreads.com/book/show/34327067-versioning-in-an-event-sourced-system
 
 https://martinfowler.com/books/eip.html[Enterprise Integration Patterns] by
-(as always) Martin Fowler is a pretty good start.
-
-
-//TODO: add some footgun examples.
-
+(as always) Martin Fowler is a pretty good start for messaging patterns.
