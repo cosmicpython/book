@@ -579,11 +579,11 @@ https://io.made.com/blog/2018-04-28-eventsourcing-101.html[event sourcing]
 
 === Wrap-Up
 
-* events can come _from_ the outside, but they can also be published
-  externally--our `publish` handler converts an event to a message
-  on a Redis channel. We use events to talk to the outside world.
-
-TODO: more here
+Events can come _from_ the outside, but they can also be published
+externally--our `publish` handler converts an event to a message on a Redis
+channel. We use events to talk to the outside world.  This kind of temporal
+decoupling buys us a lot of flexibility in our application integrations, but,
+as always, it comes at a cost.
 
 [quote, Martin Fowler, What do you mean by “Event-Driven”? (martinfowler.com)]
 ____
@@ -594,8 +594,10 @@ see as it's not explicit in any program text; this can make it hard to debug
 and modify.
 ____
 
+If you're moving from a model of synchronous messaging to an async one, you
+also open up a whole host of problems to do with message reliability and eventual
+consistency.   Read on to the [[footguns]] section in the epilogue.
 
-// (DS) glad you included this warning.
 
 [[chapter_11_external_events_tradeoffs]]
 [options="header"]
@@ -603,10 +605,15 @@ ____
 |===
 |Pros|Cons
 a|
-* avoids distributed BBOM
-* decoupled, async: easier to change individual services, and add new ones
+* Avoids the Distributed Big Ball of Mud.
+* Services are decoupled: it's easier to change individual services, and add
+  new ones.
 
 a|
-* overall flows are harder to see
+* The overall flows of information are harder to see.
+* Eventual consistency is a new concept to deal with
+* Message reliability and choices around at-least-once vs at-most-once delivery
+  need thinking through
 
 |===
+

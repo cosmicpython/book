@@ -111,7 +111,7 @@ hired an architect who knew what he was doing, and he helped us get things
 back under control.
 
 Start by working out the _use cases_ of your system. If you have a
-user-inteface, what actions does it perform? If you've got some back-end
+user interface, what actions does it perform? If you've got some back-end
 processing component, then maybe each cron job or celery job is a single
 use-case. Each of your use cases needs to have an imperative name: "Apply
 Billing Charges", "Clean Abandoned Accounts", or "Raise Purchase Order".
@@ -577,6 +577,7 @@ I'm using Django, can I still do this?::
 How can I convince other engineers to try this stuff?::
     tbc
 
+[[footguns]]
 === Footguns
 
 Okay, so we've give you a whole bunch of new toys to play with, here's the
