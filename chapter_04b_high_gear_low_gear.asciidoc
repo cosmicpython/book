@@ -1,7 +1,34 @@
-[[chapter_04_service_layer]]
+[[chapter_04b_high_gear_low_gear]]
+=== Testing Edge-to-Edge with Service Layer, and High Gear vs Low Gear
+
+We've introduced the service layer to capture some of the additional
+orchestration responsibilities we need from a working application:
+clearly defining our use cases, and the workflow for each: what do
+we need to get from our repositories, what pre-checks and current state
+validation we should do, and what do we save at the end.
+
+But currently many of our unit tests operate at a lower level, acting
+directly on the model.  In this chapter we'll discuss the tradeoffs
+involved in moving those tests up to the service-layer level, and
+some more general testing guidelines.
+
+.Harry Says: Seeing a Test Pyramid in Action Made me a Convert
+*******************************************************************************
+I was initially skeptical of all Bob's architectural patterns, but seeing
+an actual Test Pyramid made me a convert.
+
+Once you implement domain modelling and service layer, you really actually can
+get to a stage where unit tests outnumber integration and end-to-end tests by
+an order of magnitude.  Having worked in places where the e2e test build would
+take hours ("wait 'til tomorrow", essentially), I can't tell you what a
+difference it makes to be able to run all your tests in minutes or seconds.
+
+Read on for some guidelines on how to decide what kinds of tests to write,
+and at which level.  They changed my testing-life.
+*******************************************************************************
 
 
-=== How Is Our Test Pyramid Looking?
+=== How is our Test Pyramid Looking?
 
 Let's see what this move to using a Service Layer, with its own service-layer tests,
 does to our test pyramid:
@@ -33,10 +60,10 @@ a healthy-looking test pyramid.
 
 === Should Domain Layer Tests Move to the Service Layer?
 
-We could take this a step further. Since we can test our software against
-the service layer, we don't really need tests for the domain model any more.
-Instead, we could rewrite all of the domain-level tests from Chapter 1 in
-terms of the service layer.
+Let's see what happens if we take this a step further. Since we can test our
+software against the service layer, we don't really need tests for the domain
+model any more. Instead, we could rewrite all of the domain-level tests from
+Chapter 1 in terms of the service layer.
 
 
 .Rewriting a domain test at the service layer (test_services.py)
@@ -463,3 +490,5 @@ def test_happy_path_returns_201_and_allocated_batch():
     assert r.json()['batchref'] == batch2
 ----
 ====
+
+TODO: wrap-up
