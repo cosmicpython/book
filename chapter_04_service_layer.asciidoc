@@ -864,15 +864,17 @@ image::images/service_layer_diagram_runtime_dependencies.png[]
 ----
 
 
+Wonderful.  But there are still some bits of awkwardness to tidy up:
 
-//TODO (DS): Good wrap up. I'd really like to see a table or something that
-//sums up what belongs in each layer so far.
+* the service layer is still tightly coupled to the domain, because
+  its API is expressed in terms of `OrderLine` objects.  In
+  <<chapter_04b_high_gear_low_gear>> we'll fix that, and talk about
+  the way that Service Layer enables more productive TDD.
 
-Wonderful. But there's still a bit of awkwardness we'd like to get rid of. The
-service layer is tightly coupled to a `session` object.  In the next chapter,
-we'll introduce one more pattern that works closely with Repository and
-Service Layer, the Unit of Work pattern, and everything will be absolutely
-lovely. You'll see!
+* The service layer is tightly coupled to a `session` object.  In <<chapter_05_uow>>
+  we'll introduce one more pattern that works closely with Repository and
+  Service Layer, the Unit of Work, and everything will be absolutely lovely.
+  You'll see!
 
 But first, as is customary, a pause for <<chapter_04_service_layer_tradeoffs>>,
 in which we consider the pros and cons of having a Service Layer at all.
