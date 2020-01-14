@@ -85,6 +85,7 @@ class Allocate(Command):
 <2> The `from_json` method reads a string as JSON, and turns it into our message
     type.
 
+
 This can get repetitive, though,  since we need to specify our fields twice,
 so we might want to introduce a helper library that can unify the validation and
 declaration of our message types.
@@ -127,6 +128,11 @@ create our message type.
 <4> We can create reusable parsers for quantity, or sku, etc to keep things DRY.
 <5> Declaring a message type becomes a one-liner
 
+// (EJ2) I understand this code, but find it to be a little bit gross, since 
+// there are many alternatives that combine schema validation, object serialization
+// + deserialization, and class type definitions for you.  Examples here: https://github.com/voidfiles/python-serialization-benchmark
+// Would be nice to see a mention of things like Marshmallow here.
+
 ********************************************************************************
 
 === Postel's Law and the Tolerant Reader Pattern
@@ -158,6 +164,13 @@ Similarly, developers _love_ to validate incoming messages with tools like JSON
 schema, or to build libraries that validate incoming messages and share them
 among systems. This likewise fails the robustness test.
 
+// (EJ3) This reads like it's saying that JSON-Schema is bad (which is a separate discussion, I think.)
+//
+// If I understand correctly, the issue is that JSON-Schema allows you to specify 
+// syntax, semantics, + pragmatics all in a single definition, and tends to 
+// encourage devs to mix them together. Therefore it encourages overly premature validation.
+//
+
 Let's imagine, for example, that the procurement system adds new fields to the
 `change_batch_quantity` message that record the reason for the change, and the
 email of the user responsible for the change.
@@ -174,6 +187,10 @@ over-specify their contents. This will help you to stay robust when other
 systems change over time. Resist the temptation to share message definitions
 between systems, instead make it easy to define the data you depend on. For more
 on the Tolerant Reader pattern, see Martin Fowler's article https://martinfowler.com/bliki/TolerantReader.html
+
+// (EJ2) IMO "Smart Edges, Dumb Pipes" is a useful another useful idiom to keep validation straight.
+// "Validation at the Edge" might be mis-interpreted as the "validate everything you can as soon as
+//  you can."
 
 ********************************************************************************
 
@@ -215,6 +232,10 @@ class MessageBus:
             raise e
 ----
 ====
+
+// (EJ3) What's your opinion on how to handle validation in the scenario where
+// the command is being passed to an asynchronous worker pool via RabbitMQ?
+// 
 
 Here's how we might use that method from our Flask API endpoint.
 
