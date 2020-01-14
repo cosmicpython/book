@@ -380,8 +380,35 @@ TODO: Context diagram, E-Commerce, Availability, Fulfilment, Event-Broker
     - or new ones, and we switch over the downstream things progressively
 
 
-
 //TODO: event capture and all that jazz
+
+.Case Study: David on Taking Small Steps
+*******************************************************************************
+
+Our tech reviewer David Seddon, says:
+
+_For me, one of the blockers of putting the ideas into action was a concern
+that I might not do it right / make things worse. Partly just because it
+wouldn't fit in with our wider architectural approach. Talking to you made me
+see that I could try introducing some of the ideas without necessarily trying
+to convert everything._
+
+_Indeed I realize now that someone else at my company has done exactly that.
+They started using the message broker we were using for Celery as an external
+message bus for a separate service, via domain events. They're also using a lot
+of the same ideas as in your book though with much less OO)._
+
+[quote, Our Readers]
+____
+Don't be afraid to try these things in small places
+____
+
+_So I think one good call to action is, don't be afraid to try these things in
+small places. Don't feel you need permission to rearchitect everything. And
+something you've already said, be solution-focused in where you choose to do
+it._
+
+*******************************************************************************
 
 === More required reading
 
