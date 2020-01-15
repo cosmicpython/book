@@ -84,7 +84,6 @@ class Allocate(Command):
 <1> The ++schema++footnote:[https://pypi.org/project/schema/] library lets us
     describe the structure and validation of our messages in a nice declarative way.
 
-
 <2> The `from_json` method reads a string as JSON, and turns it into our message
     type.
 
@@ -135,6 +134,12 @@ AddStock = command(
 This comes at the expense of losing the types on your dataclass, so bear that
 trade-off in mind.
 
+// (EJ2) I understand this code, but find it to be a little bit gross, since 
+// there are many alternatives that combine schema validation, object serialization
+// + deserialization, and class type definitions for you.  Examples here: https://github.com/voidfiles/python-serialization-benchmark
+// Would be nice to see a mention of things like Marshmallow here.
+
+
 
 === Postel's Law and the Tolerant Reader Pattern
 
@@ -164,6 +169,13 @@ more. For the most part, we can ignore the internal structure of strings.
 Similarly, developers _love_ to validate incoming messages with tools like JSON
 schema, or to build libraries that validate incoming messages and share them
 among systems. This likewise fails the robustness test.
+
+// (EJ3) This reads like it's saying that JSON-Schema is bad (which is a separate discussion, I think.)
+//
+// If I understand correctly, the issue is that JSON-Schema allows you to specify 
+// syntax, semantics, + pragmatics all in a single definition, and tends to 
+// encourage devs to mix them together. Therefore it encourages overly premature validation.
+//
 
 Let's imagine, for example, that the procurement system adds new fields to the
 `ChangeBatchQuantity` message that record the reason for the change, and the
@@ -201,7 +213,13 @@ inputs you allow.
 *******************************************************************************
 
 
+
 === Validating At The Edge
+
+// (EJ2) IMO "Smart Edges, Dumb Pipes" is a useful another useful idiom to keep
+// validation straight.
+// "Validation at the Edge" might be mis-interpreted as the "validate
+// everything you can as soon as you can."
 
 Earlier, we said that we want to avoid cluttering our code with irrelevant
 detail. In particular, we don't want to code defensively inside our domain model.
@@ -243,6 +261,10 @@ class MessageBus:
             raise e
 ----
 ====
+
+// (EJ3) What's your opinion on how to handle validation in the scenario where
+// the command is being passed to an asynchronous worker pool via RabbitMQ?
+// 
 
 Here's how we might use that method from our Flask API endpoint.
 
