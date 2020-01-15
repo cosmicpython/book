@@ -88,7 +88,7 @@ class Allocate(Command):
 <2> The `from_json` method reads a string as JSON, and turns it into our message
     type.
 
-// TODO hynek doesn't like the inline call to json.loads
+// IDEA hynek didn't like the inline call to json.loads
 
 This can get repetitive, though,  since we need to specify our fields twice,
 so we might want to introduce a helper library that can unify the validation and
@@ -135,10 +135,10 @@ AddStock = command(
 This comes at the expense of losing the types on your dataclass, so bear that
 trade-off in mind.
 
-.Postel's Law and the Tolerant Reader Pattern
-********************************************************************************
 
-Postel's law, or the Robustness Principle, tells us "Be liberal in what you
+=== Postel's Law and the Tolerant Reader Pattern
+
+Postel's law or the Robustness Principle, tells us "Be liberal in what you
 accept, and conservative in what you emit". The idea here is that we should be
 strict whenever we're sending messages to other systems, but as lenient as
 possible when we're receiving messages from others.
@@ -154,7 +154,7 @@ line when some anarchist releases a product named "COMFY-CHAISE-LONGUE" or when
 a snafu at the supplier results in a shipment of "CHEAP-CARPET-2".
 
 Really, as the allocation system, it's _none of our business_ what the format of
-a sku might be. All we need is an identifier, so we can simply describe it as a
+a SKU might be. All we need is an identifier, so we can simply describe it as a
 string. This means that the Procurement system can change the format whenever
 they like, and we won't care.
 
@@ -183,32 +183,22 @@ TIP: Validate as little as possible. Only read the fields you need, and don't
     depend on. For more info, see Martin Fowler's article on the
     https://martinfowler.com/bliki/TolerantReader.html[Tolerant Reader pattern].
 
-////
-TODO (hynek)
 
-Oof so both this and the Fowler article are full of non-sequiturs.
+.Is Postel Always Right?
+*******************************************************************************
+Mentioning Postel can be quite triggering to some people. They will
+https://tools.ietf.org/html/draft-iab-protocol-maintenance-04[tell you]
+that Postel is the precise reason that everything on the Internet is broken and
+we can't have nice things. Ask Hynek about SSLv3 one day.
 
-For one: Postel was wrong. We see it every day. Postel’s law is why the
-internet if fucked in so many ways. We should’ve been conservative at receiving
-from the get go.Then maybe we wouldn’t have to support 20 variants of
-everything, just because some stupid server supported it in 1995.
+We like the tolerant reader approach in the particular context of event-based
+integration between services that we control, because it allows for independent
+evolution of those services.
 
-Secondly and more concretely: ignoring extra keys makes the system not more
-robust. It makes it more brittle and confusing for the future. Two random
-examples:
-
-1. You have an optional field abc and the user passes abcc. You ignore it, the
-user is surprised why shit doesn’t work how they thought it will because you
-don’t help them with an error message.
-
-2. Users accidentally pass a field abc=True (maybe copy pasta who knows). It
-works well for years und you introduce a field abc that deletes an account or
-transfers money around. Boom, stuff broke over night.
-
-The broader your feature envelope, the more nightmares await you down the road.
-////
-
-********************************************************************************
+If you're in charge of an API that's open to the public on the big bad
+Internets, there might be good reasons to be more conservative about what
+inputs you allow.
+*******************************************************************************
 
 
 === Validating At The Edge
@@ -220,9 +210,10 @@ domain model or use-case handlers see them. This helps our code to stay clean
 and maintainable over the long-term. We sometimes refer to this as "validating
 at the edge of the system".
 
-// TODO (hynek) an even better argument is that invalid data wanders through
-// your system is a time bomb, and the deeper it gets the more damage it can
-// do, and the less reasonable tools you have to respond to it.
+As well as keeping your code clean and free of endless checks and asserts,
+bear in mind that invalid data wandering through your system is a time bomb;
+the deeper it gets, the more damage it can do, and the less reasonable tools
+you have to respond to it.
 
 Back in Chapter 6 we said that the message bus was a great place to put
 cross-cutting concerns, and validation is a perfect example of that. Here's how
@@ -302,12 +293,8 @@ TIP: Usually when you receive an invalid message there's little you can do but
     log the error and continue. At MADE we use metrics to count how many
     messages a system receives, and how many of those are successfully
     processed, skipped, or invalid. Our monitoring tools will alert us if we
-    see spikes in the numbers of bad messages. Ignoring unrecognised fields and
-    being liberal about the format of data helps to keep us robust when things
-    change.
+    see spikes in the numbers of bad messages.
 
-
-// TODO (hynek) hynek dont like this neither
 
 
 === Validating Semantics
