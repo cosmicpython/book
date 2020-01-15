@@ -35,7 +35,7 @@ image::images/maps_chapter_12_after.png[]
 * Defines the jobs the system should perform and orchestrates different components.  
 
 | Command/Event Handler | Receives a Command or Event and performs what needs to happen.
-| Unit of Work | Abstraction around data integrity. Each unit of work represents an atomic update.
+| Unit of Work | Abstraction around data integrity. Each unit of work represents an atomic update.  Makes repositories available. Tracks new events on retrieved aggregates.
 | Message Bus (Internal) | Handles Commands and Events by routing them to the appropriate Handler.
 
 .2+a| Adapters (Secondary)
