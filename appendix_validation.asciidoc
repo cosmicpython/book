@@ -144,9 +144,10 @@ trade-off in mind.
 === Postel's Law and the Tolerant Reader Pattern
 
 Postel's law or the Robustness Principle, tells us "Be liberal in what you
-accept, and conservative in what you emit". The idea here is that we should be
-strict whenever we're sending messages to other systems, but as lenient as
-possible when we're receiving messages from others.
+accept, and conservative in what you emit". We think this applies particularly
+well in the context of integration with our other systems. The idea here is
+that we should be strict whenever we're sending messages to other systems, but
+as lenient as possible when we're receiving messages from others.
 
 For example, our system _could_ validate the format of a sku. We've been using
 made up skus like "UNFORGIVING-CUSHION" and "MISBEGOTTEN-POUFFE". These follow
@@ -290,7 +291,7 @@ def bad_request(e: ValidationError):
 
 And here's how we might plug it in to our asynchronous message processor
 
-
+-
 [[validation_pubsub]]
 .Validation errors when handling redis messages (src/allocation/redis_pubsub.py)
 ====
