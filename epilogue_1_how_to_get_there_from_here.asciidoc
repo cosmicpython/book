@@ -467,31 +467,58 @@ What message broker should we use? How should we
     - or new ones, and we switch over the downstream things progressively
 
 
-.Case Study: David on Taking Small Steps
+.Case Study: David Seddon on Taking Small Steps
 *******************************************************************************
 
-Our tech reviewer David Seddon, says:
+_Hi, I'm David - one of the tech reviewers on this book. I've worked on
+several complex Django monoliths, and so I've known the pain that Bob and
+Harry have made all sorts of grand promises about soothing._
 
-_For me, one of the blockers of putting the ideas into action was a concern
-that I might not do it right / make things worse. Partly just because it
-wouldn't fit in with our wider architectural approach. Talking to you made me
-see that I could try introducing some of the ideas without necessarily trying
-to convert everything._
+_When I was first exposed to the patterns described here, I was rather
+excited. I had successfully used some of the techniques already on
+smaller projects, but here was a blueprint for much larger, database-backed
+systems like the one I work on in my day job. So, I started trying to figure
+out how I could implement it at my current organization._
 
-_Indeed I realize now that someone else at my company has done exactly that.
-They started using the message broker we were using for Celery as an external
-message bus for a separate service, via domain events. They're also using a lot
-of the same ideas as in your book though with much less OO)._
+_I chose to tackle a problem area of the code base that had always bothered me.
+I began by implementing it as a use case. But I found myself running
+into unexpected questions. There were things that I hadn't considered
+while reading that now made it difficult to see what to do. Was it a
+problem if my use case interacted with two different aggregates? Could
+one use case call another? And how was it going to exist within
+a system that followed different architectural principles without resulting
+in a horrible mess?_
 
-[quote, David]
-____
-Don't be afraid to try these things in small places
-____
+_What happened to that oh-so-promising blueprint? Did I actually understand
+the ideas well enough to put them into practice? Was it even suitable for my
+application? Even if it was, would any of my colleagues agree to such a
+major change? Were these just nice ideas for me to fantasize about while I got
+on with real life?_
 
-_So I think one good call to action is, don't be afraid to try these things in
-small places. Don't feel you need permission to rearchitect everything. And
-something you've already said, be solution-focused in where you choose to do
-it._
+_It took me a while to realize that I could start small. I didn't
+need to be a purist, or to 'get it right' first time: I could experiment,
+finding what worked for me._
+
+_And so that's what I've done. I've been able to apply *some* of the ideas
+in a few places. I've built new features whose business logic
+can be tested without the database or mocks. And as a team we've
+introduced a service layer to help define the jobs the system does._
+
+_If you start trying to apply these patterns in your work, you may go through
+similar feelings to begin with. When the nice theory of a book meets the reality
+of your code base, it can be demoralizing._
+
+_My advice is to focus on a specific problem and ask yourself how you can
+put the relevant ideas to use, perhaps in an initially limited and imperfect fashion.
+You may discover, as I did, that the first problem you pick might be a bit too difficult
+-  if so, move on to something else. Don't try to boil the ocean, and don't be *too*
+afraid of making mistakes. It will be a learning experience, and you can be confident
+that you're moving roughly in a direction that others have found useful._
+
+_So, if you're feeling the pain too - give these ideas a try. Don't feel you need permission
+to rearchitect everything - just look for somewhere small to start. And above all, do it
+to solve a specific problem. If you're successful in solving it, you know you got something
+right - and others will too._
 
 *******************************************************************************
 
