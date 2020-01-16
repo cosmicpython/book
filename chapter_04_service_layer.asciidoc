@@ -1,7 +1,13 @@
 [[chapter_04_service_layer]]
 == Our First Use Case: Flask API and Service Layer
 
-Back to our allocations project!
+Back to our allocations project! <<maps_service_layer_before>> shows where we
+got to at the end of the Repository chapter:
+
+[[maps_service_layer_before]]
+.Before: we drive our app by talking to Repositories and the Domain Model
+image::images/maps_chapter_04_before.png[]
+
 
 In this chapter, we discuss the difference between orchestration logic,
 business logic, and interfacing code, and we introduce the _Service Layer_
@@ -12,19 +18,18 @@ We'll also discuss testing: by combining the Service Layer with our Repository
 abstraction over the database, we're able to write fast tests, not just of
 our domain model, but the entire workflow for a use case.
 
-By the end of this chapter, we'll have added a Flask API that will talk to
-the Service Layer, which will serve as the entrypoint to our Domain Model.
-By making the service layer depend on the `AbstractRepository`, we'll be
-able to unit test it using `FakeRepository`, and then run it in real life
-using `SqlAlchemyRepository`.  <<service_layer_before_after>> is a diagram
-showing where we're heading.
+<<maps_service_layer_after>> shows where we're aiming for: we're going to
+add a Flask API that will talk to the Service Layer, which will serve as the
+entrypoint to our Domain Model. By making the service layer depend on the
+`AbstractRepository`, we'll be able to unit test it using `FakeRepository`, and
+then run it in real life using `SqlAlchemyRepository`.
 
 NOTE: In our diagrams, we are using the convention that the _yellow/orange_
     blocks mean new things that we are adding to our architecture.
 
-[[service_layer_before_after]]
-.Adding the Service Layer to our Architecture
-image::images/maps_chapter_04.png[]
+[[maps_service_layer_after]]
+.The Service Layer will become the main way into our app
+image::images/maps_chapter_04_after.png[]
 
 
 [TIP]
@@ -391,7 +396,7 @@ class FakeSession():
 ====
 
 This fake session is only a temporary solution.  We'll get rid of it and make
-things even nicer in the next chapter, <<chapter_06_uow>>. But in the meantime
+things even nicer soon, in <<chapter_06_uow>>. But in the meantime
 the fake `.commit()` lets us migrate a third test from the E2E layer:
 
 
@@ -452,8 +457,8 @@ Typical service-layer functions have similar steps:
 <4> And if all is well, we save/update any state we've changed.
 
 That last step is a little unsatisfactory at the moment, our services
-layer is tightly coupled to our database layer, but we'll improve on
-that in the next chapter.
+layer is tightly coupled to our database layer, but again, we can improve
+that if we introduce <<chapter_06_uow>>.
 
 
 [[depend_on_abstractions]]
@@ -506,7 +511,7 @@ abstractions intact.
 *******************************************************************************
 
 
-Still, the essentials of the services layer are there, and our Flask
+But the essentials of the services layer are there, and our Flask
 app now looks a lot cleaner, <<flask_app_using_service_layer>>:
 
 
@@ -589,12 +594,11 @@ stuff, which we implement end-to-end; and tests about orchestration stuff, which
 we can test against the service layer in memory.
 
 
-
 .Exercise for the Reader
 ******************************************************************************
-We've now got services for `add_batch` and `allocate`, why not build out
-a service for `deallocate`?  We've added an E2E test and a few stub
-service-layer tests for you to get started here:
+We've now got a services `allocate`, why not build out a service for
+`deallocate`?  We've added an E2E test and a few stub service-layer tests for
+you to get started here:
 
 https://github.com/cosmicpython/code/tree/chapter_04_service_layer_exercise
 
