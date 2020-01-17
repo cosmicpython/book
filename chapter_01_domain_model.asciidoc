@@ -13,7 +13,7 @@ always be able to find these little shapes at the core.
 
 [[maps_chapter_01_notext]]
 .A placeholder illustration of our domain model
-image::images/maps_chapter_01_notext.png[]
+image::images/apwp_0101.png[]
 
 
 === What Is a Domain Model?
@@ -125,7 +125,7 @@ to a customer's orders; see <<allocation_context_diagram>>.
 
 [[allocation_context_diagram]]
 .Context diagram for the allocation service
-image::images/allocation_context_diagram.png[]
+image::images/apwp_0102.png[]
 [role="image-source"]
 ----
 [plantuml, allocation_context_diagram]
@@ -472,7 +472,7 @@ class Batch:
 
 [[model_diagram]]
 .Our model in UML
-image::images/model_diagram.png[]
+image::images/apwp_0103.png[]
 [role="image-source"]
 ----
 [plantuml, model_diagram, config=plantuml.cfg]
@@ -980,7 +980,7 @@ def allocate(line: OrderLine, batches: List[Batch]) -> str:
 
 [[maps_chapter_01_withtext]]
 .Our domain model at the end of the chapter
-image::images/maps_chapter_01_withtext.png[]
+image::images/apwp_0104.png[]
 
 That'll probably do for now! We have a Domain Service which we can use for our
 first use case.   But first we'll need a database...

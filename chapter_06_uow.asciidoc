@@ -16,7 +16,7 @@ layer to start a session, it talks to the repository layer to initialize a
 
 [[before_uow_diagram]]
 .Without UoW: API talks directly to 3 layers
-image::images/maps_chapter_05_before.png[]
+image::images/apwp_0601.png[]
 
 <<after_uow_diagram>> shows our target state: the Flask API now only does two
 things: it initializes a Unit of Work, and it invokes a service.  The service
@@ -27,7 +27,7 @@ to talk directly to the DB.
 
 [[after_uow_diagram]]
 .With UoW: UoW now manages DB state
-image::images/maps_chapter_05_after.png[]
+image::images/apwp_0602.png[]
 
 And we'll do it all using a lovely piece of Python syntax, a context manager.
 

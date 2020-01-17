@@ -14,7 +14,7 @@ a `Repository` object that sits between our Domain Model and the database.
 
 [[maps_chapter_02]]
 .Before and after Repository Pattern
-image::images/maps_chapter_02.png[]
+image::images/apwp_0201.png[]
 
 // TODO add a legend showing what the colours mean in the diagrams.  And
 // ideally some of the shapes and arrows and stuff too...
@@ -101,7 +101,7 @@ approach to structuring a system that has a UI, some logic, and a database (see
 
 [[layered_architecture2]]
 .Layered Architecture
-image::images/layered_architecture.png[]
+image::images/apwp_0002.png[]
 
 
 Django's Model-View-Template structure is closely related, as is
@@ -121,7 +121,7 @@ Instead, as discussed in the introduction, we'll think of our model as being on 
 
 [[onion_architecture]]
 .Onion architecture
-image::images/onion_architecture.png[]
+image::images/apwp_0203.png[]
 [role="image-source"]
 ----
 [ditaa, onion_architecture]
@@ -173,7 +173,7 @@ storing the allocations as a collection on our `Batch` object.
 
 [[model_diagram_reminder]]
 .Our Model
-image::images/model_diagram.png[]
+image::images/apwp_0103.png[]
 // see chapter_01_domain_model for diagram source
 
 Let's see how we might translate this to a relational database.
@@ -570,7 +570,7 @@ an illustration.
 
 [[repository_pattern_diagram]]
 .Repository pattern
-image::images/repository_pattern_diagram.png[]
+image::images/apwp_0205.png[]
 [role="image-source"]
 ----
 [ditaa, repository_pattern_diagram]
@@ -922,7 +922,7 @@ complexity, local simplicity], by Rob Vens)]
 
 [[domain_model_tradeoffs_diagram]]
 .Domain Model tradeoffs as a diagram
-image::images/domain_model_tradeoffs_diagram.png[]
+image::images/apwp_0206.png[]
 [role="image-source"]
 ----
 [ditaa, domain_model_tradeoffs_diagram]

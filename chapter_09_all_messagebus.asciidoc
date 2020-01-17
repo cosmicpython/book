@@ -8,7 +8,7 @@ side-effect...
 
 [[maps_chapter_08_before]]
 .Before: the message bus is an optional add-on
-image::images/maps_chapter_08_before.png[]
+image::images/apwp_0901.png[]
 
 ...to the situation in <<map_chapter_08_after>> where
 everything goes via the message bus, and our app has been transformed
@@ -16,7 +16,7 @@ fundamentally into a message-processor.
 
 [[map_chapter_08_after]]
 .The Message Bus is now the main entrypoint to the service layer
-image::images/maps_chapter_08_after.png[]
+image::images/apwp_0902.png[]
 
 
 [TIP]
@@ -62,7 +62,7 @@ model elaboration.], we model the situation as in
 
 [[batch_changed_events_flow_diagram]]
 .batch quantity changed means deallocate and reallocate
-image::images/batch_changed_events_flow_diagram.png[]
+image::images/apwp_0903.png[]
 [role="image-source"]
 ----
 [ditaa, batch_changed_events_flow_diagram]
@@ -485,7 +485,7 @@ back to our existing handler for allocation, to be re-allocated.
 
 [[reallocation_sequence_diagram]]
 .Sequence diagram for reallocation flow
-image::images/reallocation_sequence_diagram.png[]
+image::images/apwp_0904.png[]
 [role="image-source"]
 ----
 [plantuml, reallocation_sequence_diagram, config=plantuml.cfg]

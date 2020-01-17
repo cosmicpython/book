@@ -21,7 +21,7 @@ there as well.
 
 [[message_processor_diagram]]
 .Our application is a Message Processor
-image::images/maps_chapter_10.png[]
+image::images/apwp_1101.png[]
 
 
 [TIP]
@@ -52,7 +52,7 @@ we've named our system after a noun, _batches_, instead of _allocation_).
 
 [[batches_context_diagram]]
 .Context diagram for the "batches" service
-image::images/batches_context_diagram.png[]
+image::images/apwp_1102.png[]
 [role="image-source"]
 ----
 [plantuml, batches_context_diagram, config=plantuml.cfg]
@@ -84,7 +84,7 @@ order, we want to update the customer record to flag them as a VIP.
 
 [[command_flow_diagram_1]]
 .Command Flow 1
-image::images/command_flow_diagram_1.png[]
+image::images/apwp_1103.png[]
 [role="image-source"]
 ----
 [plantuml, command_flow_diagram_1, config=plantuml.cfg]
@@ -160,7 +160,7 @@ should own this process, as shown in <<command_flow_diagram_2>>?
 
 [[command_flow_diagram_2]]
 .Command Flow 2
-image::images/command_flow_diagram_2.png[]
+image::images/apwp_1104.png[]
 [role="image-source"]
 ----
 [plantuml, command_flow_diagram_2, config=plantuml.cfg]
@@ -201,7 +201,7 @@ right after we take a user's order for 3 MISBEGOTTEN-RUG,
 
 [[command_flow_diagram_with_error]]
 .Command Flow with Error
-image::images/command_flow_diagram_with_error.png[]
+image::images/apwp_1105.png[]
 [role="image-source"]
 ----
 [plantuml, command_flow_diagram_with_error, config=plantuml.cfg]
@@ -329,7 +329,7 @@ Our new flow will look like this:
 
 [[reallocation_sequence_diagram_with_redis]]
 .Sequence diagram for reallocation flow
-image::images/reallocation_sequence_diagram_with_redis.png[]
+image::images/apwp_1106.png[]
 [role="image-source"]
 ----
 [plantuml, reallocation_sequence_diagram_with_redis, config=plantuml.cfg]
