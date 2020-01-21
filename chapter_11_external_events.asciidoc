@@ -57,9 +57,7 @@ image::images/apwp_1102.png[]
 ----
 [plantuml, apwp_1102, config=plantuml.cfg]
 @startuml Batches Context Diagram
-!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Context.puml
-
-skinparam roundCorner 20
+!include images/C4_Context.puml
 
 System(batches, "Batches", "Knows about available stock")
 Person(customer, "Customer", "Wants to buy furniture")

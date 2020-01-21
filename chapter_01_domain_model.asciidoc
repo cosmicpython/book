@@ -132,15 +132,6 @@ image::images/apwp_0102.png[]
 @startuml Allocation Context Diagram
 !include images/C4_Context.puml
 
-
-skinparam roundCorner 20
-skinparam Padding 2
-skinparam wrapWidth 200
-skinparam default {
-    FontName Guardian Sans Cond Regular
-    FontSize 18
-}
-
 System(systema, "Allocation", "Allocates stock to customer orders")
 
 Person(customer, "Customer", "Wants to buy furniture")
