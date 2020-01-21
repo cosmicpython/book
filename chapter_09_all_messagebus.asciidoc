@@ -357,7 +357,7 @@ return bus
     just makes them available.
 
 
-//TODO: we can definitely get rid of _commit() now right?
+//IDEA: we can definitely get rid of _commit() now right?
 // (EJ2) at this point _commit() doesn't serve any purpose, so it could be deleted.
 //       unsure if deleting it would be confusing at this point.
 
@@ -373,7 +373,9 @@ class TestAddBatch:
 
     def test_for_new_product(self):
         uow = FakeUnitOfWork()
-        messagebus.handle(events.BatchCreated("b1", "CRUNCHY-ARMCHAIR", 100, None), uow)
+        messagebus.handle(
+            events.BatchCreated("b1", "CRUNCHY-ARMCHAIR", 100, None), uow
+        )
         assert uow.products.get("CRUNCHY-ARMCHAIR") is not None
         assert uow.committed
 
@@ -384,8 +386,12 @@ class TestAllocate:
 
     def test_returns_allocation(self):
         uow = FakeUnitOfWork()
-        messagebus.handle(events.BatchCreated("b1", "COMPLICATED-LAMP", 100, None), uow)
-        result = messagebus.handle(events.AllocationRequired("o1", "COMPLICATED-LAMP", 10), uow)
+        messagebus.handle(
+            events.BatchCreated("b1", "COMPLICATED-LAMP", 100, None), uow
+        )
+        result = messagebus.handle(
+            events.AllocationRequired("o1", "COMPLICATED-LAMP", 10), uow
+        )
         assert result == "b1"
 ----
 ====
@@ -417,7 +423,7 @@ a temporary hack on our messagebus to let it return events.
 ----
 ====
 
-// TODO (hynek) inline the r=, the addition of a meaningless variable is distracting.
+// IDEA (hynek) inline the r=, the addition of a meaningless variable is distracting.
 
 
 It's because we're mixing the read and write responsibilities in our system.
@@ -550,7 +556,9 @@ class TestChangeBatchQuantity:
 
     def test_changes_available_quantity(self):
         uow = FakeUnitOfWork()
-        messagebus.handle(events.BatchCreated("batch1", "ADORABLE-SETTEE", 100, None), uow)
+        messagebus.handle(
+            events.BatchCreated("batch1", "ADORABLE-SETTEE", 100, None), uow
+        )
         [batch] = uow.products.get(sku="ADORABLE-SETTEE").batches
         assert batch.available_quantity == 100  #<1>
 
@@ -561,10 +569,14 @@ class TestChangeBatchQuantity:
 
     def test_reallocates_if_necessary(self):
         uow = FakeUnitOfWork()
-        messagebus.handle(events.BatchCreated("batch1", "INDIFFERENT-TABLE", 50, None), uow)
-        messagebus.handle(events.BatchCreated("batch2", "INDIFFERENT-TABLE", 50, date.today()), uow)
-        messagebus.handle(events.AllocationRequired("order1", "INDIFFERENT-TABLE", 20), uow)
-        messagebus.handle(events.AllocationRequired("order2", "INDIFFERENT-TABLE", 20), uow)
+        event_history = [
+            events.BatchCreated("batch1", "INDIFFERENT-TABLE", 50, None),
+            events.BatchCreated("batch2", "INDIFFERENT-TABLE", 50, date.today()),
+            events.AllocationRequired("order1", "INDIFFERENT-TABLE", 20),
+            events.AllocationRequired("order2", "INDIFFERENT-TABLE", 20),
+        ]
+        for e in event_history:
+            messagebus.handle(e, uow)
         [batch1, batch2] = uow.products.get(sku="INDIFFERENT-TABLE").batches
         assert batch1.available_quantity == 10
         assert batch2.available_quantity == 50
@@ -796,12 +808,17 @@ def test_reallocates_if_necessary_isolated():
     uow = FakeUnitOfWorkWithFakeMessageBus()
 
     # test setup as before
-    messagebus.handle(events.BatchCreated("batch1", "INDIFFERENT-TABLE", 50, None), uow)
-    messagebus.handle(events.BatchCreated("batch2", "INDIFFERENT-TABLE", 50, date.today()), uow)
-    messagebus.handle(events.AllocationRequired("order1", "INDIFFERENT-TABLE", 20), uow)
-    messagebus.handle(events.AllocationRequired("order2", "INDIFFERENT-TABLE", 20), uow)
+    event_history = [
+        events.BatchCreated("batch1", "INDIFFERENT-TABLE", 50, None),
+        events.BatchCreated("batch2", "INDIFFERENT-TABLE", 50, date.today()),
+        events.AllocationRequired("order1", "INDIFFERENT-TABLE", 20),
+        events.AllocationRequired("order2", "INDIFFERENT-TABLE", 20),
+    ]
+    for e in event_history:
+        messagebus.handle(e, uow)
     [batch1, batch2] = uow.products.get(sku="INDIFFERENT-TABLE").batches
     assert batch1.available_quantity == 10
+    assert batch2.available_quantity == 50
 
     messagebus.handle(events.BatchQuantityChanged("batch1", 25), uow)
 
@@ -812,8 +829,6 @@ def test_reallocates_if_necessary_isolated():
     assert reallocation_event.sku == 'INDIFFERENT-TABLE'
 ----
 ====
-
-// TODO: this listing flows outside the sidebar margin.  and the normal margin too tbh.
 
 Whether you want to do this or not depends on the complexity of your chain of
 events.  We'd say, start out with edge-to-edge testing, and only resort to
