@@ -62,7 +62,7 @@ e|      e| Event e| Command
 |===
 
 
-// TODO: Diagram of user "buy stock" -> "stock purchased"
+// IDEA: Diagram of user "buy stock" -> "stock purchased"
 //                       "create batch" -> "batch created"
 // (EJ3) "ChangeBatchQuantity" -> "AllocationRequired" will be a less trivial example
 
@@ -291,8 +291,6 @@ Using the techniques we've already discussed in this book, we decide that we
 want to build a new `History` aggregate that records orders and can raise domain
 events when rules are met. We will structure the code like this:
 
-// TODO: (EJ2) The Aggregate base class doesn't add anything here and could be confusing.
-//       Better to just do class History: # Aggregate
 
 [[vip_customer_listing]]
 .VIP Customer (example code for a different project)
@@ -300,7 +298,7 @@ events when rules are met. We will structure the code like this:
 [source,python]
 [role="skip"]
 ----
-class History(Aggregate):
+class History:  # Aggregate
 
     def __init__(self, customer_id: int):
         self.orders = set() # Set[HistoryEntry]
@@ -347,14 +345,17 @@ def congratulate_vip_customer(uow, event: CustomerBecameVip): #<4>
 
 <1> The History aggregate captures the rules for when a customer becomes a VIP.
     This puts us in a good place to handle changes when the rules become more
-    cmnplex in the future.
+    complex in the future.
+
 <2> Our first handler creates an order for the customer and raises a domain
     event 'OrderCreated'.
+
 <3> Our second handler updates the History object to record that an order was
     created.
+
 <4> Finally we send an email to the customer when they become a VIP.
 
-//TODO: Sequence diagram here?
+//IDEA: Sequence diagram here?
 
 Using this code we can gain some intuition about error handling in an
 event-driven system.
@@ -519,4 +520,4 @@ a|
 |===
 
 
-// TODO: discussion, can events raise commands?
+// IDEA: discussion, can events raise commands?

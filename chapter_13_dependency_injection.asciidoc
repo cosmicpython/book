@@ -442,7 +442,7 @@ def bootstrap(
 
 // TODO more examples of init stuff
 
-// TODO: show option of bootstrapper as class instead?
+// IDEA: show option of bootstrapper as class instead?
 
 Here's how we inject dependencies into a handler function by inspecting
 it:
@@ -979,16 +979,17 @@ And, erm, that's it really.
 
 .Exercise for the Reader
 ******************************************************************************
-NOTE: TODO, under construction
 
-// (EJ2) Maybe LocalStack here https://github.com/localstack/localstack?
+There are two possible things you could do for practice in this chapter:
 
-Why not have a go at changing from email to, idk, twilio or slack
-notifications or something?
+1. Try swapping out our notifications from email to, for example, SMS 
+    notifications using Twilio, or Slack notifications.  Can you find
+    a good equivalent to Mailhog for integration testing?
 
-Oh yeah, step 4 is a bit challenging...
-
-Or, do the same thing for redis_eventpublisher.
+2. In a similar way to what we did moving from `send_mail` to a `Notifications`
+    class, try refactoring our `redis_eventpublisher` which is currently just
+    a `Callable` to some sort of more formal adapter / base class / protocol.
+    
 ******************************************************************************
 
 

@@ -348,6 +348,8 @@ def test_allocations_view(sqlite_session_factory):
     any impementation/infrastructure details about how things get stored.
 
 ////
+IDEA: sidebar on testing views.  some old content follows.
+
 Before you dismiss the need to use integration tests as just another
 anti-feather in the anti-cap of this total anti-pattern, it's worth thinking
 through the alternatives.
@@ -375,7 +377,7 @@ your permanent storage and the logic of your read-only views.
   that intermediary layer, so that you can test the SQL and the
   display/calculation/view logic separately
 
-// TODO: some example code showing a DAL layer in front of some read-only view
+// IDEA: some example code showing a DAL layer in front of some read-only view
 // code with more complex business logic.
 
 ////
@@ -502,17 +504,18 @@ version from <<views_dot_py>>?  It may not look too bad up there, but we
 can tell you it took several attempts, and plenty of digging through the
 SQLAlchemy docs.  SQL is just SQL.
 
+////
+IDEA (hynek)
+this seems like a PERFECT opportunity to talk about SQLAlchemy Core API. If you
+have questions, pls talk to me. But jumping from ORM directly to raw SQL is
+baby/bathwater.
+////
+
 But the ORM can also expose us to performance problems.
 
 
 === SELECT N+1, and Other Performance Considerations
 
-////
-TODO (hynek)
-this seems like a PERFECT opportunity to talk about SQLAlchemy Core API. If you
-have questions, pls talk to me. But jumping from ORM directly to raw SQL is
-baby/bathwater.
-////
 
 The so-called
 https://secure.phabricator.com/book/phabcontrib/article/n_plus_one/[SELECT N+1]
@@ -524,8 +527,9 @@ key relationships on your objects.
 
 NOTE: In all fairness we should say that SQLAlchemy is quite good at avoiding
     the SELECT N+1 problem.  It doesn't display it in the above example, and
-    you can request https://docs.sqlalchemy.org/en/13/orm/loading_relationships.html[eager loading] explicitly to avoid it when dealing
-    with joined objects.
+    you can request
+    https://docs.sqlalchemy.org/en/13/orm/loading_relationships.html[eager loading]
+    explicitly to avoid it when dealing with joined objects.
 
 Beyond `SELECT N+1`, you may have other reasons that you want to decouple the
 way you persist state changes from the way that you retrieve current state.
@@ -836,7 +840,7 @@ TIP: Event handlers are a great way to manage updates to a read model,
   motives
 |===
 
-// TODO (EJ3) Might be useful to re-iterate what "full-blown" CQRS means vs simpler CQRS options.  I think
+// IDEA (EJ3) Might be useful to re-iterate what "full-blown" CQRS means vs simpler CQRS options.  I think
 //      most blog posts describe CQRS in terms of the "full-blown" version, while
 //      ignoring over the simpler version that is developed earlier in this chapter.
 //

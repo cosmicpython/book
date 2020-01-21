@@ -299,7 +299,7 @@ Secondly, we're reducing the strength of coupling between our systems. If we
 need to change the order of operations, or to introduce new steps in the process
 we can do that locally.
 
-// TODO: need to add an example of a process change.  And/or explain "locally"
+// IDEA: need to add an example of a process change.  And/or explain "locally"
 // (EJ3) I think this is clear enough.  Not sure about for a junior dev.
 
 
@@ -323,7 +323,10 @@ NOTE: We're glossing over the complexity involved in choosing the right messagin
     <<footguns,Footguns>> section in <<epilogue_1_how_to_get_there_from_here>>.
 
 
-Our new flow will look like this:
+Our new flow will look like <<reallocation_sequence_diagram_with_redis>>: 
+Redis provides the `BatchQuantityChanged` event that kicks the whole process
+off, and our `Allocated` event being published back out to Redis again at the
+end.
 
 [[reallocation_sequence_diagram_with_redis]]
 .Sequence diagram for reallocation flow
@@ -351,7 +354,7 @@ MessageBus -> Redis : publish to line_allocated channel
 @enduml
 ----
 
-// TODO (DS): hard to remember what the change is here
+
 
 === Test-Driving It All Using an End-To-End Test
 
@@ -414,11 +417,11 @@ def test_change_batch_quantity_leading_to_reallocation():
     because it won't be the only message on that channel.
 
 ////
-TODO (EJ3) Minor comment: This e2e test might not be safe or repeatable as part of a
-     larger test suite, since test run data is being persisted in redis.
-     Purging the queue as part of setup will help, but it would still have problems
-     with running tests in parallel. Not sure if it's worth bringing up as it might
-     be too much of a digression.
+NITPICK (EJ3) Minor comment: This e2e test might not be safe or repeatable as
+part of a larger test suite, since test run data is being persisted in redis.
+Purging the queue as part of setup will help, but it would still have problems
+with running tests in parallel. Not sure if it's worth bringing up as it might
+be too much of a digression.
 ////
 
 
