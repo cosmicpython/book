@@ -1,4 +1,4 @@
-[[chapter_06_aggregate]]
+[[chapter_07_aggregate]]
 == Aggregates and Consistency Boundaries
 
 In this chapter we'd like to revisit our domain model to talk about invariants
@@ -8,92 +8,30 @@ discuss the concept of a _consistency boundary_, and show how making it
 explicit can help us to build high-performance software without compromising
 maintainability.
 
-Here's a preview of where we're headed: we're going to move from a model where
-we need to retrieve all the batches and pass them to the `allocate()` domain
-service (<<chapter_08_before_diagram>>):
+<<maps_chapter_06>> shows a preview of where we're headed: we'll introduce
+a new model object called `Product` to wrap multiple batches, and make
+the old `allocate()` domain service available as a method on Product instead.
 
+[[maps_chapter_06]]
+.Adding the Product Aggregate
+image::images/maps_chapter_06.png[]
 
-[[before_aggregates_diagram]]
-.Before: allocate against all batches using domain service
-image::images/before_aggregates_diagram.png[]
-[role="image-source"]
-----
-[plantuml, before_aggregates_diagram]
-@startuml
-
-class services {
-    allocate()
-}
-
-
-package domain_model {
-
-  class Batch {
-  }
-
-  class allocate {
-  }
-}
-
-
-package repositories {
-
-  class BatchRepository {
-    list()
-  }
-
-}
-
-services -> BatchRepository: list all batches
-services --> allocate: allocate(orderline, batches)
-
-@enduml
-----
-
-...to a world in which there is a new _Aggregate_ class named `Product`
-that will be in charge of allocation, and choosing which batches to
-allocate against (<<after_aggregates_diagram>>):
-
-[[after_aggregates_diagram]]
-.After: ask Product to allocate against its batches
-image::images/after_aggregates_diagram.png[]
-[role="image-source"]
-----
-[plantuml, after_aggregates_diagram]
-@startuml
-
-class services {
-    allocate()
-}
-
-
-package domain_model {
-
-  class Product {
-    allocate()
-  }
-
-  class Batch {
-  }
-}
-
-
-package repositories {
-
-  class ProductRepository {
-    get()
-  }
-
-}
-
-services -> ProductRepository: get me the product for this sku
-services --> Product: allocate(orderline)
-Product -o Batch: has
-
-@enduml
-----
 
 Why?  Let's find out.
+
+
+[TIP]
+====
+You can find our code for this chapter at
+https://github.com/cosmicpython/code/tree/appendix_csvs[github.com/cosmicpython/code/tree/appendix_csvs].
+
+----
+git clone https://github.com/cosmicpython/code.git && cd code
+git checkout appendix_csvs
+# or, if you want to code along, checkout the previous chapter:
+git checkout chapter_06_uow
+----
+====
 
 
 === Why Not Just Run Everything in a Spreadsheet?
@@ -111,6 +49,7 @@ low initial complexity but tends not to scale very well because it's difficult
 to apply logic and maintain consistency.
 
 // TODO: better examples.
+
 Who is allowed to view this particular field? Who's allowed to update it? What
 happens when we try to order -350 chairs, or 10,000,000 tables? Can an employee
 have a negative salary?
@@ -128,15 +67,15 @@ rule that restricts the possible states our model can get into. An _invariant_
 is defined a little more precisely, as a condition that is always true.
 
 If we were writing a hotel booking system, we might have the constraint that double
-bookings are not allowed.  This supports the constraint that a room cannot have more
+bookings are not allowed.  This supports the invariant that a room cannot have more
 than one booking for the same night.
 
 Of course, sometimes we might need to temporarily _bend_ the rules. Perhaps we
 need to shuffle the rooms around due to a VIP booking. While we're moving
 bookings around in memory we might be double booked, but our domain model
 should ensure that, when we're finished, we end up in a final consistent state,
-where the invariants are met.  Either that, or we raise an error and refuse to
-complete the operation.
+where the invariants are met. If we can't find a way to fit all our guests in
+we should raise an error and refuse to complete the operation.
 
 Let's look at a couple of concrete examples from our business requirements
 
@@ -149,9 +88,7 @@ This is a business rule that imposes an invariant. The invariant is that an
 order line is allocated to either zero or one batch, but never more than one.
 We need to make sure that our code never accidentally calls `Batch.allocate()`
 on two different batches for the same line, and currently, there's nothing
-there to explicitly stop us doing that.  By nominating an Aggregate to be
-"in charge of" all batches, we'll have a single place where we can enforce
-this constraint.
+there to explicitly stop us doing that.  
 
 
 ==== Invariants, Concurrency and Locks
@@ -190,17 +127,45 @@ order lines, we can't hold a lock over the whole `batches` table for
 every single one--we'll get deadlocks or performance problems at the very least.
 
 
-In the rest of this chapter, we'll first discuss choosing an aggregate
-and demonstrate its usefulness for managing invariants at the conceptual level,
-as the single entrypoint in our code for modifying batches and allocations. In
-that role, it's defending us from programmer error.
+=== What is an Aggregate?
 
-Then we'll return to the topic of concurrency and discuss how the aggregate can
-enforce invariants at a lower level.  In that role, it'll be defending us
-against concurrency / data integrity bugs.
+Okay, so if we can't lock the whole database every time we want to allocate an
+order line, what should we do instead? We want to protect the invariants of our
+system but allow for the greatest degree of concurrency. Maintaining our
+invariants inevitably means preventing concurrent writes - if multiple users can
+allocate DEADLY-SPOON at the same time, we run the risk of over-allocating.
 
+On the other hand, there's no reason why we can't allocate DEADLY-SPOON at the
+same time as FLIMSY-DESK. It's safe to allocate two different products at the
+same time because there's no invariant that covers them both. We don't need them
+to be consistent with each other.
 
-=== Choosing the Right Aggregate
+The aggregate pattern is a design pattern from the DDD community that helps us
+to resolve this tension. An aggregate is just a domain object that contains
+other domain objects and lets us treat the whole collection as a single unit.
+
+The only way to modify the objects inside the aggregate is to load the whole
+thing, and to call methods on the aggregate itself.
+
+As a model gets more complex and grows more Entity and Value Objects,
+referencing each other in a tangled graph, it can be hard to keep track of who
+can modify what. Especially when we have _collections_ in the model like we do
+(our batches are a collection), it's a good idea to nominate some entities to be
+the single entrypoint for modifying their related objects. It makes the system
+conceptually simpler and easy to reason about if you nominate some objects to be
+in charge of consistency for the others.
+
+For example, if we're building a shopping site, the "Cart" might make a good
+aggregate: it's a collection of items that I can treat as a single unit.
+Importantly, I want to load the entire basket as a single blob from my data
+store. I don't want two requests to modify my basket at the same time, or I
+run the risk of weird concurrency errors. Instead, I want each change to my
+basket to run in a single database transaction.
+
+We don't want to modify multiple baskets in a transaction, because there's no
+use-case for changing the baskets of several customers at the same time. Each
+basket is a single _consistency boundary_ responsible for maintaining its own
+invariants.
 
 [quote, Eric Evans, DDD blue book]
 ____
@@ -217,48 +182,150 @@ purpose of data changes.
 // root ENTITY.
 ____
 
-Even if it weren't for the data integrity concerns, as a model gets more complex
-and grows more different Entity and Value Objects, all of which start pointing
-to each other, it can be hard to keep track of who can modify what.  Especially
-when we have _collections_ in the model like we do (our batches are a collection),
-it's a good idea to nominate some entities to be the single entrypoint for
-modifying their related objects.  It makes the system conceptually simpler
-and easy to reason about if you nominate some objects to be in charge of consistency
-for the others.
+Per Evans, our aggregate has a root entity (the cart) which encapsulates access
+to items. Each item has its own identity, but other parts of the system will only
+ever refer to the cart as an indivisible whole.
 
 TIP: Just like we sometimes use `_leading_underscores` to mark methods or functions
     as "private", you can think of aggregates as being the "public" classes of our
     model, and the rest of the Entities and Value Objects are "private".
 
-So what shall we choose as our aggregate?
+=== Choosing an Aggregate
 
-Some sort of `Order` object might suggest itself, but that's more about order lines,
-and we're more concerned about something that provides some sort of conceptual unity
-for collections of batches.
+What aggregate should we use for our system? The choice is somewhat arbitrary,
+but it's important. The aggregate will be the boundary where we make sure
+every operation ends in a consistent state. This helps us to reason about our
+software and prevent weird race issues. We want to draw a boundary around a
+small number of objects - the smaller the better for performance - that have to
+be consistent with one another, and we need to give it a good name.
 
-An object to represent a `Warehouse` or a `Shipment` can represent a collection of
-batches, but it wouldn't really slice the batches up in a useful way for the purposes
-of allocating an individual order line.
+The object we're manipulating under the covers is the Batch. What do we call a
+collection of batches? How should we divide all the batches in the system into
+discreet islands of consistency?
+
+We _could_ use the Shipment as our boundary. Each shipment contains several
+batches, and they all travel to our warehouse at the same time. Or perhaps we
+could use the Warehouse as our boundary: each warehouse contains many batches
+and it could make sense to count all the stock at the same time.
+
+Neither of these concepts really satisfies us, though. We should be able to
+allocate DEADLY-SPOONs and FLIMSY-DESKs at the same time, even if they're in the
+same warehouse, or the same shipment. These concepts have the wrong granularity.
 
 When we allocate an order line, we're actually only interested in batches
-that have the same SKU as the order line.  Some sort of concept like `GlobalSkuStock`
-could work: a collection of all the batches for a given SKU.
+that have the same SKU as the order line. Some sort of concept like
+`GlobalSkuStock` could work: a collection of all the batches for a given SKU.
 
 It's an unwieldy name though, so after some bikeshedding via `SkuStock`, `Stock`,
 `ProductStock`, and so on, we decided to simply call it `Product` --
 after all, that was the first concept we came across in our exploration of the
 domain language back in <<chapter_01_domain_model>>.
 
-So the plan is: when we want to allocate an order line, rather than looking up
-all the `Batch` objects in the world and allocating against them, we will identify
-a single `Product` object for the SKU in our order line, and it will be in charge
-of all the batches _for that sku_, and it will be in charge of allocation.
+So the plan is: when we want to allocate an order line, instead of
+<<before_aggregates_diagram>>, where we looking up all the `Batch` objects in
+the world and passing them to the `allocate()` domain service...
 
-Let's see how that looks, concretely:
+
+[[before_aggregates_diagram]]
+.Before: allocate against all batches using domain service
+image::images/before_aggregates_diagram.png[]
+[role="image-source"]
+----
+[plantuml, before_aggregates_diagram, config=plantuml.cfg]
+@startuml
+
+hide empty members
+
+package "Service Layer" as services {
+    class "allocate()" as allocate {
+    }
+    hide allocate circle
+    hide allocate members
+}
+
+
+
+package "Domain Model" as domain_model {
+
+  class Batch {
+  }
+
+  class "allocate()" as allocate_domain_service {
+  }
+    hide allocate_domain_service circle
+    hide allocate_domain_service members
+}
+
+
+package repositories {
+
+  class BatchRepository {
+    list()
+  }
+
+}
+
+allocate -> BatchRepository: list all batches
+allocate --> allocate_domain_service: allocate(orderline, batches)
+
+@enduml
+----
+
+...we'll move to the world of <<after_aggregates_diagram>>, in which there is a new
+the `Product` object for the particular SKU of our order line, and it will be in charge
+of all the batches _for that sku_, and we can call a `.allocate()` method on that
+instead.
+
+[[after_aggregates_diagram]]
+.After: ask Product to allocate against its batches
+image::images/after_aggregates_diagram.png[]
+[role="image-source"]
+----
+[plantuml, after_aggregates_diagram, config=plantuml.cfg]
+@startuml
+
+hide empty members
+
+package "Service Layer" as services {
+    class "allocate()" as allocate {
+    }
+}
+
+hide allocate circle
+hide allocate members
+
+
+package "Domain Model" as domain_model {
+
+  class Product {
+    allocate()
+  }
+
+  class Batch {
+  }
+}
+
+
+package repositories {
+
+  class ProductRepository {
+    get()
+  }
+
+}
+
+allocate -> ProductRepository: get me the product for this sku
+allocate --> Product: product.allocate(orderline)
+Product o- Batch: has
+
+@enduml
+----
+
+Let's see how that looks in code form:
 
 
 [[product_aggregate]]
-.Our chosen Aggregate, Product (src/allocation/model.py)
+.Our chosen Aggregate, Product (src/allocation/domain/model.py)
 ====
 [source,python]
 [role="non-head"]
@@ -288,6 +355,9 @@ class Product:
 <3> And finally, we can move the `allocate()` Domain Service to
     being a method on the `Product` aggregate.
 
+// TODO (hynek): random nitpick: exceptions denoting errors should be
+// named *Error.  Are you doing this to save space in the listing?
+
 
 NOTE: This `Product` might not look like what you'd expect a `Product`
     model to look like.  No price, no description, no dimensions...
@@ -304,8 +374,7 @@ NOTE: This `Product` might not look like what you'd expect a `Product`
 //      an error for __hash__. or sumfink.
 
 
-
-[[bounded_contexts_sidebar]].
+[[bounded_contexts_sidebar]]
 .Aggregates, Bounded Contexts and Microservices
 *******************************************************************************
 One of the most important contributions from Evans and the DDD community
@@ -345,7 +414,7 @@ elsewhere.  The Fowler link earlier is a good starting point, and either
 
 === 1 Aggregate = 1 Repository
 
-Once you define certain entities to be Aggregates, we need to apply the
+Once you define certain entities to be aggregates, we need to apply the
 rule that they are the only entities that are publicly accessible to the
 outside world.  In other words, the only repositories we are allowed should
 be repositories that return aggregates.
@@ -359,20 +428,12 @@ In our case, we'll switch from `BatchRepository` to `ProductRepository`:
 [source,python]
 [role="skip"]
 ----
-class AbstractUnitOfWork:
-    ...
+class AbstractUnitOfWork(abc.ABC):
+    products: repository.AbstractProductRepository
 
-    def init_repositories(self, products: repository.AbstractProductRepository):
-        self._products = products
+...
 
-    @property
-    def products(self) -> repository.AbstractProductRepository:
-        return self._products
-
-
-#...
-
-class AbstractProductRepository:
+class AbstractProductRepository(abc.ABC):
 
     @abc.abstractmethod
     def add(self, product):
@@ -391,7 +452,7 @@ our `FakeRepository` and then feed through the new model into our service
 layer, to see how it looks with `Product` as its main entrypoint:
 
 [[service_layer_uses_products]]
-.Service layer  (src/allocation/services.py)
+.Service layer  (src/allocation/service_layer/services.py)
 ====
 [source,python]
 ----
@@ -438,7 +499,7 @@ if you do that, you'll still have to solve a few challenges on your own,
 like adding the model to the ORM and making sure all the moving parts can
 talk to each other, which we hope will be instructive.
 
-https://github.com/cosmicpython/code/tree/chapter_06_aggregate_exercise
+https://github.com/cosmicpython/code/tree/chapter_07_aggregate_exercise
 
 We've put in a "cheating" implementation in that delegates to the existing
 `allocate()` function, so you should be able to evolve that towards the real
@@ -452,7 +513,7 @@ do them for you by magic!
 ******************************************************************************
 
 
-=== Version Numbers
+=== Optimistic Concurrency With Version Numbers
 
 We've got our new aggregate so we've solved the conceptual problem of choosing
 an object to be in charge of consistency boundaries.  Let's now spend a little
@@ -480,7 +541,7 @@ with `version=4`, and the other update will be rejected.
 image::images/version_numbers_sequence_diagram.png[]
 [role="image-source"]
 ----
-[plantuml, version_numbers_sequence_diagram]
+[plantuml, version_numbers_sequence_diagram, config=plantuml.cfg]
 @startuml
 
 entity Model
@@ -505,6 +566,17 @@ Database -[#red]>x Transaction2: Error! version is already 4
 @enduml
 ----
 
+TIP: When two operations conflict in this way we usually retry the failed
+    operation from the beginning. Imagine we have two customers, Harry and Bob,
+    and both submit orders for 'SHINY-TABLE'. Both threads load the product at
+    version 1 and allocate stock. The database prevents the concurrent update,
+    and Bob's order fails with an error. When we _retry_ the operation, Bob's
+    order loads the product at version 2, and tries to allocate again. If there
+    is enough stock left all is well, otherwise he'll receive `OutOfStock`. Most
+    operations can be retried this way in the case of a concurrency problem.
+    More on this in <<recovering_from_errors>> and <<footguns>>.
+
+
 ==== Implementation Options for Version Numbers
 
 There are essentially 3 options for implementing version numbers:
@@ -524,7 +596,7 @@ There are essentially 3 options for implementing version numbers:
 
 Option 3 isn't ideal, because there's no real way of doing it without having to
 assume that _all_ products have changed, so we'll be incrementing version numbers
-when we don't have tofootnote:[perhaps we could get some ORM/sqlalchemy magic to tell
+when we don't have tofootnote:[Perhaps we could get some ORM/SQLAlchemy magic to tell
 us when an object is dirty, but how would that work in the generic case, eg for a
 CsvRepository?].
 
@@ -535,7 +607,7 @@ So in the end, even though version numbers don't _have_ to be a domain concern,
 you might decide the cleanest tradeoff is to put them in the domain.
 
 [[product_aggregate_with_version_number]]
-.Our chosen Aggregate, Product (src/allocation/model.py)
+.Our chosen Aggregate, Product (src/allocation/domain/model.py)
 ====
 [source,python]
 ----
@@ -561,9 +633,12 @@ class Product:
 
 <1> There it is!
 
-// TODO: more discussion of version number--actual number doesn't matter,
-//   we're just setting _something_ so the db complains, could use uids,
-//   also discuss similarity with eventsourcing version numbers.
+NOTE: If you're scratching your head at this version number business, it might
+help to remember that the _number_ isn't important. What's important is that
+the Product database row is modified whenever we make a change to the Product
+aggregate. The version number is a simple human-comprehensible way to model a
+thing that changes on every write, but it could equally be a random UUID every
+time.
 
 
 === Testing for Our Data Integrity Rules
@@ -624,7 +699,7 @@ def test_concurrent_updates_to_version_are_not_allowed(postgres_session_factory)
         dict(sku=sku),
     )
     assert version == 2  #<2>
-    exception = [exceptions]
+    [exception] = exceptions
     assert 'could not serialize access due to concurrent update' in str(exception)  #<3>
 
     orders = list(session.execute(
@@ -657,7 +732,7 @@ To get the test to pass as it is, we can set the transaction isolation level
 on our session:
 
 [[transaction_serializable]]
-.Set isolation level for session (src/allocation/unit_of_work.py)
+.Set isolation level for session (src/allocation/service_layer/unit_of_work.py)
 ====
 [source,python]
 ----
@@ -681,7 +756,7 @@ which will produce different behavior: two concurrent transactions will not
 be allowed to do a read on the same rows at the same time.
 
 [[with_for_update]]
-.SqlAlchemy with_for_update (src/allocation/repository.py)
+.SQLAlchemy with_for_update (src/allocation/adapters/repository.py)
 ====
 [source,python]
 [role="non-head"]
@@ -727,16 +802,27 @@ NOTE: Some people refer to this as the "read-modify-write" failure mode.
 
 .Recap: Aggregates and Consistency Boundaries
 *****************************************************************
-Choose the right aggregate::
-    bla
+Aggregates are your entrypoints into the Domain Model::
+    By restricting the number of ways that things can be changed,
+    we make the system easier to reason about.
 
-Something something transactions::
-    bla bla.
+Aggregates are in charge of a consistency boundary::
+    An aggregate's job is to be able to manage our business rules
+    about invariants as they apply to a group of related objects.
+    It's the aggregate's job to check that the objects within its
+    remit are consistent with each other and with our rules, and
+    to reject changes that would break the rules
+
+Aggregates and concurrency issues go together::
+    When thinking about implementing these consistency checks, we
+    end up thinking about transactions and locks.  Choosing the
+    right aggregate is about performance as well as conceptual
+    organization of your domain.
 
 *****************************************************************
 
 
-[[chapter_06_aggregate_tradoffs]]
+[[chapter_07_aggregate_tradoffs]]
 [options="header"]
 .Aggregates: The Trade-Offs
 |===

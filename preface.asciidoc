@@ -79,20 +79,33 @@ those languages in a long time (or indeed ever), those code listings can be
 quite... trying. There's a reason the latest edition of that other classic text,
 https://martinfowler.com/books/refactoring.html[Refactoring], is in JavaScript.
 
-So we hope this book will make for a lightweight introduction to some
-of the key architectural patterns that support domain-driven design
-(DDD) and event-driven microservices, that it will serve as a reference
-for implementing them in a Pythonic way, and that it will serve as a
-first step for those who want to do further research  in this field.
 
-////
-[SG] Great preface. One niggle, until the last paragraph I thought what was being
-described was a book on designing enterprise software well in Python using established(?)
-techniques and patterns, more often seen in other languages. However in the last paragraph
-feels like event-driven microservices just suddenly pops in unannounced and the book changes
-direction a bit to be about DDD+event-driven microservices?
-TODO
-////
+=== TDD, DDD and Event-Driven Architecture
+
+In order of notoriety, we know of three tools for managing complexity:
+
+1. Test-Driven Development (TDD) helps us to build code that is correct,
+   and enables us to refactor or add new features, without fear of regression.
+   But it can be hard to get the best out of our tests:  how do we make sure
+   that they run as fast as possible? That we get as much coverage and feedback
+   from fast, dependency-free unit tests, and have the minimum number of slower,
+   flakey end-to-end tests?
+
+2. Domain-Driven Design (DDD) asks us to focus our efforts on building a good
+   model of the business domain, but how to we make sure that our models aren't
+   encumbered with infrastructure concerns and become hard to change?
+
+3. Loosely coupled (micro)-services integrated via messages (sometimes called
+   Reactive Microservices) are a well established answer to managing complexity
+   across multiple applications or business domains. But it's not always
+   obvious how to make them fit with the established tools of
+   the Python world--Flask, Django, Celery and so on.
+
+Our aim with this book is to introduce several classic architectural patterns,
+and show how they support TDD, DDD and event-driven microservices.  We hope
+it will serve as a reference for implementing them in a Pythonic way, and that
+people can use it as a first step towards further research  in this field.
+
 
 === Who Should Read This Book
 
@@ -152,12 +165,12 @@ and which chapters they live in.
 
 ==== Part 1: Dependency Inversion and Domain Modelling
 
-Domain Modelling and DDD (Chapters 1 and 6)::
+Domain Modelling and DDD (Chapters 1 and 7)::
     At some level, everyone has learned the lesson that complex business
     problems need to be reflected in code, in the form of a model of the domain.
     But why does it always seem to be so hard to do it, without getting tangled
     up with infrastructure concerns, with our web frameworks, or whatever else?
-    In this chapter we give a broad overview of _domain modeling_ and DDD, and
+    In the first chapter we give a broad overview of _domain modeling_ and DDD, and
     show how to get started with a model that has no external dependencies, and
     fast unit tests. Later we return to DDD patterns to discuss how to choose
     the right _Aggregate_, and how this choice relates to questions of data
@@ -175,16 +188,18 @@ Repository, Service Layer and Unit of Work Patterns (Chapter 2, 4 and 5)::
 // [SG] Bit of pedantry - this is the first time you have used CLI acronym,
 // should be spelled out?
 
-An Aside on Coupling and Abstractions (Chapter 3)::
+Some thoughts on Testing and Abstractions (Chapters 3 + 6)::
     After presenting the first abstraction (Repository pattern), we take the
     opportunity for a general discussion of how to choose abstractions, and
-    what their role is in choosing how our software is coupled together.
+    what their role is in choosing how our software is coupled together. After
+    we introduce Service Layer, we talk a bit about achieving a _test pyramid_
+    and writing unit tests at the highest possible level of abstraction.
 
 
 
 ==== Part 2: Event-Driven Architecture
 
-Chapters 7, 8 and 9: Event-Driven Architecture::
+Chapters 8-11: Event-Driven Architecture::
     We introduce three more mutually-reinforcing patterns, starting with
     the concept of _Domain Events_, a vehicle for capturing the idea that some
     interactions with a system are triggers for others.  We use  a _Message
@@ -194,18 +209,18 @@ Chapters 7, 8 and 9: Event-Driven Architecture::
     distinction between _Commands_ and _Events_.  Our application is now
     fundamentally a message-processing system.
 
-Chapter 10: CQRS::
+Chapter 12: CQRS::
     An example of _command-query responsibility segregation_, with and without
     events.
 
-Chapter 11 Dependency Injection::
+Chapter 13 Dependency Injection::
     We tidy up our explicit and implicit dependencies, and implement a very
     simple dependency injection framework.
 
 
 ==== Epilogue
 
-How Do I Get There From Here? (Chapter 12)::
+How Do I Get There From Here? (Chapter 14)::
     Implementing architectural patterns always looks easy when you show a simple
     example, starting from scratch, but many of you will probably be wondering how
     to apply these principles to existing software.  We'll attempt to provide a
@@ -349,12 +364,24 @@ Watch us on YouTube: link:$$http://www.youtube.com/oreillymedia$$[]
 NOTE: under construction.  do complain if your name is not here.  or if you
     don't like your name being here!
 
-Thanks to our Tech Reviewers, David Seddon and Ed Jung.
+To our Tech Reviewers, David Seddon, Ed Jung and Hynek Schlawack: we absolutely
+did not deserve you. You were all incredibly dedicated, conscientious and
+rigorous.  Each one of you is immensely smart, and your different points of
+view were both useful and complementary with each other.  Thank you from the
+bottom of our hearts.
 
-Thanks to our Early Release readers for their comments and suggestions:
+Gigantic thanks also to our Early Release readers for their comments and
+suggestions:
 Ian Cooper, Abdullah Ariff, Jonathan Meier, Gil Gonçalves, Matthieu Choplin,
 Ben Judson, James Gregory, Łukasz Lechowicz, Clinton Roy, Vitorino Araújo,
-Susan Goodbody, Josh Harwood, Daniel Butler, Liu Haibin, Hynek Schlawack, Jimmy
-Davies, and many more, our apologies if we've missed your name on this list.
+Susan Goodbody, Josh Harwood, Daniel Butler, Liu Haibin, Jimmy Davies, Ignacio
+Vergara Kausel, Gaia Canestrani, Renne Rocha, pedroabi, Ashia Zawaduk
+and many more, our apologies if we've missed your name on this list.
 
-Thanks to our editor Corbin Collins
+Super-mega-thanks to our editor Corbin Collins, for his gentle chivvying, and
+for being a tireless advocate of the reader; this book is immeasurably improved
+thanks to you.
+
+// TODO thanks to rest of OR team.
+
+Any errors remaining in the book are our own, naturally

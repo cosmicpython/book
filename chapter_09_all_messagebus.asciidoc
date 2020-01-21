@@ -1,53 +1,36 @@
-[[chapter_08_all_messagebus]]
+[[chapter_09_all_messagebus]]
 == Going to Town on the Message Bus
 
 In this chapter we'll start to make events more fundamental to the internal
 structure of our application. We'll move from the current state in
-<<all_in_on_messagebus_before_diagram>> where events are an optional
+<<maps_chapter_08_before>> where events are an optional
 side-effect...
 
+[[maps_chapter_08_before]]
+.Before: the message bus is an optional add-on
+image::images/maps_chapter_08_before.png[]
 
-[[all_in_on_messagebus_before_diagram]]
-.Before: Service Layer, with optional events, bus and handlers
-image::images/all_in_on_messagebus_before_diagram.png[]
-[role="image-source"]
-----
-[graphviz, all_in_on_messagebus_before_diagram]
-digraph G {
-rankdir=LR;
-service [label="service-layer function"];
-handlers [label="handler functions"];
-
-flask -> service [label="request params\n(as primitives)"]
-service -> model
-model -> events -> messagebus -> handlers [style=dotted]
-
-}
-----
-
-...to the situation in <<all_in_on_messagebus_after_diagram>> where
+...to the situation in <<map_chapter_08_after>> where
 everything goes via the message bus, and our app has been transformed
 fundamentally into a message-processor.
 
-[[all_in_on_messagebus_after_diagram]]
-.After: everything goes via the Message Bus
-image::images/all_in_on_messagebus_after_diagram.png[]
-[role="image-source"]
-----
-[graphviz, all_in_on_messagebus_after_diagram]
-digraph G {
-rankdir=LR;
-flask [pos="0,0!"];
-handler [label="handler function"];
+[[map_chapter_08_after]]
+.The Message Bus is now the main entrypoint to the service layer
+image::images/maps_chapter_08_after.png[]
 
-flask -> event  [weight=10]
-event -> messagebus  [weight=10]
-messagebus -> handler  [weight=10]
-handler -> model [weight=10]
-model -> event [style=dotted, len=100]
 
-}
+[TIP]
+====
+You can find our code for this chapter at
+https://github.com/cosmicpython/code/tree/chapter_09_all_messagebus[github.com/cosmicpython/code/tree/chapter_09_all_messagebus].
+
 ----
+git clone https://github.com/cosmicpython/code.git && cd code
+git checkout chapter_09_all_messagebus
+# or, if you want to code along, checkout the previous chapter:
+git checkout chapter_08_events_and_message_bus
+----
+====
 
 
 === A New Requirement Leads Us to Consider a New Architecture
@@ -59,19 +42,21 @@ warehouse-management systems, logistics schedulers, and payroll systems.
 This software is tricky to write because unexpected things happen all the time
 in the real world of physical objects and unreliable humans. For example:
 
-* during a stock-take, we discover that three SPRINGY-MATTRESSes have been
-water damaged by a leaky roof.
-* a consignment of RELIABLE-FORKs is missing the required documentation and is
-held in customs for several weeks. Three RELIABLE-FORKs subsequently fail safety
-testing, and are destroyed.
-* a global shortage of sequins means we're unable to manufacture our next batch
-of SPARKLY-BOOKCASE.
+* During a stock-take, we discover that three SPRINGY-MATTRESSes have been
+  water damaged by a leaky roof.
+* A consignment of RELIABLE-FORKs is missing the required documentation and is
+  held in customs for several weeks. Three RELIABLE-FORKs subsequently fail safety
+  testing, and are destroyed.
+* A global shortage of sequins means we're unable to manufacture our next batch
+  of SPARKLY-BOOKCASE.
 
 In all of these situations,  we learn about the need to change batch quantities
 when they're already in the system.  Perhaps someone made a mistake on the number
-in the manifest, or perhaps some sofas fell off a truck. Following a conversation with the
-business,footnote:[https://en.wikipedia.org/wiki/Event_storming[Event storming]
-is a common technique], we model the situation as in
+in the manifest, or perhaps some sofas fell off a truck. Following a
+conversation with the business,footnote:[
+Event-based modelling is so popular that a practice called _event storming_ has
+been developed for facilitating event-based requirements gathering and domain
+model elaboration.], we model the situation as in
 <<batch_changed_events_flow_diagram>>:
 
 
@@ -111,10 +96,10 @@ transactions and data integrity.
 But before we jump in, think about where we're headed.  There are two
 kinds of flows through our system:
 
-* API calls that are handled by a service-layer function
+1. API calls that are handled by a service-layer function,
 
-* Internal events (which might be raised as a side-effect of a service-layer function)
-  and their handlers (which in turn call service-layer functions)
+2. Internal events (which might be raised as a side-effect of a service-layer function)
+  and their handlers (which in turn call service-layer functions).
 
 Wouldn't it be easier if everything was an event handler?  If we rethink our API
 calls as capturing events, then the service-layer functions can be event handlers
@@ -128,7 +113,7 @@ event handlers:
   event.footnote:[If you've done a bit of reading around event-driven
     architectures, you may be thinking "some of these events sound more like
     commands!". Bear with us!  We're trying to introduce one concept at a time.
-    In the <<chapter_09_commands,next chapter>> we'll introduce the distinction
+    In the <<chapter_10_commands,next chapter>> we'll introduce the distinction
     between command and events.]
 
 Our new requirement will fit the same pattern:
@@ -139,7 +124,7 @@ Our new requirement will fit the same pattern:
 * And the new `AllocationRequired` events that it may raise can be passed on to
   `services.allocate()` too, so there is no conceptual difference between a
   brand-new allocation coming from the API, and a reallocation that's
-  internally triggered by a deallocation
+  internally triggered by a deallocation.
 
 
 All sound like a bit much?   Let's work towards it all gradually.  We'll
@@ -148,18 +133,22 @@ https://martinfowler.com/articles/preparatory-refactoring-example.html[Preparato
 Refactoring] workflow, AKA "make the change easy, then make the easy change":
 
 
-* We'll start by refactoring our service layer into event handlers.  We can
+1. We'll start by refactoring our service layer into event handlers.  We can
   get used to the idea of events being the way we describe inputs to the
   system.  In particular, the existing `services.allocate()` function will
   become the handler for an event called `AllocationRequired`.
 
-* Then we'll build an end-to-end test that puts `BatchQuantityChanged` events
+2. Then we'll build an end-to-end test that puts `BatchQuantityChanged` events
   into the system, and looks for `Allocated` events coming out.
 
-* And then our actual implementation will be conceptually very simple: a new
+3. And then our actual implementation will be conceptually very simple: a new
   handler for `BatchQuantityChanged` events, whose implementation will emit
   `AllocationRequired` events, which in turn will be handled by the exact same
   handler for allocations that the API uses.
+
+
+Along the way we'll make a small tweak to the messagebus and UoW, moving the
+responsibility for putting new events onto the messagebus into the messagebus itself.
 
 
 === Refactoring Service Functions to Message Handlers
@@ -168,7 +157,7 @@ We start by defining the two events that capture our current API inputs:
 `AllocationRequired` and `BatchCreated`:
 
 [[two_new_events]]
-.BatchCreated and AllocationRequired events (src/allocation/events.py)
+.BatchCreated and AllocationRequired events (src/allocation/domain/events.py)
 ====
 [source,python]
 ----
@@ -196,7 +185,7 @@ and a UoW:
 
 
 [[services_to_handlers]]
-.Handlers and services are the same thing (src/allocation/handlers.py)
+.Handlers and services are the same thing (src/allocation/service_layer/handlers.py)
 ====
 [source,python]
 ----
@@ -229,7 +218,7 @@ def send_out_of_stock_notification(
 The change might be clearer as a diff:
 
 [[services_to_handlers_diff]]
-.Changing from services to handlers (src/allocation/handlers.py)
+.Changing from services to handlers (src/allocation/service_layer/handlers.py)
 ====
 [source,diff]
 ----
@@ -268,7 +257,7 @@ primitives, with some well-defined objects (see sidebar).
 .From Domain Objects, via Primitive Obsession, to Events as an Interface
 *******************************************************************************
 
-Some of you may may remember the <<decouple_service_layer_from_domain>> section
+Some of you may may remember the <<primitive_obsession>> section
 from <<chapter_04_service_layer>>, in which we changed our service-layer API
 from being in terms of domain objects, to primitives.  And now we're moving
 back, but to different objects?  What gives?
@@ -289,7 +278,7 @@ vary, but instead we've coupled the external world to our Event classes instead.
 They're part of the domain too, but the hope is that they vary less often, so
 they're a sensible artifact to couple on.
 
-And what have we bought ourselves?  Well, when invoking a use case in our application,
+And what have we bought ourselves?  Now, when invoking a use case in our application,
 we no longer need to remember a particular combination of primitives, just a single
 event class that represents the input to our application.  That's conceptually
 quite nice.  On top of that, as we'll see in <<appendix_validation>>, those
@@ -298,52 +287,81 @@ events classes can be a nice place to do some input validation.
 *******************************************************************************
 
 
-==== The MessageBus Needs to Pass a UoW to Each Handler
+==== The MessageBus Becomes Responsible for Collecting Events from the UoW
 
-Our event handlers now need a UoW.  We make a small modification
-to the main `messagebus.handle()` function:
+Our event handlers now need a UoW.  In addition, as our message bus becomes
+more central to our application, it makes sense to put it explicitly in charge of
+collecting and processing new events.  There was a bit of a circular dependency
+between UoW and message bus until now, so this will make it one-way:
 
 
-[[handle_takes_uow]]
-.Handle takes a UoW (src/allocation/messagebus.py)
+[[handle_has_uow_and_queue]]
+.Handle takes a UoW and manages a queue (src/allocation/service_layer/messagebus.py)
 ====
 [source,python]
 [role="non-head"]
 ----
-def handle(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):
-    for handler in HANDLERS[type(event)]:
-        handler(event, uow=uow)  #<1>
+def handle(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):  #<1>
+    queue = [event]  #<2>
+    while queue:
+        event = queue.pop(0)  #<3>
+        for handler in HANDLERS[type(event)]:  #<3>
+            handler(event, uow=uow)  #<4>
+            queue.extend(uow.collect_new_events())  #<5>
 ----
 ====
 
-<1> The messagebus passes a UoW down to each handler
+<1> The messagebus now gets passed the UoW each time it starts up.
+<2> When we begin handling our first event, we start a queue.
+<3> We pop events from the front of the queue and invoke its handlers.
+<4> The messagebus passes the UoW down to each handler
+<5> After each handler finishes, we collect any new events that have been
+    generated, and we add them to the queue.
+
+In _unit_of_work.py_, `publish_events()` becomes a less active method,
+`collect_new_events()`:
 
 
-And to _unit_of_work.py_:
-
-
-[[uow_passes_self_to_messagebus]]
-.UoW passes self to message bus (src/allocation/unit_of_work.py)
+[[uow_collect_new_events]]
+.UoW no longer puts events directly on the bus (src/allocation/service_layer/unit_of_work.py)
 ====
-[source,python]
+[source,diff]
 ----
-class AbstractUnitOfWork(abc.ABC):
-    ...
+-from . import messagebus  #<1>
+-
+ 
+ 
+ class AbstractUnitOfWork(abc.ABC):
+@@ -23,13 +21,11 @@ class AbstractUnitOfWork(abc.ABC):
+ 
+     def commit(self):
+         self._commit()
+-        self.publish_events()  #<2>
+ 
+-    def publish_events(self):
++    def collect_new_events(self):
+         for product in self.products.seen:
+             while product.events:
+-                event = product.events.pop(0)
+-                messagebus.handle(event)
++                yield product.events.pop(0)  #<3>
 
-    def publish_events(self):
-        for product in self.products.seen:
-            while product.events:
-                event = product.events.pop(0)
-                messagebus.handle(event, uow=self)  #<1>
 ----
 ====
+return bus
 
-<1> The UoW passes itself to the messagebus. This pattern is called
-    double-dispatch and it's a common trick for managing a circular dependency.
+<1> The `unit_of_work` module now no longer depends on `messagebus`
+<2> We no longer `publish_events` automatically on commit.  The messagebus
+    is keeping track of the event queue instead.
+<3> And the UoW no longer actively put events onto the messagebus, it
+    just makes them available.
 
+
+//TODO: we can definitely get rid of _commit() now right?
+// (EJ2) at this point _commit() doesn't serve any purpose, so it could be deleted.
+//       unsure if deleting it would be confusing at this point.
 
 ==== Our Tests Are All Written in Terms of Events Too:
-
 
 [[handler_tests]]
 .Handler Tests use Events (tests/unit/test_handlers.py)
@@ -353,8 +371,7 @@ class AbstractUnitOfWork(abc.ABC):
 ----
 class TestAddBatch:
 
-    @staticmethod
-    def test_for_new_product():
+    def test_for_new_product(self):
         uow = FakeUnitOfWork()
         messagebus.handle(events.BatchCreated("b1", "CRUNCHY-ARMCHAIR", 100, None), uow)
         assert uow.products.get("CRUNCHY-ARMCHAIR") is not None
@@ -365,8 +382,7 @@ class TestAddBatch:
 
 class TestAllocate:
 
-    @staticmethod
-    def test_returns_allocation():
+    def test_returns_allocation(self):
         uow = FakeUnitOfWork()
         messagebus.handle(events.BatchCreated("b1", "COMPLICATED-LAMP", 100, None), uow)
         result = messagebus.handle(events.AllocationRequired("o1", "COMPLICATED-LAMP", 10), uow)
@@ -374,9 +390,8 @@ class TestAllocate:
 ----
 ====
 
-// TODO: (DS) why staticmethod?
 
-
+[[temporary_ugly_hack]]
 ==== A Temporary Ugly Hack: The Messagebus Has to Return Results
 
 Our API and our service layer currently want to know the allocated batch ref
@@ -384,28 +399,35 @@ when they invoke our `allocate()` handler.  This means we need to put in
 a temporary hack on our messagebus to let it return events.
 
 [[hack_messagebus_results]]
-.Messagebus returns results (src/allocation/messagebus.py)
+.Messagebus returns results (src/allocation/service_layer/messagebus.py)
 ====
 [source,diff]
 ----
  def handle(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):
 +    results = []
-     for handler in HANDLERS[type(event)]:
--        handler(event, uow=uow)
-+        r = handler(event, uow=uow)
-+        results.append(r)
+     queue = [event]
+     while queue:
+         event = queue.pop(0)
+         for handler in HANDLERS[type(event)]:
+-            handler(event, uow=uow)
++            r = handler(event, uow=uow)
++            results.append(r)
+             queue.extend(uow.collect_new_events())
 +    return results
 ----
 ====
 
+// TODO (hynek) inline the r=, the addition of a meaningless variable is distracting.
+
 
 It's because we're mixing the read and write responsibilities in our system.
-We'll come back to fix this wart in <<chapter_09_cqrs>>.
+We'll come back to fix this wart in <<chapter_12_cqrs>>.
+
 
 ==== Modifying Our API to Do Events
 
 [[flask_uses_messagebus]]
-.Flask changing to messagebus as a diff (src/allocation/flask_app.py)
+.Flask changing to messagebus as a diff (src/allocation/entrypoints/flask_app.py)
 ====
 [source,diff]
 ----
@@ -421,8 +443,8 @@ We'll come back to fix this wart in <<chapter_09_cqrs>>.
 +            request.json['orderid'], request.json['sku'], request.json['qty'],
          )
 +        results = messagebus.handle(event, unit_of_work.SqlAlchemyUnitOfWork())  #<3>
-+        batchref = results.pop()
-     except exceptions.InvalidSku as e:
++        batchref = results.pop(0)
+     except InvalidSku as e:
 ----
 ====
 
@@ -448,7 +470,7 @@ fully event-driven.
 
 * The entire app is now best described as a message processor (or event processor
   if you prefer.  We'll talk about the distinction in the
-  <<chapter_09_commands, next chapter>>.
+  <<chapter_10_commands, next chapter>>.
 
 
 
@@ -466,7 +488,7 @@ back to our existing handler for allocation, to be re-allocated.
 image::images/reallocation_sequence_diagram.png[]
 [role="image-source"]
 ----
-[plantuml, reallocation_sequence_diagram]
+[plantuml, reallocation_sequence_diagram, config=plantuml.cfg]
 @startuml
 API -> MessageBus : BatchQuantityChanged event
 
@@ -483,18 +505,13 @@ end
 @enduml
 ----
 
+WARNING: Whenever you split things out like this across two units of work,
+    you now have two database transactions, so you are opening yourself up
+    to integrity issues: something could happen that means the first completes
+    but the second does.  You'll need to think about whether this is acceptable,
+    and whether you need to notice when it happens and do something about it.
+    See the <<footguns>> section in the Epilogue for more discussion.
 
-////
-TODO (ej)  There is a minor but important technical point here, I think, that
-could be a source of confusion.  The UOW and session commit are not exactly
-synonymous as the events are not actually emitted until after the UOW "ends".
-Otherwise you could end up with a race or skew on the persisted state. (Or
-would that be prevented by re-using the same uow+session instance in the event
-handlers?)
-
-I am unsure how to present that information without adding a lot of
-detail to the sequence diagram.
-////
 
 
 ==== Our New Event
@@ -504,7 +521,7 @@ needs a batch reference and a new quantity:
 
 
 [[batch_quantity_changed_event]]
-.New event (src/allocation/events.py)
+.New event (src/allocation/domain/events.py)
 ====
 [source,python]
 ----
@@ -518,7 +535,7 @@ class BatchQuantityChanged(Event):
 
 === Test-Driving a New Handler
 
-Following the lessons learned in <<chapter_03_service_layer>>,
+Following the lessons learned in <<chapter_04_service_layer>>,
 we can operate in "high gear," and write our unit tests at the highest
 possible level of abstraction, in terms of events. Here's what they might
 look like:
@@ -531,8 +548,7 @@ look like:
 ----
 class TestChangeBatchQuantity:
 
-    @staticmethod
-    def test_changes_available_quantity():
+    def test_changes_available_quantity(self):
         uow = FakeUnitOfWork()
         messagebus.handle(events.BatchCreated("batch1", "ADORABLE-SETTEE", 100, None), uow)
         [batch] = uow.products.get(sku="ADORABLE-SETTEE").batches
@@ -543,8 +559,7 @@ class TestChangeBatchQuantity:
         assert batch.available_quantity == 50  #<1>
 
 
-    @staticmethod
-    def test_reallocates_if_necessary():
+    def test_reallocates_if_necessary(self):
         uow = FakeUnitOfWork()
         messagebus.handle(events.BatchCreated("batch1", "INDIFFERENT-TABLE", 50, None), uow)
         messagebus.handle(events.BatchCreated("batch2", "INDIFFERENT-TABLE", 50, date.today()), uow)
@@ -552,10 +567,11 @@ class TestChangeBatchQuantity:
         messagebus.handle(events.AllocationRequired("order2", "INDIFFERENT-TABLE", 20), uow)
         [batch1, batch2] = uow.products.get(sku="INDIFFERENT-TABLE").batches
         assert batch1.available_quantity == 10
+        assert batch2.available_quantity == 50
 
         messagebus.handle(events.BatchQuantityChanged("batch1", 25), uow)
 
-        # order1 or order2 will be deallocated, so we"ll have 25 - 20 * 1
+        # order1 or order2 will be deallocated, so we"ll have 25 - 20
         assert batch1.available_quantity == 5  #<2>
         # and 20 will be reallocated to the next batch
         assert batch2.available_quantity == 30  #<2>
@@ -571,12 +587,10 @@ class TestChangeBatchQuantity:
 
 
 
-
-
 ==== Implementation
 
 [[change_quantity_handler]]
-.Handler delegates to model layer (src/allocation/handlers.py)
+.Handler delegates to model layer (src/allocation/service_layer/handlers.py)
 ====
 [source,python]
 ----
@@ -589,13 +603,14 @@ def change_batch_quantity(
         uow.commit()
 ----
 ====
+
 // TODO (DS): Indentation looks off
 
 
 We realize we'll need a new query type on our repository:
 
 [[get_by_batchref]]
-.A new query type on our repository (src/allocation/repository.py)
+.A new query type on our repository (src/allocation/adapters/repository.py)
 ====
 [source,python]
 ----
@@ -622,8 +637,9 @@ class AbstractRepository(abc.ABC):
     @abc.abstractmethod
     def _get_by_batchref(self, batchref) -> model.Product:
         raise NotImplementedError
+    ...
 
-
+class SqlAlchemyRepository(AbstractRepository):
     ...
 
     def _get(self, sku):
@@ -636,8 +652,6 @@ class AbstractRepository(abc.ABC):
 
 ----
 ====
-
-//TODO: type hints on get_by_batchref
 
 And on our `FakeRepository` too:
 
@@ -662,8 +676,13 @@ class FakeRepository(repository.AbstractRepository):
 ====
 
 
-// TODO: discuss finder methods on repository.
-
+NOTE: We're adding a query to our repository to make this use case easier to
+implement. So long as our query is returning a single aggregate, we're not
+bending any rules. If you find yourself writing complex queries on your
+repositories, you might want to think about a different design. In particular, a
+method like 'get_most_popular_products', or 'find_products_by_order_id' would
+definitely trigger our spidey sense. Chapter 11 and the Epilogue have some tips
+on managing complex queries.
 
 ==== A New Method on the Domain Model
 
@@ -673,7 +692,7 @@ allocate function to publish an event.
 
 
 [[change_batch_model_layer]]
-.Our model evolves to capture the new requirement (src/allocation/model.py)
+.Our model evolves to capture the new requirement (src/allocation/domain/model.py)
 ====
 [source,python]
 ----
@@ -702,7 +721,7 @@ We wire up our new handler:
 
 
 [[full_messagebus]]
-.The messagebus grows (src/allocation/messagebus.py)
+.The messagebus grows (src/allocation/service_layer/messagebus.py)
 ====
 [source,python]
 ----
@@ -721,6 +740,7 @@ And our new requirement is fully implemented.
 
 
 
+[[fake_message_bus]]
 .Unit Testing Event Handlers in Isolation with a Fake Message Bus
 *******************************************************************************
 
@@ -793,13 +813,15 @@ def test_reallocates_if_necessary_isolated():
 ----
 ====
 
+// TODO: this listing flows outside the sidebar margin.  and the normal margin too tbh.
+
 Whether you want to do this or not depends on the complexity of your chain of
 events.  We'd say, start out with edge-to-edge testing, and only resort to
 this if necessary.
 
 
 If you do decide you want to get into isolating the testing for your handlers,
-you might be better of implementing an ABC for your messagebus:
+you might be better off implementing an ABC for your messagebus:
 
 
 [[abc_for_fake_messagebus]]
@@ -832,7 +854,7 @@ class FakeMessageBus(messagebus.AbstractMessageBus):
 ----
 ====
 
-We use a class-based messagebus in <<chapter_12_dependency_injection>>,
+We use a class-based messagebus in <<chapter_13_dependency_injection>>,
 if you need more inspiration.  The "simple" implementation in this
 chapter essentially uses the `messagebus.py` module itself to implement
 Singleton Pattern.
@@ -849,7 +871,7 @@ Singleton Pattern.
 * Events are simple dataclasses that define the data structures for inputs,
   and internal messages within our system.  This is quite powerful from a DDD
   standpoint, since events often translate really well into business language
-  (in fact an entire practice know as "Event Storming" has evolved around it).
+  (cf __event storming__).
 
 * Handlers are the way we react to events.   They can call down to our
   model, or they can call out to external services.  We can define multiple
@@ -873,24 +895,21 @@ side-effects.
 
 Now, you may be wondering, where are those `BatchQuantityChanged` events actually
 going to come from?  The answer is coming up in a couple of chapters' time.  But
-first, let's talk about <<chapter_09_commands,Events versus Commands>>.
+first, let's talk about <<chapter_10_commands,Events versus Commands>>.
 
 
-[[chapter_08_all_messagebus_tradeoffs]]
+[[chapter_09_all_messagebus_tradeoffs]]
 [options="header"]
 .Whole app is a Message Bus: The Trade-Offs
 |===
 |Pros|Cons
 a|
-* handlers and services are the same thing, so that's simpler
-* we have a nice datastructure for inputs to the system
+* Handlers and services are the same thing, so that's simpler
+* We have a nice datastructure for inputs to the system
 
 a|
-* messagebus is still a slightly unpredictable way of doing things from
-  a web pov.  don't know in advance when things are going to end
-
-* we've gone from domain objects in service layer calls, to primitives,
-  and now to domain events, which feels flip-floppey.
+* Messagebus is still a slightly unpredictable way of doing things from
+  a web point of view.  You don't know in advance when things are going to end
 
 * duplication / maintenance cost of having model objects _and_ events
   now.  adding a field to one usually means adding a field to at least

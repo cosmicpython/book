@@ -1,30 +1,30 @@
-[[chapter_09_commands]]
+[[chapter_10_commands]]
 == Commands and Command Handler
 
-//TODO get rid of bullets
-
-.In this chapter
-********************************************************************************
-
-* We'll discuss the difference between _events_ and _commands_.
-* We'll extend our message bus to handle command messages.
-* We'll finish rebuilding our application as a message-processor.
-
-  // DIAGRAM GOES HERE
-
-********************************************************************************
-
 In the previous chapter we talked about using events as a way of representing
-the inputs to our system. This starts to turn our application into a message
-processing machine.
+the inputs to our system, and turned our application into a message processing
+machine.
 
-To achieve that, we converted all our use-case functions to event-handlers.
+To achieve that, we converted all our use-case functions to event handlers.
 When the API receives a POST to create a new batch, it builds a new `BatchCreated`
-event and handles it as though it came from an external system.
+event and handles it as if it were an internal event.
 This might have felt counter-intuitive. After all, the batch _hasn't_ been
 created yet, that's why we called the API. We're going to fix that conceptual
-wart by introducing _Commands_.
+wart by introducing _Commands_, and show how they can be handled by the same
+message bus, but with slightly different rules.
 
+[TIP]
+====
+You can find our code for this chapter at
+https://github.com/cosmicpython/code/tree/chapter_10_commands[github.com/cosmicpython/code/tree/chapter_10_commands].
+
+----
+git clone https://github.com/cosmicpython/code.git && cd code
+git checkout chapter_10_commands
+# or, if you want to code along, checkout the previous chapter:
+git checkout chapter_09_all_messagebus
+----
+====
 
 === Commands and Events
 
@@ -43,7 +43,7 @@ Commands capture _intent_. They express our wish for the system to do something.
 As a result, when they fail, the sender needs to receive error information.
 
 Events are broadcast by an actor to all interested listeners. When we publish the
-`batch_quantity_changed` we don't know who's going to pick it up. We name events
+`BatchQuantityChanged` we don't know who's going to pick it up. We name events
 with past-tense verb phrases like "order allocated to stock," or "shipment delayed."
 
 We often use events to spread the knowledge about successful commands.
@@ -64,12 +64,12 @@ e|      e| Event e| Command
 
 // TODO: Diagram of user "buy stock" -> "stock purchased"
 //                       "create batch" -> "batch created"
+// (EJ3) "ChangeBatchQuantity" -> "AllocationRequired" will be a less trivial example
 
-
-What kinds of commands do we have in our system right now? 
+What kinds of commands do we have in our system right now?
 
 [[commands_dot_py]]
-.Pulling out some commands (src/allocation/commands.py)
+.Pulling out some commands (src/allocation/domain/commands.py)
 ====
 [source,python]
 ----
@@ -98,19 +98,20 @@ class ChangeBatchQuantity(Command):  #<3>
 
 <1> `commands.Allocate` will replace `events.AllocationRequired`
 <2> `commands.CreateBatch` will replace `events.BatchCreated`
-<3> `commands.ChangeBatchQuantity` will replace `events.BatchQuantityChanged``
+<3> `commands.ChangeBatchQuantity` will replace `events.BatchQuantityChanged`
 
-//TODO: consider keeping BatchQuantityChanged as an event?
 
-Each of the use-cases that we discussed earlier in the book is really a command,
-an instruction for the system to try and do a thing. To unify the two halves of
-the domain, we're going to make a simple change: instead of directly invoking
-our use case functions, like we did before, we're going to take these
-commands, and we're going to put them on the message bus. As a result, our
-message bus changes somewhat.
+=== Differences in Exception-handling
 
-[[new_messagebus]]
-.Messagebus handles events and commands differently (src/allocation/messagebus.py)
+
+Just changing the names and verb tenses is all very well, but it won't actually
+change the behavior of our system.  We want to treat events and commands similarly,
+but not exactly the same.  Let's see how our message bus changes.
+
+
+
+[[messagebus_dispatches_differently]]
+.Dispatch events and commands differently (src/allocation/service_layer/messagebus.py)
 ====
 [source,python]
 ----
@@ -118,87 +119,111 @@ Message = Union[commands.Command, events.Event]
 
 
 def handle(message: Message, uow: unit_of_work.AbstractUnitOfWork):  #<1>
-    if isinstance(message, events.Event):
-        handle_event(message, uow)
-    elif isinstance(message, commands.Command):
-        return handle_command(message, uow)
-    else:
-        raise Exception(f'{message} was not an Event or Command')
+    results = []
+    queue = [message]
+    while queue:
+        message = queue.pop(0)
+        if isinstance(message, events.Event):
+            handle_event(message, queue, uow)  #<2>
+        elif isinstance(message, commands.Command):
+            cmd_result = handle_command(message, queue, uow)  #<2>
+            results.append(cmd_result)
+        else:
+            raise Exception(f'{message} was not an Event or Command')
+    return results
+----
+====
+
+<1> It still has a main `handle()` entrypoint, that takes a `message`, which may
+    be a command or an event.
+
+<2> We dispatches events and commands to two different helper functions, shown next.
 
 
-def handle_event(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):  #<2>
-    for handler in EVENT_HANDLERS[type(event)]:
+[[handle_event]]
+.Events cannot interrupt the flow (src/allocation/service_layer/messagebus.py)
+====
+[source,python]
+----
+def handle_event(
+    event: events.Event,
+    queue: List[Message],
+    uow: unit_of_work.AbstractUnitOfWork
+):
+    for handler in EVENT_HANDLERS[type(event)]:  #<1>
         try:
-            print('handling event', event, 'with handler', handler, flush=True)
+            logger.debug('handling event %s with handler %s', event, handler)
             handler(event, uow=uow)
-        except:  #<2>
-            print(f'Exception handling event {event}\n:{traceback.format_exc()}')
-            continue
+            queue.extend(uow.collect_new_events())
+        except Exception:
+            logger.exception('Exception handling event %s', event)
+            continue  #<2>
+----
+====
+
+<1> Events go to a dispatcher that can delegate to multiple handlers per
+    event.
+
+<2> It catches and logs any errors, but does not let them interrupt
+    message processing.
 
 
-def handle_command(command, uow: unit_of_work.AbstractUnitOfWork):  #<3>
-    print('handling command', command, flush=True)
+[[handle_command]]
+.Commands reraise exceptions (src/allocation/service_layer/messagebus.py)
+====
+[source,python]
+----
+def handle_command(
+    command: commands.Command,
+    queue: List[Message],
+    uow: unit_of_work.AbstractUnitOfWork
+):
+    logger.debug('handling command %s', command)
     try:
-        handler = COMMAND_HANDLERS[type(command)]
-        return handler(command, uow=uow)
-    except Exception as e:
-        print(f'Exception handling command {command}: {e}')
-        raise e  #<3>
+        handler = COMMAND_HANDLERS[type(command)]  #<1>
+        result = handler(command, uow=uow)
+        queue.extend(uow.collect_new_events())
+        return result  #<3>
+    except Exception:
+        logger.exception('Exception handling command %s', command)  
+        raise  #<2>
+----
+====
 
 
+<1> The command dispatcher expects just one handler per command.
+
+<2> If any errors are raised, they fail-fast and will bubble up.
+
+<3> `return result` is only temporary; as mentioned in <<temporary_ugly_hack>>,
+    it's a temporary hack to allow the message bus to return the batch
+    reference for the API to use.  We'll fix this in <<chapter_12_cqrs>>.
+
+
+We also change the single `HANDLERS` dict into different ones for
+commands and events.  Commands can only have one handler, according
+to our convention.
+
+[[new_handlers_dicts]]
+.New handlers dicts (src/allocation/service_layer/messagebus.py)
+====
+[source,python]
+----
 EVENT_HANDLERS = {
     events.OutOfStock: [handlers.send_out_of_stock_notification],
-}  # type: Dict[Type[events.Event], List[Callable]]  #<2>
+}  # type: Dict[Type[events.Event], List[Callable]]
 
 COMMAND_HANDLERS = {
     commands.Allocate: handlers.allocate,
     commands.CreateBatch: handlers.add_batch,
     commands.ChangeBatchQuantity: handlers.change_batch_quantity,
-}  # type: Dict[Type[commands.Command], Callable]  #<3>
+}  # type: Dict[Type[commands.Command], Callable]
 ----
 ====
 
 
-<1> It still has a main `handle()` entrypoint, that takes a message, which may
-    be a command or an event.
 
-<2> We dispatch to a function for handling events.  It can delegate to multiple
-    handlers per event, and it catches and logs any errors, but does not let them
-    interrupt message processing.
-
-<3> The command handler expects just one handler per command.  If any errors
-    are raised, they fail hard and will bubble up.
-
-
-
-
-Why does `handle_command` have a `return`, but `handle_events` doesn't, we hear
-you ask?  It's so that we can return the batchref from the API.  
-
-[[flask_uses_command]]
-.Flask gets a response from the command handler (src/allocation/flask_app.py)
-====
-[source,python]
-----
-@app.route("/allocate", methods=['POST'])
-def allocate_endpoint():
-    try:
-        cmd = commands.Allocate(
-            request.json['orderid'], request.json['sku'], request.json['qty'],
-        )
-        uow = unit_of_work.SqlAlchemyUnitOfWork()
-        batchref = messagebus.handle(cmd, uow)
-    except exceptions.InvalidSku as e:
-        return jsonify({'message': str(e)}), 400
-
-    return jsonify({'batchref': batchref}), 201
-----
-====
-
-It's the same wart we've drawn attention to before.  In <<chapter_11_cqrs>>
-we'll look at a way of separating out command handling from read requests.
-
-=== Events, Commands, and Error Handling
+=== Discussion: Events, Commands, and Error Handling
 
 Many developers get uncomfortable at this point, and ask "what happens when an
 event fails to process. How am I supposed to make sure the system is in a
@@ -208,7 +233,7 @@ If we manage to process half of the events during `messagebus.handle` before an
 out-of-memory error kills our process, how do we mitigate problems caused by the
 lost messages?
 
-Let's start with the worst case: we fail to handle and event, and the system is
+Let's start with the worst case: we fail to handle an event, and the system is
 left in an inconsistent state. What kind of error would cause this? Often in our
 systems we can end up in an inconsistent state when only half an operation is
 completed.
@@ -245,33 +270,40 @@ successful.
 Let's take another example to see why not.
 
 Imagine we are building an e-commerce website that sells expensive luxury goods.
-Our marketing department want to reward customers for repeat visits. We will
+Our marketing department wants to reward customers for repeat visits. We will
 flag customers as VIPs once they make their third purchase, and this will
 entitle them to priority treatment and special offers. Our acceptance criteria
 for this story read as follows:
 
+
+[source,gherkin]
+[role="skip"]
+----
 Given a customer with two orders in their history,
-when the customer places a third order,
-they should be flagged as a VIP.
+When the customer places a third order,
+Then they should be flagged as a VIP.
 
 When a customer first becomes a VIP
-we should send them an email to congratulate them
+Then we should send them an email to congratulate them
+----
 
 Using the techniques we've already discussed in this book, we decide that we
-want to build a new History aggregate that records orders and can raise domain
+want to build a new `History` aggregate that records orders and can raise domain
 events when rules are met. We will structure the code like this:
 
+// TODO: (EJ2) The Aggregate base class doesn't add anything here and could be confusing.
+//       Better to just do class History: # Aggregate
+
 [[vip_customer_listing]]
-.VIP Customer
+.VIP Customer (example code for a different project)
 ====
 [source,python]
 [role="skip"]
 ----
-
-class History (Aggregate):
+class History(Aggregate):
 
     def __init__(self, customer_id: int):
-        self.orders = Set() # Set[HistoryEntry]
+        self.orders = set() # Set[HistoryEntry]
         self.customer_id = customer_id
 
     def record_order(self, order_id: str, order_amount: int): #<1>
@@ -309,7 +341,7 @@ def congratulate_vip_customer(uow, event: CustomerBecameVip): #<4>
             customer.email_address,
             f'Congratulations {customer.first_name}!'
         )
-        
+
 ----
 ====
 
@@ -353,6 +385,7 @@ and structure helps us to reason about our systems as they grow larger and more
 complex.
 
 
+[[recovering_from_errors]]
 === Recovering From Errors Synchronously
 
 Hopefully we've convinced you that it's okay for events to fail independently
@@ -360,22 +393,27 @@ from the commands that raised them. What should we do, then, to make sure we
 can recover from errors when they inevitably occur?
 
 The first thing we need is to know _when_ an error has occurred, and for that we
-usually rely on logs. 
+usually rely on logs.
 
 Let's look again at the 'handle_event' method from our message bus.
 
-[[messagebus_logging_with_print]]
-.Current handle function (src/allocation/messagebus.py)
+[[messagebus_logging]]
+.Current handle function (src/allocation/service_layer/messagebus.py)
 ====
-[source,python,highlight=4;7]
+[source,python,highlight=8;12]
 ----
-def handle_event(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):
+def handle_event(
+    event: events.Event,
+    queue: List[Message],
+    uow: unit_of_work.AbstractUnitOfWork
+):
     for handler in EVENT_HANDLERS[type(event)]:
         try:
-            print('handling event', event, 'with handler', handler, flush=True)
+            logger.debug('handling event %s with handler %s', event, handler)
             handler(event, uow=uow)
-        except:
-            print(f'Exception handling event {event}\n:{traceback.format_exc()}')
+            queue.extend(uow.collect_new_events())
+        except Exception:
+            logger.exception('Exception handling event %s', event)
             continue
 ----
 ====
@@ -384,18 +422,17 @@ When we handle a message in our system, the first thing we do is write a log
 line to record what we're about to do. For our CustomerBecameVIP use case, the
 logs might read:
 
-    "Handling event CustomerBecameVIP(customer_id=12345)
-    with handler <function congratulate_vip_customer at 0x10ebc9a60>"
+----
+Handling event CustomerBecameVIP(customer_id=12345)
+with handler <function congratulate_vip_customer at 0x10ebc9a60>
+----
 
-Because we've chosen to use data classes (or named tuples) for our message types
-we get a neatly printed summary of the incoming data that we can copy and paste
-into a python shell to recreate the object.
+Because we've chosen to use dataclasses for our message types we get a neatly
+printed summary of the incoming data that we can copy and paste into a Python
+shell to recreate the object.
 
 When an error occurs, we can use the logged data to either reproduce the problem
 in a unit test, or replay the message into the system.
-
-NOTE: In the next chapter we'll show how ports and adapters makes it easy for us
-      to replay messages for testing or administrative tasks!
 
 Manual replay works well for cases where we need to fix a bug before we can
 re-process an event, but our systems will _always_ experience some background
@@ -406,9 +443,8 @@ For most of those cases, we can recover elegantly by trying again. As the
 proverb says, "if at first you don't succeed, retry the operation with an
 exponentially increasing back-off period".
 
-
 [[messagebus_handle_event_with_retry]]
-.Handle with Retry
+.Handle with Retry (src/allocation/service_layer/messagebus.py)
 ====
 [source,python]
 [role="skip"]
@@ -417,7 +453,12 @@ from tenacity import Retrying, RetryError, stop_after_attempt, wait_exponential 
 
 ...
 
-def handle_event(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):
+def handle_event(
+    event: events.Event,
+    queue: List[Message],
+    uow: unit_of_work.AbstractUnitOfWork
+):
+
     for handler in EVENT_HANDLERS[type(event)]:
         try:
             for attempt in Retrying(  #<2>
@@ -426,25 +467,36 @@ def handle_event(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):
             ):
 
                 with attempt:
-                  print('handling event', event, 'with handler', handler)
-                  handler(event, uow=uow)
-        except RetryError:
-            print('Failed to handle event, retrying')
+                    logger.debug('handling event %s with handler %s', event, handler)
+                    handler(event, uow=uow)
+                    queue.extend(uow.collect_new_events())
+        except RetryError as retry_failure:
+            logger.error(
+                'Failed to handle event %s times, giving up!,
+                retry_failure.last_attempt.attempt_number
+            )
+            continue
 
 ----
 ====
 
-<1> Tenacity is a python library that implements common patterns for retrying.
+<1> Tenacity is a Python library that implements common patterns for retrying.
+
 <2> Here we configure our message bus to retry operations up to three times,
     with an exponentially increasing wait between attempts.
 
 Retrying operations that might fail is probably the single best way to improve
-the resilience of our software. Again, the unit of work and command handler 
+the resilience of our software. Again, the unit of work and command handler
 patterns mean that each attempt starts from a consistent state, and won't leave
 things half-finished.
 
+WARNING: At some point, regardless of tenacity, we'll have to give up trying to
+    process the message. Building reliable systems with distributed messages is
+    hard and we have to skim over some tricky bits. There's pointers to more
+    reference materials in chapter 10 and the epilogue.
 
-[[chapter_09_commands_and_events_tradeoffs]]
+
+[[chapter_10_commands_and_events_tradeoffs]]
 [options="header"]
 .Splitting commands and events: The trade-offs
 |===
@@ -467,4 +519,4 @@ a|
 |===
 
 
-TODO: discussion, can events raise commands?
+// TODO: discussion, can events raise commands?

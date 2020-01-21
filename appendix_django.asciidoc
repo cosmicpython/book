@@ -16,15 +16,14 @@ package next to our main allocation code:
 ----
 ├── src
 │   ├── allocation
-│   │   ├── config.py
-│   │   ├── model.py
-│   │   ├── repository.py
-│   │   ├── services.py
-│   │   └── unit_of_work.py
+│   │   ├── __init__.py
+│   │   ├── adapters
+│   │   │   ├── __init__.py
+...
 │   ├── djangoproject
 │   │   ├── alloc
-│   │   │   ├── apps.py
 │   │   │   ├── __init__.py
+│   │   │   ├── apps.py
 │   │   │   ├── migrations
 │   │   │   │   ├── 0001_initial.py
 │   │   │   │   └── __init__.py
@@ -43,7 +42,19 @@ package next to our main allocation code:
     │   └── test_api.py
     ├── integration
     │   ├── test_repository.py
-#...
+...
+----
+====
+
+
+[TIP]
+====
+You can find our code for this chapter at
+https://github.com/cosmicpython/code/tree/appendix_django[github.com/cosmicpython/code/tree/appendix_django].
+
+----
+git clone https://github.com/cosmicpython/code.git && cd code
+git checkout appendix_django
 ----
 ====
 
@@ -64,6 +75,7 @@ some raw SQL with a call to the Django ORM / Queryset language:
 [source,python]
 ----
 from djangoproject.alloc import models as django_models
+
 
 @pytest.mark.django_db
 def test_repository_can_save_a_batch():
@@ -104,7 +116,9 @@ def test_repository_can_retrieve_a_batch_with_allocations():
     assert retrieved == expected  # Batch.__eq__ only compares reference
     assert retrieved.sku == expected.sku
     assert retrieved._purchased_quantity == expected._purchased_quantity
-    assert retrieved._allocations == {model.OrderLine("order1", sku, 12)}
+    assert retrieved._allocations == {
+        model.OrderLine("order1", sku, 12),
+    }
 ----
 ====
 
@@ -112,7 +126,7 @@ Here's how the actual repository ends up looking:
 
 
 [[django_repository]]
-.A Django repository. (src/allocation/repository.py)
+.A Django repository. (src/allocation/adapters/repository.py)
 ====
 [source,python]
 ----
@@ -137,7 +151,10 @@ class DjangoRepository(AbstractRepository):
 
 
 You can see that the implementation relies on the Django models having
-some custom methods for translating to and from our domain model.
+some custom methods for translating to and from our domain model.footnote:[
+The DRY-Python project people have built a tool called
+https://mappers.readthedocs.io/en/latest/[mappers] which looks like it might
+help to minimise boilerplate for this sort of thing.]
 
 
 ==== Custom Methods on Django ORM Classes to Translate To/From Our Domain Model
@@ -154,7 +171,7 @@ Those custom methods look something like this:
 [source,python]
 ----
 from django.db import models
-from allocation import model as domain_model
+from allocation.domain import model as domain_model
 
 class Batch(models.Model):
     reference = models.CharField(max_length=255)
@@ -260,12 +277,12 @@ def test_rolls_back_on_error():
 
 
 And the implementation is quite simple, although it took me a few
-goes to find what actual invocation of Django's transaction magic 
+goes to find what actual invocation of Django's transaction magic
 would work:
 
 
 [[start_uow_django]]
-.Unit of Work adapted for Django (src/allocation/unit_of_work.py)
+.Unit of Work adapted for Django (src/allocation/service_layer/unit_of_work.py)
 ====
 [source,python]
 ----
@@ -306,7 +323,7 @@ class DjangoUnitOfWork(AbstractUnitOfWork):
 
 === API: Django Views Are Adapters
 
-The Django _views.py_ file ends up being almost identical to the 
+The Django _views.py_ file ends up being almost identical to the
 old _flask_app.py_, because our architecture means it's a very
 thin wrapper around our service layer (which didn't change at all btw).
 
@@ -349,25 +366,92 @@ def allocate(request):
 ====
 
 
-=== Conclusions: Would You Bother?
+=== Why was this all so hard?
 
 OK it works but it does feel like more effort than Flask/SQLAlchemy.  Why is
-that, and when might you still choose Django?
+that?
 
-- it's hard because the ORM doesn't work in the same way.  We don't have
-  an equivalent of the SQLAlchemy classical mapper, so our ActiveRecord
-  and our domain model can't be the same object.  Instead we have to build a
-  manual translation layer behind the repository instead. That's more work
-  (although once it's done the ongoing maintenance burden shouldn't be too high).
+The main reason at a low level is because Django's ORM doesn't work in the same
+way.  We don't have an equivalent of the SQLAlchemy classical mapper, so our
+ActiveRecord and our domain model can't be the same object.  Instead we have to
+build a manual translation layer behind the repository instead. That's more
+work (although once it's done the ongoing maintenance burden shouldn't be too
+high).
 
-- it's also hard because you need to integrate `pytest-django` and think
-  carefully about test databases etc
+Because Django is so tightly coupled to the database, you have to use helpers
+like `pytest-django` and thinking carefully about test databases, right from
+the very first line of code, in a way that we didn't have to when we started
+out with our pure domain model.
 
-So why might you still do it?
+But at a higher level, it's because the entire reason that Django is so great
+is that it's designed around the sweet spot of making it easy to build CRUD
+apps with minimal boilerplate.  But the entire thrust of our book is about
+what to do when your app is no longer a simple CRUD app.
 
-* when migrating an existing project that has Django?
-* or because you want the Django Admin? (but we'd have to say that's likely to
-  be a bad idea, it goes against the grain of wanting to decouple your model
-  and business logic from the ORM...)
-  
-// TODO: Expand on this wrap-up?
+At that point, Django starts hindering more than it helps.  Things like the
+Django Admin, which are so awesome when you start out, become actively dangerous
+if the whole point of your app is to build a complex set of rules and modelling
+around the workflow of state changes.  The Django admin bypasses all of that.
+
+=== What To Do If You Already Have Django
+
+So what should you do if you want to apply some of the patterns in this book
+to a Django app?  We'd say:
+
+* Repository and Unit of Work pattern are going to be quite a lot of work. The
+  main thing they will buy you in the short term is faster unit tests, so
+  evaluate whether that feels worth it in your case.  In the longer term, they
+  decouple your app from Django and the database, so if you anticipate wanting
+  to migrate away from either of those, Repository and UoW are a good idea.
+
+* Service Layer might be of interest if you're seeing a lot of duplication in
+  your views.py.  It can be a good way of thinking about your use cases,
+  separately from your web endpoints.
+
+* You can still theoretically do DDD and domain modelling with Django models,
+  tightly coupled as they are to the database; you may be slowed down by
+  migrations, but it shouldn't be fatal.  So, as long as your apps is not too
+  complex and your tests not too slow, you may be able to get something out of
+  the "fat models" approach: push as much logic down to your models as possible,
+  and apply patterns like Entity, Value Object and Aggregate.  Although see
+  caveat below
+
+With that said,
+https://forum.djangoproject.com/t/where-to-put-business-logic-in-django/282/7[word
+in the Django community] is that people find that "fat models" runs into
+scalability problems of its own, particularly around managing interdependencies
+between apps.  In those cases, there's a lot to be said for extracting out a
+"business logic" or "domain" layer to sit between your views and forms, and
+your models.py which you can then keep as minimal as possible.
+
+=== Steps along the way
+
+Supposing you're working on a Django project which you're not sure is going
+to get complex enough to warrant the patterns we recommend, but you still
+want to put a few steps in place to make your life easier, both in the medium
+term, and if you want to migrate to some of our patterns later?
+
+* One piece of advice we've heard is to put a __logic.py__ into every Django app,
+  from day one.  This gives you a place to put business logic, and to keep your
+  forms, views and models free of business logic.  It can become a stepping stone
+  for moving to a fully decoupled domain model and/or service layer later.
+
+* A business logic layer might start out working with Django model objects,
+  and only later become fully decoupled from the framework and work on
+  plain Python data structures.
+
+* For the read-side, you can get some of the benefits of CQS by putting reads
+  into one place, avoiding ORM calls sprinkled all over the place
+
+* When separating out modules for reads and modules for domain logic, it
+  may be worth decoupling yourself from the django apps hierarchy.  Business
+  concerns will cut across them.
+
+
+NOTE: We'd like to give a shout out to David Seddon and Ashia Zawaduk for
+    talking through some of the ideas in this chapter.  They did their best to
+    stop us from saying anything really stupid about a topic we don't really
+    have enough personal experience of, but they may have failed.
+
+For more thoughts and actual lived experience dealing with existing
+applications, read on to <<epilogue_1_how_to_get_there_from_here>>.

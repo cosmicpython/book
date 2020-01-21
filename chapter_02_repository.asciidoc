@@ -9,48 +9,28 @@ allowing us to decouple our model layer from the data layer.  We'll see a
 concrete example of how this simplifying abstraction makes our system more
 testable by hiding the complexities of the database.
 
-<<chapter_02_class_diagram>> shows a little preview of what we're going to
-build: a `Repository` class that sits between `SqlAlchemy` (our ORM) and our
-Domain Model's `Batch` classes.
+<<maps_chapter_02>> shows a little preview of what we're going to build:
+a `Repository` object that sits between our Domain Model and the database.
 
-[[chapter_02_class_diagram]]
-.Batch, Repository and SqlAlchemy
-image::images/chapter_02_class_diagram.png[]
-[role="image-source"]
+[[maps_chapter_02]]
+.Before and after Repository Pattern
+image::images/maps_chapter_02.png[]
+
+// TODO add a legend showing what the colours mean in the diagrams.  And
+// ideally some of the shapes and arrows and stuff too...
+
+[TIP]
+====
+You can find our code for this chapter at
+https://github.com/cosmicpython/code/tree/chapter_02_repository[github.com/cosmicpython/code/tree/chapter_02_repository].
+
 ----
-[plantuml, chapter_02_class_diagram]
-@startuml
-
-package allocation {
-
-  class BatchRepository {
-    add (batch)
-    get (reference)
-    list ()
-  }
-
-  class Batch {
-    allocate ()
-    ...
-  }
-
-
-}
-
-package SqlAlchemy {
-  class Session {
-    query ()
-    add ()
-  }
-
-}
-
-  BatchRepository *--- Session : abstracts >
-  BatchRepository -> Batch : fetches >
-
-@enduml
+git clone https://github.com/cosmicpython/code.git && cd code
+git checkout chapter_02_repository
+# or, if you want to code along, checkout the previous chapter:
+git checkout chapter_01_domain_model
 ----
-
+====
 
 
 === Persisting Our Domain Model
@@ -79,11 +59,11 @@ bottom-up development, and start to think about storage and databases.
 === Some Pseudocode: What Are We Going to Need?
 
 When we build our first API endpoint, we know we're going to have
-some code that looks more or less like <<api_endpoint_pseudocode>>
-footnote:[we've used Flask because it's lightweight, but you don't need
+some code that looks more or less like <<api_endpoint_pseudocode>>.
+(We've used Flask because it's lightweight, but you don't need
 to understand Flask to understand this book.  One of the main points
 we're trying to make is that your choice of web framework should be a minor
-implementation detail].
+implementation detail).
 
 
 [[api_endpoint_pseudocode]]
@@ -108,6 +88,8 @@ def allocate_endpoint():
 We'll need a way to retrieve batch info from the DB and instantiate our domain
 model objects from it, and we'll also need a way of saving them back to the
 database.
+
+_(What? Oh, "gubbins" is a British word for "stuff".  You can just ignore that.  It's pseudocode, OK?)_
 
 
 === Applying the Dependency Inversion Principle to the Database
@@ -148,14 +130,14 @@ image::images/onion_architecture.png[]
 +------------------------+
            |
            V
-   +---------------------------------------------------+
-   |                   Domain Model                    |
-   +---------------------------------------------------+
++--------------------------------------------------+
+|                  Domain Model                    |
++--------------------------------------------------+
                                         ^
                                         |
-                               +-------------------+
-                               |   Database Layer  |
-                               +-------------------+
+                             +---------------------+
+                             |    Database Layer   |
+                             +---------------------+
 ----
 
 
@@ -176,7 +158,10 @@ https://blog.ploeh.dk/2013/12/03/layers-onions-ports-adapters-its-all-the-same/[
 on the topic.]
 
 We'll get into some of the nitty-gritty around "depending on abstractions,"
-and whether there is a Pythonic equivalent of interfaces, later in the book.
+and whether there is a Pythonic equivalent of interfaces,
+<<depend_on_abstractions,later in the book>>.
+
+See also <<what_is_a_port_and_what_is_an_adapter>> later in this chapter.
 *******************************************************************************
 
 
@@ -324,7 +309,11 @@ def start_mappers():
 <1> The ORM imports (or "depends on" or "knows about") the domain model, and
     not the other way around.
 
-<2> We define our database tables and columns using SQLAlchemy's abstractions.
+<2> We define our database tables and columns using SQLAlchemy's
+    abstractions.footnote:[Even in projects where we don't use an ORM, we
+    would often use SQLAlchemy alongside Alembic to declaratively create
+    schemas in Python and manage migrations; also to manage database connections
+    and sessions.]
 
 <3> And when we call the `mapper` function, SQLAlchemy does its magic to bind
     our domain model classes to the various tables we've defined.
@@ -424,9 +413,9 @@ def allocate_endpoint():
 
     # extract order line from request
     line = OrderLine(
-        request.params['order_id'],
-        request.params['sku'],
-        request.params['qty'],
+        request.json['orderid'],
+        request.json['sku'],
+        request.json['qty'],
     )
 
     # load all batches from the DB
@@ -478,7 +467,7 @@ def modify_a_batch(batch_id, new_quantity):
 
 
 Even though our objects are in memory, we need to put them _somewhere_ so we can
-find them again. Our in memory data would let us add new objects, just like a
+find them again. Our in-memory data would let us add new objects, just like a
 list or a set, and since the objects are in memory we never need to call a
 `.save()` method, we just fetch the object we care about, and modify it in memory.
 
@@ -490,12 +479,12 @@ repository, and `get` to return a previously added item.footnote:[
 You may be thinking, what about `list` or `delete` or `update`, but in the
 ideal world, we only modify our model objects one at a time, and delete is
 usually handled as a soft-delete, ie `batch.cancel()`. Finally, update is
-taken care of by the Unit of Work, as we'll see in <<chapter_05_uow>>.]
+taken care of by the Unit of Work, as we'll see in <<chapter_06_uow>>.]
 We stick rigidly to using these methods for data access in our domain and our
 service layer. This self-imposed simplicity stops us from coupling our domain
 model to the database.
 
-Here's what an abstract base class for our repository would look like:
+Here's what an abstract base class (ABC) for our repository would look like:
 
 [[abstract_repo]]
 .The simplest possible repository (repository.py)
@@ -516,12 +505,19 @@ class AbstractRepository(abc.ABC):
 
 WARNING: We're using abstract base classes in this book for didactic reasons:
     we hope they help explain what the interface of the repository abstraction
-    is.  In real life, we've often found ourselves deleting ABCs from our
+    is.  In real life, we've sometimes found ourselves deleting ABCs from our
     production code, because Python makes it too easy to ignore them, and
     they end up unmaintained and, at worst, misleading.
-    In practice we tend to rely on Python's duck-typing to enable abstractions.
+    In practice we often just rely on Python's duck-typing to enable abstractions.
     To a Pythonista, a repository is _any_ object that has `add(thing)` and
     `get(id)` methods.
+
+//TODO (hynek) mention protocols as an alternative.  (also link to later comment
+// about us hating on typing+abcs too often, + we should just have one sidebar on it to
+// get it out of our system)
+// (EJ2) ABCs are mentioned several times, so I think they could be consolidated too. 
+//        Could be an opportunity to drop a nugget on InterfaceSegregationPrinciple 
+//       and duck typing.
 
 <1> Python tip: `@abc.abstractmethod` is one of the only things that makes
     ABCs actually "work" in Python.   Python will refuse to let you instantiate
@@ -536,6 +532,7 @@ NOTE: To really reap the benefits of ABCs (such as they may be) you'll want to
     be running some helpers like `pylint` and `mypy`.
 
 
+
 ==== What Is the Trade-Off?
 
 
@@ -547,8 +544,7 @@ of nothing.
 ____
 
 Whenever we introduce an architectural pattern in this book, we'll always be
-trying to ask: "what do we get for this?  And what does it cost us?."
-
+trying to ask: "What do we get for this?  And what does it cost us?."
 
 Usually at the very least we'll be introducing an extra layer of abstraction,
 and although we may hope it will be reducing complexity overall, it does add
@@ -635,7 +631,7 @@ def test_repository_can_save_a_batch(session):
 <2> We keep the `.commit()` outside of the repository, and make
     it the responsibility of the caller.  There are pros and cons for
     this, some of our reasons will become clearer when we get to
-    <<chapter_05_uow>>.
+    <<chapter_06_uow>>.
 
 <3> And we use the raw SQL to verify that the right data has been saved.
 
@@ -671,11 +667,13 @@ def test_repository_can_retrieve_a_batch_with_allocations(session):
     repo = repository.SqlAlchemyRepository(session)
     retrieved = repo.get("batch1")
 
-    expected = model.Batch("batch1", "GENERIC-SOFA", 100, eta=None)  #<3>
-    assert retrieved == expected  # Batch.__eq__ only compares reference
-    assert retrieved.sku == expected.sku
+    expected = model.Batch("batch1", "GENERIC-SOFA", 100, eta=None)
+    assert retrieved == expected  # Batch.__eq__ only compares reference  #<3>
+    assert retrieved.sku == expected.sku  #<4>
     assert retrieved._purchased_quantity == expected._purchased_quantity
-    assert retrieved._allocations == {model.OrderLine("order1", "GENERIC-SOFA", 12)}  #<3>
+    assert retrieved._allocations == {
+        model.OrderLine("order1", "GENERIC-SOFA", 12),
+    }  #<4>
 ----
 ====
 
@@ -687,9 +685,12 @@ def test_repository_can_retrieve_a_batch_with_allocations(session):
     the point is to create a couple of different batches, and for the
     batch we're interested in to have one existing order line allocated to it.
 
-<3> And that's what we verify here (including an explicit check on the
-    `._allocations` attribute of our domain model, which, if you remember,
-    is a Python set of `OrderLine` objects).
+<3> And that's what we verify here.  The first `assert ==` checks that the
+    types match, and that the reference is the same (because, if you remember,
+    `Batch` is an Entity, and we have a custom ++__eq__++ for it).
+
+<4> So we also explicitly check on its major attributes, including 
+    `._allocations`, which is a Python set of `OrderLine` Value Objects.
 
 Whether or not you painstakingly write tests for every model is a judgement
 call.  Once you have one class tested for create/modify/save, you might be
@@ -812,6 +813,30 @@ TIP: Building fakes for your abstractions is an excellent way to get design
     complicated.
 
 
+[[what_is_a_port_and_what_is_an_adapter]]
+=== What is a Port and What is an Adapter, in Python?
+
+We don't want to dwell on the terminology too much here because the main thing
+we want to think about is dependency inversion, and the specifics of the
+technique you use don't matter too much.  And we're also aware that different
+people use slightly different definitions.
+
+"Ports and Adapters" came out of the OO world, and the definition we hold onto
+is that the _Port_ is the _interface_ between our application and whatever
+it is we wish to abstract away, and the _Adapter_ is the _implementation_
+behind that interface or abstraction.
+
+Now Python doesn't have interfaces _per se_, so that means that although it's
+usually easy to say what's an adapter, defining the port can be harder.  If
+you're using an abstract base class, then that's the port.  If not, the port
+is just the duck type that your adapters conform to, and that your core application
+expects -- the function and method names in use, and their argument names and types.
+
+Concretely, in this chapter, `AbstractRepository` is the port, and
+`SqlAlchemyRepository` and `FakeRepository` are the adapters.
+
+
+
 === Wrap-Up
 
 
@@ -848,7 +873,7 @@ which you might call a DAO. Repository is more close to the business domain.
 
 [[chapter_02_repository_tradeoffs]]
 [options="header"]
-.Repository Pattern and Peristence Ignorance: The Trade-Offs
+.Repository Pattern and Persistence Ignorance: The Trade-Offs
 |===
 |Pros|Cons
 a|
@@ -868,23 +893,31 @@ a|
 
 a|
 * An ORM already buys you some decoupling.  Changing foreign keys might be hard,
-  but it should be pretty easy to swap between, eg, MySql and Postgres, if you
+  but it should be pretty easy to swap between, eg, MySQL and Postgres, if you
   ever need to.
 
-* Maintaining the ORM mappings by hand is extra work and extra code.
+////
+[KP] I always found this benefit of ORMs rather weak. In the rare cases when I
+actually had to switch DB engines, the payoff was high enough to justify some
+additional work. Also, if you are using "interesting" DB features (say: special
+Postgres fields) you usually lose the portability.
+////
+
+
+* Maintaining ORM mappings by hand is extra work and extra code.
 
 * Any extra layer of indirection always increases maintenance costs and
-  adds a 'wtf factor' for Python programmers who've never seen Repository Pattern
-  before
+  adds a "WTF factor" for Python programmers who've never seen Repository Pattern
+  before.
 |===
 
-
-<<domain_model_tradeoffs_diagram>>footnote:[Diagram inspired by a post called
-https://www.reflektis.com/blog/global-complexity-local-simplicity/[Global complexity, local simplicity],
-by Rob Vens)] shows the basic thesis: yes, for simple cases, a decoupled domain
-model is harder work than a simple ORM / ActiveRecord pattern. But the more
-complex the domain, the more an investment in freeing yourself from
-infrastructure concerns will pay off, in terms of the ease of making changes:
+<<domain_model_tradeoffs_diagram>> shows the basic thesis: yes, for simple
+cases, a decoupled domain model is harder work than a simple ORM / ActiveRecord
+pattern. But the more complex the domain, the more an investment in freeing
+yourself from infrastructure concerns will pay off, in terms of the ease of
+making changes:footnote:[Diagram inspired by a post called
+https://www.reflektis.com/blog/global-complexity-local-simplicity/[Global
+complexity, local simplicity], by Rob Vens)]
 
 
 [[domain_model_tradeoffs_diagram]]
@@ -925,12 +958,12 @@ Imagine, for example, if we decide one day that we want to change allocations
 to live on the `OrderLine` instead of on the `Batch` object: if we were using
 Django, say, we'd have to define and think through the database migration
 before we could run any tests.  As it is, because our model is just plain
-Python objects, we can change a `set()` to being a new attribute, without
+old Python objects, we can change a `set()` to being a new attribute, without
 needing to think about the database until later.
 
 
 You'll be wondering, how do we actually instantiate these repositories, fake or
-real? What will our flask app actually look like?  We'll find out in the next
+real? What will our Flask app actually look like?  We'll find out in the next
 exciting installment, <<chapter_04_service_layer,the Service Layer pattern>>.
 
 But first, a brief digression.

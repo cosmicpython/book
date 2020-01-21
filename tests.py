@@ -95,7 +95,7 @@ def checked_out(chapter):
 def tree_for_branch(chapter_name):
     with checked_out(chapter_name):
         return subprocess.run(
-            ['tree', '-I', '__pycache__|*.egg-info'],
+            ['tree', '-v', '-I', '__pycache__|*.egg-info'],
             cwd=Path(__file__).parent / 'code',
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             check=True
@@ -224,4 +224,4 @@ def diff_for_tag(filename, chapter_name, tag):
         check=True
     ).stdout.decode()
     assert output.strip(), f'no commit found for [{tag}]'
-    return output
+    return '\n'.join(l.rstrip() for l in output.splitlines())
