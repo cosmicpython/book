@@ -511,9 +511,6 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 ----
 ====
 
-// TODO (hynek) this is super gross API design and makes me super of angry
-// and I'm personally offended.  Also, sentences end with a period.
-
 <1> We'll change our commit method to require a private `._commit()`
     method from subclasses.
 
@@ -527,7 +524,7 @@ NOTE: Are you wondering about error-handling, what happens if one of the
     handlers fails?  We'll discuss that in detail in <<chapter_10_commands>>.
 
 
-//TODO: can we get rid of _commit()?
+//IDEA: could change ._commit() to requiring super().commit()
 
 
 [[repository_tracks_seen]]
@@ -574,15 +571,6 @@ class SqlAlchemyRepository(AbstractRepository):
 ----
 ====
 
-// TODO (hynek) now I see what you meant in your email about adding functionality
-// to the base class and yeah it's gross ;) In both cases you do something in the base
-// and then something else additionally.  this IMHO should be a wrapper and not a
-// base class
-// (EJ3) I think this pattern (._foo, .foo) is ideologically sound, but looks really gross
-//       if you do have never attended the Church of Enterprise Java.  Either wrapper
-//       or override + extend could be other options but it would probably create cascading
-//       changes.
-
 <1> For the UoW to be able to publish new events, it needs to be able to ask
     the repository for which `Product` objects have been used during this session.
     We use a `set` called `.seen` to store them.  That means our implementations
@@ -593,6 +581,12 @@ class SqlAlchemyRepository(AbstractRepository):
 
 <3> Similarly, `.get()` delegates to a `._get()` function, to be implemented by
     subclasses, in order to capture objects seen.
+
+
+NOTE: The use of `._underscorey()` methods and subclassing is definitely not
+    the only way you could implement these patterns. Have a go at the 
+    <<get_rid_of_commit,exercise for the reader>> in this chapter and experiment
+    with some alternatives.
 
 Once the UoW and repository collaborate in this way to automatically keep
 track of live objects and process their events, the service layer can now be
@@ -660,10 +654,11 @@ it's not a lot of work.  Once your project is up and running, the interface for
 your repository and UoW abstractions really don't change much.  And if you're
 using ABC's, they'll help remind you when things get out of sync.
 
+[[get_rid_of_commit]]
 .Exercise for the Reader
 ******************************************************************************
 
-Are you finding all those `_add()` and `_commit()` methods "super-gross", in
+Are you finding all those `._add()` and `._commit()` methods "super-gross", in
 the words of our beloved tech reviewer Hynek?  Does it "make you want to beat
 Harry around the head with a plushie snake?" Hey, our code listings are
 only meant to be examples, not the perfect solution!  Why not go see if you
@@ -706,8 +701,10 @@ order to get rid of those Java-ey `_commit()` methods too?
 
 https://github.com/cosmicpython/code/tree/chapter_08_events_and_message_bus_exercise
 
-switching all the ABCs to `typing.Protocol` is a good way to force yourself
-to avoid using inheritance.  Let us know if you come up with something nice!
+TIP: Switching all the ABCs to `typing.Protocol` is a good way to force yourself
+    to avoid using inheritance.
+
+Let us know if you come up with something nice!
 
 ******************************************************************************
 
