@@ -24,16 +24,12 @@ diagram, <<allocation_context_diagram_again>>.
 image::images/apwp_0102.png[]
 
 
-// TODO (DS): Up until this point you haven't really said much about how this
-// code exists in the context of a wider system. I had assumed it was a
-// microservice...Maybe earlier in the book we need to understand a bit about
-// how this code might exist in a monolith/communicate with a monolith. If the
-// answer is still via a message bus, then isn't the distributed system angle a
-// red herring here?
-
 Faced with this requirement, many teams reach for microservices integrated
 via HTTP APIs. But if they're not careful, they'll end up producing the most
 chaotic mess of all: the distributed big ball of mud.
+
+// TODO: DS - this might give the impression that the whole of part 2
+// is irrelevant for readers in a monolith context
 
 In part two, we'll show how the techniques from part one can be extended to
 distributed systems. We'll zoom out to look at how we can compose a system from
@@ -43,7 +39,7 @@ We'll see how our Service Layer and Unit of Work allow us to reconfigure our app
 to run as an asynchronous message processor, and how event driven systems help
 us to decouple Aggregates and applications from one another.
 
-//TODO (DS): It seems to me the two key themes in this book are vertical and
+//IDEA (DS): It seems to me the two key themes in this book are vertical and
 //horizontal decoupling. Did you consider choosing those for the two parts?
 
 We'll look at the following patterns and techniques:
@@ -62,4 +58,4 @@ Plus, we'll add a dependency injection framework. Which is nothing to do with
 event-driven architecture per se, but it just tidies up an awful lot of loose
 ends.
 
-TODO: a bit of blurb about making events more central to our design thinking?
+// IDEA: a bit of blurb about making events more central to our design thinking?
