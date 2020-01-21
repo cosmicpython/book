@@ -509,12 +509,6 @@ WARNING: We're using abstract base classes in this book for didactic reasons:
     To a Pythonista, a repository is _any_ object that has `add(thing)` and
     `get(id)` methods.
 
-//TODO (hynek) mention protocols as an alternative.  (also link to later comment
-// about us hating on typing+abcs too often, + we should just have one sidebar on it to
-// get it out of our system)
-// (EJ2) ABCs are mentioned several times, so I think they could be consolidated too. 
-//        Could be an opportunity to drop a nugget on InterfaceSegregationPrinciple 
-//       and duck typing.
 
 <1> Python tip: `@abc.abstractmethod` is one of the only things that makes
     ABCs actually "work" in Python.   Python will refuse to let you instantiate
@@ -523,7 +517,11 @@ WARNING: We're using abstract base classes in this book for didactic reasons:
 
 <2> `raise NotImplementedError` is nice but neither necessary nor sufficient.
     In fact, your abstract methods can have real behavior which subclasses
-    can call out to, if you want.
+    can call out to, if you want.footnote:[Many smart people will tell you that
+putting behavior into ABCs is bad design; "prefer composition over inheritance",
+and all that jazz. We've done it a few times in this book, for simplicity, but
+that doesn't mean you have to.  If you want typing without the possibility of
+inheritance, check out https://www.python.org/dev/peps/pep-0544/[PEP 544 protocols].]
 
 NOTE: To really reap the benefits of ABCs (such as they may be) you'll want to
     be running some helpers like `pylint` and `mypy`.
