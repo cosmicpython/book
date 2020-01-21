@@ -1,24 +1,24 @@
 Title: Architecture Patterns with Python
 ISBN: 9781492052203
-JIRA #: [ FILL IN ]
+JIRA #: DCPSPROD-3883
 
 
 Stylesheet: animal_theme_sass
 Toolchain: Atlas 2
 
-Atlas URL: https://atlas.oreilly.com/oreillymedia/[ FILL IN ATLAS BOOK ID ]
+Atlas URL: https://atlas.oreilly.com/oreillymedia/architecture-patterns-with-python
 
-Incoming format: [FILL IN]
-Outgoing format: HTMLBook
+Incoming format: Asciidoc
+Outgoing format: Asciidoc
 
-Preliminary pagecount: TOTAL  [ FILL IN / With or without figs? ]
+Preliminary pagecount: 292
   
-Is this project in Early Release? [FILL IN YES/NO]
+Is this project in Early Release? YES
 
 Resources
 =========
 
-** Figs: Illustrations [ FILL IN: has posted the figs / is still working on the figs]. 
+** Figs: Illustrations is still working on the figs. 
    44 total. (0 are informal; 465 are inline.)
 
    Once the figs are processed on /work, you'll need to add them to the book's repo.
@@ -45,7 +45,11 @@ Notes from Tools:
 =================
 
 ** PROD: Add any authors to project that need to be added.
-** Syntax highlighting: applied to [ FILL IN ] out of [ FILL IN ] code listings.
+** Syntax highlighting: applied to 218 out of 264 code listings.
+
+** Note that the URL of the repo has been changed to match the title.
+** The errors related to code callouts stem from two callouts that are missing their corresponding list items. These are located at chapter_13_dependency_injection.asciidoc line 689 and appendix_validation.asciidoc line 405. Please have the author advise on whether to remove the callout or add the missing list item.
+** As noted below, there are some customizations I made to the Examples. Please see TOOLSREQ-4934 for details.
 
 ** Please let Tools know ASAP if there are any other global problems for which we can help automate a fix.
 
@@ -53,12 +57,22 @@ Notes from Tools:
 Notes at arrival in production:
 ==================
 
-
+Notes for Production:
+* They are hoping to have print copies to sign at the Pycon Conference April 15-23, 2020. That's a little before the ERD, so if extra effort can be made to let this happen, it would be great. [KB added padding to the schedule to account for your honeymoon, and we have an early March FTP. If we can hold that and make this a March ERD instead of April ERD, big hurrah!]
+* Both authors live in the UK, so you may experience delays in communication. Harry functions as the lead and responds far more often than Bob. Confirm with them, but usually an okay from Harry is good enough for approval. Make sure he agrees and knows to rouse Bob on anything he wants Bob to specifically approve. [KB has worked with Harry before, he's super nice!]
+* Figure log is at https://docs.google.com/spreadsheets/d/1xg0EhcmcSklv9WxqyFbB0Kvcsj9lPGxr/edit#gid=29876908. 
+* All figures can be used as-is as far as we can tell. No need for redraws. [KB sez: these do look fine, though slight inconsistencies in style. Some of them have light blue text that may have legibility issues, so going to ask Rebecca to darken them.]
+* Authors using Examples but want the "Example X-X" bits hidden. Tools has modified the asciidoc for this project to remove the "Example X-X" from appearing, so maybe production doesn't have to do anything on this. They also have the example titles right-aligned, which is intentional (you can ask KB about Harry Percival's other book and the formatting quirks, if you're curious).
+* Watch for use of singular "I" – author voice should be plural "we"
+* Watch for sentence style headings; use ORM heading styles
+* Take a light hand in the edit, unless stuff is just wrong. If in doubt, best to query. They have some quirky ideas about writing, and I gave them more than the usual leeway. They needed some "wins" since we imposed the book's title against their will and really put the hammer down in terms of schedule. They are also proud of UK English and may try to sneak some in, including using pounds instead of dollars. I recommend letting a lot of that go if it seems insignificant.
+* Tools: in epubcheck, I see some errors related to callout list icons. [Nick: See Notes from Tools]
+* Some duplicate hardcoded part numbers (Part I: Part 1: Title) [Nick: I fixed the Part titles]
 
 ==================
 
 Please let me know about any other issues.
 
 Thanks,
-[ FILL IN ]
+-Nick
 
