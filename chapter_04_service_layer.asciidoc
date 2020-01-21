@@ -6,7 +6,7 @@ got to at the end of the Repository chapter:
 
 [[maps_service_layer_before]]
 .Before: we drive our app by talking to Repositories and the Domain Model
-image::images/maps_chapter_04_before.png[]
+image::images/apwp_0401.png[]
 
 
 In this chapter, we discuss the difference between orchestration logic,
@@ -29,7 +29,7 @@ NOTE: In our diagrams, we are using the convention that the _yellow/orange_
 
 [[maps_service_layer_after]]
 .The Service Layer will become the main way into our app
-image::images/maps_chapter_04_after.png[]
+image::images/apwp_0402.png[]
 
 
 [TIP]
@@ -780,7 +780,7 @@ and the `AbstractRepository` (the port, in ports & adapters terminology).
 
 [[service_layer_diagram_abstract_dependencies]]
 .Abstract dependencies of the service layer
-image::images/service_layer_diagram_abstract_dependencies.png[]
+image::images/apwp_0403.png[]
 [role="image-source"]
 ----
 [ditaa, service_layer_diagram_abstract_dependencies]
@@ -803,7 +803,7 @@ adapter):
 
 [[service_layer_diagram_test_dependencies]]
 .Tests provide an implementation of the abstract dependency
-image::images/service_layer_diagram_test_dependencies.png[]
+image::images/apwp_0404.png[]
 [role="image-source"]
 ----
 [ditaa, service_layer_diagram_test_dependencies]
@@ -834,7 +834,7 @@ And when we actually run our app, we swap in the "real" dependency,
 
 [[service_layer_diagram_runtime_dependencies]]
 .Dependencies at runtime
-image::images/service_layer_diagram_runtime_dependencies.png[]
+image::images/apwp_0405.png[]
 [role="image-source"]
 ----
 [ditaa, service_layer_diagram_runtime_dependencies]

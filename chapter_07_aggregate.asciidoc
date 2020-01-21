@@ -14,7 +14,7 @@ the old `allocate()` domain service available as a method on Product instead.
 
 [[maps_chapter_06]]
 .Adding the Product Aggregate
-image::images/maps_chapter_06.png[]
+image::images/apwp_0701.png[]
 
 
 Why?  Let's find out.
@@ -228,7 +228,7 @@ the world and passing them to the `allocate()` domain service...
 
 [[before_aggregates_diagram]]
 .Before: allocate against all batches using domain service
-image::images/before_aggregates_diagram.png[]
+image::images/apwp_0702.png[]
 [role="image-source"]
 ----
 [plantuml, before_aggregates_diagram, config=plantuml.cfg]
@@ -278,7 +278,7 @@ instead.
 
 [[after_aggregates_diagram]]
 .After: ask Product to allocate against its batches
-image::images/after_aggregates_diagram.png[]
+image::images/apwp_0703.png[]
 [role="image-source"]
 ----
 [plantuml, after_aggregates_diagram, config=plantuml.cfg]
@@ -538,7 +538,7 @@ with `version=4`, and the other update will be rejected.
 
 [[version_numbers_sequence_diagram]]
 .Sequence Diagram: Two Transactions Attempt a Concurrent Update on Product
-image::images/version_numbers_sequence_diagram.png[]
+image::images/apwp_0704.png[]
 [role="image-source"]
 ----
 [plantuml, version_numbers_sequence_diagram, config=plantuml.cfg]

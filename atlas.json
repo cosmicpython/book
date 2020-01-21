@@ -1,13 +1,11 @@
 {
   "branch": "master",
   "files": [
-    "cover.html",
     "titlepage.html",
     "copyright.html",
     "toc.html",
     "preface.asciidoc",
     "introduction.asciidoc",
-
     "part1.asciidoc",
     "chapter_01_domain_model.asciidoc",
     "chapter_02_repository.asciidoc",
@@ -16,7 +14,6 @@
     "chapter_05_high_gear_low_gear.asciidoc",
     "chapter_06_uow.asciidoc",
     "chapter_07_aggregate.asciidoc",
-
     "part2.asciidoc",
     "chapter_08_events_and_message_bus.asciidoc",
     "chapter_09_all_messagebus.asciidoc",
@@ -24,15 +21,12 @@
     "chapter_11_external_events.asciidoc",
     "chapter_12_cqrs.asciidoc",
     "chapter_13_dependency_injection.asciidoc",
-
     "epilogue_1_how_to_get_there_from_here.asciidoc",
-
     "appendix_ds1_table.asciidoc",
     "appendix_project_structure.asciidoc",
     "appendix_csvs.asciidoc",
     "appendix_django.asciidoc",
     "appendix_validation.asciidoc",
-
     "ix.html",
     "author_bio.html",
     "colo.html"
@@ -40,7 +34,7 @@
   "formats": {
     "pdf": {
       "version": "web",
-      "color_count": "4",
+      "color_count": "1",
       "index": true,
       "toc": true,
       "syntaxhighlighting": true,
@@ -65,7 +59,7 @@
       "downsample_images": false
     },
     "html": {
-      "index": false,
+      "index": true,
       "toc": true,
       "syntaxhighlighting": true,
       "show_comments": false,
