@@ -55,7 +55,7 @@ we've named our system after a noun, _batches_, instead of _allocation_).
 image::images/apwp_1102.png[]
 [role="image-source"]
 ----
-[plantuml, batches_context_diagram, config=plantuml.cfg]
+[plantuml, apwp_1102, config=plantuml.cfg]
 @startuml Batches Context Diagram
 !includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Context.puml
 
@@ -87,7 +87,7 @@ order, we want to update the customer record to flag them as a VIP.
 image::images/apwp_1103.png[]
 [role="image-source"]
 ----
-[plantuml, command_flow_diagram_1, config=plantuml.cfg]
+[plantuml, apwp_1103, config=plantuml.cfg]
 @startuml
 
 actor Customer
@@ -163,7 +163,7 @@ should own this process, as shown in <<command_flow_diagram_2>>?
 image::images/apwp_1104.png[]
 [role="image-source"]
 ----
-[plantuml, command_flow_diagram_2, config=plantuml.cfg]
+[plantuml, apwp_1104, config=plantuml.cfg]
 @startuml
 
 actor w as "Warehouse worker"
@@ -204,7 +204,7 @@ right after we take a user's order for 3 MISBEGOTTEN-RUG,
 image::images/apwp_1105.png[]
 [role="image-source"]
 ----
-[plantuml, command_flow_diagram_with_error, config=plantuml.cfg]
+[plantuml, apwp_1105, config=plantuml.cfg]
 @startuml
 
 actor Customer
@@ -332,7 +332,7 @@ Our new flow will look like this:
 image::images/apwp_1106.png[]
 [role="image-source"]
 ----
-[plantuml, reallocation_sequence_diagram_with_redis, config=plantuml.cfg]
+[plantuml, apwp_1106, config=plantuml.cfg]
 
 @startuml
 

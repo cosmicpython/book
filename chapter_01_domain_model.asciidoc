@@ -128,7 +128,7 @@ to a customer's orders; see <<allocation_context_diagram>>.
 image::images/apwp_0102.png[]
 [role="image-source"]
 ----
-[plantuml, allocation_context_diagram]
+[plantuml, apwp_0102]
 @startuml Allocation Context Diagram
 !includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Context.puml
 
@@ -475,7 +475,7 @@ class Batch:
 image::images/apwp_0103.png[]
 [role="image-source"]
 ----
-[plantuml, model_diagram, config=plantuml.cfg]
+[plantuml, apwp_0103, config=plantuml.cfg]
 
 left to right direction
 hide empty members

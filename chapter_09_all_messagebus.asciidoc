@@ -65,7 +65,7 @@ model elaboration.], we model the situation as in
 image::images/apwp_0903.png[]
 [role="image-source"]
 ----
-[ditaa, batch_changed_events_flow_diagram]
+[ditaa, apwp_0903]
 +----------+    /----\      +------------+       +--------------------+
 | Batch    |--> |RULE| -->  | Deallocate | ----> | AllocationRequired |
 | Quantity |    \----/      +------------+-+     +--------------------+-+
@@ -488,7 +488,7 @@ back to our existing handler for allocation, to be re-allocated.
 image::images/apwp_0904.png[]
 [role="image-source"]
 ----
-[plantuml, reallocation_sequence_diagram, config=plantuml.cfg]
+[plantuml, apwp_0904, config=plantuml.cfg]
 @startuml
 API -> MessageBus : BatchQuantityChanged event
 

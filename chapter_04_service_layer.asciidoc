@@ -783,7 +783,7 @@ and the `AbstractRepository` (the port, in ports & adapters terminology).
 image::images/apwp_0403.png[]
 [role="image-source"]
 ----
-[ditaa, service_layer_diagram_abstract_dependencies]
+[ditaa, apwp_0403]
         +-----------------------------+
         |         Service Layer       |
         +-----------------------------+
@@ -806,7 +806,7 @@ adapter):
 image::images/apwp_0404.png[]
 [role="image-source"]
 ----
-[ditaa, service_layer_diagram_test_dependencies]
+[ditaa, apwp_0404]
         +-----------------------------+
         |           Tests             |-------------\
         +-----------------------------+             |
@@ -837,7 +837,7 @@ And when we actually run our app, we swap in the "real" dependency,
 image::images/apwp_0405.png[]
 [role="image-source"]
 ----
-[ditaa, service_layer_diagram_runtime_dependencies]
+[ditaa, apwp_0405]
        +--------------------------------+
        | Flask API (Presentation layer) |-----------\
        +--------------------------------+           |
