@@ -687,7 +687,7 @@ can do the job.
     but for a more complex application you might have one file per class, you
     might have some helper parent classes for `Entity`, `ValueObject` and
     `Aggregate`, you might add an __exceptions.py__ for domain-layer exceptions,
-    and as we'll see in Part 2, __commands.py__ and __events.py__.
+    and as we'll see in <<part2>>, __commands.py__ and __events.py__.
 
 <2> We'll distinguish the service layer.  Currently that's just one file
     called _services.py_ for our service-layer functions.  You could
