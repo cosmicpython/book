@@ -993,15 +993,27 @@ There are two possible things you could do for practice in this chapter:
 ******************************************************************************
 
 
-=== DI and bootstrap wrap-up
+=== DI and Bootstrap Wrap-up
 
-* once you have more than one adapter, you start to feel a lot of pain unless
-  you do DI
+* Once you have more than one adapter, you'll start to feel a lot of pain
+  from passing dependencies around manually, unless you do some kind of
+  _dependency injection._
 
-* bootstrap script as function works.  as class too
+* Setting up dependency injection is just one of many typical
+  setup/initialization activities that you need to do just once when starting
+  your app.  Putting this all together into a _bootstrap script_ is often a
+  good idea.
 
-* DI framework if you have more complex requirements. maybe?
+* The bootstrap script is also a good place to provide sensible default
+  configuration for your adapters, and as a single place to override those
+  adapters with fakes, for your tests.
 
-* you've now seen how you do an adapter properly
+* A dependency injection framework can be useful if you find yourself
+  needing to do DI at multiple levels: if you have chained dependencies
+  of components that all need DI, for example.
 
-TODO: expand on wrap-up
+* This chapter also presented a worked example of changing an implicit/simple
+  dependency into a "proper" adapter, factoring out an ABC, defining its real
+  and fake implementations, and thinking through integration testing.
+
+// TODO: tradeoffs?
