@@ -94,8 +94,6 @@ This gives us three useful things:
    to get a repository.
 
 
-//TODO (DS): Could be a good moment to revisit the diagram at the beginning of the book.
-
 
 === Test-Driving a UoW with Integration Tests
 
@@ -270,11 +268,13 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 <4> Finally, we provide concrete `commit()` and `rollback()` methods that
     use our database session.
 
-//TODO: why not swap out db using os.environ?
+//IDEA: why not swap out db using os.environ?
 // (EJ2) Could be a good idea to point out that this couples the unit of work to postgres.
 //         This does get dealt with in in bootstrap, so you could make a forward-reference.
 // (EJ3) IIRC using a factory like this is considered an anti-pattern ("Control-Freak" from M.Seeman's book)
 //         Is there a reason to inject a factory instead of a session?
+// (HP) yes because each unit of work needs to start a new session every time
+// we call __enter__ and close it on __exit__
 
 
 

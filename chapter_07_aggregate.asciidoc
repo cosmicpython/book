@@ -48,7 +48,7 @@ spreadsheets back and forward over e-mail. This "csv over smtp" architecture has
 low initial complexity but tends not to scale very well because it's difficult
 to apply logic and maintain consistency.
 
-// TODO: better examples.
+// IDEA: better examples?
 
 Who is allowed to view this particular field? Who's allowed to update it? What
 happens when we try to order -350 chairs, or 10,000,000 tables? Can an employee
@@ -355,7 +355,7 @@ class Product:
 <3> And finally, we can move the `allocate()` Domain Service to
     being a method on the `Product` aggregate.
 
-// TODO (hynek): random nitpick: exceptions denoting errors should be
+// IDEA (hynek): random nitpick: exceptions denoting errors should be
 // named *Error.  Are you doing this to save space in the listing?
 
 
@@ -368,7 +368,7 @@ NOTE: This `Product` might not look like what you'd expect a `Product`
     discussion.
 
 
-//TODO: talk about magic methods on aggregates maybe?  ie, a non-aggregate entity
+//IDEA: talk about magic methods on aggregates maybe?  ie, a non-aggregate entity
 //      might have a __hash__ so that we can put it into a set, but because you
 //      are never supposed to have a collection of aggregates, they could return
 //      an error for __hash__. or sumfink.
