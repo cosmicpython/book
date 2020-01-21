@@ -506,7 +506,7 @@ TIP: Notice that, although we're using dependency injection, there was no need
     abstraction is, but they're not necessary.  Python's dynamic nature means
     we can always rely on duck typing.
 
-// TODO [KP] Again, one could mention PEP544 protocols here. For some reason, I like them.
+// IDEA [KP] Again, one could mention PEP544 protocols here. For some reason, I like them.
 
 [[bob_tests]]
 .Tests using DI
@@ -629,7 +629,7 @@ called https://martinfowler.com/articles/mocksArentStubs.html[Mocks aren't Stubs
 But they're also often used as stubs or dummies.  There, promise we're done with
 the test double terminology nitpicks now.)
 
-//TODO (hynek) you could mention Alex Gaynor's `pretend` which gives you
+//IDEA (hynek) you could mention Alex Gaynor's `pretend` which gives you
 // stubs without mocks error-prone magic.
 
 What about London-school vs classic-style TDD?  You can read more about those
@@ -709,11 +709,5 @@ a few heuristics and questions to ask yourself:
 
 
 Practice makes less-imperfect!
-
-// TODO (DS): I think this is potentially a great chapter, perhaps belonging
-// really on in the book. But it is also a bit of a brain dump of lots of deep,
-// amazing concepts. I don't think you've quite found the best structure here
-// yet. Perhaps it could be structured around these heuristics?
-// (EJ3) Not sure how to structure this better.
 
 And now back to our regular programming...

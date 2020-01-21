@@ -172,7 +172,7 @@ def allocate_endpoint():
 ----
 ====
 
-//TODO (hynek) pretty sure you can drop the jsonify call
+//IDEA (hynek) pretty sure you can drop the jsonify call
 
 So far so good.  No need for too much more of your "architecture astronaut"
 nonsense, Bob and Harry, you may be thinking.
@@ -478,24 +478,9 @@ def allocate(line: OrderLine, repo: AbstractRepository, session) -> str:  #<1>
 ====
 
 It depends on a repository.  We've chosen to make the dependency explicit,
-and we've used the type hint to say that we depend on
-pass:[<code>AbstractRepository</code>]footnote:[
-Is this Pythonic?  Depending on who you ask, both abstract base classes and
-type hints are hideous abominations, and serve only to add useless, unreadable
-cruft to your code; beloved only by people who wish that Python was Haskell,
-which it will never be.  "beautiful is better than ugly," "simple is better
-than complex," and "readability counts..."
-Or, perhaps they make explicit something that would otherwise be implicit
-("explicit is better than implicit").  For the purposes of this book, we've
-decided this argument carries the day. What you decide to do in your own
-codebase is up to you.]
+and we've used the type hint to say that we depend on `AbstractRepository`.
 This means it'll work both when the tests give it a `FakeRepository`, and
 when the flask app gives it a `SqlAlchemyRepository`.
-
-// TODO (hynek, re type-hating footnote: I feel like this meditation has already
-// come up a few times.  Maybe have a short section instead to get it out of
-// your system and be done?
-// Also: type haters have never had to maintain large apps over a long time.
 
 If you remember the <<dip,Dependency Inversion Principle section from the introduction>>,
 this is what we mean when we says we should "depend on abstractions". Our
@@ -706,48 +691,8 @@ can do the job.
     referred to as _primary_,  _driving_ or _outward-facing_ adapters.
 
 What about ports?  As you may remember, they are the abstract interfaces which the
-adapters implement. If you really wanted to go to town, you could split out the
-abstract repository (which is the Port) into its own file, along with any other
-ABCs for other adapters, and put them in a folder called __ports__footnote:[Our
-tech reviewer David Seddon would particularly enjoy that, because it would make
-our module dependency graph really neat, illustrating the "depend on abstractions"
-concept.].
-
-[[abstract_repo_own_file]]
-.Some subfolders
-====
-[source,text]
-[role="skip"]
-----
-.
-├── domain
-│   ├── __init__.py
-│   └── model.py
-├── adapters
-│   ├── __init__.py
-│   ├── orm.py
-│   └── sqlalchemy_repository.py
-├── ports
-│   ├── abstract_repository.py
-...
-----
-====
-
-The primary/upstream ports are harder to define at this stage, because
-the port is just "the service-layer function and its arguments". In
-later chapter, we build Command and Event classes, and you can call
-those ports in theory, but putting them into a _ports_ subfolder instead
-of inside the domain folder would feel weird to us.
-
-// TODO - this whole ports discussion feels a bit long-winded, maybe cut?
-// (EJ3) - I think this section could be shortened up a bit.  Re: the 'ports'
-//         package/folder, I get the value for pedagogical purposes here, but
-//         in general I'm ambivalent because:
-//         * in practice, someone may cargo-cult the 'adapters' + 'ports' structure naively,
-//           and end up sticking anything that is a port or adapter here. And then
-//           you will end up coincidental coupling.
-//         * any package structure is subjective and fail you eventually, which is the
-//           how you get crosscuts.
+adapters implement. We tend to keep them in the same file as the adapters which
+implement them.
 
 
 === Wrap-Up
