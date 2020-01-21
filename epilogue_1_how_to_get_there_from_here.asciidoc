@@ -80,7 +80,7 @@ attached to it via a billing package.
 As a result, every read or write operation against a document had to load an
 enormous number of objects from the database in order to test permissions and
 quotas. Creating a new workspace involved hundreds of database queries as we set
-up the permissions structure, invited users, and set up sample content. 
+up the permissions structure, invited users, and set up sample content.
 
 Some of the code for operations was in web handlers, and ran when a user clicked
 a button or submitted a form, some of it was in "manager" objects that held
@@ -146,7 +146,7 @@ about.
 This is a good opportunity to pull any data-access or orchestration code out of
 the domain model and up into the use-cases. We should also try to pull IO
 concerns (eg. sending emails, writing files) out of the domain model and up into
-the use-case functions. We apply the techniques from Chapter 3 on abstractions
+the use-case functions. We apply the techniques from <<chapter_03_abstractions>> on abstractions
 to keep our handlers unit testable even when they're performing IO.
 
 TIP: It's fine if you've got duplication in the use-case functions. We're not
@@ -199,7 +199,7 @@ user.account.workspaces[0].documents.versions[1].owner.account.workspaces[0].set
 
 It's easy to build a system this way with Django ORM or SQLAlchemy but it's
 to be avoided. While it's _convenient_, it makes it very hard to reason about
-performance because each property might trigger a lookup to the database. 
+performance because each property might trigger a lookup to the database.
 
 TIP: Aggregates are a _consistency boundary_. In general each use-case should
 update a single aggregate at a time. One handler fetches one aggregate from a
@@ -207,7 +207,7 @@ repository, modifies its state, and raises any events that happen as a result.
 If you need data from another part of the system, it's totally find to use a
 read model, but avoid updating multiple aggregates in a single transaction.
 When we choose to separate code into different aggregates, we're explicitly
-choosing to make them _eventually consistent_ with one another. Chapter 6 has
+choosing to make them _eventually consistent_ with one another. <<chapter_06_uow>> has
 much more on this topic.
 
 There were a bunch of operations that required us to loop over objects this way,
@@ -230,7 +230,7 @@ def lock_documents_in_folder(folder):
 
     for doc in folder.documents:
          doc.archive()
-        
+
      for child in folder.children:
          lock_documents_in_folder(child)
 ----
@@ -240,13 +240,13 @@ These operations _killed_ performance but fixing them meant giving up our single
 object graph. Instead we began to identify aggregates and to break the direct
 links between objects.
 
-NOTE: We talked about the infamous "select N+1 problem" in chapter 11, and how
+NOTE: We talked about the infamous "select N+1 problem" in <<chapter_11_external_events>>, and how
 we might choose to use different techniques when reading data for queries vs
 reading data for commands.
 
 Mostly we did this by replacing direct references with identifiers:
 
-Before: 
+Before:
 
 [source,python]
 ----
@@ -275,7 +275,7 @@ class Document:
    id: int
    workspace_id: int
    parent_id: int
-   
+
    # Note that our Document Aggregate continued to hold all its versions
    # so that we could treat the whole document as a single unit.
    versions: List[DocumentVersion]
@@ -306,7 +306,7 @@ tree view of folders and documents.
 This screen was _incredibly_ heavy on the database, because it relied on nested
 for loops that triggered a lazy-loaded ORM.
 
-TIP: We use this same technique in the book in Chapter 11 where we replace a
+TIP: We use this same technique in the book in <<chapter_11_external_events>> where we replace a
     nested loop over ORM objects with a simple SQL query. It's the first step
     in a CQRS approach.
 
@@ -432,7 +432,7 @@ we had to rewrite the entire user management function as a brand new system.
 Figuring out how to model your domain is a complex task, and the subject of many
 decent books in its own right. We like to use interactive techniques like Event
 Storming, and CRC modelling, because humans are good at collaborating through
-play. 
+play.
 
 Event Modelling is a technique that brings engineers and product owners together
 to understand a system in terms of commands, queries, and events.
@@ -455,7 +455,7 @@ easier to make the argument for structuring the project to make modelling easy.
 Once you've managed to convince your team to try a new way of building software
 it's easy to get overwhelmed by the sheer number of new things to think about.
 
-What message broker should we use? How should we 
+What message broker should we use? How should we
 
 * decide on a piece of the old system to carve out.
 * get your system to produce events
@@ -615,7 +615,7 @@ should read at least:
 
 ==== We explicitly choose small, focused transactions that can fail independently
 
-In chapter 8 we update our process so that _deallocating_ an order line and
+In <<chapter_08_events_and_message_bus>> we update our process so that _deallocating_ an order line and
 _reallocating_ the line happen in two separate units of work.
 You will need monitoring to know when these transactions fail, and tooling to
 replay events. Some of this is made easier by using a transaction log as your

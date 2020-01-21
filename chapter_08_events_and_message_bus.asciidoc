@@ -349,7 +349,7 @@ HANDLERS = {
 ----
 ====
 
-NOTE: Note that the messagebus as implemented doesn't give us concurrency since  
+NOTE: Note that the messagebus as implemented doesn't give us concurrency since
     only one handler will run at a time.
     Our objective isn't to support parallel threads, but to separate
     tasks conceptually, and keep each unit of work as small as possible.
@@ -722,7 +722,7 @@ The magic words "When X then Y" often tell us about an event that we can make
 concrete in our system. Treating events as first-class things in our model helps
 us to make our code more testable and observable, and helps to isolate concerns.
 
-Events are useful for more than just sending emails, though. In Chapter 5 we
+Events are useful for more than just sending emails, though. In <<chapter_05_high_gear_low_gear>> we
 spent a lot of time convincing you that you should define aggregates, or
 boundaries where we guarantee consistency. People often ask "what
 should I do if I need to change multiple aggregates as part of a request?" Now
@@ -733,7 +733,7 @@ Product) then we can make them *eventually consistent* by using events. When an
 Order is cancelled, then we should find the products that were allocated to it,
 and remove the allocations.
 
-In Chapter 8, we'll look at this idea in more detail as we build a more complex
+In <<chapter_08_events_and_message_bus>>, we'll look at this idea in more detail as we build a more complex
 workflow with our new message bus.
 
 

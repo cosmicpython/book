@@ -163,9 +163,9 @@ while the book is still in its draft form!
 The book is divided into two parts; here's a look at the topics we'll cover,
 and which chapters they live in.
 
-==== Part 1: Dependency Inversion and Domain Modelling
+==== pass:[<a data-type="xref" data-xrefstyle="chap-num-title" href="#part1">#part1</a>]
 
-Domain Modelling and DDD (Chapters 1 and 7)::
+Domain Modelling and DDD (Chapters pass:[<a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_01_domain_model">#chapter_01_domain_model</a> and <a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_07_aggregate">#chapter_07_aggregate</a>])::
     At some level, everyone has learned the lesson that complex business
     problems need to be reflected in code, in the form of a model of the domain.
     But why does it always seem to be so hard to do it, without getting tangled
@@ -176,7 +176,7 @@ Domain Modelling and DDD (Chapters 1 and 7)::
     the right _Aggregate_, and how this choice relates to questions of data
     integrity.
 
-Repository, Service Layer and Unit of Work Patterns (Chapter 2, 4 and 5)::
+Repository, Service Layer and Unit of Work Patterns (Chapters pass:[<a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_02_repository">#chapter_02_repository</a>, <a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_04_service_layer">#chapter_04_service_layer</a> and <a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_05_high_gear_low_gear">#chapter_05_high_gear_low_gear</a>])::
     In these three chapters we present three closely related and
     mutually reinforcing patterns that support our ambition to keep
     the model free of extraneous dependencies.  We build a layer of
@@ -188,7 +188,7 @@ Repository, Service Layer and Unit of Work Patterns (Chapter 2, 4 and 5)::
 // [SG] Bit of pedantry - this is the first time you have used CLI acronym,
 // should be spelled out?
 
-Some thoughts on Testing and Abstractions (Chapters 3 + 6)::
+Some thoughts on Testing and Abstractions (Chapters pass:[<a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_03_abstractions">#chapter_03_abstractions</a> + <a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_06_uow">#chapter_06_uow</a>])::
     After presenting the first abstraction (Repository pattern), we take the
     opportunity for a general discussion of how to choose abstractions, and
     what their role is in choosing how our software is coupled together. After
@@ -197,9 +197,9 @@ Some thoughts on Testing and Abstractions (Chapters 3 + 6)::
 
 
 
-==== Part 2: Event-Driven Architecture
+==== pass:[<a data-type="xref" data-xrefstyle="chap-num-title" href="#part2">#part2</a>]
 
-Chapters 8-11: Event-Driven Architecture::
+Chapters pass:[<a data-type="xref" href="#chapter_08_events_and_message_bus">#chapter_08_events_and_message_bus</a>-<a data-type="xref" href="#chapter_11_external_events">#chapter_11_external_events</a>]: Event-Driven Architecture::
     We introduce three more mutually-reinforcing patterns, starting with
     the concept of _Domain Events_, a vehicle for capturing the idea that some
     interactions with a system are triggers for others.  We use  a _Message
@@ -209,18 +209,18 @@ Chapters 8-11: Event-Driven Architecture::
     distinction between _Commands_ and _Events_.  Our application is now
     fundamentally a message-processing system.
 
-Chapter 12: CQRS::
+<<chapter_12_cqrs>>: CQRS::
     An example of _command-query responsibility segregation_, with and without
     events.
 
-Chapter 13 Dependency Injection::
+<<chapter_13_dependency_injection>> Dependency Injection::
     We tidy up our explicit and implicit dependencies, and implement a very
     simple dependency injection framework.
 
 
 ==== Epilogue
 
-How Do I Get There From Here? (Chapter 14)::
+How Do I Get There From Here? (<<epilogue_1_how_to_get_there_from_here>>)::
     Implementing architectural patterns always looks easy when you show a simple
     example, starting from scratch, but many of you will probably be wondering how
     to apply these principles to existing software.  We'll attempt to provide a

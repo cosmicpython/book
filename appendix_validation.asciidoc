@@ -134,7 +134,7 @@ AddStock = command(
 This comes at the expense of losing the types on your dataclass, so bear that
 trade-off in mind.
 
-// (EJ2) I understand this code, but find it to be a little bit gross, since 
+// (EJ2) I understand this code, but find it to be a little bit gross, since
 // there are many alternatives that combine schema validation, object serialization
 // + deserialization, and class type definitions for you.  Examples here: https://github.com/voidfiles/python-serialization-benchmark
 // Would be nice to see a mention of things like Marshmallow here.
@@ -173,8 +173,8 @@ among systems. This likewise fails the robustness test.
 
 // (EJ3) This reads like it's saying that JSON-Schema is bad (which is a separate discussion, I think.)
 //
-// If I understand correctly, the issue is that JSON-Schema allows you to specify 
-// syntax, semantics, + pragmatics all in a single definition, and tends to 
+// If I understand correctly, the issue is that JSON-Schema allows you to specify
+// syntax, semantics, + pragmatics all in a single definition, and tends to
 // encourage devs to mix them together. Therefore it encourages overly premature validation.
 //
 
@@ -234,13 +234,13 @@ bear in mind that invalid data wandering through your system is a time bomb;
 the deeper it gets, the more damage it can do, and the less reasonable tools
 you have to respond to it.
 
-Back in Chapter 6 we said that the message bus was a great place to put
+Back in <<chapter_06_uow>> we said that the message bus was a great place to put
 cross-cutting concerns, and validation is a perfect example of that. Here's how
 we might change our bus to perform validation for us.
 
 
 [[validation_on_bus]]
-.Validation 
+.Validation
 ====
 [source,python]
 ----
@@ -265,7 +265,7 @@ class MessageBus:
 
 // (EJ3) What's your opinion on how to handle validation in the scenario where
 // the command is being passed to an asynchronous worker pool via RabbitMQ?
-// 
+//
 
 Here's how we might use that method from our Flask API endpoint.
 
@@ -277,7 +277,7 @@ Here's how we might use that method from our Flask API endpoint.
 ----
 @app.route("/change_quantity", methods=['POST'])
 def change_batch_quantity():
-    try: 
+    try:
         bus.handle_message('ChangeBatchQuantity', request.body)
     except ValidationError as e:
         return bad_request(e)
@@ -285,7 +285,7 @@ def change_batch_quantity():
         return jsonify({'message': str(e)}), 400
 
 def bad_request(e: ValidationError):
-    return e.code, 400 
+    return e.code, 400
 ----
 ====
 
@@ -429,7 +429,7 @@ class SkipMessage (Exception):
     incorrect behavior. For example, we might receive the same message multiple
     times, or we might receive a message that is now out of date.
     """"
-    
+
     def __init__(self, reason):
         self.reason = reason
 
@@ -441,7 +441,7 @@ def batch_is_new(self, event, uow):
 ====
 
 Introducing a `SkipMessage` exception lets us handle these cases in a generic
-way in our message bus. 
+way in our message bus.
 
 [[skip_in_bus]]
 .The Bus Now Knows How To Skip (src/allocation/messagebus.py)

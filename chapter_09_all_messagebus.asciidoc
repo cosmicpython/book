@@ -329,15 +329,15 @@ In _unit_of_work.py_, `publish_events()` becomes a less active method,
 ----
 -from . import messagebus  #<1>
 -
- 
- 
+
+
  class AbstractUnitOfWork(abc.ABC):
 @@ -23,13 +21,11 @@ class AbstractUnitOfWork(abc.ABC):
- 
+
      def commit(self):
          self._commit()
 -        self.publish_events()  #<2>
- 
+
 -    def publish_events(self):
 +    def collect_new_events(self):
          for product in self.products.seen:
@@ -681,7 +681,7 @@ implement. So long as our query is returning a single aggregate, we're not
 bending any rules. If you find yourself writing complex queries on your
 repositories, you might want to think about a different design. In particular, a
 method like 'get_most_popular_products', or 'find_products_by_order_id' would
-definitely trigger our spidey sense. Chapter 11 and the Epilogue have some tips
+definitely trigger our spidey sense. <<chapter_11_external_events>> and the Epilogue have some tips
 on managing complex queries.
 
 ==== A New Method on the Domain Model
