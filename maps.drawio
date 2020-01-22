@@ -1,4 +1,4 @@
-<mxfile host="www.draw.io" modified="2020-01-22T17:23:31.784Z" agent="Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:72.0) Gecko/20100101 Firefox/72.0" etag="V2yD6jcy2N0mY-wUzeDQ" version="12.5.5" type="github" pages="11">
+<mxfile host="www.draw.io" modified="2020-01-22T17:24:19.000Z" agent="Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:72.0) Gecko/20100101 Firefox/72.0" etag="5Z8zMC5hk5nYaP67RQk0" version="12.5.5" type="github" pages="11">
   <diagram id="rh1DttEXYZF73mCXou3R" name="Chapter 1">
     <mxGraphModel dx="1978" dy="1113" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
@@ -1232,7 +1232,7 @@
     </mxGraphModel>
   </diagram>
   <diagram name="Chapter 11" id="uloHF3oTohPtsYz8bfXU">
-    <mxGraphModel dx="1130" dy="636" grid="1" gridSize="5" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1648" dy="928" grid="1" gridSize="5" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="glnVcpvA8bHsyrLV4RX5-0"/>
         <mxCell id="glnVcpvA8bHsyrLV4RX5-1" parent="glnVcpvA8bHsyrLV4RX5-0"/>
@@ -1266,7 +1266,7 @@
             <mxPoint as="offset"/>
           </mxGeometry>
         </mxCell>
-        <mxCell id="aOpChjktBB4jcuNQKIP--7" value="&lt;div style=&quot;font-size: 11px;&quot;&gt;External Message Bus&lt;/div&gt;&lt;div style=&quot;font-size: 11px;&quot;&gt;(eg Redis, Event Store)&lt;br style=&quot;font-size: 11px;&quot;&gt;&lt;/div&gt;" style="shape=loopLimit;whiteSpace=wrap;html=1;shadow=0;dashed=1;fontFamily=Guardian Sans Cond Light;fontSize=11;fontColor=#000000;align=center;strokeColor=#F7A072;fillColor=#EDDEA4;gradientColor=none;size=11;fontStyle=1" parent="glnVcpvA8bHsyrLV4RX5-1" vertex="1">
+        <mxCell id="aOpChjktBB4jcuNQKIP--7" value="&lt;div style=&quot;font-size: 11px&quot;&gt;External Message Bus / Message Broker&lt;br&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 11px&quot;&gt;(eg Redis, Event Store)&lt;br style=&quot;font-size: 11px&quot;&gt;&lt;/div&gt;" style="shape=loopLimit;whiteSpace=wrap;html=1;shadow=0;dashed=1;fontFamily=Guardian Sans Cond Light;fontSize=11;fontColor=#000000;align=center;strokeColor=#F7A072;fillColor=#EDDEA4;gradientColor=none;size=11;fontStyle=1" parent="glnVcpvA8bHsyrLV4RX5-1" vertex="1">
           <mxGeometry x="310" y="250" width="240" height="30" as="geometry"/>
         </mxCell>
         <mxCell id="aOpChjktBB4jcuNQKIP--9" value="external events" style="edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#F7A072;fillColor=#B5E2FA;fontFamily=Guardian Sans Cond Light;fontSize=10;fontColor=#212A2E;verticalAlign=middle;entryX=0.5;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;fontStyle=1" parent="glnVcpvA8bHsyrLV4RX5-1" source="aOpChjktBB4jcuNQKIP--7" target="aOpChjktBB4jcuNQKIP--1" edge="1">
