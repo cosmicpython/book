@@ -24,8 +24,9 @@ entrypoint to our Domain Model. By making the service layer depend on the
 `AbstractRepository`, we'll be able to unit test it using `FakeRepository`, and
 then run it in real life using `SqlAlchemyRepository`.
 
-NOTE: In our diagrams, we are using the convention that the _yellow/orange_
-    blocks mean new things that we are adding to our architecture.
+NOTE: In our diagrams, we are using the convention that new components
+    are highlighted with bold text/lines (and yellow/orange color, if you're
+    reading a digital version)
 
 [[maps_service_layer_after]]
 .The Service Layer will become the main way into our app
