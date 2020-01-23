@@ -217,7 +217,7 @@ with examples.]
 mnemonic.
 
 Unfortunately we can't illustrate the DIP using three tiny code listings like
-we did for encapsulation, but since the whole of Part 1 is essentially a worked
+we did for encapsulation, but since the whole of <<part1>> is essentially a worked
 example of implementing the DIP throughout an application, hopefully you'll get
 your fill of concrete examples from those.
 
@@ -294,6 +294,6 @@ business logic becomes spread out throughout the layers of our application,
 making it hard to identify, understand, and change.
 
 <<chapter_01_domain_model>> shows how to build a business
-layer using a _Domain Model_, and the rest of the patterns in Part 1 show
+layer using a _Domain Model_, and the rest of the patterns in <<part1>> show
 how we can keep the domain model easy to change and free of low-level concerns,
 by choosing the right abstractions and continuously applying the DIP.

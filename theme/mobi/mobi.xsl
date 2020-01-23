@@ -14,4 +14,7 @@
     </em></p>
   </xsl:template>
 
+    <!-- Drop @width attributes from table headers if present -->
+  <xsl:template match="h:th/@width"/>
+
 </xsl:stylesheet>

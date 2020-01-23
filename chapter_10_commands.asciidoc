@@ -185,7 +185,7 @@ def handle_command(
         queue.extend(uow.collect_new_events())
         return result  #<3>
     except Exception:
-        logger.exception('Exception handling command %s', command)  
+        logger.exception('Exception handling command %s', command)
         raise  #<2>
 ----
 ====
@@ -494,7 +494,7 @@ things half-finished.
 WARNING: At some point, regardless of tenacity, we'll have to give up trying to
     process the message. Building reliable systems with distributed messages is
     hard and we have to skim over some tricky bits. There's pointers to more
-    reference materials in chapter 10 and the epilogue.
+    reference materials in <<chapter_10_commands>> and the epilogue.
 
 
 [[chapter_10_commands_and_events_tradeoffs]]

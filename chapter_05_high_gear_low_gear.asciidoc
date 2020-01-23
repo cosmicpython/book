@@ -67,7 +67,7 @@ already a healthy-looking test pyramid.
 Let's see what happens if we take this a step further. Since we can test our
 software against the service layer, we don't really need tests for the domain
 model any more. Instead, we could rewrite all of the domain-level tests from
-Chapter 1 in terms of the service layer.
+<<chapter_01_domain_model>> in terms of the service layer.
 
 
 .Rewriting a domain test at the service layer (tests/unit/test_services.py)
@@ -167,7 +167,7 @@ don't change the URLs or request formats, our http tests will continue to pass.
 This gives us confidence that large-scale changes, like changing the DB schema,
 haven't broken our code.
 
-At the other end of the spectrum, the tests we wrote in chapter 1 helped us to
+At the other end of the spectrum, the tests we wrote in <<chapter_01_domain_model>> helped us to
 flesh out our understanding of the objects we need. The tests guided us to a
 design that makes sense and reads in the domain language. When our tests read
 in the domain language, we feel comfortable that our code matches our intuition

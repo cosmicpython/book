@@ -1,7 +1,7 @@
 [role="pagenumrestart"]
 [[part1]]
 [part]
-== Part 1: Building an Architecture to Support Domain Modelling
+== Building an Architecture to Support Domain Modelling
 
 
 [quote, Cyrille Martraire, DDD EU 2017]
@@ -24,7 +24,7 @@ After all, our customers don't care about the data model. They care about what
 the system _does_, otherwise they'd just use a spreadsheet.
 
 The first part of the book looks at how to build a rich object model
-through TDD (in <<chapter_01_domain_model,Chapter 1>>), and then we'll see how
+through TDD (in <<chapter_01_domain_model>>), and then we'll see how
 to keep that model decoupled from technical concerns. We see how to build
 persistence-agnostic code and how to create stable APIs around our domain so
 that we can refactor aggressively.
@@ -47,7 +47,7 @@ If you'd like a picture of where we're going, take a look at
 yet!  We introduce each box in the figure, one by one.
 
 [[part1_components_diagram]]
-.A component diagram for our app at the end of Part 1
+.A component diagram for our app at the end of <<part1>>
 image::images/apwp_p101.png[]
 
 //TODO: inline this diagram's source.
@@ -59,7 +59,7 @@ discussion with a simple example that shows how and why we choose our
 abstractions.
 
 
-Several of the appendices are further explorations of the content from Part 1:
+Several of the appendices are further explorations of the content from <<part1>>:
 
 * <<appendix_project_structure>> is a write-up of the infrastructure for our example
   code: how we build and run the docker images, where we manage configuration
