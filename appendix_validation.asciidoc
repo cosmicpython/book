@@ -62,7 +62,7 @@ from schema import And, Schema, Use
 @dataclass
 class Allocate(Command):
 
-    _schema = Schema({ #<1>
+    _schema = Schema({  #<1>
         'orderid': int,
          sku: str,
          qty: And(Use(int), lambda n: n > 0)
@@ -73,7 +73,7 @@ class Allocate(Command):
     qty: int
 
     @classmethod
-    def from_json(cls, data): #<2>
+    def from_json(cls, data):  #<2>
        data = json.loads(data)
        return cls(**_schema.validate(data))
 ----
@@ -99,18 +99,18 @@ declaration of our message types.
 ====
 [source,python]
 ----
-def command(name, **fields): #<1>
-    schema = Schema(And(Use(json.loads), fields), ignore_extra_keys=True) #<2>
+def command(name, **fields):  #<1>
+    schema = Schema(And(Use(json.loads), fields), ignore_extra_keys=True)  #<2>
     cls = make_dataclass(name, fields.keys())
-    cls.from_json = lambda s: cls(**schema.validate(s)) #<3>
+    cls.from_json = lambda s: cls(**schema.validate(s))  #<3>
     return cls
 
 def greater_than_zero(x):
     return x > 0
 
-quantity = And(Use(int), greater_than_zero) #<4>
+quantity = And(Use(int), greater_than_zero)  #<4>
 
-Allocate = command( #<5>
+Allocate = command(  #<5>
     orderid=int,
     sku=str,
     qty=quantity
@@ -357,12 +357,12 @@ of contract-based programming.
 This module contains pre-conditions that we apply to our handlers.
 """
 
-class MessageUnprocessable(Exception): #<1>
+class MessageUnprocessable(Exception):  #<1>
 
     def __init__(self, message):
         self.message = message
 
-class ProductNotFound(MessageUnprocessable): #<2>
+class ProductNotFound(MessageUnprocessable):  #<2>
    """"
    This exception is raised when we try to perform an action on a product
    that doesn't exist in our database.
@@ -372,7 +372,7 @@ class ProductNotFound(MessageUnprocessable): #<2>
         super().__init__(message)
         self.sku = message.sku
 
-def product_exists(event, uow): #<3>
+def product_exists(event, uow):  #<3>
     product = uow.products.get(event.sku)
     if product is None:
         raise ProductNotFound(event)
@@ -392,9 +392,8 @@ This keeps the main flow of our logic in the service layer clean and declarative
 [[ensure_in_services]]
 .ensure in use in services (src/allocation/services.py)
 ====
-[source,python]
+[source,python,highlight=8]
 ----
-
 # services.py
 
 from allocation import ensure
@@ -402,7 +401,7 @@ from allocation import ensure
 def allocate(event, uow):
     line = mode.OrderLine(event.orderid, event.sku, event.qty)
     with uow:
-        ensure.product_exists(uow, event) #<4>
+        ensure.product_exists(uow, event)
 
         product = uow.products.get(line.sku)
         product.allocate(line)

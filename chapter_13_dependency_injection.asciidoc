@@ -686,7 +686,7 @@ def sqlite_bus(sqlite_session_factory):
         start_orm=True,  #<1>
         uow=unit_of_work.SqlAlchemyUnitOfWork(sqlite_session_factory),  #<2>
         send_mail=lambda *args: None,  #<3>
-        publish=lambda *args: None,  #<4>
+        publish=lambda *args: None,  #<3>
     )
     yield bus
     clear_mappers()
