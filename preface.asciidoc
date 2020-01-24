@@ -126,8 +126,8 @@ If you're not used to working test-first, it may feel a little strange at
 the beginning, but we hope you'll soon get used to seeing code "being used,"
 i.e. from the outside, before you see how it's built on the inside.
 
-We use some specific Python (version 3) frameworks and technologies, like
-Flask, SQLAlchemy, and Pytest, as well as Docker and Redis.  If you're already
+We use some specific Python frameworks and technologies, like Flask,
+SQLAlchemy, and Pytest, as well as Docker and Redis.  If you're already
 familiar with them, that won't hurt, but we don't think it's required.  One of
 our main aims with this book is to build an architecture where specific
 technology choices become minor implementation details.
@@ -267,12 +267,17 @@ Particularly if you're intending to apply some of these patterns in your own
 projects, then working through a simple example is a great way to get some
 safe practice.
 
+
+=== License
+
 The code (and the online version of the book) is licensed under a Creative
 Commons CC-By-ND license, which means you are free to copy and share it with
 anyone you like, for non-commercial purposes, as long as you give attribution.
 If you want to re-use any of the content from this book and you have any
 worries about the license, contact O'Reilly at pass:[<a class="email"
 href="mailto:permissions@oreilly.com"><em>permissions@oreilly.com</em></a>].
+
+The print edition is licensed differently, please see the copyright page.
 
 
 === Conventions Used in This Book
