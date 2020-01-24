@@ -733,7 +733,14 @@ def bootstrap_test_app():
 So that gets rid of a little duplication, and we've moved a bunch
 of setup and sensible defaults into a single place.
 
-//TODO weak segue
+
+.Exercise for the Reader 1
+**********************************************************************
+Change all the handlers to being classes as per <<di_with_classes>>,
+and amend the bootstrapper's DI code as appropriate.  This will let you
+know if you prefer the functional or the class-based approach, when 
+it comes to your own projects.
+**********************************************************************
 
 
 === Building an Adapter "Properly": A Worked Example
@@ -977,10 +984,10 @@ And, erm, that's it really.
 // TODO this isn't really in the right TDD order is it?
 
 
-.Exercise for the Reader
+.Exercise for the Reader 2
 ******************************************************************************
 
-There are two possible things you could do for practice in this chapter:
+There are two possible things you could do for practice regarding adapters:
 
 1. Try swapping out our notifications from email to, for example, SMS 
     notifications using Twilio, or Slack notifications.  Can you find
