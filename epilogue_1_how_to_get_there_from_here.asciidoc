@@ -89,7 +89,7 @@ objects would make database calls, or copy files on disk, and the test coverage
 was abysmal.
 
 To fix the problem, we first introduced a service layer so that all of the code
-for creating a document or workspace was _in one place_ and could be understood.
+for creating a document or workspace was in one place and could be understood.
 This involved pulling data access code out of the domain model and into
 command handlers. Likewise, we pulled orchestration code out of the managers and
 the web handlers, and pushed it into handlers.
@@ -99,7 +99,25 @@ introducing order to the chaos.
 
 ********************************************************************************
 
-TODO: Add diagram
+[[read_model_sequence_diagram]]
+.Sequence diagram for read model
+image::images/apwp_ep01.png[]
+[role="image-source"]
+----
+[plantuml, apwp_ep01, config=plantuml.cfg]
+@startuml
+hide empty members
+Workspace *- Folder : contains
+Account *- Workspace : owns
+Account *-- Package : has
+User *-- Account : manages
+Workspace *-- User : has members
+User *-- Document : owns
+Folder *-- Document : contains
+Document *- Version: has
+User *-- Version: authors
+@enduml
+----
 
 This was the system where Bob first learned how to break apart a ball of mud,
 and it was a doozy. There was logic _everywhere_ - in the web pages, in
@@ -178,7 +196,7 @@ documents, which had many versions.
 // The messy "Before" version would just have an object graph, and the
 // "After" version with have the aggregate boundaries and roots.
 
-You can't express the full horror of the thing in an ERD diagram.
+You can't express the full horror of the thing in a class diagram.
 For one thing, there wasn't really a single account related to a user. Instead
 there was some bizarre rule where you had to enumerate all of the accounts
 associated to the user via the workspaces and take the one with the earliest
