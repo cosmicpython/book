@@ -577,6 +577,20 @@ https://io.made.com/blog/2018-04-28-eventsourcing-101.html[event sourcing]
 
 *******************************************************************************
 
+
+.Exercise for the Reader
+*******************************************************************************
+
+A nice simple one for this chapter: make it so that the main `allocate()` use
+case can also be invoked by an event on a Redis channel, as well (or instead of)
+via the API.
+
+You'll want to add a new E2E test, and feed through some changes into
+__redis_eventconsumer.py__.
+
+*******************************************************************************
+
+
 === Wrap-Up
 
 Events can come _from_ the outside, but they can also be published
