@@ -850,3 +850,38 @@ a|
 
 * Dealing with eventual consistency between aggregates can be complex.
 |===
+
+Part one Recap
+=============
+
+Those of you with particularly good memories will remember this diagram from the
+start of the book.
+
+[[part1_components_diagram]]
+.A component diagram for our app at the end of <<part1>>
+image::images/apwp_p101.png[]
+
+Well, here we are, at the end of part one. What have we achieved? We've seen how
+to start building a domain model that's exercised by a set of high-level unit
+tests. Our tests describe the behaviour of our system - the rules that we agreed
+with our business stakeholders - in human readable prose. When our business
+requirements change, we have confidence that our tests will help us to prove the
+new functionality, and when new develoeprs join the project, they can read our
+tests to understand how things work.
+
+We've decoupled the infrastructural parts of our system, like the database and
+API handlers, so that we can plug them into the outside of our application.
+This helps us to keep our codebase well organised, and stops us from building a
+big ball of mud.
+
+Lastly, we've talked about the idea of consistency boundaries. We don't want to
+lock our entire system whenever we make a change, so we have to choose which
+parts are consistent with one another.
+
+For a small system, this is everything you need to go and play with the ideas of
+Domain-Driven Design. You now have the tools to build database agnostic domain
+models that represent the shared language of your business experts. Hurrah!
+
+In part two, we'll zoom out and talk about a bigger topic: if aggregates are our
+boundary, and we can only update one at a time, how do we model processes that
+cross consistency boundaries?
