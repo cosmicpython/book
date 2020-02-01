@@ -99,8 +99,8 @@ introducing order to the chaos.
 
 ********************************************************************************
 
-[[read_model_sequence_diagram]]
-.Sequence diagram for read model
+[[collaboration_app_model]]
+.Domain of a Collaboration System
 image::images/apwp_ep01.png[]
 [role="image-source"]
 ----
@@ -788,7 +788,7 @@ image::images/apwp_ep04.png[]
 ----
 [plantuml, apwp_ep04, config=plantuml.cfg]
 @startuml View Fetcher Component Diagram
-!include C4_Component.puml
+!include images/C4_Component.puml
 
 LAYOUT_LEFT_RIGHT
 
