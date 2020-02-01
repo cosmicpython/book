@@ -458,13 +458,18 @@ def allocate(
         if product is None:
             raise InvalidSku(f'Invalid sku {line.sku}')
         batchref = product.allocate(line)
-        uow.commit()
+        uow.commit() #<1>
 
         if batchref is None:
             messagebus.handle(events.OutOfStock(line.sku))
         return batchref
 ----
 ====
+
+<1> We commit even if we fail to allocate because the code is simpler this way
+    and it's easier to reason about: we always commit unless something goes
+    wrong. Committing when we haven't changed anything is safe, and keeps the
+    code uncluttered.
 
 Again, we have applications in production that implement the pattern in this
 way.  What works for you will depend on the particular trade-offs you face, but
