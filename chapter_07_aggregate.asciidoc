@@ -529,6 +529,11 @@ the `allocations` tables, we force both of them to also try and update the
 `version_number` in the `products` table, in such a way that only one of them
 can win and the world stays consistent.
 
+TIP: This is optimistic concurrency control. It's optimistic because we assume
+everything will be _fine_ when two users want to make changes to the database.
+Pessimistic concurrency control assumes that two users will cause conflicts, so
+we lock everything just to be safe.
+
 <<version_numbers_sequence_diagram>> shows an illustration: two concurrent
 transactions do their read operations at the same time, so they see
 a Product with (eg) `version=3`.  They both call `Product.allocate()`
@@ -795,9 +800,6 @@ will depend on circumstances.
 NOTE: Some people refer to this as the "read-modify-write" failure mode.
     https://www.2ndquadrant.com/en/blog/postgresql-anti-patterns-read-modify-write-cycles/[This page has a good overview].
 
-
-//TODO (DS): Maybe worth explaining the difference between optimistic and
-//pessimistic locking in more detail, and earlier in the chapter?
 
 
 .Recap: Aggregates and Consistency Boundaries
