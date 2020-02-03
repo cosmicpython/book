@@ -510,7 +510,7 @@ own domain model.
 We used event interception to move from this:
 
 [[strangler_before]]
-.Context Diagram for MADE.com
+.Before: strong, bidirectional coupling based on XML-RPC
 image::images/apwp_ep04.png[]
 [role="image-source"]
 ----
@@ -533,7 +533,7 @@ Rel(ecom, fulfilment, "Sends orders", "xml-rpc")
 to this
 
 [[strangler_after]]
-.Context Diagram for MADE.com
+.After: loose coupling with asynchronous events
 image::images/apwp_ep05.png[]
 [role="image-source"]
 ----
