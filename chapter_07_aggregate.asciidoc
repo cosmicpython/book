@@ -762,7 +762,7 @@ DEFAULT_SESSION_FACTORY = sessionmaker(bind=create_engine(
 ====
 
 Transaction isolation levels are tricky stuff, it's worth spending time
-understanding https://www.postgresql.org/docs/9.6/transaction-iso.html[the
+understanding https://www.postgresql.org/docs/12/transaction-iso.html[the
 documentation].
 
 
