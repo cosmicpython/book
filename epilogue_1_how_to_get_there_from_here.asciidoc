@@ -579,12 +579,21 @@ How should use cases interact across a larger system? Is it a problem for one to
     aggregates. When your use case has finished, it can raise an event, and a
     handler elsewhere can run.
 
-Is it a smell for a use case to use multiple repositories, and why?::
-    Yes! A repository is a pattern that we use for reading _aggregates_ from our
-    persistent store. By definition, we should only ever be updating one aggregate
-    at a time. If you need to read data to figure out what to do, then consider a
-    read-model that returns just the data you need, even if you cheat and build it
-    with a repo and domain objects under the hood.
+Is it a smell for a use case to use multiple repositories/aggregates, and why?::
+    An aggregate is a consistency boundary, so if your use case needs to update
+    two aggregates atomically (within the same transaction), then your
+    consistency boundary is wrong, strictly speaking.  Ideally you should think
+    about moving to a new aggregate that wraps up all the things you want to 
+    change at the same time.
+    +++<br />+++
+    If you're actually only updating one aggregate, and using the other(s) for
+    read-only access, then that's _fine_, although you could consider building a
+    read model / view to get you that data instead--it makes things cleaner if
+    each use case only has one aggregate.
+    +++<br />+++
+    If you do need to modify two aggregates, but the two operations don't have to be
+    in the same transaction/UoW, then consider splitting the work out into two
+    different handlers and using a domain event to carry information between the two.
 
 What if I have a read-only but business-logic heavy system?::
     View models can have complex logic in them. In this book we've encouraged you to
