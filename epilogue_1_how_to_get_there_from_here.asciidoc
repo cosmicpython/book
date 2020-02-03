@@ -82,14 +82,14 @@ enormous number of objects from the database in order to test permissions and
 quotas. Creating a new workspace involved hundreds of database queries as we set
 up the permissions structure, invited users, and set up sample content.
 
-Some of the code for operations was in web handlers, and ran when a user clicked
+Some of the code for operations was in web handlers that ran when a user clicked
 a button or submitted a form, some of it was in "manager" objects that held
 code for orchestrating work, and some of it was in the domain model. Model
 objects would make database calls, or copy files on disk, and the test coverage
 was abysmal.
 
 To fix the problem, we first introduced a service layer so that all of the code
-for creating a document or workspace was _in one place_ and could be understood.
+for creating a document or workspace was in one place and could be understood.
 This involved pulling data access code out of the domain model and into
 command handlers. Likewise, we pulled orchestration code out of the managers and
 the web handlers, and pushed it into handlers.
@@ -99,7 +99,25 @@ introducing order to the chaos.
 
 ********************************************************************************
 
-TODO: Add diagram
+[[collaboration_app_model]]
+.Domain of a Collaboration System
+image::images/apwp_ep01.png[]
+[role="image-source"]
+----
+[plantuml, apwp_ep01, config=plantuml.cfg]
+@startuml
+hide empty members
+Workspace *- Folder : contains
+Account *- Workspace : owns
+Account *-- Package : has
+User *-- Account : manages
+Workspace *-- User : has members
+User *-- Document : owns
+Folder *-- Document : contains
+Document *- Version: has
+User *-- Version: authors
+@enduml
+----
 
 This was the system where Bob first learned how to break apart a ball of mud,
 and it was a doozy. There was logic _everywhere_ - in the web pages, in
@@ -172,13 +190,7 @@ graph was highly connected. Each account had many workspaces, each workspace had
 many members, all of whom had their own accounts. Each workspace contained many
 documents, which had many versions.
 
-// (EJ2) In lieu of the ERD diagram, maybe something similar to this:
-// http://www.informit.com/articles/article.aspx?p=2020371&seqNum=4
-//
-// The messy "Before" version would just have an object graph, and the
-// "After" version with have the aggregate boundaries and roots.
-
-You can't express the full horror of the thing in an ERD diagram.
+You can't express the full horror of the thing in a class diagram.
 For one thing, there wasn't really a single account related to a user. Instead
 there was some bizarre rule where you had to enumerate all of the accounts
 associated to the user via the workspaces and take the one with the earliest
@@ -248,56 +260,171 @@ Mostly we did this by replacing direct references with identifiers:
 
 Before:
 
-[source,python]
+[[aggregates_before]]
+.Before Aggregates
+image::images/apwp_ep02.png[]
+[role="image-source"]
 ----
-class Workspace:
-   folders:  List[Folder]
+[plantuml, apwp_ep02, config=plantuml.cfg]
+@startuml
+hide empty members
+
+class Document {
+
+  add_version ()
+
+  workspace: Workspace
+  parent: Folder
+
+  versions: List[DocumentVersion]
+
+}
+
+class DocumentVersion {
+
+  title : str
+  version_number: int
+
+  document: Document
+
+}
+
+class Account {
+  add_package ()
+
+  owner : User
+  packages : List[BillingPackage]
+  workspaces: List[Workspace]
+}
 
 
-class Folder:
-   permissions: PermissionSet
-   documents: List[Document]
-   parent: Folder
-   children: List[Folder]
+class BillingPackage {
+}
 
+class Workspace {
 
-class Document:
-    parent: Folder
-    workspace: Workspace
-    version: List[DocumentVersion]
+  add_member(member: User)
+
+  account: Account
+  owner: User
+  members: List[User]
+
+}
+
+class Folder {
+  parent: Workspace
+  children: List[Folder]
+
+  copy_to(target: Folder)
+  add_document(document: Document)
+}
+
+class User {
+  account: Account
+}
+
+Account --> Workspace
+Account --> BillingPackage
+Account --> User
+Workspace --> User
+Workspace --> Folder
+Workspace --> Account
+Folder --> Folder
+Folder --> Document
+Folder --> Workspace
+Folder --> User
+Document --> DocumentVersion
+Document --> Folder
+Document --> User
+DocumentVersion --> Document
+DocumentVersion --> User
+User --> Account
+
+@enduml
+
 ----
 
 After:
-
-[source,python]
+[[aggregates_after]]
+.After Modeling With Aggregates
+image::images/apwp_ep03.png[]
+[role="image-source"]
 ----
-class Document:
-   id: int
-   workspace_id: int
-   parent_id: int
+[plantuml, apwp_ep03, config=plantuml.cfg]
+@startuml
+hide empty members
 
-   # Note that our Document Aggregate continued to hold all its versions
-   # so that we could treat the whole document as a single unit.
-   versions: List[DocumentVersion]
+frame Document {
+
+  class Document {
+
+    add_version ()
+
+    workspace_id: int
+    parent_folder: int
+
+    versions: List[DocumentVersion]
+
+  }
+
+  class DocumentVersion {
+
+    title : str
+    version_number: int
+
+  }
+}
+
+frame Account {
+
+  class Account {
+    add_package ()
+
+    owner : int
+    packages : List[BillingPackage]
+  }
 
 
-class Folder:
-   id: int
-   permissions: PermissionSet
-   workspace_id: int
+  class BillingPackage {
+  }
 
+}
 
-class Workspace:
-    id: int
+frame Workspace {
+   class Workspace {
+
+     add_member(member: int)
+
+     account_id: int
+     owner: int
+     members: List[int]
+
+   }
+}
+
+frame Folder {
+
+  class Folder {
+    workspace_id : int
+    children: List[int]
+
+    copy_to(target: int)
+  }
+
+}
+
+Document o-- DocumentVersion
+Account o-- BillingPackage
+
+@enduml
 ----
-
 TIP: Bi-directional links are often a sign that your aggregates aren't right.
     In our original code, a Document knew about its containing Folder, and the
     Folder had a collection of Documents. This makes it easy to traverse the
     object graph but stops us from thinking properly about the consistency
     boundaries we need. We break apart aggregates by using references instead.
-    In the new model, a Document had a `folder_id` but no way to directly access
-    the Folder.
+    In the new model, a Document had reference to its `parent_folder` but no way
+    to directly access the Folder.
 
 If we needed to _read_ data, we avoided writing complex loops and transforms and
 tried to replace them with straight SQL. For example, one of our screens was a
@@ -380,15 +507,74 @@ own domain model.
 
 3. Replace the older system with the new.
 
-We used event interception move from this:
+We used event interception to move from this:
 
-TODO: Context diagram, E-commerce and Fulfilment over XMLRPC
+[[strangler_before]]
+.Context Diagram for MADE.com
+image::images/apwp_ep04.png[]
+[role="image-source"]
+----
+[plantuml, apwp_ep04, config=plantuml.cfg]
+@startuml E-Commerce Context
+!include images/C4_Context.puml
+
+Person_Ext(customer, "Customer", "Wants to buy furniture")
+
+System(fulfilment, "Fulfilment System", "Manages order fulfilment and logistics")
+System(ecom, "E-commerce website", "Allows customers to buy furniture")
+
+Rel(customer, ecom, "Uses")
+Rel(fulfilment, ecom, "Updates stock and orders", "xml-rpc")
+Rel(ecom, fulfilment, "Sends orders", "xml-rpc")
+
+@enduml
+----
 
 to this
 
-TODO: Context diagram, E-Commerce, Availability, Fulfilment, Event-Broker
+[[strangler_after]]
+.Context Diagram for MADE.com
+image::images/apwp_ep05.png[]
+[role="image-source"]
+----
+[plantuml, apwp_ep05, config=plantuml.cfg]
+@startuml E-Commerce Context
+!include images/C4_Context.puml
 
+Person_Ext(customer, "Customer", "Wants to buy furniture")
 
+System(av, "Availability Service", "Calculates stock availability")
+System(fulfilment, "Fulfilment System", "Manages order fulfilment and logistics")
+System(ecom, "E-commerce website", "Allows customers to buy furniture")
+
+Rel(customer, ecom, "Uses")
+Rel(customer, av, "Uses")
+Rel(fulfilment, av, "Publishes batch_created", "events")
+Rel(av, ecom, "Publishes out_of_stock", "events")
+Rel(ecom, fulfilment, "Sends orders", "xml-rpc")
+
+@enduml
+----
+
+Practically this was a several month project. Our first step was to write a
+domain model that could represent batches, shipments, and products. We used TDD
+to build a toy system that could answer a single question: "If I want N units of
+HAZARDOUS_RUG how long will they take to be delivered?".
+
+Once we had a working domain model, we switched to building out some
+infrasructural pieces. Our first production deployment was a tiny system, that
+could receive a `batch_created` event, and log its json representation. This is
+the "Hello World" of event driven architecture. It forced us to deploy a message
+bus, hook up a producer and consumer, build a deployment pipeline, and write a
+simple message handler.
+
+TIP: When deploying an event-driven system, start with a "walking skeleton".
+Deploying a system that just logs its input forces us to tackle all the
+infrastructural questions and start working in production.
+
+Given a deployment pipeline, the infrastructure we needed, and a basic domain
+model, we were off. A couple of months later we were in production and serving
+real customers.
 
 === Convincing your stakeholders to try something new
 
@@ -432,12 +618,11 @@ we had to rewrite the entire user management function as a brand new system.
 Figuring out how to model your domain is a complex task, and the subject of many
 decent books in its own right. We like to use interactive techniques like Event
 Storming, and CRC modelling, because humans are good at collaborating through
-play.
+play. Event Modelling is another technique that brings engineers and product
+owners together to understand a system in terms of commands, queries, and events.
 
-Event Modelling is a technique that brings engineers and product owners together
-to understand a system in terms of commands, queries, and events.
-
-TODO: Link event modelling
+TIP: Check out www.eventmodelling.org and www.eventstorming.org for some great
+guides to visual modelling of systems with events.
 
 The goal is to be able to talk about the system using the same ubiquitous
 language, so that you can agree on where the complexity lies.
@@ -470,8 +655,6 @@ What message broker should we use? How should we
 .Case Study: David Seddon on Taking Small Steps
 *******************************************************************************
 
-// TODO: consider moving this to the introduction?
-
 _Hi, I'm David - one of the tech reviewers on this book. I've worked on
 several complex Django monoliths, and so I've known the pain that Bob and
 Harry have made all sorts of grand promises about soothing._
@@ -481,7 +664,7 @@ excited. I had successfully used some of the techniques already on
 smaller projects, but here was a blueprint for much larger, database-backed
 systems like the one I work on in my day job. So, I started trying to figure
 out how I could implement it at my current organization._
-
+ 
 _I chose to tackle a problem area of the code base that had always bothered me.
 I began by implementing it as a use case. But I found myself running
 into unexpected questions. There were things that I hadn't considered
@@ -525,18 +708,6 @@ right - and others will too._
 *******************************************************************************
 
 
-
-=== More required reading
-
-* _Monolith to Microservices_ by Sam Newman, and his original book,
-  _Building Microservices_. Strangler (Fig) pattern is mentioned as a
-  favorite, also many others.  Good if you're thinking of moving to
-  microservices, and also on integration patterns and the considerations
-  of async messaging-based integration.
-
-* https://leanpub.com/clean-architectures-in-python[Clean Architectures in Python]
-  by Leonardo Giordani, which came out in 2019, is one of the few previous
-  books on application architecture in Python.
 
 === Questions our Tech Reviewers Asked That We Couldn't Work Into Prose
 
@@ -603,17 +774,38 @@ What if I have a read-only but business-logic heavy system?::
     lot of complexity to our read-side.
     +++<br />+++
     We've written systems where the view models needed extensive unit tests. In
-    those systems, we split a _view builder_ from a _view fetcher_.
-    +++<br />+++
-    +++<br />+++
-    TODO: Diagram
-    +++<br />+++
-    +++<br />+++
-    This makes it easy to test the view builder by giving it mocked data, eg. a list
-    of dicts.
-    +++<br />+++
-    "Fancy CQRS" with event handlers is really a way of running our complex view
-    logic whenever we write so that we can avoid running it when we read.
+    those systems, we split a _view builder_ from a _view fetcher_, as in
+    <<view_builder_diagram>>.
+
+[[view_builder_diagram]]
+.A view builder and fetcher
+image::images/apwp_ep06.png[]
+[role="image-source"]
+----
+[plantuml, apwp_ep06, config=plantuml.cfg]
+@startuml View Fetcher Component Diagram
+!include images/C4_Component.puml
+
+LAYOUT_LEFT_RIGHT
+
+ComponentDb(db, "Database", "RDBMS")
+Component(fetch, "View Fetcher", "Reads data from db, returning list of tuples or dicts")
+Component(build, "View Builder", "Filters and maps tuples")
+Component(api, "API", "Handles HTTP and serialization concerns")
+
+Rel(fetch, db, "Read data from")
+Rel(build, fetch, "Invokes")
+Rel(api, build, "Invokes")
+
+@enduml
+----
+
+This makes it easy to test the view builder by giving it mocked data, eg. a list
+of dicts.
++++<br />+++
+"Fancy CQRS" with event handlers is really a way of running our complex view
+logic whenever we write so that we can avoid running it when we read.
+// TODO: move this to the cqrs chapter?
 
 Do I need to build microservices to do this stuff?::
     Egads, no! These techniques pre-date microservices by a decade or so. Aggregates,
@@ -626,8 +818,8 @@ I'm using Django, can I still do this?::
     We have an entire appendix, just for you! <<appendix_django>>
 
 
-How can I convince other engineers to try this stuff?::
-    tbc
+// TODO: How can I convince other engineers to try this stuff?::
+
 
 [[footguns]]
 === Footguns
@@ -648,8 +840,9 @@ AWS EventBridge.
 
 Tyler Treat has some excellent blog posts on his site bravenewgeek.com and you
 should read at least:
- * https://bravenewgeek.com/you-cannot-have-exactly-once-delivery/
- * https://bravenewgeek.com/what-you-want-is-what-you-dont-understanding-trade-offs-in-distributed-messaging/
+
+ * https://bravenewgeek.com/you-cannot-have-exactly-once-delivery/[You cannot have exactly-once delivery].
+ * https://bravenewgeek.com/what-you-want-is-what-you-dont-understanding-trade-offs-in-distributed-messaging/[Understanding tradeoffs in distributed messaging].
 
 ==== We explicitly choose small, focused transactions that can fail independently
 
@@ -657,9 +850,8 @@ In <<chapter_08_events_and_message_bus>> we update our process so that _dealloca
 _reallocating_ the line happen in two separate units of work.
 You will need monitoring to know when these transactions fail, and tooling to
 replay events. Some of this is made easier by using a transaction log as your
-message broker (eg. Kafka, EventStore). You might also look at the Outbox
-pattern:
-* https://microservices.io/patterns/data/transactional-outbox.html
+message broker (eg. Kafka, EventStore). You might also look at the 
+https://microservices.io/patterns/data/transactional-outbox.html[Outbox pattern].
 
 ==== We don't discuss idempotency
 
@@ -671,8 +863,9 @@ safely retry events when they fail.
 
 There's a lot of good material on idempotent message handling, try starting
 here:
-* https://blog.sapiensworks.com/post/2015/08/26/How-To-Ensure-Idempotency
-* https://lostechies.com/jimmybogard/2013/06/03/un-reliability-in-messaging-idempotency-and-de-duplication/
+
+* https://blog.sapiensworks.com/post/2015/08/26/How-To-Ensure-Idempotency[How to ensure idempotency].
+* https://lostechies.com/jimmybogard/2013/06/03/un-reliability-in-messaging-idempotency-and-de-duplication/[Un-reliability in messaging].
 
 ==== Your events will need to change their schema over time
 
@@ -680,8 +873,29 @@ You'll need to find some way of documenting your events and sharing schema
 with consumers. We like using JSON schema and markdown because it's simple but
 there is other prior art.
 
-Greg Young wrote an entire book on managing event-driven systems over time:
-https://www.goodreads.com/book/show/34327067-versioning-in-an-event-sourced-system
+* Greg Young wrote an entire book on
+  https://www.goodreads.com/book/show/34327067-versioning-in-an-event-sourced-system[managing event-driven systems over time]:
 
-https://martinfowler.com/books/eip.html[Enterprise Integration Patterns] by
-(as always) Martin Fowler is a pretty good start for messaging patterns.
+
+* https://martinfowler.com/books/eip.html[Enterprise Integration Patterns] by
+  (as always) Martin Fowler is a pretty good start for messaging patterns.
+
+Phew! That's a lot of warnings, and we hope we haven't scared you off completely.
+Our goal with this book has been to give you just enough knowledge and intuition
+that you can start building some of this for yourself. We would love to hear how
+you get on and what problems you're facing with the techniques in your own
+systems, so why not get in touch with us over at www.cosmicpython.com ?
+
+
+=== More required reading
+
+* https://leanpub.com/clean-architectures-in-python[Clean Architectures in Python]
+  by Leonardo Giordani, which came out in 2019, is one of the few previous
+  books on application architecture in Python.
+
+* _Monolith to Microservices_ by Sam Newman, and his original book,
+  _Building Microservices_. Strangler (Fig) pattern is mentioned as a
+  favorite, also many others.  Good if you're thinking of moving to
+  microservices, and also on integration patterns and the considerations
+  of async messaging-based integration.
+
