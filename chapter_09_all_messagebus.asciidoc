@@ -178,10 +178,9 @@ class AllocationRequired(Event):
 ----
 ====
 
-Then we rename `services.py` to `handlers.py`, we add in with the existing
-message handler for `send_out_of_stock_notification`, and most importantly,
-we change all the handlers so that they have the same inputs:  an event
-and a UoW:
+Then we rename `services.py` to `handlers.py`, add the existing message handler
+for `send_out_of_stock_notification`, and most importantly, we change all the
+handlers so that they have the same inputs: an event and a UoW:
 
 
 [[services_to_handlers]]
@@ -251,7 +250,7 @@ The change might be clearer as a diff:
 ----
 ====
 
-Along the way, we've our service-layer's API, which was a scattering of
+Along the way, we've enriched our service-layer's API, which was a scattering of
 primitives, with some well-defined objects (see sidebar).
 
 .From Domain Objects, via Primitive Obsession, to Events as an Interface

@@ -36,7 +36,7 @@ The differences between them, though, are important.
 
 Commands are sent by one actor to another specific actor with the expectation that
 a particular thing will happen as a result. When I post a form to an API handler,
-I am sending a command. We name commands with imperative tense verb phrases like
+I am sending a command. We name commands with imperative mood verb phrases like
 "allocate stock," or "delay shipment."
 
 Commands capture _intent_. They express our wish for the system to do something.
@@ -494,7 +494,7 @@ things half-finished.
 WARNING: At some point, regardless of tenacity, we'll have to give up trying to
     process the message. Building reliable systems with distributed messages is
     hard and we have to skim over some tricky bits. There's pointers to more
-    reference materials in <<chapter_10_commands>> and the epilogue.
+    reference materials in the epilogue.
 
 
 [[chapter_10_commands_and_events_tradeoffs]]
