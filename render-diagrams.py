@@ -35,17 +35,20 @@ def render_images(chapter_name):
             code = next_element.cssselect('pre')[0].text
             render_image(code, image_id)
 
+INCLUDES = [
+    'images/C4_Context.puml',
+    'images/C4_Component.puml',
+]
 
 def _add_dots(source, image_id):
     lines = source.splitlines()
     assert lines[0].startswith('[')
     assert image_id in lines[0]
     plantuml_cfg = str(Path('plantuml.cfg').absolute())
-    c4_include = 'images/C4_Context.puml'
     lines[0] = lines[0].replace('config=plantuml.cfg', f'config={plantuml_cfg}')
     for ix, l in enumerate(lines):
-        if c4_include in l:
-            lines[ix] = l.replace(c4_include, str(Path(c4_include).absolute()))
+        if include := next((i for i in INCLUDES if i in l), None):
+            lines[ix] = l.replace(include, str(Path(include).absolute()))
     lines.insert(1, '....')
     lines.append('....')
     return '\n'.join(lines)
