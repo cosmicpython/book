@@ -516,7 +516,7 @@ image::images/apwp_ep04.png[]
 ----
 [plantuml, apwp_ep04, config=plantuml.cfg]
 @startuml E-Commerce Context
-!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/release/1-0/C4_Context.puml
+!include images/C4_Context.puml
 
 Person_Ext(customer, "Customer", "Wants to buy furniture")
 
@@ -539,7 +539,7 @@ image::images/apwp_ep05.png[]
 ----
 [plantuml, apwp_ep05, config=plantuml.cfg]
 @startuml E-Commerce Context
-!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/release/1-0/C4_Context.puml
+!include images/C4_Context.puml
 
 Person_Ext(customer, "Customer", "Wants to buy furniture")
 
@@ -777,16 +777,15 @@ What if I have a read-only but business-logic heavy system?::
     lot of complexity to our read-side.
     +++<br />+++
     We've written systems where the view models needed extensive unit tests. In
-    those systems, we split a _view builder_ from a _view fetcher_.
-    +++<br />+++
-    +++<br />+++
+    those systems, we split a _view builder_ from a _view fetcher_, as in
+    <<view_builder_diagram>>.
 
 [[view_builder_diagram]]
 .A view builder and fetcher
-image::images/apwp_ep04.png[]
+image::images/apwp_ep06.png[]
 [role="image-source"]
 ----
-[plantuml, apwp_ep04, config=plantuml.cfg]
+[plantuml, apwp_ep06, config=plantuml.cfg]
 @startuml View Fetcher Component Diagram
 !include images/C4_Component.puml
 
