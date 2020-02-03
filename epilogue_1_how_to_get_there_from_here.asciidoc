@@ -569,8 +569,8 @@ bus, hook up a producer and consumer, build a deployment pipeline, and write a
 simple message handler.
 
 TIP: When deploying an event-driven system, start with a "walking skeleton".
-Deploying a system that just logs its input forces us to tackle all the
-infrastructural questions and start working in production.
+    Deploying a system that just logs its input forces us to tackle all the
+    infrastructural questions and start working in production.
 
 Given a deployment pipeline, the infrastructure we needed, and a basic domain
 model, we were off. A couple of months later we were in production and serving
@@ -633,23 +633,6 @@ line model. You can treat this as a lunch time workshop, or as a spike at the
 beginning of a project. Once you can demonstrate the value of modelling, it's
 easier to make the argument for structuring the project to make modelling easy.
 
-
-
-=== Getting started
-
-Once you've managed to convince your team to try a new way of building software
-it's easy to get overwhelmed by the sheer number of new things to think about.
-
-What message broker should we use? How should we
-
-* decide on a piece of the old system to carve out.
-* get your system to produce events
-    - as its main outputs
-    - and as inputs to your new system
-* consume them in your new service. we now have a separate db and bounded context
-* the new system produces
-    - either the same events the old one did (and we can switch those old parts off)
-    - or new ones, and we switch over the downstream things progressively
 
 
 .Case Study: David Seddon on Taking Small Steps
