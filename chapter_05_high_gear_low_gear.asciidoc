@@ -91,14 +91,14 @@ def test_prefers_current_stock_batches_to_shipments():
 def test_prefers_warehouse_batches_to_shipments():
     in_stock_batch = Batch("in-stock-batch", "RETRO-CLOCK", 100, eta=None)
     shipment_batch = Batch("shipment-batch", "RETRO-CLOCK", 100, eta=tomorrow)
-    repo = FakeRepository([warehouse_batch, shipment_batch])
+    repo = FakeRepository([in_stock_batch, shipment_batch])
     session = FakeSession()
 
     line = OrderLine('oref', "RETRO-CLOCK", 10)
 
     services.allocate(line, repo, session)
 
-    assert warehouse_batch.available_quantity == 90
+    assert in_stock_batch.available_quantity == 90
 ----
 ====
 
