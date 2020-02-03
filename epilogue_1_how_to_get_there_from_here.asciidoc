@@ -802,13 +802,13 @@ Rel(api, build, "Invokes")
 
 @enduml
 ----
-    +++<br />+++
-    +++<br />+++
-    This makes it easy to test the view builder by giving it mocked data, eg. a list
-    of dicts.
-    +++<br />+++
-    "Fancy CQRS" with event handlers is really a way of running our complex view
-    logic whenever we write so that we can avoid running it when we read.
+
+This makes it easy to test the view builder by giving it mocked data, eg. a list
+of dicts.
++++<br />+++
+"Fancy CQRS" with event handlers is really a way of running our complex view
+logic whenever we write so that we can avoid running it when we read.
+// TODO: move this to the cqrs chapter?
 
 Do I need to build microservices to do this stuff?::
     Egads, no! These techniques pre-date microservices by a decade or so. Aggregates,
@@ -821,8 +821,8 @@ I'm using Django, can I still do this?::
     We have an entire appendix, just for you! <<appendix_django>>
 
 
-How can I convince other engineers to try this stuff?::
-    tbc
+// TODO: How can I convince other engineers to try this stuff?::
+
 
 [[footguns]]
 === Footguns
@@ -843,8 +843,9 @@ AWS EventBridge.
 
 Tyler Treat has some excellent blog posts on his site bravenewgeek.com and you
 should read at least:
- * https://bravenewgeek.com/you-cannot-have-exactly-once-delivery/
- * https://bravenewgeek.com/what-you-want-is-what-you-dont-understanding-trade-offs-in-distributed-messaging/
+
+ * https://bravenewgeek.com/you-cannot-have-exactly-once-delivery/[You cannot have exactly-once delivery].
+ * https://bravenewgeek.com/what-you-want-is-what-you-dont-understanding-trade-offs-in-distributed-messaging/[Understanding tradeoffs in distributed messaging].
 
 ==== We explicitly choose small, focused transactions that can fail independently
 
@@ -852,9 +853,8 @@ In <<chapter_08_events_and_message_bus>> we update our process so that _dealloca
 _reallocating_ the line happen in two separate units of work.
 You will need monitoring to know when these transactions fail, and tooling to
 replay events. Some of this is made easier by using a transaction log as your
-message broker (eg. Kafka, EventStore). You might also look at the Outbox
-pattern:
-* https://microservices.io/patterns/data/transactional-outbox.html
+message broker (eg. Kafka, EventStore). You might also look at the 
+https://microservices.io/patterns/data/transactional-outbox.html[Outbox pattern].
 
 ==== We don't discuss idempotency
 
@@ -866,8 +866,9 @@ safely retry events when they fail.
 
 There's a lot of good material on idempotent message handling, try starting
 here:
-* https://blog.sapiensworks.com/post/2015/08/26/How-To-Ensure-Idempotency
-* https://lostechies.com/jimmybogard/2013/06/03/un-reliability-in-messaging-idempotency-and-de-duplication/
+
+* https://blog.sapiensworks.com/post/2015/08/26/How-To-Ensure-Idempotency[How to ensure idempotency].
+* https://lostechies.com/jimmybogard/2013/06/03/un-reliability-in-messaging-idempotency-and-de-duplication/[Un-reliability in messaging].
 
 ==== Your events will need to change their schema over time
 
@@ -875,11 +876,12 @@ You'll need to find some way of documenting your events and sharing schema
 with consumers. We like using JSON schema and markdown because it's simple but
 there is other prior art.
 
-Greg Young wrote an entire book on managing event-driven systems over time:
-https://www.goodreads.com/book/show/34327067-versioning-in-an-event-sourced-system
+* Greg Young wrote an entire book on
+  https://www.goodreads.com/book/show/34327067-versioning-in-an-event-sourced-system[managing event-driven systems over time]:
 
-https://martinfowler.com/books/eip.html[Enterprise Integration Patterns] by
-(as always) Martin Fowler is a pretty good start for messaging patterns.
+
+* https://martinfowler.com/books/eip.html[Enterprise Integration Patterns] by
+  (as always) Martin Fowler is a pretty good start for messaging patterns.
 
 Phew! That's a lot of warnings, and we hope we haven't scared you off completely.
 Our goal with this book has been to give you just enough knowledge and intuition
