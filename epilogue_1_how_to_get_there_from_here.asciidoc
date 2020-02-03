@@ -582,11 +582,12 @@ How should use cases interact across a larger system? Is it a problem for one to
 Is it a smell for a use case to use multiple repositories/aggregates, and why?::
     An aggregate is a consistency boundary, so if your use case needs to update
     two aggregates atomically (within the same transaction), then your
-   consistency boundary is wrong.  That might be fine ("practicality beats purity") but on the other hand
-   it may make your system harder to reason about.
+    consistency boundary is wrong, strictly speaking.  Ideally you should think
+    about moving to a new aggregate that wraps up all the things you want to 
+    change at the same time.
     +++<br />+++
     If you're actually only updating one aggregate, and using the other(s) for
-    read-only access, then that's _fine, although you could consider building a
+    read-only access, then that's _fine_, although you could consider building a
     read model / view to get you that data instead--it makes things cleaner if
     each use case only has one aggregate.
     +++<br />+++
