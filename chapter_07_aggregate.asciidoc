@@ -749,7 +749,7 @@ def test_concurrent_updates_to_version_are_not_allowed(postgres_session_factory)
 To get the test to pass as it is, we can set the transaction isolation level
 on our session:
 
-[[transaction_serializable]]
+[[isolation_repeatable_read]]
 .Set isolation level for session (src/allocation/service_layer/unit_of_work.py)
 ====
 [source,python]
