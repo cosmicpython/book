@@ -414,10 +414,14 @@ elsewhere.  The Fowler link earlier is a good starting point, and either
 
 === 1 Aggregate = 1 Repository
 
-Once you define certain entities to be aggregates, we need to apply the
-rule that they are the only entities that are publicly accessible to the
-outside world.  In other words, the only repositories we are allowed should
-be repositories that return aggregates.
+Once you define certain entities to be aggregates, we need to apply the rule
+that they are the only entities that are publicly accessible to the outside
+world.  In other words, the only repositories we are allowed should be
+repositories that return aggregates.
+
+NOTE: The rule that repositories should only return aggregates is the main place
+    where we enforce the convention that aggregates are the only way into our
+    domain model.  Be wary of breaking it!
 
 In our case, we'll switch from `BatchRepository` to `ProductRepository`:
 
