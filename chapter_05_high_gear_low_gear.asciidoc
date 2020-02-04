@@ -99,6 +99,7 @@ def test_prefers_warehouse_batches_to_shipments():
     services.allocate(line, repo, session)
 
     assert in_stock_batch.available_quantity == 90
+    assert shipment_batch.available_quantity == 100
 ----
 ====
 
