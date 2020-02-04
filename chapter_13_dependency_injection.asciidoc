@@ -402,7 +402,7 @@ Here's a first cut.
 ----
 def bootstrap(
     start_orm: bool = True,  #<1>
-    uow: unit_of_work.AbstractUnitOfWork = unit_of_work.SqlAlchemyUnitOfWork(),
+    uow: unit_of_work.AbstractUnitOfWork = unit_of_work.SqlAlchemyUnitOfWork(),  #<2>
     send_mail: Callable = email.send,
     publish: Callable = redis_eventpublisher.publish,
 ) -> messagebus.MessageBus:
@@ -411,19 +411,19 @@ def bootstrap(
         orm.start_mappers()  #<1>
 
     dependencies = {'uow': uow, 'send_mail': send_mail, 'publish': publish}
-    injected_event_handlers = {  #<2>
+    injected_event_handlers = {  #<3>
         event_type: [
             inject_dependencies(handler, dependencies)
             for handler in event_handlers
         ]
         for event_type, event_handlers in handlers.EVENT_HANDLERS.items()
     }
-    injected_command_handlers = {  #<2>
+    injected_command_handlers = {  #<3>
         command_type: inject_dependencies(handler, dependencies)
         for command_type, handler in handlers.COMMAND_HANDLERS.items()
     }
 
-    return messagebus.MessageBus(  #<3>
+    return messagebus.MessageBus(  #<4>
         uow=uow,
         event_handlers=injected_event_handlers,
         command_handlers=injected_command_handlers,
@@ -435,10 +435,15 @@ def bootstrap(
     to be done once at the beginning of an app.  We also see things like
     setting up the `logging` module
 
-<2> We build up our injected versions of the handlers mappings using
+<2> We can use the argument defaults to define what the normal/production
+    defaults are.  It's nice to have them in a single place, but
+    sometimes dependencies have some side-effects at construction-time,
+    in which case you might prefer to default them to `None` instead.
+
+<3> We build up our injected versions of the handlers mappings using
     a function called `inject_dependencies()` which we'll show next.
 
-<3> And we return a configured message bus ready to use.
+<4> And we return a configured message bus ready to use.
 
 // TODO more examples of init stuff
 
