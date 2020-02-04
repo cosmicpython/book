@@ -805,7 +805,7 @@ read1, write1, read2, write2(succeed)
 //TODO maybe better diagrams here?
 
 In our simple case, it's not obvious which to prefer.  In a more complex
-scenario, `SELECT FOR UPDATE` might lead to more deadlocks, while `READ REPETABLE`
+scenario, `SELECT FOR UPDATE` might lead to more deadlocks, while `REPEATABLE READ`
 having more of an "optimistic locking" approach and might lead to more failures,
 but the failures might be more recoverable.  So, as usual, the right solution
 will depend on circumstances.
