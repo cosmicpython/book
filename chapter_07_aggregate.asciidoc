@@ -763,7 +763,7 @@ DEFAULT_SESSION_FACTORY = sessionmaker(bind=create_engine(
 
 Transaction isolation levels are tricky stuff, it's worth spending time
 understanding https://www.postgresql.org/docs/12/transaction-iso.html[the
-documentation].
+Postgres documentation] (or whichever database you use--annoyingly, they all have quite radically different definitions.  Oracle's SERIALIZABLE is equivalent to Postgres's REPETABLE READ, for example.
 
 
 ==== SELECT FOR UPDATE Can Also Help
