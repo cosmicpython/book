@@ -466,7 +466,7 @@ def allocate(
 ----
 ====
 
-<1> We commit even if we fail to allocate because the code is simpler this way
+<1> As before, we commit even if we fail to allocate because the code is simpler this way
     and it's easier to reason about: we always commit unless something goes
     wrong. Committing when we haven't changed anything is safe, and keeps the
     code uncluttered.
@@ -810,4 +810,3 @@ a|
 
 a|
 |===
-
