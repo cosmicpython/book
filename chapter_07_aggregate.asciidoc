@@ -519,8 +519,17 @@ We've got our new aggregate so we've solved the conceptual problem of choosing
 an object to be in charge of consistency boundaries.  Let's now spend a little
 time talking about how to enforce data integrity at the database level.
 
+NOTE: This section of the chapter has a lot of implementation details. Some
+    of it is Postgres-specific for example.  But more generally, we're showing
+    one approach to managing concurrency issues, but it's just one approach.
+    Real requirements in this area vary a lot from project to project. You
+    shouldn't expect to be able to copy-paste code here into production.
+
+
 We don't want to hold a lock over the entire batches table, but how will we
-implement holding a lock over just the rows for a particular sku?  The answer
+implement holding a lock over just the rows for a particular sku?
+
+One answer
 is to have a single attribute on the Product model which acts as a marker for
 the whole state change being complete, and we use it as the single resource
 that concurrent workers can fight over:  if two transactions both read the
@@ -528,6 +537,11 @@ state of the world for `batches` at the same time, and they both want to update
 the `allocations` tables, we force both of them to also try and update the
 `version_number` in the `products` table, in such a way that only one of them
 can win and the world stays consistent.
+
+TIP: Version numbers are just one way of implementing optimistic locking. You
+    could achieve the same thing by setting the Postgres transaction isolation
+    level to `SERIALIZABLE`, but that often comes at a severe performance cost.
+    Version numbers also make an implicit concept explicit.
 
 <<version_numbers_sequence_diagram>> shows an illustration: two concurrent
 transactions do their read operations at the same time, so they see
@@ -648,10 +662,13 @@ concurrent attempts to do allocation against the same `Product`, one of them
 should fail, because they can't both update the version number.
 
 First let's simulate a "slow" transaction using a function that does
-allocation, and then does an explicit sleep:
+allocation, and then does an explicit sleep:footnote:[`time.sleep()` works well
+in our use case, but it's not the most reliable or efficient way to reproduce
+concurrency bugs.  Consider using semaphores or similar synchronization primitives
+shared between your threads to get better guarantees of behavior.]
 
 [[time_sleep_thread]]
-.time.sleep can reliably produce concurrency behavior (tests/integration/test_uow.py)
+.time.sleep can reproduce concurrency behavior (tests/integration/test_uow.py)
 ====
 [source,python]
 ----
@@ -668,6 +685,7 @@ def try_to_allocate(orderid, sku, exceptions):
         exceptions.append(e)
 ----
 ====
+
 
 Then we have our test invoke this slow allocation twice, concurrently, using
 threads:
@@ -720,7 +738,7 @@ def test_concurrent_updates_to_version_are_not_allowed(postgres_session_factory)
 
 <2> We assert that the version number has only been incremented once.
 
-<3> We can also check on the specific exception if we like
+<3> We can also check on the specific exception if we like.
 
 <4> And we double-check that only one allocation has gotten through.
 
@@ -731,26 +749,26 @@ def test_concurrent_updates_to_version_are_not_allowed(postgres_session_factory)
 To get the test to pass as it is, we can set the transaction isolation level
 on our session:
 
-[[transaction_serializable]]
+[[isolation_repeatable_read]]
 .Set isolation level for session (src/allocation/service_layer/unit_of_work.py)
 ====
 [source,python]
 ----
 DEFAULT_SESSION_FACTORY = sessionmaker(bind=create_engine(
     config.get_postgres_uri(),
-    isolation_level="SERIALIZABLE",
+    isolation_level="REPEATABLE READ",
 ))
 ----
 ====
 
 Transaction isolation levels are tricky stuff, it's worth spending time
-understanding https://www.postgresql.org/docs/9.6/transaction-iso.html[the
-documentation].
+understanding https://www.postgresql.org/docs/12/transaction-iso.html[the
+Postgres documentation] (or whichever database you use--annoyingly, they all have quite radically different definitions.  Oracle's SERIALIZABLE is equivalent to Postgres's REPETABLE READ, for example.
 
 
 ==== SELECT FOR UPDATE Can Also Help
 
-An alternative to using the `SERIALIZABLE` isolation level is to use
+An alternative to using the `REPEATABLE READ` isolation level is to use
 https://www.postgresql.org/docs/9.6/explicit-locking.html[SELECT FOR UPDATE],
 which will produce different behavior: two concurrent transactions will not
 be allowed to do a read on the same rows at the same time.
@@ -787,7 +805,7 @@ read1, write1, read2, write2(succeed)
 //TODO maybe better diagrams here?
 
 In our simple case, it's not obvious which to prefer.  In a more complex
-scenario, `SELECT FOR UPDATE` might lead to more deadlocks, while `SERIALIZABLE`
+scenario, `SELECT FOR UPDATE` might lead to more deadlocks, while `REPEATABLE READ`
 having more of an "optimistic locking" approach and might lead to more failures,
 but the failures might be more recoverable.  So, as usual, the right solution
 will depend on circumstances.
