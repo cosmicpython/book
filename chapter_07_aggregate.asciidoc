@@ -664,7 +664,7 @@ should fail, because they can't both update the version number.
 First let's simulate a "slow" transaction using a function that does
 allocation, and then does an explicit sleep:footnote:[`time.sleep()` works well
 in our use case, but it's not the most reliable or efficient way to reproduce
-concurrency bugs.  Consider using semaphores or similar concurrency primitives
+concurrency bugs.  Consider using semaphores or similar synchronization primitives
 shared between your threads to get better guarantees of behavior.]
 
 [[time_sleep_thread]]
