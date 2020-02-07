@@ -88,7 +88,7 @@ This is a business rule that imposes an invariant. The invariant is that an
 order line is allocated to either zero or one batch, but never more than one.
 We need to make sure that our code never accidentally calls `Batch.allocate()`
 on two different batches for the same line, and currently, there's nothing
-there to explicitly stop us doing that.  
+there to explicitly stop us doing that.
 
 
 ==== Invariants, Concurrency and Locks
@@ -798,12 +798,20 @@ radically different definitions.  Oracle's SERIALIZABLE is equivalent to
 Postgres's REPETABLE READ, for example.]
 
 
-==== SELECT FOR UPDATE Can Also Help
+==== Pessimistic Concurrency Control Example: SELECT FOR UPDATE
 
-An alternative to using the `REPEATABLE READ` isolation level is to use
-https://www.postgresql.org/docs/9.6/explicit-locking.html[SELECT FOR UPDATE],
-which will produce different behavior: two concurrent transactions will not
-be allowed to do a read on the same rows at the same time.
+There are any number of other ways you might want to approach this,
+but we'll show one.  https://www.postgresql.org/docs/9.6/explicit-locking.html[SELECT FOR UPDATE],
+produces different behavior: two concurrent transactions will not be allowed to
+do a read on the same rows at the same time.
+
+`SELECT FOR UPDATE` is a way of declaring, during the read phase of
+your transaction, that certain rows are going to be updated later,
+and other transactions should keep clear.  So this is an example
+of pessimistic concurrency control.
+
+Here's how you can use the SQLAlchemy DSL to specify at query-time
+that you are marking some rows for update:
 
 [[with_for_update]]
 .SQLAlchemy with_for_update (src/allocation/adapters/repository.py)
