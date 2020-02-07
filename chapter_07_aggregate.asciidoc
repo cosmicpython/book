@@ -651,12 +651,12 @@ class Product:
 
 <1> There it is!
 
-NOTE: If you're scratching your head at this version number business, it might
-help to remember that the _number_ isn't important. What's important is that
-the Product database row is modified whenever we make a change to the Product
-aggregate. The version number is a simple human-comprehensible way to model a
-thing that changes on every write, but it could equally be a random UUID every
-time.
+TIP: If you're scratching your head at this version number business, it might
+    help to remember that the _number_ isn't important. What's important is
+    that the Product database row is modified whenever we make a change to the
+    Product aggregate. The version number is a simple human-comprehensible way
+    to model a thing that changes on every write, but it could equally be a
+    random UUID every time.
 
 
 === Testing for Our Data Integrity Rules
@@ -767,7 +767,10 @@ DEFAULT_SESSION_FACTORY = sessionmaker(bind=create_engine(
 
 Transaction isolation levels are tricky stuff, it's worth spending time
 understanding https://www.postgresql.org/docs/12/transaction-iso.html[the
-Postgres documentation] (or whichever database you use--annoyingly, they all have quite radically different definitions.  Oracle's SERIALIZABLE is equivalent to Postgres's REPETABLE READ, for example.
+Postgres documentation]footnote:[If you're not using Postgres, you'll need to
+read different documentation. Annoyingly, different databases all have quite
+radically different definitions.  Oracle's SERIALIZABLE is equivalent to
+Postgres's REPETABLE READ, for example.]
 
 
 ==== SELECT FOR UPDATE Can Also Help
