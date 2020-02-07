@@ -182,14 +182,14 @@ class AbstractUnitOfWork(abc.ABC):
     batches: repository.AbstractRepository  #<1>
 
     def __exit__(self, *args):  #<2>
-        self.rollback()  #<5>
+        self.rollback()  #<4>
 
     @abc.abstractmethod
-    def commit(self):  #<4>
+    def commit(self):  #<3>
         raise NotImplementedError
 
     @abc.abstractmethod
-    def rollback(self):  #<5>
+    def rollback(self):  #<4>
         raise NotImplementedError
 ----
 ====
@@ -201,9 +201,9 @@ class AbstractUnitOfWork(abc.ABC):
     the two magic methods that execute when we enter the `with` block and
     when we exit it.  They're our setup and teardown phases.
 
-<4> It provides a way to explicitly commit our work
+<3> It provides a way to explicitly commit our work
 
-<5> If we don't commit, or if we exit the context manager by raising an error,
+<4> If we don't commit, or if we exit the context manager by raising an error,
     we do a `rollback`. (the rollback has no effect if `commit()` has been
     called.  Read on for more discussion of this).
 
