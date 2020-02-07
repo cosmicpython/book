@@ -946,8 +946,14 @@ tests to understand how things work.
 
 We've decoupled the infrastructural parts of our system, like the database and
 API handlers, so that we can plug them into the outside of our application.
-This helps us to keep our codebase well organised, and stops us from building a
+This helps us to keep our codebase well organized, and stops us from building a
 big ball of mud.
+
+By applying the dependency inversion principle, and by using the ports-and-adapters
+inspired patterns like Repository and Unit of Work, we've made it possible to
+do TDD in both high gear and low gear, and to maintain a healthy test pyramid.
+We can test our system edge-to-edge, and the need for integration and
+end-to-end tests is kept to a minimum.
 
 Lastly, we've talked about the idea of consistency boundaries. We don't want to
 lock our entire system whenever we make a change, so we have to choose which
