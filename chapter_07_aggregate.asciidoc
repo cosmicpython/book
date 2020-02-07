@@ -842,17 +842,35 @@ to
 read1, write1, read2, write2(succeed)
 ----
 
+Some people refer to this as the "read-modify-write" failure mode.
+https://www.2ndquadrant.com/en/blog/postgresql-anti-patterns-read-modify-write-cycles/[This page has a good overview].
+
 //TODO maybe better diagrams here?
 
-In our simple case, it's not obvious which to prefer.  In a more complex
-scenario, `SELECT FOR UPDATE` might lead to more deadlocks, while `REPEATABLE READ`
-having more of an "optimistic locking" approach and might lead to more failures,
-but the failures might be more recoverable.  So, as usual, the right solution
-will depend on circumstances.
+Again, in our simple case, it's not obvious which to prefer.  In a more complex
+scenario, `SELECT FOR UPDATE` might lead to more deadlocks, while `REPEATABLE
+READ` would lead to more retries.  But if you have a test like the
+one we've shown, you can specify the behavior you want, and see how
+it changes.  You can also use the test as a basis for performing
+some performance experiments.
 
-NOTE: Some people refer to this as the "read-modify-write" failure mode.
-    https://www.2ndquadrant.com/en/blog/postgresql-anti-patterns-read-modify-write-cycles/[This page has a good overview].
 
+
+=== Aggregates Wrap-up
+
+Specific choices around concurrency control vary a lot based on business
+circumstances and your storage technology choices, but we'd like to bring this
+chapter back to the conceptual idea of an Aggregate:  we explicitly model an
+object as being the main entrypoint to some subset of our model, and to be in
+charge of enforcing the invariants and business rules that apply across all of
+those objects.
+
+
+Choosing the right aggregate is a key decision, and it's one you may revisit
+over time.  You can read more about it in the various well-known DDD books.
+We also recommend these three online papers on
+https://dddcommunity.org/library/vernon_2011/[Effective Aggregate Design]
+by Vaugh Vernon (the "red book" author).
 
 
 .Recap: Aggregates and Consistency Boundaries
@@ -906,14 +924,16 @@ a|
 * Dealing with eventual consistency between aggregates can be complex.
 |===
 
-Part one Recap
-=============
+
+
+=== Part One Recap
+
 
 Those of you with particularly good memories will remember this diagram from the
 start of the book.
 
 [[recap_components_diagram]]
-.A component diagram for our app at the end of <<part1>>
+.A component diagram for our app at the end of Part One
 image::images/apwp_p101.png[]
 
 Well, here we are, at the end of part one. What have we achieved? We've seen how
