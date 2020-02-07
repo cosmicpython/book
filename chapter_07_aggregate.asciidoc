@@ -963,6 +963,14 @@ For a small system, this is everything you need to go and play with the ideas of
 Domain-Driven Design. You now have the tools to build database agnostic domain
 models that represent the shared language of your business experts. Hurrah!
 
+NOTE: At the risk of laboring the point--we've been at pains to point out that
+    each pattern comes at a cost.  Each layer of indirection has a price in terms
+    of complexity and duplication in our code, and will be confusing to programmers
+    who've never seen them before.  If your app is essentially a simple CRUD
+    wrapper around a database, and isn't likely to be anything more than that
+    in the forseeable future, _you don't need these patterns_.  Go ahead and
+    use Django, and save yourself a lot of bother.
+
 In part two, we'll zoom out and talk about a bigger topic: if aggregates are our
 boundary, and we can only update one at a time, how do we model processes that
 cross consistency boundaries?
