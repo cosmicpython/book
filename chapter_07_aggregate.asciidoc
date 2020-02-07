@@ -805,13 +805,15 @@ but we'll show one.  https://www.postgresql.org/docs/9.6/explicit-locking.html[S
 produces different behavior: two concurrent transactions will not be allowed to
 do a read on the same rows at the same time.
 
-`SELECT FOR UPDATE` is a way of declaring, during the read phase of
-your transaction, that certain rows are going to be updated later,
-and other transactions should keep clear.  So this is an example
+`SELECT FOR UPDATE` is a way of picking a row or rows to use as a lock
+(although those rows don't have to be the ones you update).  If two
+transactions both try to `SELECT FOR UPDATE` a row at the same time, one will
+win, and the other will wait until the lock is released. So this is an example
 of pessimistic concurrency control.
 
-Here's how you can use the SQLAlchemy DSL to specify at query-time
-that you are marking some rows for update:
+
+Here's how you can use the SQLAlchemy DSL to specify `FOR UPDATE` at
+query time:
 
 [[with_for_update]]
 .SQLAlchemy with_for_update (src/allocation/adapters/repository.py)
@@ -847,12 +849,11 @@ https://www.2ndquadrant.com/en/blog/postgresql-anti-patterns-read-modify-write-c
 
 //TODO maybe better diagrams here?
 
-Again, in our simple case, it's not obvious which to prefer.  In a more complex
-scenario, `SELECT FOR UPDATE` might lead to more deadlocks, while `REPEATABLE
-READ` would lead to more retries.  But if you have a test like the
-one we've shown, you can specify the behavior you want, and see how
-it changes.  You can also use the test as a basis for performing
-some performance experiments.
+We don't really have time to discuss all the tradeoffs between `REPEATABLE READ`
+and `SELECT FOR UPDATE`, or optimistic vs pessimistic locking in general. 
+But if you have a test like the one we've shown, you can specify the behavior
+you want, and see how it changes.  You can also use the test as a basis for
+performing some performance experiments.
 
 
 
@@ -928,21 +929,21 @@ a|
 
 === Part One Recap
 
-
-Those of you with particularly good memories will remember this diagram from the
-start of the book.
+Do you remember <<recap_components_diagram>>, the diagram we showed at the
+beginning of the book to preview where we were heading?
 
 [[recap_components_diagram]]
 .A component diagram for our app at the end of Part One
 image::images/apwp_p101.png[]
 
-Well, here we are, at the end of part one. What have we achieved? We've seen how
-to start building a domain model that's exercised by a set of high-level unit
-tests. Our tests describe the behaviour of our system - the rules that we agreed
-with our business stakeholders - in human readable prose. When our business
-requirements change, we have confidence that our tests will help us to prove the
-new functionality, and when new develoeprs join the project, they can read our
-tests to understand how things work.
+So that's where we are, at the end of part one. What have we achieved? We've
+seen how to build a domain model that's exercised by a set of
+high-level unit tests. Our tests are living documentation: they describe the
+behavior of our system--the rules that we agreed with our business
+stakeholders--in nice readable code. When our business requirements change, we
+have confidence that our tests will help us to prove the new functionality, and
+when new developers join the project, they can read our tests to understand how
+things work.
 
 We've decoupled the infrastructural parts of our system, like the database and
 API handlers, so that we can plug them into the outside of our application.
