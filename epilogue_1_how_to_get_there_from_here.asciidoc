@@ -214,13 +214,13 @@ to be avoided. While it's _convenient_, it makes it very hard to reason about
 performance because each property might trigger a lookup to the database.
 
 TIP: Aggregates are a _consistency boundary_. In general each use-case should
-update a single aggregate at a time. One handler fetches one aggregate from a
-repository, modifies its state, and raises any events that happen as a result.
-If you need data from another part of the system, it's totally find to use a
-read model, but avoid updating multiple aggregates in a single transaction.
-When we choose to separate code into different aggregates, we're explicitly
-choosing to make them _eventually consistent_ with one another. <<chapter_06_uow>> has
-much more on this topic.
+    update a single aggregate at a time. One handler fetches one aggregate from
+    a repository, modifies its state, and raises any events that happen as a
+    result. If you need data from another part of the system, it's totally find
+    to use a read model, but avoid updating multiple aggregates in a single
+    transaction. When we choose to separate code into different aggregates,
+    we're explicitly choosing to make them _eventually consistent_ with one
+    another.
 
 There were a bunch of operations that required us to loop over objects this way,
 for example:
@@ -748,6 +748,9 @@ Is it a smell for a use case to use multiple repositories/aggregates, and why?::
     If you do need to modify two aggregates, but the two operations don't have to be
     in the same transaction/UoW, then consider splitting the work out into two
     different handlers and using a domain event to carry information between the two.
+    You can read more in
+    https://dddcommunity.org/wp-content/uploads/files/pdf_articles/Vernon_2011_1.pdf[these papers on aggregate design]
+    by Vaughn Vernon.
 
 What if I have a read-only but business-logic heavy system?::
     View models can have complex logic in them. In this book we've encouraged you to
@@ -861,7 +864,7 @@ there is other prior art.
 
 
 * https://martinfowler.com/books/eip.html[Enterprise Integration Patterns] by
-  (as always) Martin Fowler is a pretty good start for messaging patterns.
+  Hohpe and Woolf is a pretty good start for messaging patterns.
 
 Phew! That's a lot of warnings, and we hope we haven't scared you off completely.
 Our goal with this book has been to give you just enough knowledge and intuition

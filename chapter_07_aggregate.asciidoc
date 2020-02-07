@@ -88,7 +88,7 @@ This is a business rule that imposes an invariant. The invariant is that an
 order line is allocated to either zero or one batch, but never more than one.
 We need to make sure that our code never accidentally calls `Batch.allocate()`
 on two different batches for the same line, and currently, there's nothing
-there to explicitly stop us doing that.  
+there to explicitly stop us doing that.
 
 
 ==== Invariants, Concurrency and Locks
@@ -547,6 +547,7 @@ TIP: Version numbers are just one way of implementing optimistic locking. You
     level to `SERIALIZABLE`, but that often comes at a severe performance cost.
     Version numbers also make an implicit concept explicit.
 
+
 <<version_numbers_sequence_diagram>> shows an illustration: two concurrent
 transactions do their read operations at the same time, so they see
 a Product with (eg) `version=3`.  They both call `Product.allocate()`
@@ -584,15 +585,39 @@ Database -[#red]>x Transaction2: Error! version is already 4
 @enduml
 ----
 
-TIP: When two operations conflict in this way we usually retry the failed
-    operation from the beginning. Imagine we have two customers, Harry and Bob,
-    and both submit orders for 'SHINY-TABLE'. Both threads load the product at
-    version 1 and allocate stock. The database prevents the concurrent update,
-    and Bob's order fails with an error. When we _retry_ the operation, Bob's
-    order loads the product at version 2, and tries to allocate again. If there
-    is enough stock left all is well, otherwise he'll receive `OutOfStock`. Most
-    operations can be retried this way in the case of a concurrency problem.
-    More on this in <<recovering_from_errors>> and <<footguns>>.
+
+.Optimistic Concurrency Control and Retries
+********************************************************************************
+
+What we've implemented here is called _optimistic_ concurrency control because
+our default assumption is that everything will be _fine_ when two users want to
+make changes to the database: we think it's unlikely that they will conflict
+with each other, so we let them go ahead, and just make sure we have a way to
+notice at the end if it turns out there was a problem after all.
+
+_Pessimistic_ concurrency control works under the assumption that two users
+are going to cause conflicts and we want to prevent them in all cases, so
+we lock everything just to be safe.  In our example that would mean locking
+the whole batches table, or using ++SELECT FOR UPDATE++--we're pretending
+that we've ruled those out for performance reasons, but in real life you'd
+want to do some evaluations and measurements of your own.
+
+With pessimistic locking you don't need to think about handling failures
+because the database will prevent them for you (although you do need to think
+about deadlocks).  With optimistic locking, you do need to explicitly handle
+the possibility of failures in the (hopefully unlikely) case of a clash.
+
+The usual way to handle a failure is to retry the failed operation from the
+beginning. Imagine we have two customers, Harry and Bob, and both submit orders
+for 'SHINY-TABLE'. Both threads load the product at version 1 and allocate
+stock. The database prevents the concurrent update, and Bob's order fails with
+an error. When we _retry_ the operation, Bob's order loads the product at
+version 2, and tries to allocate again. If there is enough stock left all is
+well, otherwise he'll receive `OutOfStock`. Most operations can be retried this
+way in the case of a concurrency problem.
+
+Read more on retries in <<recovering_from_errors>> and <<footguns>>.
+********************************************************************************
 
 
 ==== Implementation Options for Version Numbers
@@ -773,12 +798,22 @@ radically different definitions.  Oracle's SERIALIZABLE is equivalent to
 Postgres's REPETABLE READ, for example.]
 
 
-==== SELECT FOR UPDATE Can Also Help
+==== Pessimistic Concurrency Control Example: SELECT FOR UPDATE
 
-An alternative to using the `REPEATABLE READ` isolation level is to use
-https://www.postgresql.org/docs/9.6/explicit-locking.html[SELECT FOR UPDATE],
-which will produce different behavior: two concurrent transactions will not
-be allowed to do a read on the same rows at the same time.
+There are any number of other ways you might want to approach this,
+but we'll show one.  https://www.postgresql.org/docs/9.6/explicit-locking.html[SELECT FOR UPDATE],
+produces different behavior: two concurrent transactions will not be allowed to
+do a read on the same rows at the same time.
+
+`SELECT FOR UPDATE` is a way of picking a row or rows to use as a lock
+(although those rows don't have to be the ones you update).  If two
+transactions both try to `SELECT FOR UPDATE` a row at the same time, one will
+win, and the other will wait until the lock is released. So this is an example
+of pessimistic concurrency control.
+
+
+Here's how you can use the SQLAlchemy DSL to specify `FOR UPDATE` at
+query time:
 
 [[with_for_update]]
 .SQLAlchemy with_for_update (src/allocation/adapters/repository.py)
@@ -809,20 +844,34 @@ to
 read1, write1, read2, write2(succeed)
 ----
 
+Some people refer to this as the "read-modify-write" failure mode.
+https://www.2ndquadrant.com/en/blog/postgresql-anti-patterns-read-modify-write-cycles/[This page has a good overview].
+
 //TODO maybe better diagrams here?
 
-In our simple case, it's not obvious which to prefer.  In a more complex
-scenario, `SELECT FOR UPDATE` might lead to more deadlocks, while `REPEATABLE READ`
-having more of an "optimistic locking" approach and might lead to more failures,
-but the failures might be more recoverable.  So, as usual, the right solution
-will depend on circumstances.
-
-NOTE: Some people refer to this as the "read-modify-write" failure mode.
-    https://www.2ndquadrant.com/en/blog/postgresql-anti-patterns-read-modify-write-cycles/[This page has a good overview].
+We don't really have time to discuss all the tradeoffs between `REPEATABLE READ`
+and `SELECT FOR UPDATE`, or optimistic vs pessimistic locking in general. 
+But if you have a test like the one we've shown, you can specify the behavior
+you want, and see how it changes.  You can also use the test as a basis for
+performing some performance experiments.
 
 
-//TODO (DS): Maybe worth explaining the difference between optimistic and
-//pessimistic locking in more detail, and earlier in the chapter?
+
+=== Aggregates Wrap-up
+
+Specific choices around concurrency control vary a lot based on business
+circumstances and your storage technology choices, but we'd like to bring this
+chapter back to the conceptual idea of an Aggregate:  we explicitly model an
+object as being the main entrypoint to some subset of our model, and to be in
+charge of enforcing the invariants and business rules that apply across all of
+those objects.
+
+
+Choosing the right aggregate is a key decision, and it's one you may revisit
+over time.  You can read more about it in the various well-known DDD books.
+We also recommend these three online papers on
+https://dddcommunity.org/library/vernon_2011/[Effective Aggregate Design]
+by Vaugh Vernon (the "red book" author).
 
 
 .Recap: Aggregates and Consistency Boundaries
@@ -875,3 +924,54 @@ a|
 
 * Dealing with eventual consistency between aggregates can be complex.
 |===
+
+
+
+=== Part One Recap
+
+Do you remember <<recap_components_diagram>>, the diagram we showed at the
+beginning of the book to preview where we were heading?
+
+[[recap_components_diagram]]
+.A component diagram for our app at the end of Part One
+image::images/apwp_p101.png[]
+
+So that's where we are, at the end of part one. What have we achieved? We've
+seen how to build a domain model that's exercised by a set of
+high-level unit tests. Our tests are living documentation: they describe the
+behavior of our system--the rules that we agreed with our business
+stakeholders--in nice readable code. When our business requirements change, we
+have confidence that our tests will help us to prove the new functionality, and
+when new developers join the project, they can read our tests to understand how
+things work.
+
+We've decoupled the infrastructural parts of our system, like the database and
+API handlers, so that we can plug them into the outside of our application.
+This helps us to keep our codebase well organized, and stops us from building a
+big ball of mud.
+
+By applying the dependency inversion principle, and by using the ports-and-adapters
+inspired patterns like Repository and Unit of Work, we've made it possible to
+do TDD in both high gear and low gear, and to maintain a healthy test pyramid.
+We can test our system edge-to-edge, and the need for integration and
+end-to-end tests is kept to a minimum.
+
+Lastly, we've talked about the idea of consistency boundaries. We don't want to
+lock our entire system whenever we make a change, so we have to choose which
+parts are consistent with one another.
+
+For a small system, this is everything you need to go and play with the ideas of
+Domain-Driven Design. You now have the tools to build database agnostic domain
+models that represent the shared language of your business experts. Hurrah!
+
+NOTE: At the risk of laboring the point--we've been at pains to point out that
+    each pattern comes at a cost.  Each layer of indirection has a price in terms
+    of complexity and duplication in our code, and will be confusing to programmers
+    who've never seen them before.  If your app is essentially a simple CRUD
+    wrapper around a database, and isn't likely to be anything more than that
+    in the forseeable future, _you don't need these patterns_.  Go ahead and
+    use Django, and save yourself a lot of bother.
+
+In part two, we'll zoom out and talk about a bigger topic: if aggregates are our
+boundary, and we can only update one at a time, how do we model processes that
+cross consistency boundaries?
