@@ -178,10 +178,9 @@ class AllocationRequired(Event):
 ----
 ====
 
-Then we rename `services.py` to `handlers.py`, we add in with the existing
-message handler for `send_out_of_stock_notification`, and most importantly,
-we change all the handlers so that they have the same inputs:  an event
-and a UoW:
+Then we rename `services.py` to `handlers.py`, add the existing message handler
+for `send_out_of_stock_notification`, and most importantly, we change all the
+handlers so that they have the same inputs: an event and a UoW:
 
 
 [[services_to_handlers]]
@@ -251,7 +250,7 @@ The change might be clearer as a diff:
 ----
 ====
 
-Along the way, we've our service-layer's API, which was a scattering of
+Along the way, we've enriched our service-layer's API, which was a scattering of
 primitives, with some well-defined objects (see sidebar).
 
 .From Domain Objects, via Primitive Obsession, to Events as an Interface
@@ -313,7 +312,8 @@ def handle(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):  #<1>
 
 <1> The messagebus now gets passed the UoW each time it starts up.
 <2> When we begin handling our first event, we start a queue.
-<3> We pop events from the front of the queue and invoke its handlers.
+<3> We pop events from the front of the queue and invoke its handlers (the
+    `HANDLERS` dict hasn't changed, it still maps event types to handler functions).
 <4> The messagebus passes the UoW down to each handler
 <5> After each handler finishes, we collect any new events that have been
     generated, and we add them to the queue.
@@ -753,8 +753,7 @@ And our new requirement is fully implemented.
 
 
 [[fake_message_bus]]
-.Unit Testing Event Handlers in Isolation with a Fake Message Bus
-*******************************************************************************
+=== Optionally: Unit Testing Event Handlers in Isolation with a Fake Message Bus
 
 Our main test for the reallocation workflow
 (<<test_change_batch_quantity_handler>>) is "edge-to-edge".  It uses
@@ -835,9 +834,18 @@ events.  We'd say, start out with edge-to-edge testing, and only resort to
 this if necessary.
 
 
-If you do decide you want to get into isolating the testing for your handlers,
-you might be better off implementing an ABC for your messagebus:
 
+.Exercise for the Reader
+*******************************************************************************
+A great way to force yourself to really understand some code is to refactor it.
+In the discussion of testing handlers in isolation, we used something called
+`FakeUnitOfWorkWithFakeMessageBus`, which is unneccessarily complicated, and
+violates the SRP.
+
+If we change the message bus to being a class,footnote:[The "simple"
+implementation in this chapter essentially uses the `messagebus.py` module
+itself to implement Singleton Pattern.]
+then building a `FakeMessageBus` is more straightforward:
 
 [[abc_for_fake_messagebus]]
 .An Abstract MessageBus and its real and fake versions
@@ -869,11 +877,13 @@ class FakeMessageBus(messagebus.AbstractMessageBus):
 ----
 ====
 
-We use a class-based messagebus in <<chapter_13_dependency_injection>>,
-if you need more inspiration.  The "simple" implementation in this
-chapter essentially uses the `messagebus.py` module itself to implement
-Singleton Pattern.
+So jump into the code at
+https://github.com/cosmicpython/code/tree/chapter_09_all_messagebus[github.com/cosmicpython/code/tree/chapter_09_all_messagebus] and see if you can get a class-based version
+working, and then write a version of `test_reallocates_if_necessary_isolated()`
+from earlier.
 
+We use a class-based messagebus in <<chapter_13_dependency_injection>>,
+if you need more inspiration.
 
 *******************************************************************************
 

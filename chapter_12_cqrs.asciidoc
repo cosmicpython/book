@@ -807,6 +807,15 @@ TIP: Event handlers are a great way to manage updates to a read model,
     if you decide you need one.  They also make it easy to change the
     implementation of that read model at a later date.
 
+.Exercise for the Reader
+**********************************************************************
+Implement another view, this time to show the allocation for a single
+order line.
+
+Here the tradeoffs between using hardcoded SQL vs going via a repository
+should be much more blurry.  Try a few versions (maybe including going
+to Redis), and see which you prefer.
+**********************************************************************
 
 
 === But Would You Really?  CRUD versus CQRS.

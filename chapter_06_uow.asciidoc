@@ -176,22 +176,20 @@ base class:
 .Abstract Unit of Work context manager (src/allocation/service_layer/unit_of_work.py)
 ====
 [source,python]
+[role="skip"]
 ----
 class AbstractUnitOfWork(abc.ABC):
     batches: repository.AbstractRepository  #<1>
 
-    def __enter__(self) -> AbstractUnitOfWork:  #<2>
-        return self  #<3>
-
-    def __exit__(self, *args):  #<3>
-        self.rollback()
+    def __exit__(self, *args):  #<2>
+        self.rollback()  #<4>
 
     @abc.abstractmethod
-    def commit(self):  #<4>
+    def commit(self):  #<3>
         raise NotImplementedError
 
     @abc.abstractmethod
-    def rollback(self):  #<5>
+    def rollback(self):  #<4>
         raise NotImplementedError
 ----
 ====
@@ -203,15 +201,13 @@ class AbstractUnitOfWork(abc.ABC):
     the two magic methods that execute when we enter the `with` block and
     when we exit it.  They're our setup and teardown phases.
 
-<3> The enter returns `self`, because we want access to the `uow` instance
-    and its attributes and methods, inside the `with` block.
+<3> It provides a way to explicitly commit our work
 
-<4> It provides a way to explicitly commit our work
-
-<5> If we don't commit, or if we exit the context manager by raising an error,
+<4> If we don't commit, or if we exit the context manager by raising an error,
     we do a `rollback`. (the rollback has no effect if `commit()` has been
     called.  Read on for more discussion of this).
 
+// TODO: bring this code listing back under test, remove `return self` from all the uows.
 
 NOTE: We've made the UoW part of the service layer, in our folder
     hierarchy.  It is also an adapter, but as we'll see later in the
