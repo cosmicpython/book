@@ -312,7 +312,8 @@ def handle(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):  #<1>
 
 <1> The messagebus now gets passed the UoW each time it starts up.
 <2> When we begin handling our first event, we start a queue.
-<3> We pop events from the front of the queue and invoke its handlers.
+<3> We pop events from the front of the queue and invoke its handlers (the
+    `HANDLERS` dict hasn't changed, it still maps event types to handler functions).
 <4> The messagebus passes the UoW down to each handler
 <5> After each handler finishes, we collect any new events that have been
     generated, and we add them to the queue.
