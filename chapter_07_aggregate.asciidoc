@@ -397,7 +397,8 @@ translating that to and from other microservices it integrates with.
 
 In our example, the allocation service has `Product(sku, batches)`,
 whereas the ecommerce will have `Product(sku, description, price, image_url,
-dimensions, etc...)`
+dimensions, etc...)`. As a rule of thumb, your domain models should only
+include the data that they need for performing calculations. 
 
 Whether or not you've got a microservices architecture, a key consideration
 in choosing your aggregates is also choosing the bounded context that they
@@ -488,8 +489,40 @@ def allocate(
 ----
 ====
 
+=== What about performance?
 
-//TODO: mention link between aggregates and foreign keys
+We've mentioned a few times that we're modelling with aggregates because we want
+to have high-performance software, but here we are loading ALL the batches when
+we only need one. You might expect that to be inefficient, but there's a few
+reasons why we're comfortable here.
+
+Firstly, we're purposefully modelling our data so that we can make a single
+query to the database to read, and a single update to persist our changes. This
+tends to perform much better than systems that issue lots of ad-hoc queries. In
+systems that don't model this way, we often find that transactions get slowly
+longer and more complex as the software evolves.
+
+Secondly, our data structures are minimal and comprise a few strings and
+integers per row. We can easily load tens or even hundreds of batches in a few
+milliseconds.
+
+Thirdly, we only expect to have twenty or so batches of each product at a time.
+Once a batch is used up, we can discount it from our calculations. This means
+that the amount of data we're fetching shouldn't get out of control over time.
+
+If we _did_ expect to have thousands of active batches for a product, we'd have
+a couple of options. For one, we could use lazy-loading for the batches in a
+product. From the perspective of our code, nothing would change, but in the
+background SQLAlchemy would page through data for us. This would lead to more
+requests, each fetching a smaller number of rows. Since we only need to find a
+single batch with enough capacity for our order, this might work pretty well.
+
+If all else failed, we'd just look for a different aggregate. Maybe we could
+split up batches by region, or by warehouse. Maybe we could re-design our data
+access strategy around the shipment concept. The Aggregate pattern is designed
+to help manage some technical constraints around consistency and performance.
+There isn't _one_ correct Aggregate, and we should feel comfortable changing our
+minds if find our boundaries are causing performance woes.
 
 
 .Exercise for the Reader
