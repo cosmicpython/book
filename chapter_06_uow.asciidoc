@@ -644,13 +644,17 @@ SQLAlchemy Session.
 Lastly, we're motivated again by the dependency inversion principle: our
 service layer depends on a thin abstraction, and we attach a concrete
 implementation at the outside edge of the system. This lines up nicely with
-SQLAlchemy's own recommendations:
+SQLAlchemy's own
+https://docs.sqlalchemy.org/en/13/orm/session_basics.html#when-do-i-construct-a-session-when-do-i-commit-it-and-when-do-i-close-it[recommendations]:
 
-> Keep the lifecycle of the session (and usually the transaction) separate and
-> external.
-> The most comprehensive approach, recommended for more substantial applications,
-> will try to keep the details of session, transaction and exception management
-> as far as possible from the details of the program doing its work.
+[quote, SQLALchemy "Session Basics" Documentation]
+____
+the lifecycle of the session (and usually the transaction) separate and
+external. The most comprehensive approach, recommended for more substantial
+applications, will try to keep the details of session, transaction and
+exception management as far as possible from the details of the program doing
+its work.
+____
 
 
 //IDEA:  not sure where, but we should maybe talk about the option of separating
