@@ -248,7 +248,7 @@ class MessageBus:
 
     def handle_message(self, name: str, body: str):
         try:
-            message_type = next(mt for mt in EVENT_HANDLERS.keys() if mt.__name__ == name)
+            message_type = next(mt for mt in EVENT_HANDLERS if mt.__name__ == name)
             message = message_type.from_json(body)
             self.handle([message])
         except StopIteration:
@@ -390,7 +390,7 @@ def product_exists(event, uow):  #<3>
 This keeps the main flow of our logic in the service layer clean and declarative:
 
 [[ensure_in_services]]
-.ensure in use in services (src/allocation/services.py)
+.ensure calls in services (src/allocation/services.py)
 ====
 [source,python,highlight=8]
 ----
@@ -505,8 +505,8 @@ Validate at the edge when possible::
 
 Only validate what you require::
     Use the Tolerant Reader pattern: only read the fields your application needs
-    and don't over-specify their internal structure. If you can treat it as an
-    opaque string, that will make life easier.
+    and don't over-specify their internal structure. Treating fields as opaque
+    strings buys you a lot of flexibility.
 
 Spend time writing helpers for validation::
     Having a nice declarative way to validate incoming messages and apply
