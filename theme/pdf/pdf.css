@@ -2,6 +2,11 @@
 
 /*--------Put Your Custom CSS Rules Below--------*/
 
+/* Temporary fix to TOC spacing from Tools */
+nav[data-type="toc"] li {
+  margin-bottom: 0 !important;
+}
+
 /* harry rule to hide inline image sources */
 .image-source {
     display: none !important;
