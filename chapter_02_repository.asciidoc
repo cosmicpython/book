@@ -272,7 +272,7 @@ inversion and Repository pattern to Django.
 
 Well, thankfully, that's not the only way to use SQLAlchemy.  The alternative is
 to define your schema separately, and an explicit _mapper_ for how to convert
-between the schema and our domain model, what SQLAlchemy calls a 
+between the schema and our domain model, what SQLAlchemy calls a
 https://docs.sqlalchemy.org/en/latest/orm/mapping_styles.html#classical-mappings[classical mapping].
 
 
@@ -685,7 +685,7 @@ def test_repository_can_retrieve_a_batch_with_allocations(session):
     types match, and that the reference is the same (because, if you remember,
     `Batch` is an Entity, and we have a custom ++__eq__++ for it).
 
-<4> So we also explicitly check on its major attributes, including 
+<4> So we also explicitly check on its major attributes, including
     `._allocations`, which is a Python set of `OrderLine` Value Objects.
 
 Whether or not you painstakingly write tests for every model is a judgement
@@ -909,8 +909,13 @@ Postgres fields) you usually lose the portability.
 
 <<domain_model_tradeoffs_diagram>> shows the basic thesis: yes, for simple
 cases, a decoupled domain model is harder work than a simple ORM / ActiveRecord
-pattern. But the more complex the domain, the more an investment in freeing
-yourself from infrastructure concerns will pay off, in terms of the ease of
+pattern.
+
+TIP: If your app is just a simple CRUD (create-read-update-delete) wrapper
+    around a database, then you don't need a domain model or a repository.
+
+But, the more complex the domain, the more an investment in freeing
+yourself from infrastructure concerns will pay off in terms of the ease of
 making changes:footnote:[Diagram inspired by a post called
 https://www.reflektis.com/blog/global-complexity-local-simplicity/[Global
 complexity, local simplicity], by Rob Vens)]
