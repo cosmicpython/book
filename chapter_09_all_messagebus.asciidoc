@@ -488,7 +488,7 @@ fully event-driven.
 === Implementing Our New Requirement
 
 We're done with our refactoring phase. Let's see if we really have "made the
-change easy".  Let's implement our new requirement: we'll receive as our
+change easy".  Let's implement our new requirement, shown in <<reallocation_sequence_diagram>>: we'll receive as our
 inputs some new `BatchQuantityChanged` events, pass them to a handler, which in
 turn might emit some `AllocationRequired` events, and those in turn will go
 back to our existing handler for allocation, to be re-allocated.
@@ -519,7 +519,7 @@ end
 WARNING: Whenever you split things out like this across two units of work,
     you now have two database transactions, so you are opening yourself up
     to integrity issues: something could happen that means the first completes
-    but the second does.  You'll need to think about whether this is acceptable,
+    but the second does not.  You'll need to think about whether this is acceptable,
     and whether you need to notice when it happens and do something about it.
     See the <<footguns>> section in the Epilogue for more discussion.
 
@@ -605,6 +605,8 @@ class TestChangeBatchQuantity:
 
 
 ==== Implementation
+
+Our new handler is very simple:
 
 [[change_quantity_handler]]
 .Handler delegates to model layer (src/allocation/service_layer/handlers.py)
