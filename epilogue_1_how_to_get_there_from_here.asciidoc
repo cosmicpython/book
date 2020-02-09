@@ -206,7 +206,7 @@ The codebase made it easy to "dot" your way through these objects like so:
 
 [source,python]
 ----
-user.account.workspaces[0].documents.versions[1].owner.account.workspaces[0].settings;
+user.account.workspaces[0].documents.versions[1].owner.account.settings[0];
 ----
 
 It's easy to build a system this way with Django ORM or SQLAlchemy but it's
@@ -456,6 +456,11 @@ for workspace_id in workspaces:
 
 
 === An Event-driven Approach to go Microservices Via Strangler Pattern
+
+_Strangler Fig Pattern_ involves creating a new system around the edges
+of an old system, while keeping it running. Bits of old functionality
+are gradually intercepted and replaced until the old system is left
+doing nothing at all, and can be switched off.
 
 
 .Case Study: Carving out a microservice to replace a domain
@@ -713,7 +718,7 @@ Extracting use-cases will break a lot of my existing code, it's too tangled::
     painful process. Don't expect things to get instantly better, and don't worry if
     some bits of your application stay messy.
 
-Do I need to do CQRS? That sounds weird, can't I just use repositories for::
+Do I need to do CQRS? That sounds weird, can't I just use repositories?::
     Of course you can! The techniques we're presenting in this book are intended to
     make your life _easier_, they're not some kind of ascetic discipline with which
     to punish yourself.
@@ -863,21 +868,16 @@ there is other prior art.
   https://www.goodreads.com/book/show/34327067-versioning-in-an-event-sourced-system[managing event-driven systems over time]:
 
 
-* https://martinfowler.com/books/eip.html[Enterprise Integration Patterns] by
-  Hohpe and Woolf is a pretty good start for messaging patterns.
-
-Phew! That's a lot of warnings, and we hope we haven't scared you off completely.
-Our goal with this book has been to give you just enough knowledge and intuition
-that you can start building some of this for yourself. We would love to hear how
-you get on and what problems you're facing with the techniques in your own
-systems, so why not get in touch with us over at www.cosmicpython.com ?
-
-
 === More required reading
+
+A couple more books we'd like to recommend to help you on your way:
 
 * https://leanpub.com/clean-architectures-in-python[Clean Architectures in Python]
   by Leonardo Giordani, which came out in 2019, is one of the few previous
   books on application architecture in Python.
+
+* https://martinfowler.com/books/eip.html[Enterprise Integration Patterns] by
+  Hohpe and Woolf is a pretty good start for messaging patterns.
 
 * _Monolith to Microservices_ by Sam Newman, and his original book,
   _Building Microservices_. Strangler (Fig) pattern is mentioned as a
@@ -885,3 +885,12 @@ systems, so why not get in touch with us over at www.cosmicpython.com ?
   microservices, and also on integration patterns and the considerations
   of async messaging-based integration.
 
+
+=== Wrap-Up
+
+Phew! That's a lot of warnings and further reading suggestions, we hope we
+haven't scared you off completely. Our goal with this book has been to give you
+just enough knowledge and intuition that you can start building some of this
+for yourself. We would love to hear how you get on and what problems you're
+facing with the techniques in your own systems, so why not get in touch with us
+over at www.cosmicpython.com ?

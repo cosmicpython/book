@@ -372,11 +372,12 @@ allocate(cmd)
 ====
 
 <1> The class is designed to produce a callable function, so it has a
-    ++__call__++ method.
+    +++<code>__call__</code>+++ method.
 
-<2> But we use the ++__init__++ to declare the dependencies it requires.
-    This sort of thing will feel familiar if you've ever made class-based
-    descriptors, or a class-based context manager that takes arguments.
+<2> But we use the +++<code>__init__</code>+++ to declare the dependencies it
+    requires. This sort of thing will feel familiar if you've ever made
+    class-based descriptors, or a class-based context manager that takes
+    arguments.
 
 
 Use whichever you and your team feel more comfortable with.

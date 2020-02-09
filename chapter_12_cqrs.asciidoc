@@ -7,11 +7,12 @@ should be treated differently. Then we're going to push that insight as far
 as we can. If you're anything like Harry, this will all seem extreme at first,
 but hopefully we can make the argument that it's not _totally_ unreasonable.
 
+<<maps_chapter_11>> shows where we might end up.
+
 [[maps_chapter_11]]
 .Separating reads from writes
 image::images/apwp_1201.png[]
 
-<<maps_chapter_11>> shows where we might end up. Firstly though, why bother?
 
 [TIP]
 ====
@@ -26,6 +27,10 @@ git checkout chapter_12_cqrs
 git checkout chapter_11_external_events
 ----
 ====
+
+
+Firstly though, why bother?
+
 
 === Domain models are for writing
 
@@ -100,7 +105,7 @@ This idea of trading consistency against performance makes a lot of developers
 nervous at first, so let's talk quickly about that.
 
 Let's imagine that our "Get Available Stock" query is 30 seconds out of date
-when Bob visits the page for ILL-JUDGED-WARDROBE. 
+when Bob visits the page for ILL-JUDGED-WARDROBE.
 Meanwhile, though, Harry has already bought the last item. When we try to
 allocate Bob's order, we'll get a failure and we'll need to either cancel his
 order, or buy more stock and delay his delivery.
@@ -158,7 +163,7 @@ domain model are just bloat.
 
 
 === Post/Redirect/Get and CQS
- 
+
 If you've been doing web development, you're probably familiar with the
 post/redirect/get pattern. This is a technique where a web endpoint accepts an
 HTTP POST, and responds with a redirect to see the result. For example, we might
@@ -310,8 +315,9 @@ distinction between reads and writes in your application is still a good idea.
 We apply command-query separation, and it's easy to see which code modifies
 state (the event handlers) and which code just retrieves read-only state (the views).
 
-TIP: Split out your read-only views from your state-modifying
-    command and event handlers.
+TIP: Splitting out your read-only views from your state-modifying
+    command and event handlers is probably a good idea, even if you
+    don't want to go to full-blown CQRS.
 
 
 === Testing CQRS Views
@@ -378,8 +384,8 @@ your permanent storage and the logic of your read-only views.
   that intermediary layer, so that you can test the SQL and the
   display/calculation/view logic separately
 
-// IDEA: some example code showing a DAL layer in front of some read-only view
-// code with more complex business logic.
+IDEA: some example code showing a DAL layer in front of some read-only view
+code with more complex business logic.
 
 ////
 
@@ -419,7 +425,9 @@ def allocations(orderid: str, uow: unit_of_work.AbstractUnitOfWork):
 
 <3> And then we filter _again_ to get just the batches for our specific
     order.  That in turn relies on our batch objects being able to tell us
-    which order IDs it has allocated to it:
+    which order IDs it has allocated to it.
+
+We implement that last using a `.orderid` property:
 
 
 [[orderids_on_batch]]
@@ -474,7 +482,7 @@ TIP: This justification for CQRS is related to the justification for Domain
 
 ===  "Obvious" Alternative 2: Using the ORM
 
-You may be thinking, OK, if our repository is clunky, and working with 
+You may be thinking, OK, if our repository is clunky, and working with
 `Products` is clunky, then I can at least  use my ORM and work with `Batches`.
 That's what it's for!
 
@@ -585,7 +593,8 @@ but building a denormalized copy of your data that's optimized for read operatio
 isn't uncommon, once you've reached the limits of what you can do with indexes.
 
 Even with well-tuned indexes, a relational database uses a lot of CPU to perform
-joins. The fastest queries will always be `SELECT * from MyTable WHERE key = :value`
+joins. The fastest queries will always be `SELECT * from _mytable_ WHERE _key_ =
+:__value__`
 
 More than raw speed, though, this approach buys us scale. When we're writing
 data to a relational database, we need to make sure that we get a lock over the
@@ -600,9 +609,10 @@ TIP: Because read replicas can be inconsistent, there's no limit to how many we
     can have. If you're struggling to scale a system with a complex data store,
     ask whether you could build a simpler read model.
 
-Keeping them up to date is the challenge!  Database views (materialized or
-otherwise) and triggers are a common solution, but that limits you to your database.
-We'd like to show you how we can reuse our event-driven architecture instead.
+Keeping the read model up to date is the challenge!  Database views
+(materialized or otherwise) and triggers are a common solution, but that limits
+you to your database. We'd like to show you how we can reuse our event-driven
+architecture instead.
 
 
 ==== Updating a Read Model Table Using an Event Handler
@@ -717,7 +727,9 @@ Flask -> User: some allocations
 @enduml
 ----
 
-**********
+
+.Rebuilding From Scratch
+*******************************************************************************
 "What happens when it breaks" should be the first question we ask as engineers.
 
 How do we deal with a view model that hasn't been updated because of a bug or
@@ -737,7 +749,7 @@ update our view model, we can write a tool that
 
 We can use this technique to create entirely new read-models from historical
 data.
-**********
+*******************************************************************************
 
 === Changing our Read Model Implementation is Easy
 
@@ -799,6 +811,8 @@ def allocations(orderid):
 ----
 ====
 
+
+
 And the _exact same_ integration tests that we had before still pass,
 because they are written at a level of abstraction that's decoupled from the
 implementation: setup puts messages on the messagebus, and the assertions
@@ -830,22 +844,22 @@ to Redis), and see which you prefer.
 | Option | Pros | Cons
 
 | Just use repositories
-| Simple, consistent approach. 
+| Simple, consistent approach.
 | Expect performance issues with complex query patterns.
 
-| Use custom queries with your ORM 
-| Allows re-use of db configuration and model definitions 
+| Use custom queries with your ORM
+| Allows re-use of db configuration and model definitions
 | Adds another query language with its own quirks and syntax.
 
-| Use hand-rolled SQL 
-| Offers fine control over performance with a standard query syntax 
+| Use hand-rolled SQL
+| Offers fine control over performance with a standard query syntax
 | Changes to db schema have to be made to your hand-rolled queries *and* your
   ORM definitions. Highly normalised schemas may stil have performance
   limitations
 
-| Create separate read stores with events 
+| Create separate read stores with events
 | Read-only copies are easy to scale out. Views can be constructed when data
-  changes so that queries are as simple as possible. 
+  changes so that queries are as simple as possible.
 | Complex technique. Harry will be forever suspicious of your tastes and
   motives
 |===
@@ -854,7 +868,7 @@ to Redis), and see which you prefer.
 //      most blog posts describe CQRS in terms of the "full-blown" version, while
 //      ignoring over the simpler version that is developed earlier in this chapter.
 //
-//      In my experience, many people react to CQRS with the response that 
+//      In my experience, many people react to CQRS with the response that
 //      it's insane/too complex/too-hard and want to fall back to a CRUD hammer.
 //
 
@@ -871,7 +885,7 @@ model become ever more compelling.
 
 Often, your read operations will be acting on the same conceptual objects as your
 write model, so using the ORM, adding some read methods to your repositories,
-and using Domain Model classes for your read operations is _just fine_. 
+and using Domain Model classes for your read operations is _just fine_.
 
 In our book example, the read operations act on quite different conceptual
 entities to our Domain Model.  The allocation service thinks in terms of
