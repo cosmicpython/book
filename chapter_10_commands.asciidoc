@@ -53,6 +53,9 @@ Events capture _facts_ about things that happened in the past. Since we don't
 know who's handling an event, senders should not care whether the receivers
 succeeded or failed.
 
+<<events_vs_commands_table>> recaps the differences.
+
+[[events_vs_commands_table]]
 [cols="e,a,a", frame="none"]
 .Events vs Commands
 |===
@@ -141,6 +144,8 @@ def handle(message: Message, uow: unit_of_work.AbstractUnitOfWork):  #<1>
 <2> We dispatches events and commands to two different helper functions, shown next.
 
 
+Here's how we handle events:
+
 [[handle_event]]
 .Events cannot interrupt the flow (src/allocation/service_layer/messagebus.py)
 ====
@@ -168,6 +173,7 @@ def handle_event(
 <2> It catches and logs any errors, but does not let them interrupt
     message processing.
 
+And here's how we do commands:
 
 [[handle_command]]
 .Commands reraise exceptions (src/allocation/service_layer/messagebus.py)
