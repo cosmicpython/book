@@ -2,54 +2,57 @@
 [appendix]
 == Summary diagram and table
 
+Here's what our architecture looks like by the end of the book:
+
 [[recap_diagram]]
 .Our architecture by the end of the book
 image::images/apwp_aa01.png[]
 
+<<ds1_table>> shows a recap of each pattern and what it does.
 
 [[ds1_table]]
 .The components of our architecture and what they all do.
-[cols="3"]
+[cols="1,1,2"]
 |===
 | Layer | Component | Description
 
-.5+a| Domain 
+.5+a| *Domain*
 
-* Defines the business logic.
+__Defines the business logic.__
 
 
 | Entity | A domain object whose attributes may change, but that has a recognizable identity over time.
 
 | Value Object | An immutable domain object whose attributes entirely define it. It is fungible with other identical objects.
 
-| Aggregate | Cluster of associated objects that we treat as a unit for the purpose of data changes.
+| Aggregate | Cluster of associated objects that we treat as a unit for the purpose of data changes.  Defines and enforces a consistency boundary.
 
-| Event | Represents something that happened, emitted by or stored on domain objects.
+| Event | Represents something that happened.
 
 | Command | Represents a job the system should perform.
 
-.3+a| Service layer
+.3+a| *Service Layer*
 
-* Defines the jobs the system should perform and orchestrates different components.  
+__Defines the jobs the system should perform and orchestrates different components.__
 
-| Command/Event Handler | Receives a Command or Event and performs what needs to happen.
+| Handler | Receives a Command or Event and performs what needs to happen.
 | Unit of Work | Abstraction around data integrity. Each unit of work represents an atomic update.  Makes repositories available. Tracks new events on retrieved aggregates.
 | Message Bus (Internal) | Handles Commands and Events by routing them to the appropriate Handler.
 
-.2+a| Adapters (Secondary)
+.2+a| *Adapters* (Secondary)
 
-* Concrete implementations of an interface that goes from our system out
-to the outside world / I/O
+__Concrete implementations of an interface that goes from our system out
+to the outside world / I/O.__
 
 | Repository | Abstraction around persistent storage. Each Aggregate has its own Repository.
 | Event Publisher | Pushes Events onto the external message bus.
 
-.2+a| Entrypoints (Primary adapters)
+.2+a| *Entrypoints* (Primary adapters)
 
-* Translate external inputs into calls into the service layer.
+__Translate external inputs into calls into the service layer.__
 
 | Web | Receives web requests and translates them into Commands, passing them to the Internal Message Bus.
-| Event Consumer | Reads Events from the External Message Bus and translates them into Commands, passing them to the Internal Message Bus.
+| Eventconsumer | Reads Events from the External Message Bus and translates them into Commands, passing them to the Internal Message Bus.
 
 | n/a | External Message Bus (Message Broker) | A piece of infrastructure that different services use to intercommunicate, via Events.
 |===
