@@ -60,6 +60,8 @@ start dumping these things into our web controllers:
 
 ==== First, Avoid Making a Mess of of Our Web Controllers
 
+As a one-off hack, this _might_ be OK..
+
 [[email_in_flask]]
 .Just whack it in the endpoint, what could go wrong? (src/allocation/entrypoints/flask_app.py)
 ====
@@ -88,12 +90,12 @@ def allocate_endpoint():
 ----
 ====
 
-As a one-off hack, this might be okay, but it's easy to see how we can quickly
-end up in a mess by patching things in this way. Sending emails isn't the job of
-our HTTP layer, and we'd like to be able to unit test this new feature.
+...but it's easy to see how we can quickly end up in a mess by patching things up
+like this. Sending emails isn't the job of our HTTP layer, and we'd like to be
+able to unit test this new feature.
 
 
-==== ... And Let's Not Make a Mess of Our Model Either
+==== And Let's Not Make a Mess of Our Model Either
 
 Assuming we don't want to put this code into our web controllers, because
 we want them to be as thin as possible, we may look at putting it right at
@@ -736,8 +738,8 @@ Product) then we can make them *eventually consistent* by using events. When an
 Order is cancelled, then we should find the products that were allocated to it,
 and remove the allocations.
 
-In <<chapter_08_events_and_message_bus>>, we'll look at this idea in more detail as we build a more complex
-workflow with our new message bus.
+In <<chapter_08_events_and_message_bus>>, we'll look at this idea in more
+detail as we build a more complex workflow with our new message bus.
 
 
 .Recap: Domain Events and the Message Bus
@@ -773,6 +775,9 @@ Option 3: Unit of Work collects events from Aggregates and passes them to Messag
     and easy to use once it's set up.
 
 *****************************************************************
+
+And <<chapter_08_events_and_message_bus_tradeoffs>> shows the trade-offs as we
+see them:
 
 [[chapter_08_events_and_message_bus_tradeoffs]]
 [options="header"]

@@ -609,9 +609,11 @@ see as it's not explicit in any program text; this can make it hard to debug
 and modify.
 ____
 
-If you're moving from a model of synchronous messaging to an async one, you
-also open up a whole host of problems to do with message reliability and eventual
-consistency.   Read on to the <<footguns>> section in the epilogue.
+<<chapter_11_external_events_tradeoffs>> shows some tradeoffs to think about.
+More generally, if you're moving from a model of synchronous messaging to an
+async one, you also open up a whole host of problems to do with message
+reliability and eventual consistency.   Read on to the <<footguns>> section in
+the epilogue.
 
 
 [[chapter_11_external_events_tradeoffs]]

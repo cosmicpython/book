@@ -498,6 +498,21 @@ WARNING: At some point, regardless of tenacity, we'll have to give up trying to
     reference materials in the epilogue.
 
 
+=== Wrap-Up
+
+In this book we decided to introduce the concept of events before the concept
+of commands, but other guides often do it the other way around.  Making
+explicit the requests that our system can respond to by giving them a name
+and their own datastructure is quite a fundamental thing to do.  You'll
+sometimes see people use the name _Command Handler Pattern_ to describe what
+we're doing with Events, Commands and Message Bus.
+
+<<chapter_10_commands_and_events_tradeoffs>> discusses some of the things you
+should think about before you jump on board.
+
+
+<<chapter_10_commands_and_events_tradeoffs>>
+
 [[chapter_10_commands_and_events_tradeoffs]]
 [options="header"]
 .Splitting commands and events: The trade-offs
