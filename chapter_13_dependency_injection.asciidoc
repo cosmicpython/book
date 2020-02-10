@@ -830,7 +830,7 @@ We change the dependency in the bootstrap script:
 [[notifications_in_bus]]
 .Notifications in messagebus (src/allocation/bootstrap.py)
 ====
-[source,python]
+[source,diff]
 [role="skip"]
 ----
  def bootstrap(
