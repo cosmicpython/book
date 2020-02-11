@@ -2,7 +2,7 @@
 [appendix]
 == A Template Project Structure
 
-Around <<chapter_04_service_layer>> we moved from just having
+Around <<chapter_04_service_layer>>, we moved from just having
 everything in one folder to a more structured tree, and we thought it might
 be of interest to outline the moving parts.
 
@@ -71,59 +71,56 @@ The basic folder structure looks like this:
 <1> Our _docker-compose.yml_ and our _Dockerfile_ are the main bits of configuration
     for the containers that run our app, and can also run the tests (for CI).  A
     more complex project might have several Dockerfiles, although we've found that
-    minimising the number of images is usually a good idea.footnote:[Splitting
-    out images for prod and test is sometimes a good idea, but we've tended
+    minimizing the number of images is usually a good idea.footnote:[Splitting
+    out images for production and testing is sometimes a good idea, but we've tended
     to find that going further and trying to split out different images for
-    different types of application code (eg web api vs pubsub client) usually
+    different types of application code (e.g., Web API versus pub/sub client) usually
     ends up being more trouble than it's worth; the cost in terms of complexity
     and longer rebuild/CI times is too high. YMMV.]
 
-<2> A __Makefile__footnote:[A pure-Python alternative to Makefiles is
-    http://www.pyinvoke.org/[Invoke]; worth checking out if everyone in your
-    team knows Python (or at least knows it better than Bash!)]
-    provides the entrypoint for all the typical commands a developer
-    (or a CI server) might want to run during their normal workflow.  `make
-    build`, `make test`, and so on.  This is optional, you could just use
-    `docker-compose` and `pytest` directly, but if nothing else it's nice to
+<2> A __Makefile__ provides the entrypoint for all the typical commands a developer
+    (or a CI server) might want to run during their normal workflow: `make
+    build`, `make test`, and so on.footnote:[A pure-Python alternative to Makefiles is
+    http://www.pyinvoke.org/[Invoke], worth checking out if everyone on your
+    team knows Python (or at least knows it better than Bash!).] This is optional. You could just use
+    `docker-compose` and `pytest` directly, but if nothing else, it's nice to
     have all the "common commands" in a list somewhere, and unlike
-    documentation, a Makefile is code so it has less tendency to go out of date.
+    documentation, a Makefile is code so it has less tendency to become out-of-date.
 
-<3> All the actual source code for our app, including the domain model, the
+<3> All the source code for our app, including the domain model, the
     Flask app, and infrastructure code, lives in a Python package inside
-    _src_,footnote:[More on _src_ folders: https://hynek.me/articles/testing-packaging/]
+    _src_,footnote:[https://hynek.me/articles/testing-packaging["Testing and Packaging"] by Hynek Schlawack provides more information on _src_ folders.]
     which we install using `pip install -e` and the _setup.py_ file.  This makes
-    imports easy. Currently the structure within this module is totally flat,
-    but for a more complex project you'd expect to grow a folder hierarchy
-    including _domain_model/_, _infrastructure/_, _services/_, _api/_
+    imports easy. Currently, the structure within this module is totally flat,
+    but for a more complex project, you'd expect to grow a folder hierarchy
+    including _domain_model/_, _infrastructure/_, _services/_, and _api/_.
 
 
-<4> Tests live in their own folder, with subfolders to distinguish different test
-    types, and allow you to run them separately.  We can keep shared fixtures
+<4> Tests live in their own folder. Subfolders distinguish different test
+    types and allow you to run them separately.  We can keep shared fixtures
     (_conftest.py_) in the main tests folder, and nest more specific ones if we
     wish. This is also the place to keep _pytest.ini_.
 
 
 
-TIP:  The https://docs.pytest.org/en/latest/goodpractices.html#choosing-a-test-layout-import-rules[pytest docs]
-    are really good on test layout and importability.
+TIP: The https://docs.pytest.org/en/latest/goodpractices.html#choosing-a-test-layout-import-rules[pytest docs] are really good on test layout and importability.
 
 
-Let's look at a few of files and concepts in more detail.
+Let's look at a few of these files and concepts in more detail.
 
 
 
-=== Env Vars, 12-Factor, and Config, Inside and Outside Containers.
+=== Env Vars, 12-Factor, and Config, Inside and Outside Containers
 
 The basic problem we're trying to solve here is that we need different
-config settings for:
+config settings for the following:
 
 - Running code or tests directly from your own dev machine, perhaps
-  talking to mapped ports from docker containers
+  talking to mapped ports from Docker containers
 
 - Running on the containers themselves, with "real" ports and hostnames
 
-- And different settings for different container environments, dev,
-  staging, prod, and so on.
+- Different container environments (dev, staging, prod, and so on).
 
 Configuration through environment variables as suggested by the
 https://12factor.net/config[12-factor] manifesto will solve this problem,
@@ -163,31 +160,31 @@ def get_api_url():
     `os.environ` if it needs to.
 
 <2> _config.py_ also defines some default settings, designed to work when
-    running the code from the developer's local machinefootnote:[
-    This gives us a local dev setup that "just works" (as much as possible).
-    You may prefer to fail hard on missing env vars instead, particularly
-    if any of the defaults would be insecure in production.].
+    running the code from the developer's local machine.footnote:[
+    This gives us a local development setup that "just works" (as much as possible).
+    You may prefer to fail hard on missing environment variables instead, particularly
+    if any of the defaults would be insecure in production.]
 
-There is an elegant Python package called
-https://github.com/hynek/environ-config[environ-config] which is worth looking
+An elegant Python package called
+https://github.com/hynek/environ-config[_environ-config_] is worth looking
 at if you get tired of hand-rolling your own environment-based config functions.
 
 TIP: Don't let this config module become a dumping ground full of things that
     are only vaguely related to config, and is then imported all over the place.
-    Keep things immutable and only modify them via environment variables.
+    Keep things immutable and modify them only via environment variables.
     If you decide to use a <<chapter_13_dependency_injection,bootstrap script>>,
     you can make it the only place (other than tests) that config is imported.
 
 === Docker-Compose and Containers Config
 
-We use a lightweight docker container orchestration tool called docker-compose.
-It's main configuration is via a YAML file (sighfootnote:[Harry is a bit YAML-weary.
+We use a lightweight Docker container orchestration tool called _docker-compose_.
+It's main configuration is via a YAML file (sigh):footnote:[Harry is a bit YAML-weary.
 It's _everywhere_ and yet he can never remember the syntax or how it's supposed
-to indent.]):
+to indent.]
 
 
 [[docker_compose]]
-.Docker-Compose config file (docker-compose.yml)
+.docker-compose config file (docker-compose.yml)
 ====
 [source,yaml]
 ----
@@ -222,39 +219,39 @@ services:
 ----
 ====
 
-<1> In the docker-compose file, we define the different "services"
-    (containers) that we need for our app.  Usually one main image
+<1> In the _docker-compose_ file, we define the different _services_
+    (containers) that we need for our app. Usually one main image
     contains all our code, and we can use it to run our API, our tests,
     or any other service that needs access to the domain model.
 
-<2> You'll probably have some other infrastructure services like a database.
-    In production you may not use containers for this, you might have a cloud
+<2> You'll probably have other infrastructure services, including a database.
+    In production you might not use containers for this; you might have a cloud
     provider instead, but _docker-compose_ gives us a way of producing a
     similar service for dev or CI.
 
 <3> The `environment` stanza lets you set the environment variables for your
-    containers, the hostnames and ports as seen from inside the docker cluster.
+    containers, the hostnames and ports as seen from inside the Docker cluster.
     If you have enough containers that information starts to be duplicated in
-    these sections, you can use `environment_file` instead.  We usually call
+    these sections, you can use `environment_file` instead. We usually call
     ours _container.env_.
 
-<4> Inside a cluster, docker-compose sets up networking such that containers are
+<4> Inside a cluster, _docker-compose_ sets up networking such that containers are
     available to each other via hostnames named after their service name.
 
-<5> Protip: if you're mounting volumes to share source folders between your
-    local dev machine and the container, the `PYTHONDONTWRITEBYTECODE` env
-    var tells Python to not write `.pyc` files, and that will save you from
+<5> Pro tip: if you're mounting volumes to share source folders between your
+    local dev machine and the container, the `PYTHONDONTWRITEBYTECODE` environment variable
+    tells Python to not write _.pyc_ files, and that will save you from
     having millions of root-owned files sprinkled all over your local filesystem,
     being all annoying to delete, and causing weird Python compiler errors besides.
 
 <6> Mounting our source and test code as `volumes` means we don't need to rebuild
     our containers every time we make a code change.
 
-<7> And the `ports` section allows us to expose the ports from inside the containers
-    to the outside worldfootnote:[On a CI server you may not be able to expose
+<7> The `ports` section allows us to expose the ports from inside the containers
+    to the outside worldfootnote:[On a CI server, you may not be able to expose
     arbitrary ports reliably, but it's only a convenience for local dev. You
-    can find ways of making these port mappings optional, eg with
-    docker-compose.override.yml]--these correspond to the default ports we set
+    can find ways of making these port mappings optional, e.g., with
+    _docker-compose.override.yml_.]—these correspond to the default ports we set
     in _config.py_.
 
 NOTE: Inside Docker, other containers are available through hostnames named after
@@ -264,7 +261,7 @@ NOTE: Inside Docker, other containers are available through hostnames named afte
 
 === Installing Your Source as a Package
 
-All our application code (everything except tests really) lives inside an
+All our application code (everything except tests, really) lives inside an
 _src_ folder:
 
 [[src_folder_tree]]
@@ -281,12 +278,12 @@ _src_ folder:
 ----
 ====
 
-<1> Subfolders define top-level module names.  You can have multiple if you like.
+<1> Subfolders define top-level module names. You can have multiple if you like.
 
 <2> And _setup.py_ is the file you need to make it pip-installable, shown next.
 
 [[setup_dot_py]]
-.pip-installable modules in 3 lines  (src/setup.py)
+.pip-installable modules in three lines (src/setup.py)
 ====
 [source,python]
 ----
@@ -300,16 +297,16 @@ setup(
 ----
 ====
 
-That's all you need.  `packages=` specifies the names of subfolders that you
+That's all you need. `packages=` specifies the names of subfolders that you
 want to install as top-level modules. The `name` entry is just cosmetic, but
 it's required. For a package that's never actually going to hit PyPI, it'll
-do fine.footnote:[For more setup.py tips see
-https://hynek.me/articles/testing-packaging/[this article on packaging by Hynek].]
+do fine.footnote:[For more _setup.py_ tips see
+https://hynek.me/articles/testing-packaging/[this article on packaging] by Hynek.]
 
 
 === Dockerfile
 
-Dockerfiles are going to be very project-specific, but here's a few key stages
+Dockerfiles are going to be very project-specific, but here are a few key stages
 you'll expect to see:
 
 [[dockerfile]]
@@ -342,22 +339,22 @@ CMD flask run --host=0.0.0.0 --port=80
 ----
 ====
 
-<1> Installing system-level dependencies.
+<1> Installing system-level dependencies
 <2> Installing our Python dependencies (you may want to split out your dev from
-    prod dependencies; we haven't here, for simplicity).
-<3> Copying and installing our source.
+    prod dependencies; we haven't here, for simplicity)
+<3> Copying and installing our source
 <4> Optionally configuring a default startup command (you'll probably override
     this a lot from the command-line)
 
 TIP: One thing to note is that we install things in the order of how frequently they
-    are likely to change.  This allows us to maximize docker build cache reuse. I
-    can't tell you how much pain and frustration belies this lesson.  For this,
+    are likely to change. This allows us to maximize Docker build cache reuse. I
+    can't tell you how much pain and frustration underlies this lesson. For this,
     and many more Python Dockerfile improvement tips, check out
-    https://pythonspeed.com/docker/[Production-ready Docker packaging].
+    https://pythonspeed.com/docker/[Production-Ready Docker Packaging].
 
 === Tests
 
-Our tests are kept alongside everything else, as in <<tests_folder>>:
+Our tests are kept alongside everything else, as shown here:
 
 [[tests_folder]]
 .Tests folder tree
@@ -382,22 +379,21 @@ Our tests are kept alongside everything else, as in <<tests_folder>>:
 
 Nothing particularly clever here, just some separation of different test types
 that you're likely to want to run separately, and some files for common fixtures,
-config and so on.
+config, and so on.
 
-There's no _src_ folder or _setup.py_ in the tests folders because we've not usually
-found we need to make tests pip-installable, but if you have difficulties with
+There's no _src_ folder or _setup.py_ in the test folders because we usually
+haven't needed to make tests pip-installable, but if you have difficulties with
 import paths, you might find it helps.
 
 
-=== Wrap-up
+=== Wrap-Up
 
-Those are our basic building blocks:
+These are our basic building blocks:
 
-* Source code in an _src_ folder, pip-installable using setup.py
-* Some docker config for spinning up a local cluster that mirrors production as far as possible
-* Configuration via environment variables, centralised in a Python file called _config.py_, with
-  defaults allowing things to run _outside_ containers.
-* And a Makefile for useful command-line, um, commands.
+* Source code in an _src_ folder, pip-installable using _setup.py_
+* Some Docker config for spinning up a local cluster that mirrors production as far as possible
+* Configuration via environment variables, centralized in a Python file called _config.py_, with defaults allowing things to run _outside_ containers
+* A Makefile for useful command-line, um, commands
 
 We doubt that anyone will end up with _exactly_ the same solutions we did, but we hope you
 find some inspiration here.
