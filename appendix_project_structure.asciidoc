@@ -9,7 +9,7 @@ be of interest to outline the moving parts.
 [TIP]
 ====
 The code for this chapter is in the
-https://github.com/cosmicpython/code/tree/appendix_project_structure[appendix_project_structure] branch.
+https://github.com/cosmicpython/code/tree/appendix_project_structure[appendix_project_structure] branch on GitHub.
 
 ----
 git clone https://github.com/cosmicpython/code.git
@@ -81,7 +81,7 @@ The basic folder structure looks like this:
 <2> A __Makefile__ provides the entrypoint for all the typical commands a developer
     (or a CI server) might want to run during their normal workflow: `make
     build`, `make test`, and so on.footnote:[A pure-Python alternative to Makefiles is
-    http://www.pyinvoke.org/[Invoke], worth checking out if everyone on your
+    http://www.pyinvoke.org[Invoke], worth checking out if everyone on your
     team knows Python (or at least knows it better than Bash!).] This is optional. You could just use
     `docker-compose` and `pytest` directly, but if nothing else, it's nice to
     have all the "common commands" in a list somewhere, and unlike
@@ -103,7 +103,7 @@ The basic folder structure looks like this:
 
 
 
-TIP: The https://docs.pytest.org/en/latest/goodpractices.html#choosing-a-test-layout-import-rules[pytest docs] are really good on test layout and importability.
+TIP: The https://oreil.ly/QVb9Q[pytest docs] are really good on test layout and importability.
 
 
 Let's look at a few of these files and concepts in more detail.
@@ -301,7 +301,7 @@ That's all you need. `packages=` specifies the names of subfolders that you
 want to install as top-level modules. The `name` entry is just cosmetic, but
 it's required. For a package that's never actually going to hit PyPI, it'll
 do fine.footnote:[For more _setup.py_ tips see
-https://hynek.me/articles/testing-packaging/[this article on packaging] by Hynek.]
+https://hynek.me/articles/testing-packaging[this article on packaging] by Hynek.]
 
 
 === Dockerfile
@@ -350,7 +350,7 @@ TIP: One thing to note is that we install things in the order of how frequently 
     are likely to change. This allows us to maximize Docker build cache reuse. I
     can't tell you how much pain and frustration underlies this lesson. For this,
     and many more Python Dockerfile improvement tips, check out
-    https://pythonspeed.com/docker/[Production-Ready Docker Packaging].
+    https://pythonspeed.com/docker[Production-Ready Docker Packaging].
 
 === Tests
 

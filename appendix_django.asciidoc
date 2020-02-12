@@ -50,7 +50,7 @@ package next to our main allocation code:
 [TIP]
 ====
 The code for this chapter is in the
-https://github.com/cosmicpython/code/tree/appendix_django[appendix_django] branch.
+https://github.com/cosmicpython/code/tree/appendix_django[appendix_django] branch on GitHub.
 
 ----
 git clone https://github.com/cosmicpython/code.git
@@ -213,7 +213,7 @@ class OrderLine(models.Model):
 
 <1> For value objects, `objects.get_or_create` can work, but for entities,
     you probably need an explicit try-get/except to handle the upsert.footnote:[
-    `@mr-bo-jangles` suggested you might be able to use https://docs.djangoproject.com/en/2.2/ref/models/querysets/#update-or-create[`update_or_create`]
+    `@mr-bo-jangles` suggested you might be able to use https://oreil.ly/HTq1r[`update_or_create`]
     but that's beyond our Django-fu.]
 
 <2> We've shown the most complex example here. If you do decide to do this,
@@ -418,7 +418,7 @@ to a Django app? We'd say the following:
   the following caveat.
 
 With that said,
-https://forum.djangoproject.com/t/where-to-put-business-logic-in-django/282/7[word
+https://oreil.ly/Nbpjj[word
 in the Django community] is that people find that the fat models approach runs into
 scalability problems of its own, particularly around managing interdependencies
 between apps. In those cases, there's a lot to be said for extracting out a

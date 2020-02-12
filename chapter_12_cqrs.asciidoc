@@ -527,7 +527,7 @@ But the ORM can also expose us to performance problems.
 
 
 The so-called
-https://secure.phabricator.com/book/phabcontrib/article/n_plus_one/[`SELECT N+1`]
+https://oreil.ly/OkBOS[`SELECT N+1`]
 problem is a common performance problem with ORMs: when retrieving a list of
 objects, your ORM will often perform an initial query to, say, get all the IDs
 of the objects it needs, and then issue individual queries for each object to
@@ -536,7 +536,7 @@ retrieve their attributes.  This is especially likely if there are any foreign-k
 NOTE: In all fairness we should say that SQLAlchemy is quite good at avoiding
     the `SELECT N+1` problem.  It doesn't display it in the preceding example, and
     you can request
-    https://docs.sqlalchemy.org/en/13/orm/loading_relationships.html[eager loading]
+    https://oreil.ly/XKDDm[eager loading]
     explicitly to avoid it when dealing with joined objects.
 
 Beyond `SELECT N+1`, you may have other reasons that you want to decouple the

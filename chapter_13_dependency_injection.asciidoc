@@ -228,7 +228,7 @@ onto the message bus feels like a violation of the SRP.
 Instead, we'll reach for a pattern called _Composition Root_ (a bootstrap
 script to you and me)footnote:[Because Python is not a "pure" OO language, Python developers aren't necessarily used to the concept of needing to _compose_ a set of objects into a working application. We just pick our entrypoint and run code from top to bottom.],
 and we'll do a bit of "manual DI" (dependency injection without a
-framework,footnote:[Mark Seemann calls this https://blog.ploeh.dk/2012/11/06/WhentouseaDIContainer[_Pure DI_] or sometimes _Vanilla DI_.]):
+framework,footnote:[Mark Seemann calls this https://oreil.ly/iGpDL[_Pure DI_] or sometimes _Vanilla DI_.]):
 
 
 ----
@@ -532,9 +532,9 @@ framework.
 
 // IDEA: discuss/define what a DI container is
 
-At MADE, we've used https://pypi.org/project/Inject/[Inject] in a few places,
+At MADE, we've used https://pypi.org/project/Inject[Inject] in a few places,
 and it's fine although it makes Pylint unhappy.  You might also check out
-https://pypi.org/project/punq/[Punq], as written by Bob himself, or the
+https://pypi.org/project/punq[Punq], as written by Bob himself, or the
 DRY-Python crew's https://github.com/dry-python/dependencies[dependencies].
 
 *******************************************************************************
@@ -668,7 +668,7 @@ rest of it:
     However, it's still a global in the `flask_app` module scope, if that makes sense. This
     may cause problems if you ever find yourself wanting to test your Flask app
     in-process by using the Flask Test Client instead of using Docker as we do.
-    It's worth researching https://flask.palletsprojects.com/en/1.1.x/patterns/appfactories/[Flask app factories]
+    It's worth researching https://oreil.ly/_a6Kl[Flask app factories]
     if you get into this.]
 
 

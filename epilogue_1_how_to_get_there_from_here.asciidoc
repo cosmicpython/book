@@ -23,9 +23,9 @@ some basic firearms safety.
 Chances are that a lot of you are thinking something like this:
 
 "OK Bob and Harry, that's all well and good, and if I ever get hired to work
-on a green-field new service, I know what to do.  But in the meantime, I'm
+on a green-field new service, I know what to do. But in the meantime, I'm
 here with my big ball of Django mud, and I don't see any way to get to your
-nice, clean, perfect, untainted, simplistic model.  Not from here."
+nice, clean, perfect, untainted, simplistic model. Not from here."
 
 We hear you. Once you've already _built_ a big ball of mud, it's hard to know
 how to start improving things. Really, we need to tackle things step by step.
@@ -750,7 +750,7 @@ Is it a smell for a use case to use multiple repositories/aggregates, and why?::
     in the same transaction/UoW, then consider splitting the work out into two
     different handlers and using a domain event to carry information between the two.
     You can read more in
-    https://dddcommunity.org/wp-content/uploads/files/pdf_articles/Vernon_2011_1.pdf[these papers on aggregate design]
+    https://oreil.ly/uZ4yt[these papers on aggregate design]
     by Vaughn Vernon.
 
 What if I have a read-only but business-logic-heavy system?::
@@ -825,8 +825,8 @@ Amazon EventBridge.
 Tyler Treat has some excellent blog posts on his site _bravenewgeek.com_ and you
 should read at least:
 
- * https://bravenewgeek.com/you-cannot-have-exactly-once-delivery/[You cannot have exactly-once delivery].
- * https://bravenewgeek.com/what-you-want-is-what-you-dont-understanding-trade-offs-in-distributed-messaging/[Understanding tradeoffs in distributed messaging].
+ * https://oreil.ly/pcstD["You Cannot Have Exactly-once Delivery"]
+ * https://oreil.ly/j8bmF["What You Want Is What You Don’t: Understanding Trade-Offs in Distributed Messaging"]
 
 ==== We explicitly choose small, focused transactions that can fail independently
 
@@ -835,7 +835,7 @@ _reallocating_ the line happen in two separate units of work.
 You will need monitoring to know when these transactions fail, and tooling to
 replay events. Some of this is made easier by using a transaction log as your
 message broker (e.g., Kafka, EventStore). You might also look at the
-https://microservices.io/patterns/data/transactional-outbox.html[Outbox pattern].
+https://oreil.ly/sLfnp[Outbox pattern].
 
 ==== We don't discuss idempotency
 
@@ -848,29 +848,27 @@ safely retry events when they fail.
 There's a lot of good material on idempotent message handling, try starting
 here:
 
-* https://blog.sapiensworks.com/post/2015/08/26/How-To-Ensure-Idempotency[How to ensure idempotency]
-* https://lostechies.com/jimmybogard/2013/06/03/un-reliability-in-messaging-idempotency-and-de-duplication/[Un-reliability in messaging]
+* https://oreil.ly/yERzR["How to Ensure Idempotency in an Eventual Consistent DDD/CQRS Application"]
+* https://oreil.ly/Ekuhi["(Un) Reliability in messaging"]
 
 ==== Your Events Will Need to Change Their Schema Over Time
 
 You'll need to find some way of documenting your events and sharing schema
 with consumers. We like using JSON schema and markdown because it's simple but
-there is other prior art. Greg Young wrote an entire book on https://www.goodreads.com/book/show/34327067-versioning-in-an-event-sourced-system[managing event-driven systems over time].
+there is other prior art. Greg Young wrote an entire book on managing event-driven systems over time: _Versioning in an Event Sourced System_ (Leanpub).
 
 
 === More Required Reading
 
 A couple more books we'd like to recommend to help you on your way:
 
-* https://leanpub.com/clean-architectures-in-python[Clean Architectures in Python]
-  by Leonardo Giordani, which came out in 2019, is one of the few previous
-  books on application architecture in Python.
+* _Clean Architectures in Python_ by Leonardo Giordani (Leanpub), which came out in 2019, is one of the few previous books on application architecture in Python.
 
-* https://martinfowler.com/books/eip.html[Enterprise Integration Patterns] by
-  Hohpe and Woolf is a pretty good start for messaging patterns.
+* Enterprise Integration Patterns by
+  Hohpe and Woolf (Addison-Wesley Professional) is a pretty good start for messaging patterns.
 
 * _Monolith to Microservices_ by Sam Newman, and his original book,
-  _Building Microservices_. Strangler (Fig) pattern is mentioned as a
+  _Building Microservices_ (O'Reilly). Strangler (Fig) pattern is mentioned as a
   favorite, also many others.  Good if you're thinking of moving to
   microservices, and also on integration patterns and the considerations
   of async messaging-based integration.
@@ -878,9 +876,9 @@ A couple more books we'd like to recommend to help you on your way:
 
 === Wrap-Up
 
-Phew! That's a lot of warnings and further reading suggestions, we hope we
-haven't scared you off completely. Our goal with this book has been to give you
-just enough knowledge and intuition that you can start building some of this
+Phew! That's a lot of warnings and reading suggestions; we hope we
+haven't scared you off completely. Our goal with this book is to give you
+just enough knowledge and intuition to can start building some of this
 for yourself. We would love to hear how you get on and what problems you're
 facing with the techniques in your own systems, so why not get in touch with us
-over at www.cosmicpython.com ?
+over at www.cosmicpython.com?
