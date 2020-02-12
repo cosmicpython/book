@@ -1,7 +1,7 @@
 [role="pagenumrestart"]
 [[part1]]
 [part]
-== Building an Architecture to Support Domain Modelling
+== Building an Architecture to Support Domain Modeling
 
 
 [quote, Cyrille Martraire, DDD EU 2017]
@@ -9,42 +9,42 @@ ____
 Most developers have never seen a domain model, only a data model.
 ____
 
-Most developers that we talk to about architecture have a nagging sense that
+Most developers whom we talk to about architecture have a nagging sense that
 things could be better. They're often trying to rescue a system that has gone
 wrong somehow, and trying to put some structure back into a ball of mud.
 They know that their business logic shouldn't be spread all over the place,
-but they've no idea how to fix it.
+but they have no idea how to fix it.
 
 We've found that many developers, when asked to design a new system, will
 immediately start to build a database schema, with the object model treated
 as an afterthought. This is where it all starts to go wrong. Instead, _behavior
-should come first, and drive our storage requirements._
+should come first and drive our storage requirements._
 
 After all, our customers don't care about the data model. They care about what
-the system _does_, otherwise they'd just use a spreadsheet.
+the system _does_; otherwise they'd just use a spreadsheet.
 
 The first part of the book looks at how to build a rich object model
-through TDD (in <<chapter_01_domain_model>>), and then we'll see how
-to keep that model decoupled from technical concerns. We see how to build
+through TDD (in <<chapter_01_domain_model>>), and then we'll show how
+to keep that model decoupled from technical concerns. We only how to build
 persistence-agnostic code and how to create stable APIs around our domain so
 that we can refactor aggressively.
 
-To do that, we look at four key design patterns:
+To do that, we present four key design patterns:
 
 * The <<chapter_02_repository,Repository pattern>>, an abstraction over the
   idea of persistent storage
 
-* A <<chapter_04_service_layer,Service Layer>> that clearly defines where our
-  use-cases begin and end
+* The <<chapter_04_service_layer,Service Layer>> pattern to clearly define where our
+  use cases begin and end
 
 * The <<chapter_06_uow,Unit of Work pattern>> to provide atomic operations
 
-* And the <<chapter_07_aggregate,Aggregate pattern>> to enforce the integrity
-  of our data.
+* The <<chapter_07_aggregate,Aggregate pattern>> to enforce the integrity
+  of our data
 
 If you'd like a picture of where we're going, take a look at
-<<part1_components_diagram>>, but don't worry if none of it makes any sense
-yet!  We introduce each box in the figure, one by one.
+<<part1_components_diagram>>, but don't worry if none of it makes sense
+yet!  We introduce each box in the figure, one by one throughout this part of the book.
 
 [[part1_components_diagram]]
 .A component diagram for our app at the end of <<part1>>
@@ -55,17 +55,16 @@ We also take a little time out to talk about
 discussion with a simple example that shows how and why we choose our
 abstractions.
 
-
-Several of the appendices are further explorations of the content from <<part1>>:
+Three appendices are further explorations of the content from Part I:
 
 * <<appendix_project_structure>> is a write-up of the infrastructure for our example
-  code: how we build and run the docker images, where we manage configuration
+  code: how we build and run the Docker images, where we manage configuration
   info,  how we run different types of tests.
 
-* <<appendix_csvs>> is a "the proof is in the pudding" kind of chapter, showing
-  how easy it is to swap out our entire infrastructure--the flask API, the
-  ORM and postgres, for a totally different I/O model involving a CLI and
+* <<appendix_csvs>> is a "the proof is in the pudding" kind of content, showing
+  how easy it is to swap out our entire infrastructure--the Flask API, the
+  ORM and Postgres, for a totally different I/O model involving a CLI and
   CSVs.
 
 * Finally, <<appendix_django>> may be of interest if you're wondering how these
-  patterns might look if using Django, instead of Flask+SQLAlchemy.
+  patterns might look if using Django, instead of Flask and SQLAlchemy.

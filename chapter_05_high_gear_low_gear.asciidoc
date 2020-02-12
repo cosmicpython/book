@@ -2,43 +2,43 @@
 == TDD in High Gear and Low Gear
 
 We've introduced the service layer to capture some of the additional
-orchestration responsibilities we need from a working application:
-clearly defining our use cases, and the workflow for each: what do
+orchestration responsibilities we need from a working application. The service layer helps us
+clearly define our use cases and the workflow for each: what
 we need to get from our repositories, what pre-checks and current state
-validation we should do, and what do we save at the end.
+validation we should do, and what we save at the end.
 
-But currently many of our unit tests operate at a lower level, acting
-directly on the model.  In this chapter we'll discuss the tradeoffs
+But currently, many of our unit tests operate at a lower level, acting
+directly on the model. In this chapter we'll discuss the trade-offs
 involved in moving those tests up to the service-layer level, and
 some more general testing guidelines.
 
 
-.Harry Says: Seeing a Test Pyramid in Action was a Lightbulb Moment
+.Harry Says: Seeing a Test Pyramid in Action Was a Light-Bulb Moment
 *******************************************************************************
-A few words from Harry directly:
+Here are a few words from Harry directly:
 
 _I was initially skeptical of all Bob's architectural patterns, but seeing
-an actual Test Pyramid made me a convert._
+an actual test pyramid made me a convert._
 
-_Once you implement domain modelling and service layer, you really actually can
+_Once you implement domain modeling and the service layer, you really actually can
 get to a stage where unit tests outnumber integration and end-to-end tests by
-an order of magnitude.  Having worked in places where the e2e test build would
-take hours ("wait 'til tomorrow", essentially), I can't tell you what a
+an order of magnitude.  Having worked in places where the E2E test build would
+take hours ("wait 'til tomorrow," essentially), I can't tell you what a
 difference it makes to be able to run all your tests in minutes or seconds._
 
-_Read on for some guidelines on how to decide what kinds of tests to write,
-and at which level.  The high gear vs low gear way of thinking really changed
-my testing-life._
+_Read on for some guidelines on how to decide what kinds of tests to write
+and at which level. The high gear versus low gear way of thinking really changed
+my testing life._
 *******************************************************************************
 
 
-=== How is our Test Pyramid Looking?
+=== How Is Our Test Pyramid Looking?
 
-Let's see what this move to using a Service Layer, with its own service-layer tests,
+Let's see what this move to using a service layer, with its own service-layer tests,
 does to our test pyramid:
 
 [[test_pyramid]]
-.Counting different types of test
+.Counting types of tests
 ====
 [source,sh]
 [role="skip"]
@@ -57,7 +57,7 @@ tests/e2e/test_api.py:2
 
 //NICE-TO-HAVE: test listing this too?
 
-Not bad!  15 unit tests, 8 integration tests, and just 2 end-to-end tests.  That's
+Not bad! We have 15 unit tests, 8 integration tests, and just 2 end-to-end tests.  That's
 already a healthy-looking test pyramid.
 
 
@@ -66,8 +66,8 @@ already a healthy-looking test pyramid.
 
 Let's see what happens if we take this a step further. Since we can test our
 software against the service layer, we don't really need tests for the domain
-model any more. Instead, we could rewrite all of the domain-level tests from
-<<chapter_01_domain_model>> in terms of the service layer.
+model anymore. Instead, we could rewrite all of the domain-level tests from
+<<chapter_01_domain_model>> in terms of the service layer:
 
 
 .Rewriting a domain test at the service layer (tests/unit/test_services.py)
@@ -105,13 +105,13 @@ def test_prefers_warehouse_batches_to_shipments():
 
 Why would we want to do that?
 
-Tests are supposed to help us change our system fearlessly, but very often
+Tests are supposed to help us change our system fearlessly, but often
 we see teams writing too many tests against their domain model. This causes
-problems when they come to change their codebase, and find that they need to
+problems when they come to change their codebase and find that they need to
 update tens or even hundreds of unit tests.
 
 This makes sense if you stop to think about the purpose of automated tests. We
-use tests to enforce that some property of the system doesn't change while we're
+use tests to enforce that a property of the system doesn't change while we're
 working. We use tests to check that the API continues to return 200, that the
 database session continues to commit, and that orders are still being allocated.
 
@@ -119,12 +119,12 @@ If we accidentally change one of those behaviors, our tests will break. The
 flip side, though, is that if we want to change the design of our code, any
 tests relying directly on that code will also fail.
 
-As we get further into the book, we'll see how the service layer forms an API
+As we get further into the book, you'll see how the service layer forms an API
 for our system that we can drive in multiple ways. Testing against this API
 reduces the amount of code that we need to change when we refactor our domain
-model. If we restrict ourselves to only testing against the service layer,
+model. If we restrict ourselves to testing only against the service layer,
 we won't have any tests that directly interact with "private" methods or
-attributes on our model objects, which leaves us more free to refactor them.
+attributes on our model objects, which leaves us freer to refactor them.
 
 TIP: Every line of code that we put in a test is like a blob of glue, holding
     the system in a particular shape. The more low-level tests we have, the
@@ -134,10 +134,10 @@ TIP: Every line of code that we put in a test is like a blob of glue, holding
 [[kinds_of_tests]]
 === On Deciding What Kind of Tests to Write
 
-You might be asking yourself "should I rewrite all my unit tests, then? Is it
-wrong to write tests against the domain model?" To answer the question, it's
+You might be asking yourself, "Should I rewrite all my unit tests, then? Is it
+wrong to write tests against the domain model?" To answer those questions, it's
 important to understand the trade-off between coupling and design feedback (see
-<<test_spectrum_diagram>>.)
+<<test_spectrum_diagram>>).
 
 [[test_spectrum_diagram]]
 .The test spectrum
@@ -151,12 +151,12 @@ image::images/apwp_0501.png[]
 |                                                                              |
 | <---------                                                       ----------> |
 |                                                                              |
-| API tests                  service-layer tests                  domain tests |
+| API Tests                  Service-Layer Tests                  Domain Tests |
 ----
 
 
 Extreme programming (XP) exhorts us to "listen to the code." When we're writing
-tests, we might find that the code is hard to use, or notice a code smell. This
+tests, we might find that the code is hard to use or notice a code smell. This
 is a trigger for us to refactor, and reconsider our design.
 
 We only get that feedback, though, when we're working closely with the target
@@ -164,8 +164,8 @@ code. A test for the HTTP API tells us nothing about the fine-grained design of
 our objects, because it sits at a much higher level of abstraction.
 
 On the other hand, we can rewrite our entire application and, so long as we
-don't change the URLs or request formats, our http tests will continue to pass.
-This gives us confidence that large-scale changes, like changing the DB schema,
+don't change the URLs or request formats, our HTTP tests will continue to pass.
+This gives us confidence that large-scale changes, like changing the database schema,
 haven't broken our code.
 
 At the other end of the spectrum, the tests we wrote in <<chapter_01_domain_model>> helped us to
@@ -176,12 +176,10 @@ about the problem we're trying to solve.
 
 Because the tests are written in the domain language, they act as living
 documentation for our model. A new team member can read these tests to quickly
-understand how the system works, and how the core concepts interrelate.
+understand how the system works and how the core concepts interrelate.
 
 We often "sketch" new behaviors by writing tests at this level to see how the
-code might look.
-
-When we want to improve the design of the code, though, we will need to replace
+code might look. When we want to improve the design of the code, though, we will need to replace
 or delete these tests, because they are tightly coupled to a particular
 implementation.
 
@@ -197,7 +195,7 @@ implementation.
 
 === High and Low Gear
 
-Most of the time, when we are adding a new feature, or fixing a bug, we don't
+Most of the time, when we are adding a new feature or fixing a bug, we don't
 need to make extensive changes to the domain model. In these cases, we prefer
 to write tests against services because of the lower coupling and higher coverage.
 
@@ -205,22 +203,22 @@ For example, when writing an `add_stock` function, or a `cancel_order` feature,
 we can work more quickly and with less coupling by writing tests against the
 service layer.
 
-When starting out a new project, or when we hit a particularly gnarly problem,
-we will drop back down to writing tests against the domain model, so that we
+When starting a new project or when hitting a particularly gnarly problem,
+we will drop back down to writing tests against the domain model so we
 get better feedback and executable documentation of our intent.
 
 The metaphor we use is that of shifting gears. When starting a journey, the
 bicycle needs to be in a low gear so that it can overcome inertia. Once we're off
 and running, we can go faster and more efficiently by changing into a high gear;
-but if we suddenly encounter a steep hill, or we're forced to slow down by a
+but if we suddenly encounter a steep hill or are forced to slow down by a
 hazard, we again drop down to a low gear until we can pick up speed again.
 
 
 
 [[primitive_obsession]]
-=== Fully Decoupling the Service Layer Tests From the Domain
+=== Fully Decoupling the Service Layer Tests from the Domain
 
-We still have some direct dependencies on the domain in our service-layer
+We still have direct dependencies on the domain in our service-layer
 tests, because we use domain objects to set up our test data and to invoke
 our service-layer functions.
 
@@ -252,9 +250,7 @@ def allocate(
 ----
 ====
 
-
 We rewrite the tests in those terms as well:
-
 
 [[tests_call_with_primitives]]
 .Tests now use primitives in function call (tests/unit/test_services.py)
@@ -272,7 +268,7 @@ def test_returns_allocation():
 ====
 
 But our tests still depend on the domain, because we still manually instantiate
-`Batch` objects.  So if, one day, we decide to massively refactor how our Batch
+`Batch` objects.  So, if one day we decide to massively refactor how our `Batch`
 model works, we'll have to change a bunch of tests.
 
 
@@ -314,8 +310,8 @@ into one place.
 
 ==== Adding a Missing Service
 
-We could go one step further though.  If we had a service to add stock,
-then we could use that, and make our service-layer tests fully expressed
+We could go one step further, though. If we had a service to add stock,
+we could use that, and make our service-layer tests fully expressed
 in terms of the service layer's official use cases, removing all dependencies
 on the domain:
 
@@ -339,7 +335,7 @@ TIP: In general, if you find yourself needing to do domain-layer stuff directly
     layer is incomplete.
 
 
-And the implementation is just two lines
+And the implementation is just two lines:
 
 [[add_batch_service]]
 .A new service for add_batch (service_layer/services.py)
@@ -367,11 +363,11 @@ NOTE: Should you write a new service just because it would help remove
 
 That now allows us to rewrite _all_ of our service-layer tests purely
 in terms of the services themselves, using only primitives, and without
-any dependencies on the model.
+any dependencies on the model:
 
 
 [[services_tests_all_services]]
-.Services tests now only use services (tests/unit/test_services.py)
+.Services tests now use only services (tests/unit/test_services.py)
 ====
 [source,python]
 ----
@@ -392,20 +388,20 @@ def test_allocate_errors_for_invalid_sku():
 ====
 
 
-This is a really nice place to be in.  Our service-layer tests only depend on
-the services layer itself, leaving us completely free to refactor the model as
+This is a really nice place to be in.  Our service-layer tests depend on only
+the service layer itself, leaving us completely free to refactor the model as
 we see fit.
 
 
 === Carrying the Improvement Through to the E2E Tests
 
-In the same way that adding `add_batch` helped decouple our services-layer
+In the same way that adding `add_batch` helped decouple our service-layer
 tests from the model, adding an API endpoint to add a batch would remove
-the need for the ugly `add_stock` fixture, and our E2E tests can be free
+the need for the ugly `add_stock` fixture, and our E2E tests could be free
 of those hardcoded SQL queries and the direct dependency on the database.
 
-The service function means adding the endpoint is very easy, just a little
-json-wrangling and a single function call:
+Thanks to our service function, adding the endpoint is easy, just a little
+JSON wrangling and a single function call:
 
 
 [[api_for_add_batch]]
@@ -428,15 +424,15 @@ def add_batch():
 ----
 ====
 
-NOTE: Are you thinking to yourself `POST` to `/add_batch`?? That's not
+NOTE: Are you thinking to yourself, POST to _/add_batch_? That's not
     very RESTful!  You're quite right.  We're being happily sloppy, but
-    if you'd like to make it all more RESTey, maybe a POST to `/batches`,
+    if you'd like to make it all more RESTy, maybe a POST to _/batches_,
     then knock yourself out!  Because Flask is a thin adapter, it'll be
     easy.  See the next sidebar.
 
 And our hardcoded SQL queries from _conftest.py_ get replaced with some
 API calls, meaning the API tests have no dependencies other than the API,
-which is also very nice:
+which is also nice:
 
 [[api_tests_with_no_sql]]
 .API tests can now add their own batches (tests/e2e/test_api.py)
@@ -456,7 +452,9 @@ def post_to_add_batch(ref, sku, qty, eta):
 @pytest.mark.usefixtures('restart_api')
 def test_happy_path_returns_201_and_allocated_batch():
     sku, othersku = random_sku(), random_sku('other')
-    batch1, batch2, batch3 = random_batchref(1), random_batchref(2), random_batchref(3)
+    batch1 = random_batchref(1)
+    batch2 = random_batchref(2)
+    batch3 = random_batchref(3)
     post_to_add_batch(batch1, sku, 100, '2011-01-02')
     post_to_add_batch(batch2, sku, 100, '2011-01-01')
     post_to_add_batch(batch3, othersku, 100, None)
@@ -471,48 +469,48 @@ def test_happy_path_returns_201_and_allocated_batch():
 
 === Wrap-Up
 
-Once you have a service layer in place, you really can move the vast majority
-of your tests to being unit tests, and develop a healthy test pyramid.  A few
-things will help along the way
+Once you have a service layer in place, you really can move the majority
+of your test coverage to unit tests and develop a healthy test pyramid.  A few
+things will help along the way:
 
-* Express your service layer in terms of primitives rather than domain objects
+* Express your service layer in terms of primitives rather than domain objects.
 
 * In an ideal world, you'll have all the services you need to be able to test
-  entirely against the service layer, rather than hacking state in via
-  repositories or the DB. This pays off in your end-to-end tests as well.
+  entirely against the service layer, rather than hacking state via
+  repositories or the database. This pays off in your end-to-end tests as well.
 
 
 
 [[types_of_test_rules_of_thumb]]
-.Different Types of Test: Rules of Thumb
+.Test Recap
 ******************************************************************************
 
 Aim for one end-to-end test per feature::
-    This might be written against an HTTP API for example.  The objective
+    This might be written against an HTTP API, for example.  The objective
     is to demonstrate that the feature works, and that all the moving parts
     are glued together correctly.
 
 Write the bulk of your tests against the service layer::
     These edge-to-edge tests offer a good trade-off between coverage,
-    run-time, and efficiency. Each tests tend to cover one code path of a
-    feature and use fakes for IO.  This is the place to exhaustivelyfootnote:[
+    runtime, and efficiency. Each test tends to cover one code path of a
+    feature and use fakes for I/O. This is the place to exhaustively
+    cover all the edge cases and the ins and outs of your business logic.footnote:[
 A valid concern about writing tests at a higher level is that it can lead to
-combinatorial explosion, for more complex use cases.  In these cases dropping
+combinatorial explosion for more complex use cases. In these cases, dropping
 down to lower-level unit tests of the various collaborating domain objects
-can be useful.  But see also <<chapter_08_events_and_message_bus>> and
-<<fake_message_bus>>]
-    cover all the edge cases and ins+outs of your business logic.
+can be useful. But see also <<chapter_08_events_and_message_bus>> and
+<<fake_message_bus>>.]
 
 Maintain a small core of tests written against your domain model::
-    These tests have highly-focused coverage, and are more brittle, but have
+    These tests have highly focused coverage and are more brittle, but have
     the highest feedback. Don't be afraid to delete these tests if the
     functionality is later covered by tests at the service layer.
 
 Error handling counts as a feature::
-    Ideally your application will be structured such that all errors that
-    bubble up to your entrypoints (eg Flask) are handled in the same way.
-    This means you only need to test the happy path for each feature, and
+    Ideally, your application will be structured such that all errors that
+    bubble up to your entrypoints (e.g., Flask) are handled in the same way.
+    This means you need to test only the happy path for each feature, and
     reserve one end-to-end test for all unhappy paths (and many unhappy path
-    unit tests of course)
+    unit tests, of course).
 
 ******************************************************************************
