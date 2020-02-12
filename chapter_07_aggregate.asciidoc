@@ -273,7 +273,7 @@ allocate --> allocate_domain_service: allocate(orderline, batches)
 ----
 
 ...we'll move to the world of <<after_aggregates_diagram>>, in which there is a new
-the `Product` object for the particular SKU of our order line, and it will be in charge
+`Product` object for the particular SKU of our order line, and it will be in charge
 of all the batches _for that sku_, and we can call a `.allocate()` method on that
 instead.
 
