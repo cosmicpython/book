@@ -4,17 +4,17 @@
 /* Globally preventing code blocks from breaking across pages
 pre { page-break-inside: avoid; } */
 
-/* handling for elements to keep them from breaking across pages
+/* handling for elements to keep them from breaking across pages */
 .nobreakinside {
  page-break-inside: avoid; 
  page-break-before: auto;
- margin-top: 0 !important; 
  
-} */
+}
 
 /*less space for pagebreaks */
 .less_space {margin-top: 0 !important;}
 
+/* Allow Examples to have less space at top of page (STYL-1266)
 section.less_space > h1:first-child { 
  margin-top: 0 !important; 
  
@@ -25,12 +25,11 @@ aside.less_space > h5:first-child {
  
 }
 
-/* Allow Examples to have less space at top of page (STYL-1266) */
 .less_space > h5:first-child {
  margin-top: 0 !important;
  padding-top: 0 !important;
 }
-
+ */
 /* Temporary fix to TOC spacing from Tools */
 nav[data-type="toc"] li {
   margin-bottom: 0 !important;
