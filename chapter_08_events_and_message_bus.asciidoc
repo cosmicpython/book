@@ -175,7 +175,7 @@ this code?
 Really this is a violation of the __single responsibility principle__ (SRP).footnote:[
 This principle is the _S_ in https://oreil.ly/AIdSD[SOLID].]
 Our use case is allocation. Our endpoint, service function, and domain methods
-are all called `allocate`, not `allocate_and_send_mail_if_out_of_stock`.
+are all called pass:[<code><span class="keep-together">allocate</span></code>], not `allocate_and_send_mail_if_out_of_stock`.
 
 TIP: Rule of thumb: if you can't describe what your function does without using
     words like "then" or "and," you might be violating the SRP.
@@ -358,6 +358,7 @@ NOTE: Note that the message bus as implemented doesn't give us concurrency becau
     run each use-case is written in a single place.
     See the following sidebar.
 
+[role="nobreakinside"]
 [[celery_sidebar]]
 .Is This Like Celery?
 *******************************************************************************
@@ -657,6 +658,7 @@ it's not a lot of work. Once your project is up and running, the interface for
 your repository and UoW abstractions really don't change much. And if you're
 using ABCs, they'll help remind you when things get out of sync.
 
+[role="nobreakinside"]
 [[get_rid_of_commit]]
 .Exercise for the Reader
 ******************************************************************************
@@ -669,7 +671,6 @@ can do better?
 
 One _composition over inheritance_ way to go would be to implement a
 wrapper class:
-
 
 [[tracking_repo_wrapper]]
 .A wrapper adds functionality and then delegates (src/adapters/repository.py)
@@ -703,7 +704,6 @@ See if you can apply a similar pattern to our UoW class, in
 order to get rid of those Java-y `_commit()` methods too. You can find the code on https://github.com/cosmicpython/code/tree/chapter_08_events_and_message_bus_exercise[GitHub].
 
 Switching all the ABCs to `typing.Protocol` is a good way to force yourself to avoid using inheritance. Let us know if you come up with something nice!
-
 ******************************************************************************
 
 === Wrap-Up
@@ -731,7 +731,7 @@ and remove the allocations.
 In <<chapter_08_events_and_message_bus>>, we'll look at this idea in more
 detail as we build a more complex workflow with our new message bus.
 
-
+[role="nobreakinside"]
 .Domain Events and the Message Bus Recap
 *****************************************************************
 Events can help with the single responsibility principle::
@@ -763,7 +763,6 @@ Option 3: UoW collects events from aggregates and passes them to message bus::
     were raised by loaded objects.
     This is the most complex design and might rely on ORM magic, but it's clean
     and easy to use once it's set up.
-
 *****************************************************************
 
 And <<chapter_08_events_and_message_bus_tradeoffs>> shows the trade-offs as we

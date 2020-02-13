@@ -16,7 +16,7 @@ image::images/apwp_1201.png[]
 
 [TIP]
 ====
-The code for this chapter is in the
+You can find the code for this chapter is in the
 https://github.com/cosmicpython/code/tree/chapter_12_cqrs[chapter_12_cqrs] branch on GitHub.
 
 ----
@@ -97,7 +97,7 @@ is a few seconds out of date, but if our allocate service is inconsistent,
 we'll make a mess of their orders. We can take advantage of this difference by
 making our reads _eventually consistent_ in order to make them perform better.
 
-
+[role="nobreakinside"]
 .Is Read Consistency Truly Attainable?
 *******************************************************************************
 
@@ -164,7 +164,7 @@ domain model are just bloat.
 
 === Post/Redirect/Get and CQS
 
-If you've been doing web development, you're probably familiar with the
+If you do web development, you're probably familiar with the
 Post/Redirect/Get pattern. In this technique, a web endpoint accepts an
 HTTP POST, and responds with a redirect to see the result. For example, we might
 accept a POST to _/batches_ to create a new batch, and redirect the user to
@@ -725,7 +725,7 @@ Flask -> User: some allocations
 @enduml
 ----
 
-
+[role="nobreakinside"]
 .Rebuilding from Scratch
 *******************************************************************************
 "What happens when it breaks?" should be the first question we ask as engineers.

@@ -22,7 +22,7 @@ git checkout chapter_03_abstractions
 A key theme in this book, hidden among the fancy patterns, is that we can use
 simple abstractions to hide messy details. When we're writing code for fun, or
 in a kata,footnote:[A code kata is a small contained programming challenge often
-used to practice TDD. See https://oreil.ly/vhjju[Kata—The Only Way to Learn TDD]]
+used to practice TDD. See https://oreil.ly/vhjju[Kata—The Only Way to Learn TDD].]
 we get to play with ideas freely, hammering things out and refactoring
 aggressively. In a large-scale system, though, we become constrained by the
 decisions made elsewhere in the system.
@@ -263,7 +263,7 @@ We can definitely refactor these tests (some of the cleanup could go into pytest
 fixtures, for example) but as long as we're doing filesystem operations, they're
 going to stay slow, and hard to read and write.
 
-
+[role="pagebreak-before less_space"]
 === Choosing the Right Abstraction(s)
 
 What could we do to rewrite our code to make it more testable?
@@ -451,7 +451,7 @@ decide that's fine because `sync()` is now so simple. Or you might decide to
 keep some integration/acceptance tests to test that `sync()`. But there's
 another option, which is to modify the `sync()` function so it can
 be unit tested _and_ end-to-end tested; it's an approach Bob calls
-e_dge-to-edge testing_.
+_edge-to-edge testing_.
 
 
 ==== Testing Edge-to-Edge with Fakes and Dependency Injection
@@ -671,7 +671,7 @@ TIP: In this chapter, we've spent a lot of time replacing end-to-end tests with
     for more details.
 
 
-.So Which Do We Use in This Book? Functional or Object-Oriented Composition?
+.So Which Do We Use Here? Functional or Object-Oriented Composition?
 ******************************************************************************
 Both. Our domain model is entirely free of dependencies and side effects,
 so that's our functional core. The service layer that we build around it

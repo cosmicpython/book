@@ -228,7 +228,7 @@ onto the message bus feels like a violation of the SRP.
 Instead, we'll reach for a pattern called _Composition Root_ (a bootstrap
 script to you and me)footnote:[Because Python is not a "pure" OO language, Python developers aren't necessarily used to the concept of needing to _compose_ a set of objects into a working application. We just pick our entrypoint and run code from top to bottom.],
 and we'll do a bit of "manual DI" (dependency injection without a
-framework,footnote:[Mark Seemann calls this https://oreil.ly/iGpDL[_Pure DI_] or sometimes _Vanilla DI_.]):
+framework):footnote:[Mark Seemann calls this https://oreil.ly/iGpDL[_Pure DI_] or sometimes _Vanilla DI_.]
 
 
 ----
@@ -248,7 +248,7 @@ Messagebus
 V
 ----
 
-TODO: betterify diagram? or just get rid of, in favour of the first?
+//TODO: betterify diagram? or just get rid of, in favour of the first?
 
 
 
@@ -975,34 +975,9 @@ def test_out_of_stock_email(bus):
 <4> Against all the odds, this actually worked, pretty much at the first go!
 
 
-And that's it really. In summary:
+And that's it really.
 
-1. Define your API using an ABC.
-2. Implement the real thing.
-3. Build a fake and use it for unit/service-layer/handler tests.
-4. Find a less-fake version you can put into your Docker environment.
-5. Test the less-fake "real" thing.
-6. Profit!
-
-// TODO this isn't really in the right TDD order is it?
-
-
-.Exercise for the Reader 2
-******************************************************************************
-
-You could do two things for practice regarding adapters:
-
-1. Try swapping out our notifications from email to, for example, SMS
-    notifications using Twilio, or Slack notifications.  Can you find
-    a good equivalent to MailHog for integration testing?
-
-2. In a similar way to what we did moving from `send_mail` to a `Notifications`
-    class, try refactoring our `redis_eventpublisher` that is currently just
-    a `Callable` to some sort of more formal adapter/base class/protocol.
-
-******************************************************************************
-
-
+[role="nobreakinside"]
 .DI and Bootstrap Recap
 ****
 * Once you have more than one adapter, you'll start to feel a lot of pain
@@ -1026,4 +1001,32 @@ You could do two things for practice regarding adapters:
   dependency into a "proper" adapter, factoring out an ABC, defining its real
   and fake implementations, and thinking through integration testing.
 ****
+
+In summary:
+
+1. Define your API using an ABC.
+2. Implement the real thing.
+3. Build a fake and use it for unit/service-layer/handler tests.
+4. Find a less-fake version you can put into your Docker environment.
+5. Test the less-fake "real" thing.
+6. Profit!
+
+// TODO this isn't really in the right TDD order is it?
+
+[role="nobreakinside"]
+.Exercise for the Reader 2
+******************************************************************************
+
+You could do two things for practice regarding adapters:
+
+1. Try swapping out our notifications from email to, for example, SMS
+    notifications using Twilio, or Slack notifications.  Can you find
+    a good equivalent to MailHog for integration testing?
+
+2. In a similar way to what we did moving from `send_mail` to a `Notifications`
+    class, try refactoring our `redis_eventpublisher` that is currently just
+    a `Callable` to some sort of more formal adapter/base class/protocol.
+
+******************************************************************************
+
 // TODO: tradeoffs?

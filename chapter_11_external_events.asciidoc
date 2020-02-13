@@ -33,7 +33,7 @@ https://github.com/cosmicpython/code/tree/chapter_11_external_events[chapter_11_
 git clone https://github.com/cosmicpython/code.git
 cd code
 git checkout chapter_11_external_events
-# or to code along, checkout the previous chapter:
+# or to code along, check out the previous chapter:
 git checkout chapter_10_commands
 ----
 ====
@@ -137,7 +137,7 @@ the different symbols.
 
 
 We can think of each of these steps as a command in our system: `ReserveStock`,
-`ConfirmReservation`, `DispatchGoods`, `MakeCustomerVIP`, and so forth.
+pass:[<span class="keep-together"><code>ConfirmReservation</code></span>], `DispatchGoods`, `MakeCustomerVIP`, and so forth.
 
 This style of architecture, where we create a microservice per database table,
 and treat our HTTP APIs as CRUD interfaces to anemic models, is the most common
@@ -230,6 +230,7 @@ of the system has to work at the same time for any part of it to work. As the
 system gets bigger, there is an exponentially increasing probability that some
 part is degraded.
 
+[role="nobreakinside"]
 [[connascence_sidebar]]
 .Connascence
 *******************************************************************************
@@ -560,12 +561,7 @@ def publish_allocated_event(
 ----
 ====
 
-
-TIP: Outbound events are one of the places it's important to apply validation.
-    See <<appendix_validation>> for some validation philosophy and examples.
-
-
-
+[role="nobreakinside"]
 .Internal Versus External Events
 *******************************************************************************
 It's a good idea to keep the distinction between internal and external events
@@ -577,7 +573,10 @@ https://oreil.ly/FXVil[event sourcing]
 
 *******************************************************************************
 
+TIP: Outbound events are one of the places it's important to apply validation.
+    See <<appendix_validation>> for some validation philosophy and examples.
 
+[role="nobreakinside"]
 .Exercise for the Reader
 *******************************************************************************
 

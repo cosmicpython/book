@@ -250,8 +250,8 @@ services:
 <7> The `ports` section allows us to expose the ports from inside the containers
     to the outside worldfootnote:[On a CI server, you may not be able to expose
     arbitrary ports reliably, but it's only a convenience for local dev. You
-    can find ways of making these port mappings optional, e.g., with
-    _docker-compose.override.yml_.]—these correspond to the default ports we set
+    can find ways of making these port mappings optional (e.g., with
+    _docker-compose.override.yml_).]—these correspond to the default ports we set
     in _config.py_.
 
 NOTE: Inside Docker, other containers are available through hostnames named after

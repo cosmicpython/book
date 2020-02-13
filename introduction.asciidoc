@@ -211,21 +211,21 @@ You might be familiar with the _dependency inversion principle_ (DIP) already, b
 it's the _D_ in the SOLID.footnote:[SOLID is an acronym for Robert C. Martin's five principles of object-oriented
 design: single responsibility, open for extension but
 closed for modification, liskov substitution, interface segregation, and
-dependency inversion. See https://oreil.ly/UFM7U["SOLID: The First Five Principles of Object-Oriented Design"] by Samuel Oloruntuba]
+dependency inversion. See https://oreil.ly/UFM7U["SOLID: The First Five Principles of Object-Oriented Design"] by Samuel Oloruntuba.]
 
 Unfortunately we can't illustrate the DIP by using three tiny code listings as
 we did for encapsulation. However, the whole of <<part1>> is essentially a worked
 example of implementing the DIP throughout an application, so you'll get
 your fill of concrete examples.
 
-In the meantime, we can talk about the formal definition of the DIP, which is as follows:
+In the meantime, we can talk about DIP's formal definition:
 
 // [SG] reference?
 
 1.  High-level modules should not depend on low-level modules. Both should
     depend on abstractions.
 
-2.  Abstractions should not depend on details. Details should depend on
+2.  Abstractions should not depend on details. Instead, details should depend on
     abstractions.
 
 But what does this mean? Let's take it bit by bit.

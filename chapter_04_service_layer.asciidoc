@@ -1,5 +1,5 @@
 [[chapter_04_service_layer]]
-== Our First Use Case: pass:[<span class="keep-together">Flask API and Service Layer</span>]
+== Our First Use Case: Flask API and pass:[<span class="keep-together">Service Layer</span>]
 
 Back to our allocations project! <<maps_service_layer_before>> shows the point we reached at the end of <<chapter_02_repository>>, which covered the Repository pattern.
 
@@ -20,11 +20,11 @@ our domain model, but the entire workflow for a use case.
 <<maps_service_layer_after>> shows what we're aiming for: we're going to
 add a Flask API that will talk to the service layer, which will serve as the
 entrypoint to our domain model. Because our service layer depends on the
-`AbstractRepository`, we can unit test with `FakeRepository`, but run it our production code using `SqlAlchemyRepository`.
+`AbstractRepository`, we can unit test it by using `FakeRepository`, but run it our production code using `SqlAlchemyRepository`.
 
 NOTE: In our diagrams, we are using the convention that new components
     are highlighted with bold text/lines (and yellow/orange color, if you're
-    reading a digital version)s
+    reading a digital version).
 
 [[maps_service_layer_after]]
 .The service layer will become the main way into our app
@@ -461,7 +461,7 @@ That last step is a little unsatisfactory at the moment, as our service
 layer is tightly coupled to our database layer. We'll improve
 that in <<chapter_06_uow>> with the Unit of Work pattern.
 
-
+[role="nobreakinside"]
 [[depend_on_abstractions]]
 .Depend on Abstractions
 *******************************************************************************
@@ -528,7 +528,7 @@ def allocate_endpoint():
 
 The responsibilities of the Flask app are just standard web stuff: per-request
 session management, parsing information out of POST parameters, response status
-codes, and JSON. All the orchestration logic is in the use -ase/service layer,
+codes, and JSON. All the orchestration logic is in the use case/service layer,
 and the domain logic stays in the domain.
 
 Finally, we can confidently strip down our E2E tests to just two, one for
@@ -574,11 +574,11 @@ We've successfully split our tests into two broad categories: tests about web
 stuff, which we implement end to end; and tests about orchestration stuff, which
 we can test against the service layer in memory.
 
-
+[role="nobreakinside"]
 .Exercise for the Reader
 ******************************************************************************
 Now that we have an allocate service, so why not build out a service for
-`deallocate`? We've added https://github.com/cosmicpython/code/tree/chapter_04_service_layer_exercise[[an E2E test and a few stub service-layer tests] for
+`deallocate`? We've added https://github.com/cosmicpython/code/tree/chapter_04_service_layer_exercise[an E2E test and a few stub service-layer tests] for
 you to get started on GitHub.
 
 If that's not enough, continue into the E2E tests and _flask_app.py_, and
@@ -616,14 +616,14 @@ system, and keeping it separate from business logic helps to keep things tidy.
 The second type of service is a _domain service_. This is the name for a piece of
 logic that belongs in the domain model but doesn't sit naturally inside a
 stateful entity or value object. For example, if you were building a shopping
-cart application, you might choose to build taxation rules as a _domain service_.
+cart application, you might choose to build taxation rules as a domain service.
 Calculating tax is a separate job from updating the cart, and it's an important
 part of the model, but it doesn't seem right to have a persisted entity for
 the job. Instead a stateless TaxCalculator class, or a `calculate_tax` function
 can do the job.
 
 
-=== Putting Things in Folders to See Where Everything Belongs
+=== Putting Things in Folders to See Where It All Belongs
 
 As our application gets bigger, we'll need to keep tidying our directory
 structure. The layout of our project gives us useful hints about what kinds of
@@ -679,13 +679,13 @@ Here's one way we could organize things:
     add service-layer exceptions here, and as you'll see in the <<chapter_05_high_gear_low_gear>>, we'll add __unit_of_work.py__.
 
 <3> _Adapters_ is a nod to the ports and adapters terminology. This will fill
-    up with any other abstractions around external I/O; e.g., a __redis_client.py__.
+    up with any other abstractions around external I/O (e.g., a __redis_client.py__).
     Strictly speaking, you would call these _secondary_ adapters or _driven_
     adapters, or sometimes _inward-facing_ adapters.
 
 <4> Entrypoints are the places we drive our application from. In the
     official ports and adapters terminology, these are adapters too, and are
-    referred to as _primary_, _driving_ ,or _outward-facing_ adapters.
+    referred to as _primary_, _driving_, or _outward-facing_ adapters.
 
 What about ports?  As you may remember, they are the abstract interfaces that the
 adapters implement. We tend to keep them in the same file as the adapters that
@@ -845,7 +845,7 @@ a|
 * We have cleanly separated "stuff that talks HTTP" from "stuff that talks
   allocation."
 
-* When combined with the _Repository pattern_ and `FakeRepository`, we have
+* When combined with the Repository pattern and `FakeRepository`, we have
   a nice way of writing tests at a higher level than the domain layer;
   we can test more of our workflow without needing to use integration tests
   (read on to <<chapter_05_high_gear_low_gear>> for more elaboration on this).

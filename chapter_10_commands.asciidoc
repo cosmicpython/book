@@ -51,9 +51,7 @@ We often use events to spread the knowledge about successful commands.
 
 Events capture _facts_ about things that happened in the past. Since we don't
 know who's handling an event, senders should not care whether the receivers
-succeeded or failed.
-
-<<events_vs_commands_table>> recaps the differences.
+succeeded or failed. <<events_vs_commands_table>> recaps the differences.
 
 [[events_vs_commands_table]]
 [cols="e,a,a", frame="none"]
@@ -355,7 +353,7 @@ def congratulate_vip_customer(uow, event: CustomerBecameVip): #<4>
     event `OrderCreated`.
 
 <3> Our second handler updates the `History` object to record that an order was
-    created.
+    pass:[<span class="keep-together">created</span>].
 
 <4> Finally we send an email to the customer when they become a VIP.
 

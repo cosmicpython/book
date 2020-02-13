@@ -69,8 +69,8 @@ developing a domain model. We hope to give you a taste of it, though,
 and cannot encourage you enough to go on and read a proper DDD book:
 
 * The original "blue book,"_Domain-Driven Design_ by Eric Evans (Addison-Wesley Professional)
-* Or, some people prefer the "red book," _Implementing Domain-Driven Design_
-  by Vaughn Vernon (Addison-Wesley Professional).
+* The "red book," _Implementing Domain-Driven Design_
+  by Vaughn Vernon (Addison-Wesley Professional)
 
 *****************************************************************
 
@@ -233,7 +233,7 @@ a| We allocate to warehouse stock in preference to shipment batches.
 a| We allocate to shipment batches in order of which has the earliest ETA.
 |===
 
-
+[role="nobreakinside"]
 .Exercise for the Reader
 ******************************************************************************
 Why not have a go at solving this problem yourself? Write a few unit tests to
@@ -524,7 +524,7 @@ see how sticking rigidly to our principles of encapsulation and careful
 layering will help us to avoid a ball of mud.
 
 
-
+[role="nobreakinside"]
 .More Types for More Type Hints
 *******************************************************************************
 
@@ -965,7 +965,7 @@ image::images/apwp_0104.png[]
 That'll probably do for now! We have a domain service that we can use for our
 first use case. But first we'll need a database...
 
-
+[role="nobreakinside"]
 .Domain Modeling Recap
 *****************************************************************
 Domain modeling::

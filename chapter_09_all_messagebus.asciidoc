@@ -22,7 +22,7 @@ image::images/apwp_0902.png[]
 [TIP]
 ====
 The code for this chapter is in the
-https://github.com/cosmicpython/code/tree/chapter_09_all_messagebus[chapter_09_all_messagebus] branch.
+https://github.com/cosmicpython/code/tree/chapter_09_all_messagebus[chapter_09_all_messagebus] branch on GitHub.
 
 ----
 git clone https://github.com/cosmicpython/code.git
@@ -254,9 +254,9 @@ The change might be clearer as a diff:
 Along the way, we've made enriched our service-layer's API more structured and consistent. It was a scattering of
 primitives, and now it uses well-defined objects (see the following sidebar).
 
-.From Domain Objects, via Primitive Obsession, to Events as an Interface
+[role="nobreakinside"]
+.From Domain Objects, via Primitive Obsession, to pass:[<span class="keep-together">Events as an Interface</span>]
 *******************************************************************************
-
 Some of you may remember <<primitive_obsession>>, in which we changed our service-layer API
 from being in terms of domain objects to primitives. And now we're moving
 back, but to different objects?  What gives?
@@ -282,7 +282,6 @@ we no longer need to remember a particular combination of primitives, just a sin
 event class that represents the input to our application. That's conceptually
 quite nice. On top of that, as you'll see in <<appendix_validation>>, those
 event classes can be a nice place to do some input validation.
-
 *******************************************************************************
 
 
@@ -313,7 +312,7 @@ def handle(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):  #<1>
 <1> The message bus now gets passed the UoW each time it starts up.
 <2> When we begin handling our first event, we start a queue.
 <3> We pop events from the front of the queue and invoke their handlers (the
-    `HANDLERS` dict hasn't changed, it still maps event types to handler functions).
+    pass:[<span class="keep-together"><code>HANDLERS</code></span>] dict hasn't changed, it still maps event types to handler functions).
 <4> The message bus passes the UoW down to each handler.
 <5> After each handler finishes, we collect any new events that have been
     generated and add them to the queue.
@@ -693,8 +692,7 @@ class FakeRepository(repository.AbstractRepository):
 NOTE: We're adding a query to our repository to make this use case easier to
 implement. So long as our query is returning a single aggregate, we're not
 bending any rules. If you find yourself writing complex queries on your
-repositories, you might want to think about a different design. In particular, a
-method like `get_most_popular_products` or `find_products_by_order_id` would
+repositories, you might want to consider a different design. Methods like `get_most_popular_products` or `find_products_by_order_id` in particular would
 definitely trigger our spidey sense. <<chapter_11_external_events>> and <<epilogue_1_how_to_get_there_from_here>> have some tips
 on managing complex queries.
 
@@ -755,14 +753,14 @@ And our new requirement is fully implemented.
 === Optionally: Unit Testing Event Handlers in Isolation with a Fake Message Bus
 
 Our main test for the reallocation workflow
-(<<test_change_batch_quantity_handler>>) is _edge-to-edge_.  It uses
+(<<test_change_batch_quantity_handler>>) is _edge-to-edge_. It uses
 the real message bus, and it tests the whole flow, where the `BatchQuantityChanged`
 event handler triggers deallocation, and emits new `AllocationRequired` events, which in
-turn are handled by their own handlers.  One test covers a chain of multiple
+turn are handled by their own handlers. One test covers a chain of multiple
 events and handlers.
 
 Depending on the complexity of your chain of events, you may decide that you
-want to test some handlers in isolation from one another.  You can do this
+want to test some handlers in isolation from one another. You can do this
 using a "fake" message bus.
 
 In our case, we actually intervene by modifying the `publish_events()` method
@@ -832,6 +830,7 @@ Whether you want to do this or not depends on the complexity of your chain of
 events. We say, start out with edge-to-edge testing, and resort to
 this only if necessary.
 
+[role="nobreakinside"]
 .Exercise for the Reader
 *******************************************************************************
 A great way to force yourself to really understand some code is to refactor it.
@@ -881,7 +880,6 @@ from earlier.
 
 We use a class-based message bus in <<chapter_13_dependency_injection>>,
 if you need more inspiration.
-
 *******************************************************************************
 
 

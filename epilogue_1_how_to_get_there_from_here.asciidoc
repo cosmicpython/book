@@ -56,49 +56,7 @@ of mud is homogeneity: every part of the system looks the same, because we
 haven't been clear about the responsibilities of each component. To fix that,
 we'll need to start separating out responsibilities and introducing clear
 boundaries. One of the first things we can do is to start building a service
-layer.
-
-.Case Study: Layering an Overgrown System
-********************************************************************************
-Many years ago, Bob worked for a software company that had outsourced the first
-version of its application, an online collaboration platform for sharing and
-working on files.
-
-When the company brought development in-house, it passed through several
-generations of developers' hands, and each wave of new developers added more
-complexity to the code's structure.
-
-At its heart, the system was an ASP.NET Web Forms application, built with an
-NHibernate ORM. Users would upload documents into workspaces, where they could
-invite other workspace members to review, comment, or modify their work.
-
-Most of the complexity of the application was in the permissions model because
-each document was contained in a folder, and folders allowed read, write, and
-edit permissions, much like a Linux filesystem.
-
-Additionally, each workspace belonged to an account, and the account had quotas
-attached to it via a billing package.
-
-As a result, every read or write operation against a document had to load an
-enormous number of objects from the database in order to test permissions and
-quotas. Creating a new workspace involved hundreds of database queries as we set
-up the permissions structure, invited users, and set up sample content.
-
-Some of the code for operations was in web handlers that ran when a user clicked
-a button or submitted a form, some of it was in manager objects that held
-code for orchestrating work, and some of it was in the domain model. Model
-objects would make database calls, or copy files on disk, and the test coverage
-was abysmal.
-
-To fix the problem, we first introduced a service layer so that all of the code
-for creating a document or workspace was in one place and could be understood.
-This involved pulling data access code out of the domain model and into
-command handlers. Likewise, we pulled orchestration code out of the managers and
-the web handlers, and pushed it into handlers.
-
-The resulting command handlers were _long_ and messy, but we'd made a start at
-introducing order to the chaos.
-********************************************************************************
+layer (<<collaboration_app_model>>).
 
 [[collaboration_app_model]]
 .Domain of a collaboration system
@@ -140,6 +98,49 @@ Billing Charges, Clean Abandoned Accounts, or Raise Purchase Order.
 In our case, most of our use cases were part of the manager classes and had
 names like Create Workspace or Delete Document Version. Each use case
 was invoked from a web frontend.
+
+[role="nobreakinside"]
+.Case Study: Layering an Overgrown System
+********************************************************************************
+Many years ago, Bob worked for a software company that had outsourced the first
+version of its application, an online collaboration platform for sharing and
+working on files.
+
+When the company brought development in-house, it passed through several
+generations of developers' hands, and each wave of new developers added more
+complexity to the code's structure.
+
+At its heart, the system was an ASP.NET Web Forms application, built with an
+NHibernate ORM. Users would upload documents into workspaces, where they could
+invite other workspace members to review, comment, or modify their work.
+
+Most of the complexity of the application was in the permissions model because
+each document was contained in a folder, and folders allowed read, write, and
+edit permissions, much like a Linux filesystem.
+
+Additionally, each workspace belonged to an account, and the account had quotas
+attached to it via a billing package.
+
+As a result, every read or write operation against a document had to load an
+enormous number of objects from the database in order to test permissions and
+quotas. Creating a new workspace involved hundreds of database queries as we set
+up the permissions structure, invited users, and set up sample content.
+
+Some of the code for operations was in web handlers that ran when a user clicked
+a button or submitted a form, some of it was in manager objects that held
+code for orchestrating work, and some of it was in the domain model. Model
+objects would make database calls, or copy files on disk, and the test coverage
+was abysmal.
+
+To fix the problem, we first introduced a service layer so that all of the code
+for creating a document or workspace was in one place and could be understood.
+This involved pulling data access code out of the domain model and into
+command handlers. Likewise, we pulled orchestration code out of the managers and
+the web handlers, and pushed it into handlers.
+
+The resulting command handlers were _long_ and messy, but we'd made a start at
+introducing order to the chaos.
+********************************************************************************
 
 Our goal is to create a single function or class for each of these supported
 operations that deals with _orchestrating_ the work to be done. Each use case
@@ -460,6 +461,71 @@ of an old system, while keeping it running. Bits of old functionality
 are gradually intercepted and replaced until the old system is left
 doing nothing at all, and can be switched off.
 
+When building the availability service, we used a technique called _event
+interception_ to move functionality from one place to another. This is a three-step
+process:
+
+1. Raise events to represent the changes happening in a system you want to
+replace.
+
+2. Build a second system that consumes those events and uses them to build its
+own domain model.
+
+3. Replace the older system with the new.
+
+We used event interception to move from <<strangler_before>>...
+
+[[strangler_before]]
+.Before: strong, bidirectional coupling based on XML-RPC
+image::images/apwp_ep04.png[]
+[role="image-source"]
+----
+[plantuml, apwp_ep04, config=plantuml.cfg]
+@startuml E-Commerce Context
+!include images/C4_Context.puml
+
+Person_Ext(customer, "Customer", "Wants to buy furniture")
+
+System(fulfilment, "Fulfilment System", "Manages order fulfilment and logistics")
+System(ecom, "E-commerce website", "Allows customers to buy furniture")
+
+Rel(customer, ecom, "Uses")
+Rel(fulfilment, ecom, "Updates stock and orders", "xml-rpc")
+Rel(ecom, fulfilment, "Sends orders", "xml-rpc")
+
+@enduml
+----
+
+to <<strangler_after>>.
+
+[[strangler_after]]
+.After: loose coupling with asynchronous events
+image::images/apwp_ep05.png[]
+[role="image-source"]
+----
+[plantuml, apwp_ep05, config=plantuml.cfg]
+@startuml E-Commerce Context
+!include images/C4_Context.puml
+
+Person_Ext(customer, "Customer", "Wants to buy furniture")
+
+System(av, "Availability Service", "Calculates stock availability")
+System(fulfilment, "Fulfilment System", "Manages order fulfilment and logistics")
+System(ecom, "E-commerce website", "Allows customers to buy furniture")
+
+Rel(customer, ecom, "Uses")
+Rel(customer, av, "Uses")
+Rel(fulfilment, av, "Publishes batch_created", "events")
+Rel(av, ecom, "Publishes out_of_stock", "events")
+Rel(ecom, fulfilment, "Sends orders", "xml-rpc")
+
+@enduml
+----
+
+Practically, this was a several month-long project. Our first step is to write a
+domain model that could represent batches, shipments, and products. We used TDD
+to build a toy system that could answer a single question: "If I want N units of
+HAZARDOUS_RUG how long will they take to be delivered?"
 
 .Case Study: Carving Out a Microservice to Replace a Domain
 ********************************************************************************
@@ -497,72 +563,6 @@ second for sustained periods.
 If this all sounds a little familiar, well, now you know where our example app
 came from!
 ********************************************************************************
-
-When building the availability service, we used a technique called _event
-interception_ to move functionality from one place to another. This is a three-step
-process:
-
-1. Raise events to represent the changes happening in a system you want to
-replace.
-
-2. Build a second system that consumes those events and uses them to build its
-own domain model.
-
-3. Replace the older system with the new.
-
-We used event interception to move from this:
-
-[[strangler_before]]
-.Before: strong, bidirectional coupling based on XML-RPC
-image::images/apwp_ep04.png[]
-[role="image-source"]
-----
-[plantuml, apwp_ep04, config=plantuml.cfg]
-@startuml E-Commerce Context
-!include images/C4_Context.puml
-
-Person_Ext(customer, "Customer", "Wants to buy furniture")
-
-System(fulfilment, "Fulfilment System", "Manages order fulfilment and logistics")
-System(ecom, "E-commerce website", "Allows customers to buy furniture")
-
-Rel(customer, ecom, "Uses")
-Rel(fulfilment, ecom, "Updates stock and orders", "xml-rpc")
-Rel(ecom, fulfilment, "Sends orders", "xml-rpc")
-
-@enduml
-----
-
-to this:
-
-[[strangler_after]]
-.After: loose coupling with asynchronous events
-image::images/apwp_ep05.png[]
-[role="image-source"]
-----
-[plantuml, apwp_ep05, config=plantuml.cfg]
-@startuml E-Commerce Context
-!include images/C4_Context.puml
-
-Person_Ext(customer, "Customer", "Wants to buy furniture")
-
-System(av, "Availability Service", "Calculates stock availability")
-System(fulfilment, "Fulfilment System", "Manages order fulfilment and logistics")
-System(ecom, "E-commerce website", "Allows customers to buy furniture")
-
-Rel(customer, ecom, "Uses")
-Rel(customer, av, "Uses")
-Rel(fulfilment, av, "Publishes batch_created", "events")
-Rel(av, ecom, "Publishes out_of_stock", "events")
-Rel(ecom, fulfilment, "Sends orders", "xml-rpc")
-
-@enduml
-----
-
-Practically, this was a several month-long project. Our first step is to write a
-domain model that could represent batches, shipments, and products. We used TDD
-to build a toy system that could answer a single question: "If I want N units of
-HAZARDOUS_RUG how long will they take to be delivered?"
 
 Once we had a working domain model, we switched to building out some
 infrastructural pieces. Our first production deployment was a tiny system that
@@ -615,7 +615,6 @@ any one of them.
 
 Years of adding hacks and workarounds to a broken model caught up with us, and
 we had to rewrite the entire user management function as a brand-new system.
-
 ********************************************************************************
 
 Figuring out how to model your domain is a complex task, and the subject of many
@@ -624,7 +623,7 @@ storming, and CRC modeling, because humans are good at collaborating through
 play. _Event modeling_ is another technique that brings engineers and product
 owners together to understand a system in terms of commands, queries, and events.
 
-TIP: Check out www.eventmodelling.org[] and www.eventstorming.org[] for some great
+TIP: Check out _www.eventmodelling.org_ and _www.eventstorming.org_ for some great
 guides to visual modeling of systems with events.
 
 The goal is to be able to talk about the system by using the same ubiquitous
@@ -637,10 +636,8 @@ beginning of a project. Once you can demonstrate the value of modeling, it's
 easier to make the argument for structuring the project to optimize for modeling.
 
 
-
 .Case Study: David Seddon on Taking Small Steps
 *******************************************************************************
-
 _Hi, I'm David, one of the tech reviewers on this book. I've worked on
 several complex Django monoliths, and so I've known the pain that Bob and
 Harry have made all sorts of grand promises about soothing._
@@ -690,7 +687,6 @@ _So, if you're feeling the pain too, give these ideas a try. Don't feel you need
 to rearchitect everything. Just look for somewhere small to start. And above all, do it
 to solve a specific problem. If you're successful in solving it, you know you got something
 right—and others will too._
-
 *******************************************************************************
 
 
@@ -702,7 +698,7 @@ Do I need to do all of this at once? Can I just do a bit at a time?::
     have an existing system, we recommend building a service layer to try to keep orchestration
     in one place. Once you have that, it's much easier to push logic into the model
     and push edge concerns like validation or error handling to the entrypoints.
-    +++<br />+++
+    +
     It's worth having a service layer even if you still have a big messy Django ORM
     because it's a way to start understanding the boundaries of operations.
 
@@ -710,7 +706,7 @@ Extracting use cases will break a lot of my existing code; it's too tangled::
     Just copy and paste. It's OK to cause more duplication in the short term. Think of
     this as a multistep process. Your code is in a bad state now, so copy and paste
     it to a new place, and then make that new code clean and tidy.
-    +++<br />+++
+    +
     Once you've done that, you can replace uses of the old code with calls to your
     new code and finally delete the mess. Fixing large codebases is a messy and
     painful process. Don't expect things to get instantly better, and don't worry if
@@ -720,7 +716,7 @@ Do I need to do CQRS? That sounds weird. Why can't I just use repositories?::
     Of course you can! The techniques we're presenting in this book are intended to
     make your life _easier_. They're not some kind of ascetic discipline with which
     to punish yourself.
-    +++<br />+++
+    +
     In our first case-study system, we had a lot of _View Builder_ objects that used
     repositories to fetch data and then performed some transformations to return
     dumb read models. The advantage is that when you hit a performance problem, it's
@@ -730,7 +726,7 @@ How should use cases interact across a larger system? Is it a problem for one to
     This might be an interim step. Again, in the first case study, we had handlers
     that would need to invoke other handlers. This gets _really_ messy, though, and
     it's much better to move to using a message bus to separate these concerns.
-    +++<br />+++
+    +
     Generally, your system will have a single message bus implementation, and a
     bunch of subdomains that center on a particular aggregate or set of
     aggregates. When your use case has finished, it can raise an event, and a
@@ -742,12 +738,12 @@ Is it a smell for a use case to use multiple repositories/aggregates, and why?::
     consistency boundary is wrong, strictly speaking. Ideally you should think
     about moving to a new aggregate that wraps up all the things you want to
     change at the same time.
-    +++<br />+++
+    +
     If you're actually updating only one aggregate and using the other(s) for
     read-only access, then that's _fine_, although you could consider building a
     read-model/view to get you that data instead--it makes things cleaner if
     each use case only has one aggregate.
-    +++<br />+++
+    +
     If you do need to modify two aggregates, but the two operations don't have to be
     in the same transaction/UoW, then consider splitting the work out into two
     different handlers and using a domain event to carry information between the two.
@@ -761,7 +757,7 @@ What if I have a read-only but business-logic-heavy system?::
     throughput requirements. Mostly, we can use simpler logic for reads, but that's
     not always true. In particular, permissions and authorization models can add a
     lot of complexity to our read side.
-    +++<br />+++
+    +
     We've written systems in which the view models needed extensive unit tests. In
     those systems, we split a _view builder_ from a _view fetcher_, as in
     <<view_builder_diagram>>.
@@ -825,10 +821,8 @@ run Event Store as our messaging tool, but we've had experience with RabbitMQ an
 Amazon EventBridge.
 
 Tyler Treat has some excellent blog posts on his site _bravenewgeek.com_ and you
-should read at least:
-
- * https://oreil.ly/pcstD["You Cannot Have Exactly-once Delivery"]
- * https://oreil.ly/j8bmF["What You Want Is What You Don’t: Understanding Trade-Offs in Distributed Messaging"]
+should read at least https://oreil.ly/pcstD["You Cannot Have Exactly-once Delivery"]
+and https://oreil.ly/j8bmF["What You Want Is What You Don’t: Understanding Trade-Offs in Distributed Messaging"].
 
 ==== We explicitly choose small, focused transactions that can fail independently
 
@@ -848,10 +842,7 @@ This is a key technique for building reliability, because it enables us to
 safely retry events when they fail.
 
 There's a lot of good material on idempotent message handling, try starting
-here:
-
-* https://oreil.ly/yERzR["How to Ensure Idempotency in an Eventual Consistent DDD/CQRS Application"]
-* https://oreil.ly/Ekuhi["(Un) Reliability in messaging"]
+with https://oreil.ly/yERzR["How to Ensure Idempotency in an Eventual Consistent DDD/CQRS Application"] and https://oreil.ly/Ekuhi["(Un) Reliability in messaging"].
 
 ==== Your Events Will Need to Change Their Schema Over Time
 
@@ -873,7 +864,7 @@ A couple more books we'd like to recommend to help you on your way:
   _Building Microservices_ (O'Reilly). Strangler (Fig) pattern is mentioned as a
   favorite, also many others.  Good if you're thinking of moving to
   microservices, and also on integration patterns and the considerations
-  of async messaging-based integration.
+  of async messaging-based pass:[<span class="keep-together">integration</span>].
 
 
 === Wrap-Up
