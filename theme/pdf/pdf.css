@@ -10,6 +10,7 @@ pre { page-break-inside: avoid; } */
 /*less space for pagebreaks */
 .less_space {margin-top: 0 !important;}
 
+section.less_space > h2:first-child,
 section.less_space > h1:first-child
 { margin-top: 0 !important; }
 
