@@ -19,15 +19,14 @@ events from external sources via an external message bus (we'll use Redis pub/su
 queues as an example), and publish its outputs, in the form of events, back
 there as well.
 
-[[message_processor_diagram]]
-.Our application is a message processor
-image::images/apwp_1101.png[]
-
-
 [TIP]
 ====
 The code for this chapter is in the
 https://github.com/cosmicpython/code/tree/chapter_11_external_events[chapter_11_external_events] branch on GitHub.
+
+[[message_processor_diagram]]
+.Our application is a message processor
+image::images/apwp_1101.png[]
 
 ----
 git clone https://github.com/cosmicpython/code.git
@@ -198,6 +197,17 @@ system when one of our requests fails? Let's say that a network error happens
 right after we take a user's order for three `MISBEGOTTEN-RUG`, as shown in
 <<command_flow_diagram_with_error>>.
 
+We have two options here: we can place the order anyway and leave it
+unallocated, or we can refuse to take the order because the allocation can't be
+guaranteed. The failure state of our batches service has bubbled up and is
+affecting the reliability of our order service.
+
+When two things have to be changed together, we say that they are _coupled_. We
+can think of this failure cascade as a kind of _temporal coupling_: every part
+of the system has to work at the same time for any part of it to work. As the
+system gets bigger, there is an exponentially increasing probability that some
+part is degraded.
+
 [[command_flow_diagram_with_error]]
 .Command flow with error
 image::images/apwp_1105.png[]
@@ -217,18 +227,6 @@ Orders --> Customer: ???
 
 @enduml
 ----
-
-
-We have two options here: we can place the order anyway and leave it
-unallocated, or we can refuse to take the order because the allocation can't be
-guaranteed. The failure state of our batches service has bubbled up and is
-affecting the reliability of our order service.
-
-When two things have to be changed together, we say that they are _coupled_. We
-can think of this failure cascade as a kind of _temporal coupling_: every part
-of the system has to work at the same time for any part of it to work. As the
-system gets bigger, there is an exponentially increasing probability that some
-part is degraded.
 
 [role="nobreakinside less_space"]
 [[connascence_sidebar]]
@@ -574,7 +572,7 @@ https://oreil.ly/FXVil[event sourcing]
 *******************************************************************************
 
 TIP: Outbound events are one of the places it's important to apply validation.
-    See <<appendix_validation>> for some validation philosophy and examples.
+    See <<appendix_validation>> for some validation philosophy and pass:[<span class="keep-together">examples</span>].
 
 [role="nobreakinside less_space"]
 .Exercise for the Reader
