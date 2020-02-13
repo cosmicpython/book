@@ -537,7 +537,7 @@ class BatchQuantityChanged(Event):
 ----
 ====
 
-
+[[test-driving-ch9]]
 === Test-Driving a New Handler
 
 Following the lessons learned in <<chapter_04_service_layer>>,
@@ -752,8 +752,8 @@ And our new requirement is fully implemented.
 [[fake_message_bus]]
 === Optionally: Unit Testing Event Handlers in Isolation with a Fake Message Bus
 
-Our main test for the reallocation workflow
-(<<test_change_batch_quantity_handler>>) is _edge-to-edge_. It uses
+Our main test for the reallocation workflow is _edge-to-edge_
+(see the example code in <<test-driving-ch9>>). It uses
 the real message bus, and it tests the whole flow, where the `BatchQuantityChanged`
 event handler triggers deallocation, and emits new `AllocationRequired` events, which in
 turn are handled by their own handlers. One test covers a chain of multiple

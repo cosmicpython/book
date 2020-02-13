@@ -148,7 +148,7 @@ should do the following:
 
 * Start its own database transaction if needed
 * Fetch any required data
-* Check any preconditions (see the _ensure_ pattern in <<appendix_validation>>)
+* Check any preconditions (see the Ensure pattern in <<appendix_validation>>)
 * Update the domain model
 * Persist any changes
 
@@ -456,7 +456,7 @@ for workspace_id in workspaces:
 
 === An Event-Driven Approach to Go to Microservices via Strangler Pattern
 
-_Strangler Fig_ pattern involves creating a new system around the edges
+The _Strangler Fig_ pattern involves creating a new system around the edges
 of an old system, while keeping it running. Bits of old functionality
 are gradually intercepted and replaced until the old system is left
 doing nothing at all, and can be switched off.
@@ -772,7 +772,7 @@ pub-sub. For reasons of brevity and simplicity, we've hand-waved a lot of tricky
 subjects. Here's a list of things we think you should know before trying this
 for real.
 
-==== Reliable messaging is hard
+Reliable messaging is hard::
 
 Redis `PUB/SUB` is not reliable and shouldn't be used as a general-purpose
 messaging tool. We picked it because it's familiar and easy to run. At MADE, we
@@ -783,7 +783,7 @@ Tyler Treat has some excellent blog posts on his site _bravenewgeek.com_ and you
 should read at least https://oreil.ly/pcstD["You Cannot Have Exactly-once Delivery"]
 and https://oreil.ly/j8bmF["What You Want Is What You Don’t: Understanding Trade-Offs in Distributed Messaging"].
 
-==== We explicitly choose small, focused transactions that can fail independently
+We explicitly choose small, focused transactions that can fail independently::
 
 In <<chapter_08_events_and_message_bus>> we update our process so that _deallocating_ an order line and
 _reallocating_ the line happen in two separate units of work.
@@ -792,7 +792,7 @@ replay events. Some of this is made easier by using a transaction log as your
 message broker (e.g., Kafka, EventStore). You might also look at the
 https://oreil.ly/sLfnp[Outbox pattern].
 
-==== We don't discuss idempotency
+We don't discuss idempotency::
 
 We haven't given any real thought to what happens when handlers are retried.
 In practice you will want to make handlers idempotent so that calling them
@@ -803,7 +803,7 @@ safely retry events when they fail.
 There's a lot of good material on idempotent message handling, try starting
 with https://oreil.ly/yERzR["How to Ensure Idempotency in an Eventual Consistent DDD/CQRS Application"] and https://oreil.ly/Ekuhi["(Un) Reliability in messaging"].
 
-==== Your Events Will Need to Change Their Schema Over Time
+Your events will need to change their schema over time::
 
 You'll need to find some way of documenting your events and sharing schema
 with consumers. We like using JSON schema and markdown because it's simple but

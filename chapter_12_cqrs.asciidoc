@@ -209,7 +209,9 @@ instead provide a new read-only endpoint to retrieve allocation state:
 def test_happy_path_returns_202_and_batch_is_allocated():
     orderid = random_orderid()
     sku, othersku = random_sku(), random_sku('other')
-    batch1, batch2, batch3 = random_batchref(1), random_batchref(2), random_batchref(3)
+    batch1 = random_batchref(1)
+    batch2 = random_batchref(2)
+    batch3 = random_batchref(3)
     api_client.post_to_add_batch(batch1, sku, 100, '2011-01-02')
     api_client.post_to_add_batch(batch2, sku, 100, '2011-01-01')
     api_client.post_to_add_batch(batch3, othersku, 100, None)
@@ -264,7 +266,7 @@ def allocations_view_endpoint(orderid):
     and it'll be a real _views.py_, not like Django's, something that knows how
     to build read-only views of our data...
 
-
+[[hold-on-ch12]]
 === Hold On to Your Lunch, Folks
 
 Hmm, so we can probably just add a list method to our existing repository
@@ -509,9 +511,9 @@ def allocations(orderid: str, uow: unit_of_work.AbstractUnitOfWork):
 ====
 
 But is that _actually_ any easier to write or understand than the raw SQL
-version from <<views_dot_py, the code example on page XXX>>?  It may not look too bad up there, but we
+version from the code example in <<hold-on-ch12>>? It may not look too bad up there, but we
 can tell you it took several attempts, and plenty of digging through the
-SQLAlchemy docs.  SQL is just SQL.
+SQLAlchemy docs. SQL is just SQL.
 
 ////
 IDEA (hynek)
@@ -531,10 +533,10 @@ https://oreil.ly/OkBOS[`SELECT N+1`]
 problem is a common performance problem with ORMs: when retrieving a list of
 objects, your ORM will often perform an initial query to, say, get all the IDs
 of the objects it needs, and then issue individual queries for each object to
-retrieve their attributes.  This is especially likely if there are any foreign-key relationships on your objects.
+retrieve their attributes. This is especially likely if there are any foreign-key relationships on your objects.
 
 NOTE: In all fairness we should say that SQLAlchemy is quite good at avoiding
-    the `SELECT N+1` problem.  It doesn't display it in the preceding example, and
+    the `SELECT N+1` problem. It doesn't display it in the preceding example, and
     you can request
     https://oreil.ly/XKDDm[eager loading]
     explicitly to avoid it when dealing with joined objects.
