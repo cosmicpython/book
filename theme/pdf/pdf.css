@@ -5,7 +5,11 @@
 pre { page-break-inside: avoid; } */
 
 /* handling for elements to keep them from breaking across pages */
-.nobreakinside {page-break-inside: avoid; page-break-before: auto;}
+.nobreakinside {
+ page-break-inside: avoid; 
+ page-break-before: auto;
+ margin-top: 0 !important; 
+}
 
 /*less space for pagebreaks */
 .less_space {margin-top: 0 !important;}
