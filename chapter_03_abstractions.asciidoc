@@ -263,7 +263,6 @@ We can definitely refactor these tests (some of the cleanup could go into pytest
 fixtures, for example) but as long as we're doing filesystem operations, they're
 going to stay slow, and hard to read and write.
 
-[role="pagebreak-before less_space"]
 === Choosing the Right Abstraction(s)
 
 What could we do to rewrite our code to make it more testable?
@@ -604,6 +603,7 @@ NOTE: Designing for testability really means designing for
     extensibility. We trade off a little more complexity for a cleaner design
     that admits novel use cases.
 
+[role="nobreakinside less_space"]
 .Mocks Versus Fakes; Classic Style Versus London School TDD
 *******************************************************************************
 
