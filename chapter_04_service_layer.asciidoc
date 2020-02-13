@@ -461,7 +461,7 @@ That last step is a little unsatisfactory at the moment, as our service
 layer is tightly coupled to our database layer. We'll improve
 that in <<chapter_06_uow>> with the Unit of Work pattern.
 
-[role="nobreakinside"]
+[role="nobreakinside less_space"]
 [[depend_on_abstractions]]
 .Depend on Abstractions
 *******************************************************************************
@@ -574,7 +574,7 @@ We've successfully split our tests into two broad categories: tests about web
 stuff, which we implement end to end; and tests about orchestration stuff, which
 we can test against the service layer in memory.
 
-[role="nobreakinside"]
+[role="nobreakinside less_space"]
 .Exercise for the Reader
 ******************************************************************************
 Now that we have an allocate service, so why not build out a service for
