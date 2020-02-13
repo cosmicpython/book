@@ -11,7 +11,8 @@ pre { page-break-inside: avoid; } */
 .less_space {margin-top: 0 !important;}
 
 section.less_space > h2:first-child,
-section.less_space > h1:first-child
+section.less_space > h1:first-child,
+aside.less_space > h5:first-child
 { margin-top: 0 !important; }
 
 /* Temporary fix to TOC spacing from Tools */
