@@ -1,6 +1,17 @@
 @charset "UTF-8";
 
 /*--------Put Your Custom CSS Rules Below--------*/
+/* Globally preventing code blocks from breaking across pages */
+div[data-type="example"], pre { page-break-inside: avoid; }
+
+/* handling for elements to keep them from breaking across pages */
+.nobreakinside {page-break-inside: avoid; page-break-before: auto;}
+
+/*less space for pagebreaks */
+.less_space {margin-top: 0 !important;}
+
+section.less_space > h1:first-child
+{ margin-top: 0 !important; }
 
 /* Temporary fix to TOC spacing from Tools */
 nav[data-type="toc"] li {
