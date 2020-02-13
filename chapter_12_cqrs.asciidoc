@@ -97,7 +97,7 @@ is a few seconds out of date, but if our allocate service is inconsistent,
 we'll make a mess of their orders. We can take advantage of this difference by
 making our reads _eventually consistent_ in order to make them perform better.
 
-[role="nobreakinside"]
+[role="nobreakinside less_space"]
 .Is Read Consistency Truly Attainable?
 *******************************************************************************
 
@@ -725,7 +725,7 @@ Flask -> User: some allocations
 @enduml
 ----
 
-[role="nobreakinside"]
+[role="nobreakinside less_space"]
 .Rebuilding from Scratch
 *******************************************************************************
 "What happens when it breaks?" should be the first question we ask as engineers.

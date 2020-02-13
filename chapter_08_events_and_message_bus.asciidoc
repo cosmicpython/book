@@ -357,8 +357,8 @@ NOTE: Note that the message bus as implemented doesn't give us concurrency becau
     This helps us to understand the codebase because the "recipe" for how to
     run each use-case is written in a single place.
     See the following sidebar.
-
-[role="nobreakinside"]
+    
+[role="nobreakinside less_space"]
 [[celery_sidebar]]
 .Is This Like Celery?
 *******************************************************************************
@@ -658,7 +658,7 @@ it's not a lot of work. Once your project is up and running, the interface for
 your repository and UoW abstractions really don't change much. And if you're
 using ABCs, they'll help remind you when things get out of sync.
 
-[role="nobreakinside"]
+[role="nobreakinside less_space"]
 [[get_rid_of_commit]]
 .Exercise for the Reader
 ******************************************************************************
@@ -731,7 +731,7 @@ and remove the allocations.
 In <<chapter_08_events_and_message_bus>>, we'll look at this idea in more
 detail as we build a more complex workflow with our new message bus.
 
-[role="nobreakinside"]
+[role="nobreakinside less_space"]
 .Domain Events and the Message Bus Recap
 *****************************************************************
 Events can help with the single responsibility principle::

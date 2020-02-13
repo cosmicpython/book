@@ -254,7 +254,7 @@ The change might be clearer as a diff:
 Along the way, we've made enriched our service-layer's API more structured and consistent. It was a scattering of
 primitives, and now it uses well-defined objects (see the following sidebar).
 
-[role="nobreakinside"]
+[role="nobreakinside less_space"]
 .From Domain Objects, via Primitive Obsession, to pass:[<span class="keep-together">Events as an Interface</span>]
 *******************************************************************************
 Some of you may remember <<primitive_obsession>>, in which we changed our service-layer API
@@ -830,7 +830,7 @@ Whether you want to do this or not depends on the complexity of your chain of
 events. We say, start out with edge-to-edge testing, and resort to
 this only if necessary.
 
-[role="nobreakinside"]
+[role="nobreakinside less_space"]
 .Exercise for the Reader
 *******************************************************************************
 A great way to force yourself to really understand some code is to refactor it.

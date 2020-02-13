@@ -320,8 +320,8 @@ def test_allocate_returns_allocation():
 <3> In our tests, we can instantiate a UoW and pass it to
     our service layer, rather than passing a repository and a session.
     This is considerably less cumbersome.
-
-[role="nobreakinside"]
+    
+[role="nobreakinside less_space"]
 .Don't Mock What You Don't Own
 ********************************************************************************
 Why do we feel more comfortable mocking the UoW than the session?
@@ -586,7 +586,7 @@ TIP: This is another example of the lesson from <<chapter_05_high_gear_low_gear>
     as we build better abstractions, we can move our tests to run against them,
     which leaves us free to change the underlying details.
 
-[role="nobreakinside"]
+[role="nobreakinside less_space"]
 .Exercise for the Reader
 ******************************************************************************
 For this chapter, probably the best thing to try is to implement a
@@ -645,7 +645,7 @@ ____
 //IDEA:  not sure where, but we should maybe talk about the option of separating
 // the uow into a uow plus a uowm.
 
-[role="nobreakinside"]
+[role="nobreakinside less_space"]
 .Unit of Work Pattern Recap
 *****************************************************************
 The Unit of Work pattern is an abstraction around data integrity::
