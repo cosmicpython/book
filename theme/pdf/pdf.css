@@ -9,15 +9,27 @@ pre { page-break-inside: avoid; } */
  page-break-inside: avoid; 
  page-break-before: auto;
  margin-top: 0 !important; 
+ 
 }
 
 /*less space for pagebreaks */
 .less_space {margin-top: 0 !important;}
 
-section.less_space > h2:first-child,
-section.less_space > h1:first-child,
-aside.less_space > h5:first-child
-{ margin-top: 0 !important; }
+section.less_space > h1:first-child { 
+ margin-top: 0 !important; 
+ 
+}
+
+aside.less_space > h5:first-child { 
+ margin-top: 0 !important; 
+ 
+}
+
+/* Allow Examples to have less space at top of page (STYL-1266) */
+.less_space > h5:first-child {
+ margin-top: 0 !important;
+ padding-top: 0 !important;
+}
 
 /* Temporary fix to TOC spacing from Tools */
 nav[data-type="toc"] li {
