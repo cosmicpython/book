@@ -196,7 +196,7 @@ TIP: Validate as little as possible. Read only the fields you need, and don't
     depend on. For more info, see Martin Fowler's article on the
     https://martinfowler.com/bliki/TolerantReader.html[Tolerant Reader pattern].
 
-[role="nobreakinside less_space"]
+[role="pagebreak-before less_space"]
 .Is Postel Always Right?
 *******************************************************************************
 Mentioning Postel can be quite triggering to some people. They will
@@ -478,12 +478,6 @@ domain model. When we receive a message like "allocate three million units of
 `SCARCE-CLOCK` to order 76543," the message is _syntactically_ valid, and
 _semantically_ valid, but we're unable to comply because we don't have the stock
 available.
-
-TIP: Once you've validated the syntax and semantics of your commands
-    at the edges of your system, the domain is the place for the rest
-    of your validation.  Validation of pragmatics is often a core part
-    of your business rules.
-
 [role="nobreakinside less_space"]
 .Validation Recap
 *****************************************************************
@@ -516,3 +510,9 @@ Locate each of the three types of validation in the right place::
     and validating pragmatics belongs in the domain model.
 
 *****************************************************************
+
+TIP: Once you've validated the syntax and semantics of your commands
+    at the edges of your system, the domain is the place for the rest
+    of your validation.  Validation of pragmatics is often a core part
+    of your business rules.
+

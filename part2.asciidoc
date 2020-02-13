@@ -19,14 +19,14 @@ the real world, our applications sit within an organization and need to exchange
 information with other parts of the system. You may remember our context
 diagram, <<allocation_context_diagram_again>>.
 
+Faced with this requirement, many teams reach for microservices integrated
+via HTTP APIs. But if they're not careful, they'll end up producing the most
+chaotic mess of all: the distributed big ball of mud.
+
 [[allocation_context_diagram_again]]
 .But exactly how will all these systems talk to each other?
 image::images/apwp_0102.png[]
 
-
-Faced with this requirement, many teams reach for microservices integrated
-via HTTP APIs. But if they're not careful, they'll end up producing the most
-chaotic mess of all: the distributed big ball of mud.
 
 // TODO: DS - this might give the impression that the whole of part 2
 // is irrelevant for readers in a monolith context

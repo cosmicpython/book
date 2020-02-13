@@ -63,6 +63,7 @@ NOTE: We've used Flask because it's lightweight, but you don't need
 to be a Flask user to understand this book. In fact, we'll show you how
 to make your choice of framework a minor detail.
 
+[role="pagebreak-before less_space"]
 [[api_endpoint_pseudocode]]
 .What our first API endpoint will look like
 ====
@@ -273,6 +274,7 @@ to define your schema separately, and an explicit _mapper_ for how to convert
 between the schema and our domain model, what SQLAlchemy calls a
 https://oreil.ly/ZucTG[classical mapping].
 
+[role="pagebreak-before less_space"]
 [[sqlalchemy_classical_mapper]]
 .Explicit ORM mapping with SQLAlchemy Table objects (orm.py)
 ====
@@ -508,7 +510,7 @@ may be), you'll want to be running some helpers like `pylint` and `mypy`.]
     In fact, your abstract methods can have real behavior that subclasses
     can call out to, if you really want.
 
-[role="nobreakinside less_space"]
+[role="pagebreak-before less_space"]
 .Abstract Base Classes, Duck Typing, and Protocols
 *******************************************************************************
 
@@ -892,7 +894,7 @@ TIP: If your app is just a simple CRUD (create-read-update-delete) wrapper
 
 But, the more complex the domain, the more an investment in freeing
 yourself from infrastructure concerns will pay off in terms of the ease of
-making changes:footnote:[Diagram inspired by a post called
+making changes.footnote:[Diagram inspired by a post called
 https://oreil.ly/fQXkP["Global Complexity, Local Simplicity"] by Rob Vens.]
 
 
