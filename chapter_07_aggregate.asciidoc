@@ -373,7 +373,7 @@ NOTE: This `Product` might not look like what you'd expect a `Product`
 //      are never supposed to have a collection of aggregates, they could return
 //      an error for __hash__. or sumfink.
 
-[role="nobreakinside"]
+[role="nobreakinside less_space"]
 [[bounded_contexts_sidebar]]
 .Aggregates, Bounded Contexts, and Microservices
 *******************************************************************************
@@ -524,7 +524,7 @@ to help manage some technical constraints around consistency and performance.
 There isn't _one_ correct Aggregate, and we should feel comfortable changing our
 minds if find our boundaries are causing performance woes.
 
-[role="nobreakinside"]
+[role="nobreakinside less_space"]
 .Exercise for the Reader
 ******************************************************************************
 You've just seen the main top layers of the code, so this shouldn't be too hard,
@@ -613,7 +613,7 @@ Database -[#red]>x Transaction2: Error! version is already 4
 @enduml
 ----
 
-[role="nobreakinside"]
+[role="nobreakinside less_space"]
 .Optimistic Concurrency Control and Retries
 ********************************************************************************
 
@@ -893,7 +893,7 @@ We also recommend these three online papers on
 https://dddcommunity.org/library/vernon_2011[Effective Aggregate Design]
 by Vaugh Vernon (the "red book" author).
 
-[role="nobreakinside"]
+[role="nobreakinside less_space"]
 .Aggregates and Consistency Boundaries Recap
 *****************************************************************
 Aggregates are your entrypoints into the domain model::
