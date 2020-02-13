@@ -1,8 +1,8 @@
 @charset "UTF-8";
 
 /*--------Put Your Custom CSS Rules Below--------*/
-/* Globally preventing code blocks from breaking across pages */
-div[data-type="example"], pre { page-break-inside: avoid; }
+/* Globally preventing code blocks from breaking across pages
+pre { page-break-inside: avoid; } */
 
 /* handling for elements to keep them from breaking across pages */
 .nobreakinside {page-break-inside: avoid; page-break-before: auto;}
