@@ -693,73 +693,36 @@ right—and others will too._
 === Questions Our Tech Reviewers Asked That We Couldn't Work into Prose
 
 Do I need to do all of this at once? Can I just do a bit at a time?::
-    No, you can absolutely adopt these techniques bit by bit. If you
-    have an existing system, we recommend building a service layer to try to keep orchestration
-    in one place. Once you have that, it's much easier to push logic into the model
-    and push edge concerns like validation or error handling to the entrypoints.
-    +
-    It's worth having a service layer even if you still have a big messy Django ORM
-    because it's a way to start understanding the boundaries of operations.
+No, you can absolutely adopt these techniques bit by bit. If you have an existing system, we recommend building a service layer to try to keep orchestration in one place. Once you have that, it's much easier to push logic into the model and push edge concerns like validation or error handling to the entrypoints.
++
+It's worth having a service layer even if you still have a big messy Django ORM because it's a way to start understanding the boundaries of operations.
 
 Extracting use cases will break a lot of my existing code; it's too tangled::
-    Just copy and paste. It's OK to cause more duplication in the short term. Think of
-    this as a multistep process. Your code is in a bad state now, so copy and paste
-    it to a new place, and then make that new code clean and tidy.
-    +
-    Once you've done that, you can replace uses of the old code with calls to your
-    new code and finally delete the mess. Fixing large codebases is a messy and
-    painful process. Don't expect things to get instantly better, and don't worry if
-    some bits of your application stay messy.
+Just copy and paste. It's OK to cause more duplication in the short term. Think of this as a multistep process. Your code is in a bad state now, so copy and paste it to a new place, and then make that new code clean and tidy.
++
+Once you've done that, you can replace uses of the old code with calls to your new code and finally delete the mess. Fixing large codebases is a messy and painful process. Don't expect things to get instantly better, and don't worry if some bits of your application stay messy.
 
 Do I need to do CQRS? That sounds weird. Why can't I just use repositories?::
-    Of course you can! The techniques we're presenting in this book are intended to
-    make your life _easier_. They're not some kind of ascetic discipline with which
-    to punish yourself.
-    +
-    In our first case-study system, we had a lot of _View Builder_ objects that used
-    repositories to fetch data and then performed some transformations to return
-    dumb read models. The advantage is that when you hit a performance problem, it's
-    easy to rewrite a view builder to use custom queries or raw SQL.
+Of course you can! The techniques we're presenting in this book are intended to make your life _easier_. They're not some kind of ascetic discipline with which to punish yourself.
++
+In our first case-study system, we had a lot of _View Builder_ objects that used repositories to fetch data and then performed some transformations to return dumb read models. The advantage is that when you hit a performance problem, it's easy to rewrite a view builder to use custom queries or raw SQL.
 
 How should use cases interact across a larger system? Is it a problem for one to call another?::
-    This might be an interim step. Again, in the first case study, we had handlers
-    that would need to invoke other handlers. This gets _really_ messy, though, and
-    it's much better to move to using a message bus to separate these concerns.
-    +
-    Generally, your system will have a single message bus implementation, and a
-    bunch of subdomains that center on a particular aggregate or set of
-    aggregates. When your use case has finished, it can raise an event, and a
-    handler elsewhere can run.
+This might be an interim step. Again, in the first case study, we had handlers that would need to invoke other handlers. This gets _really_ messy, though, and it's much better to move to using a message bus to separate these concerns.
+ +
+Generally, your system will have a single message bus implementation, and a bunch of subdomains that center on a particular aggregate or set of aggregates. When your use case has finished, it can raise an event, and a handler elsewhere can run.
 
 Is it a smell for a use case to use multiple repositories/aggregates, and why?::
-    An aggregate is a consistency boundary, so if your use case needs to update
-    two aggregates atomically (within the same transaction), then your
-    consistency boundary is wrong, strictly speaking. Ideally you should think
-    about moving to a new aggregate that wraps up all the things you want to
-    change at the same time.
-    +
-    If you're actually updating only one aggregate and using the other(s) for
-    read-only access, then that's _fine_, although you could consider building a
-    read-model/view to get you that data instead--it makes things cleaner if
-    each use case only has one aggregate.
-    +
-    If you do need to modify two aggregates, but the two operations don't have to be
-    in the same transaction/UoW, then consider splitting the work out into two
-    different handlers and using a domain event to carry information between the two.
-    You can read more in
-    https://oreil.ly/uZ4yt[these papers on aggregate design]
-    by Vaughn Vernon.
+An aggregate is a consistency boundary, so if your use case needs to update two aggregates atomically (within the same transaction), then your consistency boundary is wrong, strictly speaking. Ideally you should think about moving to a new aggregate that wraps up all the things you want to change at the same time.
++
+If you're actually updating only one aggregate and using the other(s) for read-only access, then that's _fine_, although you could consider building a read-model/view to get you that data instead--it makes things cleaner if each use case only has one aggregate.
++
+If you do need to modify two aggregates, but the two operations don't have to be in the same transaction/UoW, then consider splitting the work out into two different handlers and using a domain event to carry information between the two. You can read more in https://oreil.ly/uZ4yt[these papers on aggregate design] by Vaughn Vernon.
 
 What if I have a read-only but business-logic-heavy system?::
-    View models can have complex logic in them. In this book, we've encouraged you to
-    separate your read and write models because they have different consistency and
-    throughput requirements. Mostly, we can use simpler logic for reads, but that's
-    not always true. In particular, permissions and authorization models can add a
-    lot of complexity to our read side.
-    +
-    We've written systems in which the view models needed extensive unit tests. In
-    those systems, we split a _view builder_ from a _view fetcher_, as in
-    <<view_builder_diagram>>.
+View models can have complex logic in them. In this book, we've encouraged you to separate your read and write models because they have different consistency and throughput requirements. Mostly, we can use simpler logic for reads, but that's not always true. In particular, permissions and authorization models can add a lot of complexity to our read side.
++
+We've written systems in which the view models needed extensive unit tests. In those systems, we split a _view builder_ from a _view fetcher_, as in <<view_builder_diagram>>.
 
 [[view_builder_diagram]]
 .A view builder and fetcher
@@ -784,11 +747,7 @@ Rel(api, build, "Invokes")
 @enduml
 ----
 
-This makes it easy to test the view builder by giving it mocked data; e.g., a list
-of dicts.
-+++<br />+++
-"Fancy CQRS" with event handlers is really a way of running our complex view
-logic whenever we write so that we can avoid running it when we read.
+This makes it easy to test the view builder by giving it mocked data (e.g., a list of dicts). "Fancy CQRS" with event handlers is really a way of running our complex view logic whenever we write so that we can avoid running it when we read.
 // TODO: move this to the cqrs chapter?
 
 Do I need to build microservices to do this stuff?::
