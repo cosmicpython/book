@@ -9,15 +9,16 @@ but, hopefully, we can make the argument that it's not _totally_ unreasonable.
 
 <<maps_chapter_11>> shows where we might end up.
 
-[[maps_chapter_11]]
-.Separating reads from writes
-image::images/apwp_1201.png[]
-
-
 [TIP]
 ====
 You can find the code for this chapter is in the
 https://github.com/cosmicpython/code/tree/chapter_12_cqrs[chapter_12_cqrs] branch on GitHub.
+
+First though, why bother?
+
+[[maps_chapter_11]]
+.Separating reads from writes
+image::images/apwp_1201.png[]
 
 ----
 git clone https://github.com/cosmicpython/code.git
@@ -27,9 +28,6 @@ git checkout chapter_12_cqrs
 git checkout chapter_11_external_events
 ----
 ====
-
-
-First though, why bother?
 
 
 === Domain Models Are for Writing
