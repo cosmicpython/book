@@ -4,12 +4,12 @@
 /* Globally preventing code blocks from breaking across pages
 pre { page-break-inside: avoid; } */
 
-/* handling for elements to keep them from breaking across pages */
+/* handling for elements to keep them from breaking across pages
 .nobreakinside {
  page-break-inside: avoid; 
  page-break-before: auto;
  
-}
+} */
 
 /*less space for pagebreaks */
 .less_space {margin-top: 0 !important;}
