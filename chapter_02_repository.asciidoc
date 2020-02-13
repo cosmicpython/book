@@ -228,7 +228,7 @@ Can we really say this model is ignorant of the database? How can it be
 separate from storage concerns when our model properties are directly coupled
 to database columns?
 
-[role="nobreakinside"]
+[role="nobreakinside less_space"]
 .Django's ORM Is Essentially the Same, but More Restrictive
 *******************************************************************************
 
@@ -508,7 +508,7 @@ may be), you'll want to be running some helpers like `pylint` and `mypy`.]
     In fact, your abstract methods can have real behavior that subclasses
     can call out to, if you really want.
 
-
+[role="nobreakinside less_space"]
 .Abstract Base Classes, Duck Typing, and Protocols
 *******************************************************************************
 
@@ -737,7 +737,7 @@ def allocate_endpoint():
 ----
 ====
 
-[role="nobreakinside"]
+[role="nobreakinside less_space"]
 .Exercise for the Reader
 ******************************************************************************
 We bumped into a friend at a DDD conference the other day who said, "I haven't
