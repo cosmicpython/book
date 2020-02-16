@@ -695,6 +695,7 @@ image::images/apwp_1202.png[]
 ----
 [plantuml, apwp_1202, config=plantuml.cfg]
 @startuml
+!pragma teoz true
 actor User order 1
 boundary Flask order 2
 participant MessageBus order 3
@@ -721,8 +722,8 @@ User -> Flask: GET allocations endpoint
 Flask -> View: get allocations
 View -> DB: SELECT on view model
 DB -> View: some allocations
-View -> Flask: some allocations
-Flask -> User: some allocations
+& View -> Flask: some allocations
+& Flask -> User: some allocations
 
 @enduml
 ----
