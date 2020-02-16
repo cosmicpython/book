@@ -138,8 +138,8 @@ Person(customer, "Customer", "Wants to buy furniture")
 Person(buyer, "Buying Team", "Needs to purchase furniture from suppliers")
 
 System(procurement, "Purchasing", "Manages workflow for buying stock from suppliers")
-System(ecom, "E-commerce", "Sells goods online")
-System(warehouse, "Warehouse", "Manages workflow for shipping goods to customers.")
+System(ecom, "Ecommerce", "Sells goods online")
+System(warehouse, "Warehouse", "Manages workflow for shipping goods to customers")
 
 Rel(buyer, procurement, "Uses")
 Rel(procurement, systema, "Notifies about shipments")
