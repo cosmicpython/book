@@ -846,7 +846,7 @@ this if necessary.
 *******************************************************************************
 A great way to force yourself to really understand some code is to refactor it.
 In the discussion of testing handlers in isolation, we used something called
-`FakeUnitOfWorkWithFakeMessageBus`, which is unneccessarily complicated, and
+`FakeUnitOfWorkWithFakeMessageBus`, which is unnecessarily complicated, and
 violates the SRP.
 
 If we change the message bus to being a class,footnote:[The "simple"
@@ -945,8 +945,8 @@ a|
   a web point of view.  You don't know in advance when things are going to end
 
 * duplication / maintenance cost of having model objects _and_ events
-  now.  adding a field to one usually means adding a field to at least
-  on of the others
+  now.  Adding a field to one usually means adding a field to at least
+  one of the others
 |===
 
 Now, you may be wondering, where are those `BatchQuantityChanged` events actually
