@@ -520,13 +520,13 @@ image::images/apwp_ep04.png[]
 [role="image-source"]
 ----
 [plantuml, apwp_ep04, config=plantuml.cfg]
-@startuml E-Commerce Context
+@startuml Ecommerce Context
 !include images/C4_Context.puml
 
 Person_Ext(customer, "Customer", "Wants to buy furniture")
 
 System(fulfilment, "Fulfilment System", "Manages order fulfilment and logistics")
-System(ecom, "E-commerce website", "Allows customers to buy furniture")
+System(ecom, "Ecommerce website", "Allows customers to buy furniture")
 
 Rel(customer, ecom, "Uses")
 Rel(fulfilment, ecom, "Updates stock and orders", "xml-rpc")
@@ -543,14 +543,14 @@ image::images/apwp_ep05.png[]
 [role="image-source"]
 ----
 [plantuml, apwp_ep05, config=plantuml.cfg]
-@startuml E-Commerce Context
+@startuml Ecommerce Context
 !include images/C4_Context.puml
 
 Person_Ext(customer, "Customer", "Wants to buy furniture")
 
 System(av, "Availability Service", "Calculates stock availability")
 System(fulfilment, "Fulfilment System", "Manages order fulfilment and logistics")
-System(ecom, "E-commerce website", "Allows customers to buy furniture")
+System(ecom, "Ecommerce website", "Allows customers to buy furniture")
 
 Rel(customer, ecom, "Uses")
 Rel(customer, av, "Uses")
