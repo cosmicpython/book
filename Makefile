@@ -13,4 +13,4 @@ count-todos:
 	ls *.asciidoc | xargs grep -c TODO | sed  s/:/\\t/
 
 diagrams: html
-	./render-diagrams.py
+	./render-diagrams.py $(CHAP)

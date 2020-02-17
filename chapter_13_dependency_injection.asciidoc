@@ -231,29 +231,40 @@ Because Python is not a "pure" OO language, Python developers aren't necessarily
 used to the concept of needing to "compose" a set of objects into a working
 application.  We just pick our entrypoint and run code from top to bottom.],
 and we'll do a bit of "Manual DI" (dependency injection without a
-frameworkfootnote:[Mark Seeman calls this https://blog.ploeh.dk/2012/11/06/WhentouseaDIContainer/[Pure DI], or sometimes "Vanilla DI".]).
+frameworkfootnote:[Mark Seeman calls this https://blog.ploeh.dk/2012/11/06/WhentouseaDIContainer/[Pure DI], or sometimes "Vanilla DI".]),
+and it will all turn out something like <<bootstrap_diagram>>.
 
 
+[bootstrap_diagram]]
+.Bootstrapper between entrypoints and message bus
+image::images/apwp_1303.png[]
+[role="image-source"]
 ----
-Flask + Redis
-|
-| call
-V
-Bootstraper:  prepares handlers with correct dependencies injected in
-|             (test bootstrapper will use fakes, prod one will use reals)
-|
-|  pass injected handlers to
-V
-Messagebus
-|
-|  dispatches events and commands to injected handlers
-|
-V
+[ditaa, apwp_1303]
+
++---------------+
+|  Entrpyoints  |
+| (Flask/Redis) |
++---------------+
+        |
+        | call
+        V
+ /--------------\
+ |              |  prepares handlers with correct dependencies injected in
+ | Bootstrapper |  (test bootstrapper will use fakes, prod one will use real)
+ |              |
+ \--------------/
+        |
+        | pass injected handlers to
+        V
+/---------------\
+|  Message Bus  |
++---------------+
+        |
+        | dispatches events and commands to injected handlers
+        |
+        V
 ----
-
-TODO: betterify diagram? or just get rid of, in favour of the first?
-
-
 
 
 === Preparing Handlers: Manual DI with Closures and Partials
@@ -745,7 +756,7 @@ of setup and sensible defaults into a single place.
 **********************************************************************
 Change all the handlers to being classes as per <<di_with_classes>>,
 and amend the bootstrapper's DI code as appropriate.  This will let you
-know if you prefer the functional or the class-based approach, when 
+know if you prefer the functional or the class-based approach, when
 it comes to your own projects.
 **********************************************************************
 
@@ -996,14 +1007,14 @@ And, erm, that's it really.
 
 There are two possible things you could do for practice regarding adapters:
 
-1. Try swapping out our notifications from email to, for example, SMS 
+1. Try swapping out our notifications from email to, for example, SMS
     notifications using Twilio, or Slack notifications.  Can you find
     a good equivalent to Mailhog for integration testing?
 
 2. In a similar way to what we did moving from `send_mail` to a `Notifications`
     class, try refactoring our `redis_eventpublisher` which is currently just
     a `Callable` to some sort of more formal adapter / base class / protocol.
-    
+
 ******************************************************************************
 
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import sys
 import tempfile
 import subprocess
 from pathlib import Path
@@ -7,16 +8,24 @@ from lxml import html
 IMAGES_DIR = Path(__file__).absolute().parent / 'images'
 
 
-def main():
+def all_chapter_names():
     for fn in sorted(Path(__file__).absolute().parent.glob('*.html')):
         chapter_name = fn.name.replace('.html', '')
         if chapter_name == 'book':
             continue
-        print('Rendering images for', chapter_name)
+        yield chapter_name
+
+def main(paths):
+    if paths:
+        chapter_names = [p.replace('.html', '').replace('.asciidoc', '') for p in paths]
+    else:
+        chapter_names = all_chapter_names()
+    for chapter_name in chapter_names:
         render_images(chapter_name)
 
 
 def render_images(chapter_name):
+    print('Rendering images for', chapter_name)
     raw_contents = Path(f'{chapter_name}.html').read_text()
     parsed_html = html.fromstring(raw_contents)
 
@@ -68,4 +77,4 @@ def render_image(source, image_id):
 
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1:])
