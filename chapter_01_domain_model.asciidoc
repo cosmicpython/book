@@ -252,7 +252,7 @@ scratch, or combine/rewrite them however you like.((("GitHub", "placeholder unit
 === Unit Testing Domain Models
 
 We're not going to show you how TDD works in this book, but we want to show you
-how we would construct a model from this business conversation.
+how we would construct a model from this business conversation.((("domain modeling", "unit testing domain models", id="ix_dommodUT")))
 
 Here's what one of our first tests might look like:
 
@@ -794,7 +794,7 @@ also try to somehow make _that_ attribute read-only.
 WARNING: This is tricky territory; you shouldn't modify +++<code>__hash__</code>+++ without
     also modifying +++<code>__eq__</code>+++.  If you're not sure what you're doing,
     further reading is suggested. https://hynek.me/articles/hashes-and-equality[
-    "Python Hashes and Equality"] by our tech reviewer Hynek Schlawack is a good place to start.
+    "Python Hashes and Equality"] by our tech reviewer Hynek Schlawack is a good place to start.((("domain modeling", "unit testing domain models", startref="ix_dommodUT")))
 
 
 
