@@ -466,7 +466,7 @@ doing nothing at all, and can be switched off.
 .Case Study: Carving out a microservice to replace a domain
 ********************************************************************************
 MADE.com started out with _two_ monoliths: one for the front-end e-commerce
-application, and one for the back-end fulfilment system.
+application, and one for the back-end fulfillment system.
 
 The two systems communicated through XML-RPC. Periodically, the back-end system
 would wake up and query the front-end system to find out about new orders. When
@@ -525,12 +525,12 @@ image::images/apwp_ep04.png[]
 
 Person_Ext(customer, "Customer", "Wants to buy furniture")
 
-System(fulfilment, "Fulfilment System", "Manages order fulfilment and logistics")
+System(fulfillment, "Fulfillment System", "Manages order fulfillment and logistics")
 System(ecom, "Ecommerce website", "Allows customers to buy furniture")
 
 Rel(customer, ecom, "Uses")
-Rel(fulfilment, ecom, "Updates stock and orders", "xml-rpc")
-Rel(ecom, fulfilment, "Sends orders", "xml-rpc")
+Rel(fulfillment, ecom, "Updates stock and orders", "xml-rpc")
+Rel(ecom, fulfillment, "Sends orders", "xml-rpc")
 
 @enduml
 ----
@@ -549,14 +549,14 @@ image::images/apwp_ep05.png[]
 Person_Ext(customer, "Customer", "Wants to buy furniture")
 
 System(av, "Availability Service", "Calculates stock availability")
-System(fulfilment, "Fulfilment System", "Manages order fulfilment and logistics")
+System(fulfillment, "Fulfillment System", "Manages order fulfillment and logistics")
 System(ecom, "Ecommerce website", "Allows customers to buy furniture")
 
 Rel(customer, ecom, "Uses")
 Rel(customer, av, "Uses")
-Rel(fulfilment, av, "Publishes batch_created", "events")
+Rel(fulfillment, av, "Publishes batch_created", "events")
 Rel(av, ecom, "Publishes out_of_stock", "events")
-Rel(ecom, fulfilment, "Sends orders", "xml-rpc")
+Rel(ecom, fulfillment, "Sends orders", "xml-rpc")
 
 @enduml
 ----
