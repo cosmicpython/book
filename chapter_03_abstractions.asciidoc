@@ -355,19 +355,21 @@ Core, Imperative Shell] (FCIS).
 Let's start off by splitting the code up to separate the stateful parts from
 the logic.
 
+And our top-level function will contains almost no logic at all; it's just an
+imperative series of steps: gather inputs, call our logic, apply outputs:
 
 [[three_parts]]
 .Split our code into three  (sync.py)
 ====
 [source,python]
 ----
-def sync(source, dest):  #<3>
+def sync(source, dest):
     # imperative shell step 1, gather inputs
-    source_hashes = read_paths_and_hashes(source)
-    dest_hashes = read_paths_and_hashes(dest)
+    source_hashes = read_paths_and_hashes(source)  #<1>
+    dest_hashes = read_paths_and_hashes(dest)  #<1>
 
     # step 2: call functional core
-    actions = determine_actions(source_hashes, dest_hashes, source, dest)
+    actions = determine_actions(source_hashes, dest_hashes, source, dest)  #<2>
 
     # imperative shell step 3, apply outputs
     for action, *paths in actions:
@@ -377,18 +379,43 @@ def sync(source, dest):  #<3>
             shutil.move(*paths)
         if action == 'delete':
             os.remove(paths[0])
+----
+====
 
-...
+<1> Here's the first function we factor out, `read_paths_and_hashes()`, which
+    isolates the I/O part of our application
 
-def read_paths_and_hashes(root):  #<1>
+<2> And here is where carve out the functional core, the business logic.
+
+
+The code to build up the dictionary of paths and hashes is now trivially easy
+to write:
+
+[[read_paths_and_hashes]]
+.A function that just does I/O (sync.py)
+====
+[source,python]
+----
+def read_paths_and_hashes(root):
     hashes = {}
     for folder, _, files in os.walk(root):
         for fn in files:
             hashes[hash_file(Path(folder) / fn)] = fn
     return hashes
+----
+====
 
+The `determine_actions()` function will be the core of our business logic,
+which says, "Given these two sets of hashes and filenames, what should we
+copy/move/delete?".  It takes simple data structures and returns simple data
+structures:
 
-def determine_actions(src_hashes, dst_hashes, src_folder, dst_folder):  #<2>
+[[determine_actions]]
+.A function that just does business logic (sync.py)
+====
+[source,python]
+----
+def determine_actions(src_hashes, dst_hashes, src_folder, dst_folder):
     for sha, filename in src_hashes.items():
         if sha not in dst_hashes:
             sourcepath = Path(src_folder) / filename
@@ -406,19 +433,8 @@ def determine_actions(src_hashes, dst_hashes, src_folder, dst_folder):  #<2>
 ----
 ====
 
-<1> The code to build up the dictionary of paths and hashes is now trivially
-    easy to write.
 
-<2> The core of our "business logic," which says, "given these two sets of
-    hashes and filenames, what should we copy/move/delete?"  takes simple
-    data structures and returns simple data structures.
-
-<3> And our top-level function now contains almost no logic whatseover, it's
-    just an imperative series of steps: gather inputs, call our logic,
-    apply outputs.
-
-
-Our tests now act directly on the `determine_actions()` function:
+Our tests can now act directly on the `determine_actions()` function:
 
 
 [[harry_tests]]
