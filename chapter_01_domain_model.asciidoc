@@ -912,7 +912,7 @@ That's lovely.
 ==== Exceptions Can Express Domain Concepts Too
 
 We have one final concept to cover: exceptions
-can be used ((("exceptions", "expressing domain concepts")))to express domain concepts too. In our conversations
+can be used ((("exceptions", "expressing domain concepts")))to express domain concepts too.((("domain exceptions"))) In our conversations
 with domain experts, we've learned about the possibility that
 an order cannot be allocated because we are _out of stock_, and
 we can capture that by using a _domain exception_:
@@ -974,7 +974,7 @@ Domain modeling::
     most value to the business. Make it easy to understand and modify.
 
 Distinguish entities from value objects::
-    A value object is defined by its attributes. It's usually best
+    A value object is defined by its attributes.((("value objects", "entities versus")))((("entities", "value objects versus"))) It's usually best
     implemented as an immutable type. If you change an attribute on
     a Value Object, it represents a different object. In contrast,
     an entity has attributes that may vary over time, and still be the
@@ -985,7 +985,7 @@ Not everything has to be an object::
     Python is a multiparadigm language, so let the "verbs" in your
     code be functions. For every `FooManager`, `BarBUilder`, or `BazFactory`,
     there's often a more expressive and readable `manage_foo()`, `build_bar()`,
-    or `get_baz()` waiting to happen.
+    or `get_baz()` waiting to happen.((("functions")))
 
 This is the time to apply your best OO design principles::
     Revisit the SOLID principles and all the other good heuristics like "a versus is-a,"
