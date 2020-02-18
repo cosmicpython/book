@@ -458,6 +458,7 @@ class Batch:
 ----
 ====
 
+// TODO: consider a diff here
 // TODO explain why harry refuses to use the inline type hints syntax
 
 <<model_diagram>> shows the model in UML.
@@ -688,7 +689,7 @@ def adding_different_currencies_fails():
         Money('usd', 10) + Money('gbp', 10)
 
 def can_multiply_money_by_a_number():
-        assert fiver * 5 == Money('gbp', 25)
+    assert fiver * 5 == Money('gbp', 25)
 
 def multiplying_two_money_values_is_an_error():
     with pytest.raises(TypeError):

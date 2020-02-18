@@ -316,6 +316,9 @@ def start_mappers():
 <3> And when we call the `mapper` function, SQLAlchemy does its magic to bind
     our domain model classes to the various tables we've defined.
 
+// IDEA: add a note about mapper being maybe-deprecated, but link to
+// the mailing list post where mike shows how to reimplement it manually.
+
 The end result will be that, if we call `start_mappers()`, we will be able to
 easily load and save domain model instances from and to the database. But if
 we never call that function, then our domain model classes stay blissfully
