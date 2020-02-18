@@ -773,7 +773,7 @@ class Batch:
 ====
 
 Python's +++<code>__eq__</code>+++ magic method
-defines the behavior of the class for the `==` operator.footnote:[The +++<code>__eq__</code>+++ method is pronounced "dunder-EQ." By some, at least.]
+defines((("__eq__ magic method", primary-sortas="eq")))((("magic methods", "__eq__", secondary-sortas="eq"))) the behavior of the class for the `==` operator.footnote:[The +++<code>__eq__</code>+++ method is pronounced "dunder-EQ." By some, at least.]
 
 For both entity and value objects, it's also worth thinking through how
 +++<code>__hash__</code>+++ will work.  It's the magic method Python uses to control the
