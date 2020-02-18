@@ -257,7 +257,7 @@ package "Domain Model" as domain_model {
 }
 
 
-package repositories {
+package Repositories {
 
   class BatchRepository {
     list()
@@ -306,7 +306,7 @@ package "Domain Model" as domain_model {
 }
 
 
-package repositories {
+package Repositories {
 
   class ProductRepository {
     get()
@@ -314,7 +314,7 @@ package repositories {
 
 }
 
-allocate -> ProductRepository: get me the product for this sku
+allocate -> ProductRepository: get me the product for this SKU
 allocate --> Product: product.allocate(orderline)
 Product o- Batch: has
 
