@@ -651,7 +651,7 @@ work. It doesn't matter _which_ £10 note we're talking about, because they all
 have the same value. Likewise, two names are equal if both the first and last
 names match; and two lines are equivalent if they have the same customer order,
 product code, and quantity. We can still have complex behavior on a value
-object, though. In fact, it's common to support operations on values; for
+object, though.((("value objects", "math with"))) In fact, it's common to support operations on values; for
 example, mathematical operators:
 
 
@@ -689,13 +689,13 @@ def multiplying_two_money_values_is_an_error():
 ==== Value Objects and Entities
 
 An order line is uniquely identified by its order ID, SKU, and quantity; if we
-change one of those values, we now have a new line. That's the definition of a
+change one of those values, we now have a new line.((("value objects", "and entities", secondary-sortas="entities"))) That's the definition of a
 value object: any object that is identified by only its data, and doesn't have a
 long-lived identity. What about a batch, though? That _is_ identified by a
 reference.
 
 We use the term _entity_ to describe a domain object that has long-lived
-identity. On the previous page, we introduced a `Name` class as a value object.
+identity. ((("entities", "defined")))On the previous page, we introduced a `Name` class as a value object.
 If we take the name Harry Percival and change one letter, we have the new
 `Name` object Barry Percival.
 
