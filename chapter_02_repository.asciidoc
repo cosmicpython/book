@@ -901,34 +901,7 @@ https://oreil.ly/fQXkP["Global Complexity, Local Simplicity"] by Rob Vens.]
 [[domain_model_tradeoffs_diagram]]
 .Domain Model trade-offs as a diagram
 image::images/apwp_0206.png[]
-[role="image-source"]
-----
-[ditaa, apwp_0206]
 
-
-Cost of Changes
-
-     ^                         /
-     |      ActiveRecord/ORM |
-     |                         |                             ----/
-     |                        /                         ----/
-     |                        |                    ----/
-     |                       /                ----/
-     |                       |           ----/  Domain model w/ Repository pattern
-     |                      /       ----/
-     |                      |  ----/
-     |                    ----/
-     |               ----/ /
-     |          ----/     /
-     |     ----/        -/
-     |----/          --/
-     |           ---/
-     |       ----/
-     |------/
-     |
-     +--------------------------------------------------------------->
-                      Complexity of business domain/logic
-----
 
 Our example code isn't complex enough to give more than a hint of what
 the right-hand side of the graph looks like, but the hints are there.
