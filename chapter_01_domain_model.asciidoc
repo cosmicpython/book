@@ -318,7 +318,7 @@ class Batch:
     its branch (e.g.,
     https://github.com/python-leap/code/tree/chapter_01_domain_model[chapter_01_domain_model]).
 
-<3> Type hints are still a matter of controversy in the Python world. For
+<3> Type hints are still a matter of controversy in the Python world.((("type hints"))) For
     domain models, they can sometimes help to clarify or document what the
     expected arguments are, and people with IDEs are often grateful for them.
     You may decide the price paid in terms of readability is too high.
@@ -521,7 +521,7 @@ than we can show on the page!
 But taking this simple domain model as a placeholder for something more complex, we're going to extend our simple domain model in the rest of the book, and
 plug it into the real world of APIs and databases and spreadsheets. We'll
 see how sticking rigidly to our principles of encapsulation and careful
-layering will help us to avoid a ball of mud.
+layering will help us to avoid a ball of mud.((("type hints")))
 
 
 [role="nobreakinside"]
@@ -564,7 +564,7 @@ Whether you think this is wonderful or appalling is a matter of debate.footnote:
 ==== Dataclasses Are Great for Value Objects
 
 We've used `line` liberally in the previous code listings, but what is a
-line? In our business language, an _order_ has multiple _line_ items, where
+line?((("dataclasses", "use for value objects")))((("value objects", "using dataclasses for"))) In our business language, an _order_ has multiple _line_ items, where
 each line has a SKU, and a quantity. We can imagine that a simple YAML file
 containing order information might look like this:
 
