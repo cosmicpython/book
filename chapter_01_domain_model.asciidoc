@@ -818,7 +818,7 @@ process, whereas a service-layer service represents a use case for your
 application. Often the service layer will call a domain service.] A
 thing that allocates an order line, given a set of batches, sounds a lot like a
 function, and we can take advantage of the fact that Python is a multiparadigm
-language and just make it a function.
+language and just make it a function.((("domain services", "function for")))
 
 Let's see how we might test-drive such a function:
 
