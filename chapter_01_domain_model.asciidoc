@@ -595,7 +595,7 @@ it's not something that uniquely identifies the line itself.)
 Whenever we have a business concept that has data but no identity, we
 often choose to represent it using the _Value Object_ pattern. A _value object_ is any
 domain object that is uniquely identified by the data it holds; we usually
-make them immutable.
+make them immutable.((("value objects", "defined")))
 
 // [SG] seems a bit odd to hear about value objects before any mention of entities.
 
@@ -613,7 +613,7 @@ class OrderLine:
 ----
 ====
 
-One of the nice things that dataclasses (or named tuples) give us is _value
+One of the nice things ((("named tuples", seealso="dataclasses")))that dataclasses (or named tuples) give us is _value
 equality_ which is the fancy way of saying, "Two lines with the same `orderid`,
 `sku`, and `qty` are equal."
 
