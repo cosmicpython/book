@@ -810,7 +810,7 @@ Sometimes, it just isn't a Thing.
 ____
 
 Evans discusses the idea of Domain Service
-operations that don't have a natural home in an entity or value object.footnote:[Domain services are
+operations ((("domain services")))((("service-layer services vs. domain services")))that don't have a natural home in an entity or value object.footnote:[Domain services are
 not the same thing as the services from the
 <<chapter_04_service_layer,service layer>>, although they are
 often closely related. A domain service represents a business concept or
@@ -861,7 +861,7 @@ def test_returns_allocated_batch_ref():
 ----
 ====
 
-And our service might look like this:
+And our service((("functions", "for domain services"))) might look like this:
 
 
 [[domain_service]]
@@ -883,7 +883,7 @@ def allocate(line: OrderLine, batches: List[Batch]) -> str:
 
 You may or may not like the use of `next()` in the preceding code, but we're pretty
 sure you'll agree that being able to use `sorted()` on our list of
-batches is nice, idiomatic Python.
+batches is nice, idiomatic Python.((("magic methods", "allowing use of domain model with idiomatic Python")))
 
 To make it work, we implement +++<code>__gt__</code>+++ on our domain model:
 
@@ -912,7 +912,7 @@ That's lovely.
 ==== Exceptions Can Express Domain Concepts Too
 
 We have one final concept to cover: exceptions
-can be used to express domain concepts too. In our conversations
+can be used ((("exceptions", "expressing domain concepts")))to express domain concepts too. In our conversations
 with domain experts, we've learned about the possibility that
 an order cannot be allocated because we are _out of stock_, and
 we can capture that by using a _domain exception_:
