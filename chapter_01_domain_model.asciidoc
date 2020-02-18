@@ -2,7 +2,7 @@
 == Domain Modeling
 
 This chapter looks into how we can model business processes with code, in a way
-that's highly compatible with TDD.  We'll discuss _why_ domain modeling
+that's highly compatible with TDD. ((("domain modeling", id="ix_dommod"))) We'll discuss _why_ domain modeling
 matters, and we'll look at a few key patterns for modeling domains: Entity,
 Value Object, and Domain Service.
 
@@ -991,7 +991,7 @@ This is the time to apply your best OO design principles::
     Revisit the SOLID principles and all the other good heuristics like "a versus is-a,"
     "prefer composition over inheritance," and so on.
 
-You'll also want to think about consistency boundaries and aggregates::
+You'll((("domain modeling", startref="ix_dommod"))) also want to think about consistency boundaries and aggregates::
     But that's a topic for <<chapter_07_aggregate>>.
 
 *****************************************************************
