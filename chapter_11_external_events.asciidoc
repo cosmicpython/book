@@ -1,39 +1,38 @@
 [[chapter_11_external_events]]
 == Event-Driven Architecture: Using Events to Integrate Microservices
 
-In the last chapter we never actually spoke about _how_ we would receive
+In the preceding chapter, we never actually spoke about _how_ we would receive
 the "batch quantity changed" events, or indeed, how we might notify the
 outside world about reallocations.
 
-We've got a microservice with a web API, but what about other ways of talking
+We have a microservice with a web API, but what about other ways of talking
 to other systems?  How will we know if, say, a shipment is delayed or the
 quantity is amended? How will we tell the warehouse system that an order has
 been allocated and needs to be sent to a customer?
 
-In this chapter we'd like to show how the events metaphor can be extended
+In this chapter, we'd like to show how the events metaphor can be extended
 to encompass the way that we handle incoming and outgoing messages from the
 system. Internally, the core of our application is now a message processor.
 Let's follow through on that so it becomes a message processor _externally_ as
 well. As shown in <<message_processor_diagram>>, our application will receive
-events from external sources via an external message bus (we'll use Redis pubsub
+events from external sources via an external message bus (we'll use Redis pub/sub
 queues as an example), and publish its outputs, in the form of events, back
 there as well.
-
-[[message_processor_diagram]]
-.Our application is a Message Processor
-image::images/apwp_1101.png[]
-
 
 [TIP]
 ====
 The code for this chapter is in the
-https://github.com/cosmicpython/code/tree/chapter_11_external_events[chapter_11_external_events] branch.
+https://github.com/cosmicpython/code/tree/chapter_11_external_events[chapter_11_external_events] branch on GitHub.
+
+[[message_processor_diagram]]
+.Our application is a message processor
+image::images/apwp_1101.png[]
 
 ----
 git clone https://github.com/cosmicpython/code.git
 cd code
 git checkout chapter_11_external_events
-# or to code along, checkout the previous chapter:
+# or to code along, check out the previous chapter:
 git checkout chapter_10_commands
 ----
 ====
@@ -42,17 +41,17 @@ git checkout chapter_10_commands
 === Distributed Ball of Mud, and Thinking in Nouns
 
 Before we get into that, let's talk about the alternatives. We regularly talk to
-engineers who are trying to build out a Microservices architecture. Often they
+engineers who are trying to build out a microservices architecture. Often they
 are migrating from an existing application, and their first instinct is to
-split their system up into _nouns_.
+split their system into _nouns_.
 
 What nouns have we introduced so far in our system? Well, we have batches of
-stock, we have orders, products, and customers. So a naive attempt at breaking
+stock, orders, products, and customers. So a naive attempt at breaking
 up the system might have looked like <<batches_context_diagram>> (notice that
-we've named our system after a noun, _batches_, instead of _allocation_).
+we've named our system after a noun, _Batches_, instead of _Allocation_).
 
 [[batches_context_diagram]]
-.Context diagram for the "batches" service
+.Context diagram for the Batches service
 image::images/apwp_1102.png[]
 [role="image-source"]
 ----
@@ -82,7 +81,7 @@ instructions to the warehouse. Let's also say, if this is the customer's third
 order, we want to update the customer record to flag them as a VIP.
 
 [[command_flow_diagram_1]]
-.Command Flow 1
+.Command flow 1
 image::images/apwp_1103.png[]
 [role="image-source"]
 ----
@@ -136,29 +135,29 @@ the different symbols.
 ////
 
 
-We can think of each of these steps as a Command in our system: `ReserveStock`,
-`ConfirmReservation`, `DispatchGoods`, `MakeCustomerVIP`...
+We can think of each of these steps as a command in our system: `ReserveStock`,
+pass:[<span class="keep-together"><code>ConfirmReservation</code></span>], `DispatchGoods`, `MakeCustomerVIP`, and so forth.
 
 This style of architecture, where we create a microservice per database table,
-and treat our HTTP APIs as CRUD interfaces to anemic models is the most common
+and treat our HTTP APIs as CRUD interfaces to anemic models, is the most common
 initial way for people to approach service-oriented design.
 
 This works _fine_ for systems that are very simple, but quickly degrades into
-a Distributed Ball of Mud.
+a distributed ball of mud.
 
 To see why, let's consider another case. Sometimes, when stock arrives at the
 warehouse, we discover that items have been water damaged during transit. We
-can't sell water damaged sofas, so we have to throw them away, and request more
+can't sell water-damaged sofas, so we have to throw them away, and request more
 stock from our partners. We also need to update our stock model, and that
-might mean we need to re-allocate a customer's order.
+might mean we need to reallocate a customer's order.
 
 Where does this logic go?
 
-Well, the warehouse system knows that the stock has been damaged, so maybe it
-should own this process, as shown in <<command_flow_diagram_2>>?
+Well, the Warehouse system knows that the stock has been damaged, so maybe it
+should own this process, as shown in <<command_flow_diagram_2>>.
 
 [[command_flow_diagram_2]]
-.Command Flow 2
+.Command flow 2
 image::images/apwp_1104.png[]
 [role="image-source"]
 ----
@@ -183,23 +182,34 @@ database CRM
 @enduml
 ----
 
-This sort of works, too, but now our dependency graph is a mess. In order to
-allocate stock, the orders service drives the batches system, which drives
-warehouse; but in order to handle problems at the warehouse, our warehouse
-system drives batches, which drives orders.
+This sort of works too, but now our dependency graph is a mess. To
+allocate stock, the Orders service drives the Batches system, which drives
+Warehouse; but in order to handle problems at the warehouse, our Warehouse
+system drives Batches, which drives Orders.
 
 Multiply this by all the other workflows we need to provide, and you can see
-how services very quickly get tangled up together.
+how services quickly get tangled up.
 
 === Error Handling in Distributed Systems ===
 
 "Things break" is a universal law of software engineering. What happens in our
 system when one of our requests fails? Let's say that a network error happens
-right after we take a user's order for 3 MISBEGOTTEN-RUG,
+right after we take a user's order for three `MISBEGOTTEN-RUG`, as shown in
 <<command_flow_diagram_with_error>>.
 
+We have two options here: we can place the order anyway and leave it
+unallocated, or we can refuse to take the order because the allocation can't be
+guaranteed. The failure state of our batches service has bubbled up and is
+affecting the reliability of our order service.
+
+When two things have to be changed together, we say that they are _coupled_. We
+can think of this failure cascade as a kind of _temporal coupling_: every part
+of the system has to work at the same time for any part of it to work. As the
+system gets bigger, there is an exponentially increasing probability that some
+part is degraded.
+
 [[command_flow_diagram_with_error]]
-.Command Flow with Error
+.Command flow with error
 image::images/apwp_1105.png[]
 [role="image-source"]
 ----
@@ -218,55 +228,44 @@ Orders --> Customer: ???
 @enduml
 ----
 
-
-We have two options here: we can place the order anyway, and leave it
-unallocated, or we can refuse to take the order since the allocation can't be
-guaranteed. The failure state of our batches service has bubbled up and is
-affecting the reliability of our order service.
-
-When two things have to be changed together, we say that they are _coupled_. We
-can think of this failure-cascade as a kind of _temporal coupling_ - every part
-of the system has to work at the same time for any part of it to work. As the
-system gets bigger, there is an exponentially increasing probability that some
-part is degraded.
-
+[role="nobreakinside less_space"]
 [[connascence_sidebar]]
 .Connascence
 *******************************************************************************
-We're using the language of "coupling" here, but there's another way to describe
-the relationships between our systems. Connascence is a term used by some
+We're using the term _coupling_ here, but there's another way to describe
+the relationships between our systems. _Connascence_ is a term used by some
 authors to describe the different types of coupling.
 
-Connascence isn't _bad_ but some types of connascence are _stronger_ than
-others. We want to have strong connascence locally, like when two classes are
+Connascence isn't _bad_, but some types of connascence are _stronger_ than
+others. We want to have strong connascence locally, as when two classes are
 closely related, but weak connascence at a distance.
 
 In our first example of a distributed ball of mud, we see Connascence of
-Execution - multiple components need to know the correct order of work for an
+Execution: multiple components need to know the correct order of work for an
 operation to be successful.
 
 When thinking about error conditions here, we're talking about Connascence of
-Timing - multiple things have to happen one after another for the operation to
+Timing: multiple things have to happen, one after another, for the operation to
 work.
 
 When we replace our RPC style system with events, we replace both of these types
-of connascence with a _weaker_ type: Connascence of Name, where multiple
-components only need to agree on the name of an event, and the names of fields
+of connascence with a _weaker_ type. That's Connascence of Name: multiple
+components need to agree on only the name of an event, and the names of fields
 it carries.
 
 We can never completely avoid coupling, except by having our software not talk
 to any other software. What we want is to avoid _inappropriate_ coupling.
 Connascence provides a mental model for understanding the strength and type of
 coupling inherent in different architectural styles. Read all about it at
-http://www.connascence.io[connascence.io]
+http://www.connascence.io[connascence.io].
 *******************************************************************************
 
 
-=== The Alternative: Temporal Decoupling using Asynchronous Messaging
+=== The Alternative: Temporal Decoupling Using Asynchronous Messaging
 
-We've already seen part of the answer, which is that we should think in
-terms of verbs, not nouns.  Our domain model is about modelling a business
-process; it's not a static data model about a thing, it's a model of a verb.
+How do we get appropriate coupling? We've already seen part of the answer, which is that we should think in
+terms of verbs, not nouns. Our domain model is about modeling a business
+process. It's not a static data model about a thing; it's a model of a verb.
 
 So instead of thinking about a system for orders and a system for batches,
 we think about a system for _ordering_ and a system for _allocating_, and
@@ -275,7 +274,7 @@ so on.
 When we separate things this way, it's a little easier to see which system
 should be responsible for what.  When thinking about _ordering_, really we want
 to make sure that when we place an order, the order is placed. Everything else
-can happen _later_ so long as it happens.
+can happen _later_, so long as it happens.
 
 NOTE: If this sounds familiar, it should!  Segregating responsibilities is
     the same process we went through when designing our aggregates and commands.
@@ -286,47 +285,46 @@ rely on synchronous calls. Each service accepts commands from the outside world
 and raises events to record the result. Other services can listen to those
 events to trigger the next steps in the workflow.
 
-To avoid the "Distributed BOM" antipattern, instead of temporally coupled HTTP
+To avoid the Distributed Ball of Mud anti-pattern, instead of temporally coupled HTTP
 API calls, we want to use asynchronous messaging to integrate our systems. We
-want our "batch quantity changed" messages to come in as external messages from
-upstream systems, and we want our system to publish "allocated" events for
+want our `BatchQuantityChanged` messages to come in as external messages from
+upstream systems, and we want our system to publish `Allocated` events for
 downstream systems to listen to.
 
-Why is this better? Firstly, because things can fail independently, it's easier
-to handle degraded behavior: we can still take orders if the allocations system
+Why is this better? First, because things can fail independently, it's easier
+to handle degraded behavior: we can still take orders if the allocation system
 is having a bad day.
 
-Secondly, we're reducing the strength of coupling between our systems. If we
-need to change the order of operations, or to introduce new steps in the process
+Second, we're reducing the strength of coupling between our systems. If we
+need to change the order of operations, or to introduce new steps in the process,
 we can do that locally.
 
 // IDEA: need to add an example of a process change.  And/or explain "locally"
 // (EJ3) I think this is clear enough.  Not sure about for a junior dev.
 
 
-=== Using a Redis Pubsub Channel for Integration
+=== Using a Redis Pub/Sub Channel for Integration
 
 Let's see how it will all work concretely. We'll need some way of getting
 events out of one system and into another, like our message bus, but for
-services. This piece of infrastructure is often called a Message Broker. The
+services. This piece of infrastructure is often called a _message broker_. The
 role of a message broker is to take messages from publishers and deliver them
 to subscribers.
 
-At MADE.com we use https://eventstore.org/[Event Store]; Kafka or RabbitMQ
+At MADE.com, we use https://eventstore.org[Event Store]; Kafka or RabbitMQ
 are valid alternatives. A lightweight solution based on Redis
-https://redis.io/topics/pubsub[pubsub channels] can also work just fine, and since
+https://redis.io/topics/pubsub[pub/sub channels] can also work just fine, and because
 Redis is much more generally familiar to people, we thought we'd use it for this
 book.
 
 NOTE: We're glossing over the complexity involved in choosing the right messaging
-    platform.  Concerns like message ordering, failure handling and idempotency
-    all need to be thought through.  For a few pointers, see the
-    <<footguns,Footguns>> section in <<epilogue_1_how_to_get_there_from_here>>.
+    platform. Concerns like message ordering, failure handling, and idempotency
+    all need to be thought through. For a few pointers, see
+    <<footguns>>.
 
 
-Our new flow will look like <<reallocation_sequence_diagram_with_redis>>: 
-Redis provides the `BatchQuantityChanged` event that kicks the whole process
-off, and our `Allocated` event being published back out to Redis again at the
+Our new flow will look like <<reallocation_sequence_diagram_with_redis>>:
+Redis provides the `BatchQuantityChanged` event that kicks off the whole process, and our `Allocated` event is published back out to Redis again at the
 end.
 
 [[reallocation_sequence_diagram_with_redis]]
@@ -364,7 +362,7 @@ API to create batches, and then we'll test both inbound and outbound messages:
 
 
 [[redis_e2e_test]]
-.An end-to-end test for our pubsub model (tests/e2e/test_external_events.py)
+.An end-to-end test for our pub/sub model (tests/e2e/test_external_events.py)
 ====
 [source,python]
 ----
@@ -400,12 +398,12 @@ def test_change_batch_quantity_leading_to_reallocation():
 
 <1> You can read the story of what's going on in this test from the comments:
     we want to send an event into the system that causes an order line to be
-    reallocated, and we see that reallocation come out as an event in redis too.
+    reallocated, and we see that reallocation come out as an event in Redis too.
 
 <2> `api_client` is a little helper that we refactored out to share between
-    our two test types, it wraps our calls to `requests.post`
+    our two test types; it wraps our calls to `requests.post`.
 
-<3> `redis_client` is another test little test helper, the details of which
+<3> `redis_client` is another little test helper, the details of which
     don't really matter; its job is to be able to send and receive messages
     from various Redis channels. We'll use a channel called
     `change_batch_quantity` to send in our request to change the quantity for a
@@ -413,7 +411,7 @@ def test_change_batch_quantity_leading_to_reallocation():
     look out for the expected reallocation.
 
 <4> Because of the asynchronous nature of the system under test, we need to use
-    the `tenacity` library again to add a retry loop.  Firstly because it may
+    the `tenacity` library again to add a retry loop. Firs, because it may
     take some time for our new `line_allocated` message to arrive, but also
     because it won't be the only message on that channel.
 
@@ -429,7 +427,7 @@ be too much of a digression.
 
 ==== Redis Is Another Thin Adapter Around Our Message Bus
 
-Our Redis pubsub listener (we call it an _eventconsumer_) is very much like
+Our Redis pub/sub listener (we call it an _event consumer_) is very much like
 Flask:  it translates from the outside world to our events:
 
 
@@ -458,13 +456,13 @@ def handle_change_batch_quantity(m):
 ----
 ====
 
-<1> `main()` subscribes us to the `change_batch_quantity` channel on load
+<1> `main()` subscribes us to the `change_batch_quantity` channel on load.
 
-<2> And our main job as an entrypoint to the system is to deserialize JSON,
-    convert it to a `Command`, and pass it to the service layer--much like the
+<2> Our main job as an entrypoint to the system is to deserialize JSON,
+    convert it to a `Command`, and pass it to the service layer--much as the
     Flask adapter does.
 
-We also build a new downstream adapter to do the opposit job: it converts
+We also build a new downstream adapter to do the opposite job: it converts
 domain events to public events:
 
 [[redis_eventpubisher_first_cut]]
@@ -481,9 +479,9 @@ def publish(channel, event: events.Event):  #<1>
 ----
 ====
 
-<1> We take a hard-coded channel here, but you could also store
+<1> We take a hardcoded channel here, but you could also store
     a mapping between event classes/names and the appropriate channel,
-    allowing one or more message types to go to different channels...
+    allowing one or more message types to go to different channels.
 
 
 ==== Our New Outgoing Event
@@ -508,7 +506,7 @@ It captures everything we need to know about an allocation: the details of the
 order line, and which batch it was allocated to.
 
 We add it into our model's `allocate()` method (having added a test
-first, naturally)
+first, naturally):
 
 [[model_emits_allocated_event]]
 .Product.allocate() emits new event to record what happened (src/allocation/domain/model.py)
@@ -536,7 +534,7 @@ is a handler that publishes the outgoing event:
 
 
 [[another_handler]]
-.The messagebus grows (src/allocation/service_layer/messagebus.py)
+.The message bus grows (src/allocation/service_layer/messagebus.py)
 ====
 [source,python,highlight=2]
 ----
@@ -550,7 +548,7 @@ HANDLERS = {
 Publishing the event uses our helper function from the Redis wrapper:
 
 [[publish_event_handler]]
-.Publish to redis (src/allocation/service_layer/handlers.py)
+.Publish to Tedis (src/allocation/service_layer/handlers.py)
 ====
 [source,python]
 ----
@@ -561,24 +559,22 @@ def publish_allocated_event(
 ----
 ====
 
-
-TIP: Outbound events are one of the places it's important to apply some validation.
-    See <<appendix_validation>> for some validation philosophy and examples.
-
-
-
-.Internal vs External events
+[role="nobreakinside less_space"]
+.Internal Versus External Events
 *******************************************************************************
 It's a good idea to keep the distinction between internal and external events
 clear.  Some events may come from the outside, and some events may get upgraded
 and published externally, but not all of them.  This is particularly important
 if you get into
-https://io.made.com/blog/2018-04-28-eventsourcing-101.html[event sourcing]
-(very much a topic for another book though).
+https://oreil.ly/FXVil[event sourcing]
+(very much a topic for another book, though).
 
 *******************************************************************************
 
+TIP: Outbound events are one of the places it's important to apply validation.
+    See <<appendix_validation>> for some validation philosophy and pass:[<span class="keep-together">examples</span>].
 
+[role="nobreakinside less_space"]
 .Exercise for the Reader
 *******************************************************************************
 
@@ -611,26 +607,25 @@ ____
 
 <<chapter_11_external_events_tradeoffs>> shows some tradeoffs to think about.
 More generally, if you're moving from a model of synchronous messaging to an
-async one, you also open up a whole host of problems to do with message
-reliability and eventual consistency.   Read on to the <<footguns>> section in
-the epilogue.
+async one, you also open up a whole host of problems having to do with message
+reliability and eventual consistency. Read on to <<footguns>>.
 
 
 [[chapter_11_external_events_tradeoffs]]
 [options="header"]
-.Event-Based Microservices Integration: The Trade-Offs
+.Event-based microservices integration: the trade-offs
 |===
 |Pros|Cons
 a|
 * Avoids the Distributed Big Ball of Mud.
-* Services are decoupled: it's easier to change individual services, and add
+* Services are decoupled: it's easier to change individual services and add
   new ones.
 
 a|
 * The overall flows of information are harder to see.
-* Eventual consistency is a new concept to deal with
-* Message reliability and choices around at-least-once vs at-most-once delivery
-  need thinking through
+* Eventual consistency is a new concept to deal with.
+* Message reliability and choices around at-least-once versus at-most-once delivery
+  need thinking through.
 
 |===
 

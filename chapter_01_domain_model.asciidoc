@@ -1,14 +1,14 @@
 [[chapter_01_domain_model]]
-== Domain Modelling
+== Domain Modeling
 
 This chapter looks into how we can model business processes with code, in a way
 that's highly compatible with TDD.  We'll discuss _why_ domain modeling
-matters, and we'll look at a few key patterns for modeling domains: Entities,
-Value Objects, and Domain Services.
+matters, and we'll look at a few key patterns for modeling domains: Entity,
+Value Object, and Domain Service.
 
 <<maps_chapter_01_notext>> is a simple visual placeholder for our Domain
-Model.  We'll fill in some details in this chapter, and as we move on to
-other chapters, we'll build things around the Domain Model, but you should
+Model pattern. We'll fill in some details in this chapter, and as we move on to
+other chapters, we'll build things around the domain model, but you should
 always be able to find these little shapes at the core.
 
 [[maps_chapter_01_notext]]
@@ -20,10 +20,9 @@ image::images/apwp_0101.png[]
 
 In the <<introduction>>, we used the term _business logic layer_ to describe the
 central layer of a three-layered architecture. For the rest of the book, we're
-going to use the term _Domain Model_ instead. This is a term from the DDD
+going to use the term _domain model_ instead. This is a term from the DDD
 community that does a better job of capturing our intended meaning (see the
 next sidebar for more on DDD).
-
 
 The _domain_ is a fancy way of saying _the problem you're trying to solve._ Your
 authors currently work for an online retailer of furniture. Depending on which system
@@ -32,53 +31,50 @@ design, or logistics and delivery. Most programmers spend their days trying to
 improve or automate business processes; the domain is the set of activities
 that those processes support.
 
-A _model_ is a map of a process or phenomenon that captures some useful property.
+A _model_ is a map of a process or phenomenon that captures a useful property.
 Humans are exceptionally good at producing models of things in their heads. For
 example, when someone throws a ball toward you, you're able to predict its
-movement almost unconsciously, because you have a model of how objects move in
+movement almost unconsciously, because you have a model of the way objects move in
 space. Your model isn't perfect by any means. Humans have terrible intuitions
 about how objects behave at near-light speeds or in a vacuum because our model
 was never designed to cover those cases. That doesn't mean the model is wrong,
 but it does mean that some predictions fall outside of its domain.
 
 
-.This is not a DDD Book.  You Should Read a DDD book.
+.This Is Not a DDD Book. You Should Read a DDD Book.
 *****************************************************************
 
-Domain-driven design, or DDD, is where the concept of domain modeling was
-popularized,footnote:[
+Domain-driven design, or DDD, popularized the concept of domain modeling,footnote:[
 DDD did not originate domain modeling. Eric Evans refers to _Object Design_
-from Rebecca Whirfs-Brock and Alan McKean, which introduced Responsibility-Driven
-Design of which DDD is a special case, dealing with the domain. But even that is
-too late, and OO-enthusiasts will tell you to look further back to Ivar
+by Rebecca Wirfs-Brock and Alan McKean  (Addison-Wesley Professional), which introduced responsibility-driven
+design of which DDD is a special case dealing with the domain. But even that is
+too late, and OO enthusiasts will tell you to look further back to Ivar
 Jacobson and Grady Booch; the term has been around since the mid-1980s.]
 and it's been a hugely successful movement in transforming the way people
-design software by focusing on the core business domain.  Many of the
-architecture patterns that we cover in this book, like Entity, Aggregate,
-and Value Objects (see <<chapter_06_uow>>), and Repository pattern (in
-<<chapter_02_repository,the next chapter>>), all come from the DDD tradition.
+design software by focusing on the core business domain. Many of the
+architecture patterns that we cover in this book—including Entity, Aggregate, Value Object (see <<chapter_06_uow>>), and Repository (in
+<<chapter_02_repository,the next chapter>>)—come from the DDD tradition.
 
 In a nutshell, DDD says that the most important thing about software is that it
-provides a useful model of some problem.  If we get that model right, then our
+provides a useful model of a problem.  If we get that model right, our
 software delivers value and makes new things possible.
 
-If we get it wrong, it becomes an obstacle to be worked around.  In this book
+If we get the model wrong, it becomes an obstacle to be worked around. In this book,
 we can show the basics of building a domain model, and building an architecture
 around it that leaves the model as free as possible from external constraints,
 so that it's easy to evolve and change.
 
-But there's a lot more to DDD, and the processes, tools and techniques for
-developing a domain model.  We hope to give you a taste for it though,
-and cannot encourage you enough to go on and read a proper DDD book.
+But there's a lot more to DDD and to the processes, tools, and techniques for
+developing a domain model. We hope to give you a taste of it, though,
+and cannot encourage you enough to go on and read a proper DDD book:
 
-* The original https://domainlanguage.com/ddd/["blue book"],
-  _Domain-Driven Design_ by Eric Evans (Addison-Wesley, 2003)
-* Or, some people prefer the https://learning.oreilly.com/library/view/implementing-domain-driven-design/9780133039900/["red book"], _Implementing Domain-Driven Design_,
-  by Vaughn Vernon (Addison-Wesley, 2013).
+* The original "blue book,"_Domain-Driven Design_ by Eric Evans (Addison-Wesley Professional)
+* The "red book," _Implementing Domain-Driven Design_
+  by Vaughn Vernon (Addison-Wesley Professional)
 
 *****************************************************************
 
-The Domain Model is the mental map that business owners have of their
+The domain model is the mental map that business owners have of their
 businesses. All business people have these mental maps--they're how humans think
 about complex processes.
 
@@ -91,13 +87,13 @@ to figure out, from first principles, how to navigate home.
 
 In your first few days, you might just push buttons randomly, but soon you'd
 learn which buttons did what, so that you could give one another instructions.
-"Press the red button near the flashing doo-hickey and then throw that big
+"Press the red button near the flashing doohickey and then throw that big
 lever over by the radar gizmo," you might say.
 
 Within a couple of weeks, you'd become more precise as you adopted words to
-describe the ship's functions: "increase oxygen levels in cargo bay three"
-or "turn on the little thrusters." After a few months you'd have adopted
-language for entire complex processes: "Start landing sequence," or "prepare
+describe the ship's functions: "Increase oxygen levels in cargo bay three"
+or "turn on the little thrusters." After a few months, you'd have adopted
+language for entire complex processes: "Start landing sequence" or "prepare
 for warp." This process would happen quite naturally, without any formal effort
 to build a shared glossary.
 
@@ -110,17 +106,16 @@ in a specific way, we should listen to understand the deeper meaning and encode
 their hard-won experience into our software.
 
 We're going to use a real-world domain model throughout this book, specifically
-a model from our current employment. Made.com is a successful furniture
+a model from our current employment. MADE.com is a successful furniture
 retailer. We source our furniture from manufacturers all over the world and
 sell it across Europe.
 
 When you buy a sofa or a coffee table, we have to figure out how best
 to get your goods from Poland or China or Vietnam, and into your living room.
 
-
 At a high level, we have separate systems that are responsible for buying
-stock, selling stock to customers, and shipping goods to customers. There's a
-system in the middle that needs to coordinate the process by allocating stock
+stock, selling stock to customers, and shipping goods to customers. A
+system in the middle needs to coordinate the process by allocating stock
 to a customer's orders; see <<allocation_context_diagram>>.
 
 [[allocation_context_diagram]]
@@ -152,29 +147,27 @@ Rel_U(warehouse, customer, "Dispatches goods to")
 @enduml
 ----
 
-For the purposes of this book, we're imagining a situation where the business
+For the purposes of this book, we're imagining that the business
 decides to implement an exciting new way of allocating stock.  Until now, the
 business has been presenting stock and lead times based on what is physically
 available in the warehouse.  If and when the warehouse runs out, a product is
 listed as "out of stock" until the next shipment arrives from the manufacturer.
 
-The innovation is: if we have a system that can keep track of all our shipments
-and when they're due to arrive, then we can treat the goods on those ships as
-real stock, and part of our inventory, just with slightly longer lead times.
+Here's the innovation: if we have a system that can keep track of all our shipments
+and when they're due to arrive, we can treat the goods on those ships as
+real stock and part of our inventory, just with slightly longer lead times.
 Fewer goods will appear to be out of stock, we'll sell more, and the business
 can save money by keeping lower inventory in the domestic warehouse.
 
 But allocating orders is no longer a trivial matter of decrementing a single
-quantity in the warehouse system.  We need a more complex allocation mechanism.
+quantity in the warehouse system. We need a more complex allocation mechanism.
 Time for some domain modeling.
-
-
 
 
 === Exploring the Domain Language
 
-Understanding the Domain Model takes time, and patience, and Post-it notes. We
-have an initial conversation with our business experts and we agree on a glossary
+Understanding the domain model takes time, and patience, and Post-it notes. We
+have an initial conversation with our business experts and agree on a glossary
 and some rules for the first minimal version of the domain model. Wherever
 possible, we ask for concrete examples to illustrate each rule.
 
@@ -183,18 +176,18 @@ language_ in DDD terminology). We choose memorable identifiers for our objects
 so that the examples are easier to talk about.
 
 <<allocation_notes>> shows some notes we might have taken while having a
-conversation with our domain experts about allocation:
+conversation with our domain experts about allocation.
 
 [[allocation_notes]]
-.Some Notes on Allocation
+.Some notes on allocation
 |===
 
-a| A _product_ is identified by a _sku_, pronounced "skew," which is short for
-  "stock keeping unit."
+a| A _product_ is identified by a _SKU_, pronounced "skew," which is short for
+  _stock keeping unit_.
 
 a| _Customers_ place _orders_. An order is identified by an _order reference_,
-  and comprises multiple _order lines_, where each line has a _sku_, and a
-  _quantity_.  Example:
+  and comprises multiple _order lines_, where each line has a _SKU_ and a
+  _quantity_. For example:
 
 ----
 - 10 units of RED-CHAIR
@@ -202,14 +195,14 @@ a| _Customers_ place _orders_. An order is identified by an _order reference_,
 ----
 
 a| The purchasing department orders small _batches_ of stock. A _batch_ of stock
-  has a unique id which they call a _reference_, a _sku_ and a _quantity_.
+  has a unique ID called a _reference_, a _SKU_ and a _quantity_.
 
 a| We need to _allocate_ _order lines_ to _batches_. When we've allocated an
   order line to a batch, we will send stock from that specific batch to the
   customer's delivery address.
 
-a| When we allocate x units of stock to a batch, the _available quantity_ is
-  reduced by x. Example:
+a| When we allocate _x_ units of stock to a batch, the _available quantity_ is
+  reduced by _x_. For example:
 
 ----
 - We have a batch of 20 SMALL-TABLE, and we allocate an order line for 2 SMALL-TABLE.
@@ -217,14 +210,14 @@ a| When we allocate x units of stock to a batch, the _available quantity_ is
 ----
 
 a| We can't allocate to a batch if the available quantity is less than the
-  quantity of the order line. Example:
+  quantity of the order line. For example:
 
 ----
 - We have a batch of 1 BLUE-CUSHION, and an order line for 2 BLUE-CUSHION.
 - We should not be able to allocate the line to the batch.
 ----
 
-a| We can't allocate the same line twice.  Example:
+a| We can't allocate the same line twice. For example:
 
 ----
 - We have a batch of 10 BLUE-VASE, and we allocate an order line for 2 BLUE-VASE.
@@ -233,24 +226,21 @@ a| We can't allocate the same line twice.  Example:
 ----
 
 a| Batches have an _ETA_ if they are currently shipping, or they may be in
-  _Warehouse stock_.
+  _warehouse stock_.
 
-a| We allocate to warehouse stock in preference to shipment batches
+a| We allocate to warehouse stock in preference to shipment batches.
 
 a| We allocate to shipment batches in order of which has the earliest ETA.
 |===
 
-
+[role="pagebreak-before less_space"]
 .Exercise for the Reader
 ******************************************************************************
-Why not have a go at solving this problem yourself?  Write a few unit tests and
-see if you can capture the essence of these business rules in some nice, clean
+Why not have a go at solving this problem yourself? Write a few unit tests to
+see if you can capture the essence of these business rules in nice, clean
 code.
 
-* https://github.com/cosmicpython/code/tree/chapter_01_domain_model_exercise[
-github.com/cosmicpython/code/tree/chapter_01_domain_model_exercise]
-
-You'll find some placeholder unit tests there, but you could just start from
+You'll find some https://github.com/cosmicpython/code/tree/chapter_01_domain_model_exercise[placeholder unit tests on GitHub], but you could just start from
 scratch, or combine/rewrite them however you like.
 
 //TODO: add test_cannot_allocate_same_line_twice ?
@@ -283,7 +273,7 @@ def test_allocating_to_a_batch_reduces_the_available_quantity():
 
 The name of our unit test describes the behavior that we want to see from the
 system, and the names of the classes and variables that we use are taken from the
-business jargon. We could show this code to our non-technical co-workers, and
+business jargon. We could show this code to our nontechnical coworkers, and
 they would agree that this correctly describes the behavior of the system.
 
 And here is a domain model that meets our requirements:
@@ -315,18 +305,18 @@ class Batch:
 ----
 ====
 
-<1> `OrderLine` is an immutable dataclassfootnote:[In previous Python versions we
-    might have used a namedtuple.  You could also check out Hynek Schlawack's
-    excellent https://pypi.org/project/attrs/[attrs].]
-    with no behavior.
+<1> `OrderLine` is an immutable dataclass
+    with no behavior.footnote:[In previous Python versions, we
+    might have used a named tuple. You could also check out Hynek Schlawack's
+    excellent https://pypi.org/project/attrs[attrs].]
 
 <2> We're not showing imports in most code listings, in an attempt to keep them
     clean. We're hoping you can guess
-    that this came via `from dataclasses import dataclass`, likewise
-    `typing.Optional` and `datetime.date`.  If you want to double-check
+    that this came via `from dataclasses import dataclass`; likewise,
+    `typing.Optional` and `datetime.date`. If you want to double-check
     anything, you can see the full, working code for each chapter in
-    its branch, eg
-    https://github.com/python-leap/code/tree/chapter_01_domain_model[github.com/python-leap/code/tree/chapter_01_domain_model]
+    its branch (e.g.,
+    https://github.com/python-leap/code/tree/chapter_01_domain_model[chapter_01_domain_model]).
 
 <3> Type hints are still a matter of controversy in the Python world. For
     domain models, they can sometimes help to clarify or document what the
@@ -335,13 +325,12 @@ class Batch:
 
 
 Our implementation here is trivial: a `Batch` just wraps an integer
-`available_quantity` and we decrement that value on allocation. We've written
-quite a lot of codefootnote:[
+`available_quantity`, and we decrement that value on allocation. We've written
+quite a lot of code just to subtract one number from another, but we think that modeling our
+domain precisely will pay off.footnote:[
 Or perhaps you think there's not enough code?  What about some sort of check
-that the sku in the `OrderLine` matches `Batch.sku`?  We saved some thoughts on
-validation for <<appendix_validation>>]
-just to subtract one number from another, but we think that modeling our
-domain precisely will pay off.
+that the SKU in the `OrderLine` matches `Batch.sku`?  We saved some thoughts on
+validation for <<appendix_validation>>.]
 
 Let's write some new failing tests:
 
@@ -379,12 +368,12 @@ def test_cannot_allocate_if_skus_do_not_match():
 
 There's nothing too unexpected here. We've refactored our test suite so that we
 don't keep repeating the same lines of code to create a batch and a line for
-the same sku; and we've written four simple tests for a new method
+the same SKU; and we've written four simple tests for a new method
 `can_allocate`. Again, notice that the names we use mirror the language of our
 domain experts, and the examples we agreed upon are directly written into code.
 
 We can implement this straightforwardly, too, by writing the `can_allocate`
-method of `Batch`.
+method of `Batch`:
 
 
 [[can_allocate]]
@@ -397,7 +386,7 @@ method of `Batch`.
 ----
 ====
 
-So far we can manage the implementation by just incrementing and decrementing
+So far, we can manage the implementation by just incrementing and decrementing
 `Batch.available_quantity`, but as we get into `deallocate()` tests, we'll be
 forced into a more intelligent solution:
 
@@ -414,7 +403,7 @@ def test_can_only_deallocate_allocated_lines():
 ----
 ====
 
-In this test we're asserting that deallocating a line from a batch has no effect
+In this test, we're asserting that deallocating a line from a batch has no effect
 unless the batch previously allocated the line. For this to work, our `Batch`
 needs to understand which lines have been allocated. Let's look at the
 implementation:
@@ -497,8 +486,8 @@ Now we're getting somewhere! A batch now keeps track of a set of allocated
 just add to the set. Our `available_quantity` is now a calculated property:
 purchased quantity minus allocated quantity.
 
-Yes there's plenty more we could do, it's a little disconcerting that
-both `allocate()` and `deallocate()` can fail silently, but we've got the
+Yes, there's plenty more we could do. It's a little disconcerting that
+both `allocate()` and `deallocate()` can fail silently, but we have the
 basics.
 
 Incidentally, using a set for `._allocations` makes it simple for us
@@ -519,33 +508,32 @@ def test_allocation_is_idempotent():
 ====
 
 At the moment, it's probably a valid criticism to say that the domain model is
-too trivial to bother with DDD (or even object-orientation!).  In real life,
+too trivial to bother with DDD (or even object orientation!). In real life,
 any number of business rules and edge cases crop up: customers can ask for
 delivery on specific future dates, which means we might not want to allocate
-them to the earliest batch.  Some skus aren't in batches, but ordered on
-demand directly from suppliers, so they have different logic.  Depending on the
-customer's location, we can only allocate to a subset of warehouses and shipments
-that are in their region... except for some skus we're happy to deliver from a
+them to the earliest batch. Some SKUs aren't in batches, but ordered on
+demand directly from suppliers, so they have different logic. Depending on the
+customer's location, we can allocate to only a subset of warehouses and shipments
+that are in their region—except for some SKUs we're happy to deliver from a
 warehouse in a different region if we're out of stock in the home region. And
 so on.  A real business in the real world knows how to pile on complexity faster
 than we can show on the page!
 
-But taking this simple domain model as a placeholder for something more complex,
-in the rest of the book, we're going to extend our simple domain model, and
-plug it into the real world of APIs and databases and spreadsheets, and we'll
+But taking this simple domain model as a placeholder for something more complex, we're going to extend our simple domain model in the rest of the book, and
+plug it into the real world of APIs and databases and spreadsheets. We'll
 see how sticking rigidly to our principles of encapsulation and careful
 layering will help us to avoid a ball of mud.
 
 
-
+[role="nobreakinside"]
 .More Types for More Type Hints
 *******************************************************************************
 
-If you really want to go to town with type hints, you could go as far as
-wrapping primitive types using `typing.NewType`:
+If you really want to go to town with type hints, you could go so far as
+wrapping primitive types by using `typing.NewType`:
 
 [[too_many_types]]
-.Just taking it way too far, Bob.
+.Just taking it way too far, Bob
 ====
 [source,python]
 [role="skip"]
@@ -570,16 +558,15 @@ class Batch:
 That would allow our type checker to make sure that we don't pass a `Sku` where a
 `Reference` is expected, for example.
 
-Whether you think this is wonderful or appallingfootnote:[It is appalling.
-Please, please don't do this. --Harry.] is a matter of debate.
+Whether you think this is wonderful or appalling is a matter of debate.footnote:[It is appalling. Please, please don't do this. —Harry.]
 
 *******************************************************************************
 
 ==== Dataclasses Are Great for Value Objects
 
-We've used the _line_ liberally in the previous code listings, but what is a
-line? In the business language, an _order_ has multiple _line_ items, where
-each line has a sku, and a quantity. We can imagine that a simple yaml file
+We've used `line` liberally in the previous code listings, but what is a
+line? In our business language, an _order_ has multiple _line_ items, where
+each line has a SKU, and a quantity. We can imagine that a simple YAML file
 containing order information might look like this:
 
 
@@ -604,17 +591,17 @@ Lines:
 
 Notice that while an order has a _reference_ that uniquely identifies it, a
 _line_ does not. (Even if we add the order reference to the `OrderLine` class,
-it's not something that uniquely identifies the line itself).
+it's not something that uniquely identifies the line itself.)
 
-Whenever we have a business concept that has some data but no identity, we
-often choose to represent it using a _Value Object_. A Value Object is any
+Whenever we have a business concept that has data but no identity, we
+often choose to represent it using the _Value Object_ pattern. A _value object_ is any
 domain object that is uniquely identified by the data it holds; we usually
 make them immutable.
 
 // [SG] seems a bit odd to hear about value objects before any mention of entities.
 
 [[orderline_value_object]]
-.OrderLine is a Value Object.
+.OrderLine is a value object
 ====
 [source,python]
 [role="skip"]
@@ -627,13 +614,13 @@ class OrderLine:
 ----
 ====
 
-One of the nice things that dataclasses (or namedtuples) give us is _value
-equality_ which is the fancy way of saying "two lines with the same `orderid`,
-`sku` and `qty` are equal."
+One of the nice things that dataclasses (or named tuples) give us is _value
+equality_ which is the fancy way of saying, "Two lines with the same `orderid`,
+`sku`, and `qty` are equal."
 
 
 [[more_value_objects]]
-.More examples of Value Objects
+.More examples of value objects
 ====
 [source,python]
 [role="skip"]
@@ -660,17 +647,17 @@ def test_equality():
 ----
 ====
 
-These Value Objects match our real-world intuitions about how their values
+These value objects match our real-world intuition about how their values
 work. It doesn't matter _which_ £10 note we're talking about, because they all
-have the same value. Likewise two names are equal if both the first and last
-name match, and two lines are equivalent if they have the same customer order,
-product code and quantity. We can still have complex behavior on a Value
-Object, though. In fact, it's common to support operations on values, for
-example mathematical operators.
+have the same value. Likewise, two names are equal if both the first and last
+names match; and two lines are equivalent if they have the same customer order,
+product code, and quantity. We can still have complex behavior on a value
+object, though. In fact, it's common to support operations on values; for
+example, mathematical operators:
 
 
 [[value_object_maths]]
-.Maths with Value Objects.
+.Math with value objects
 ====
 [source,python]
 [role="skip"]
@@ -702,18 +689,18 @@ def multiplying_two_money_values_is_an_error():
 
 ==== Value Objects and Entities
 
-An order line is uniquely identified by its order ID, sku and quantity; if we
+An order line is uniquely identified by its order ID, SKU, and quantity; if we
 change one of those values, we now have a new line. That's the definition of a
-_Value Object_: any object that is only identified by its data, and doesn't have a
-long-lived identity. What about a batch though? That _is_ identified by a
+value object: any object that is identified by only its data, and doesn't have a
+long-lived identity. What about a batch, though? That _is_ identified by a
 reference.
 
-We use the term _Entity_ to describe a domain object that has long-lived
-identity. On the previous page we introduced a `Name` class as a Value Object.
-If we take the name "Harry Percival" and change one letter, we have the new
-`Name` object "Barry Percival."
+We use the term _entity_ to describe a domain object that has long-lived
+identity. On the previous page, we introduced a `Name` class as a value object.
+If we take the name Harry Percival and change one letter, we have the new
+`Name` object Barry Percival.
 
-It should be clear that "Harry Percival" is not equal to "Barry Percival":
+It should be clear that Harry Percival is not equal to Barry Percival:
 
 
 [[test_equality]]
@@ -731,7 +718,7 @@ def test_name_equality():
 But what about Harry as a _person_? People do change their names, and their
 marital status, and even their gender, but we continue to recognize them as the
 same individual. That's because humans, unlike names, have a persistent
-_identity_.
+_identity_:
 
 
 [[person_identity]]
@@ -758,7 +745,7 @@ def test_barry_is_harry():
 
 
 
-Entities, unlike values, have _identity equality_. We can change their values
+Entities, unlike values, have _identity equality_. We can change their values,
 and they are still recognizably the same thing. Batches, in our example, are
 entities. We can allocate lines to a batch, or change the date that we expect
 it to arrive, and it will still be the same entity.
@@ -786,29 +773,29 @@ class Batch:
 ----
 ====
 
-Python's +++<code>__eq__</code>+++ magic methodfootnote:[Pronounced "dunder-EQ". By some, at least.]
-defines the behavior of the class for the`==` operator.
+Python's +++<code>__eq__</code>+++ magic method
+defines the behavior of the class for the `==` operator.footnote:[The +++<code>__eq__</code>+++ method is pronounced "dunder-EQ." By some, at least.]
 
-For both Entity and Value Objects it's also worth thinking through how
+For both entity and value objects, it's also worth thinking through how
 +++<code>__hash__</code>+++ will work.  It's the magic method Python uses to control the
 behavior of objects when you add them to sets or use them as dict keys;
-more info https://docs.python.org/3/glossary.html#term-hashable[in the Python docs].
+you can find more info https://oreil.ly/YUzg5[in the Python docs].
 
-For Value Objects, the hash should be based on all the value attributes,
+For value objects, the hash should be based on all the value attributes,
 and we should ensure that the objects are immutable.  We get this for
 free by specifying `@frozen=True` on the dataclass.
 
 For entities, the simplest option is to say that the hash is ++None++, meaning
 that the object is not hashable and cannot, for example, be used in a set.
 If for some reason you decide you really do want to use set or dict operations
-with Entities, then the hash should be based on the attribute(s), like
-`.reference`, that define the Entity's unique identity over time. You should
+with entities, the hash should be based on the attribute(s), like
+`.reference`, that define the entity's unique identity over time. You should
 also try to somehow make _that_ attribute read-only.
 
 WARNING: This is tricky territory; you shouldn't modify +++<code>__hash__</code>+++ without
-    also modifying +++<code>__eq__</code>+++.  If you're not sure what you're doing, some
-    further reading is suggested.  https://hynek.me/articles/hashes-and-equality/[
-    Hashes and Equality] by our tech reviewer Hynek is a good place to start.
+    also modifying +++<code>__eq__</code>+++.  If you're not sure what you're doing,
+    further reading is suggested. https://hynek.me/articles/hashes-and-equality[
+    "Python Hashes and Equality"] by our tech reviewer Hynek Schlawack is a good place to start.
 
 
 
@@ -823,22 +810,22 @@ ____
 Sometimes, it just isn't a Thing.
 ____
 
-Evans discusses the idea of Domain Servicesfootnote:[Domain services are
+Evans discusses the idea of Domain Service
+operations that don't have a natural home in an entity or value object.footnote:[Domain services are
 not the same thing as the services from the
-<<chapter_04_service_layer,Service Layer>>, although they are
-often closely related.  A Domain Service represents a business concept or
+<<chapter_04_service_layer,service layer>>, although they are
+often closely related. A domain service represents a business concept or
 process, whereas a service-layer service represents a use case for your
-application.  Often the service layer will call a domain service.]
-operations that don't have a natural home in an Entity or Value Object.  A
+application. Often the service layer will call a domain service.] A
 thing that allocates an order line, given a set of batches, sounds a lot like a
-function, and we can take advantage of the fact that Python is a multi-paradigm
+function, and we can take advantage of the fact that Python is a multiparadigm
 language and just make it a function.
 
 Let's see how we might test-drive such a function:
 
 
 [[test_allocate]]
-.Testing our Domain Service (test_allocate.py)
+.Testing our domain service (test_allocate.py)
 ====
 [source,python]
 ----
@@ -879,7 +866,7 @@ And our service might look like this:
 
 
 [[domain_service]]
-.A standalone function for our Domain Service (model.py)
+.A standalone function for our domain service (model.py)
 ====
 [source,python]
 [role="non-head"]
@@ -895,11 +882,11 @@ def allocate(line: OrderLine, batches: List[Batch]) -> str:
 
 ==== Python's Magic Methods Let Us Use Our Models with Idiomatic Python
 
-You may or may not like the use of `next()` above, but we're pretty
+You may or may not like the use of `next()` in the preceding code, but we're pretty
 sure you'll agree that being able to use `sorted()` on our list of
 batches is nice, idiomatic Python.
 
-To make it work we implement +++<code>__gt__</code>+++ on our domain model:
+To make it work, we implement +++<code>__gt__</code>+++ on our domain model:
 
 
 
@@ -925,15 +912,15 @@ That's lovely.
 
 ==== Exceptions Can Express Domain Concepts Too
 
-One final concept to cover, which is the idea that exceptions
-can be used to express domain concepts too.  In our conversations
-with the domain experts we've learned about the possibility that
-an order cannot be allocated because we are _Out of Stock_, and
-we can capture that using a _domain exception_:
+We have one final concept to cover: exceptions
+can be used to express domain concepts too. In our conversations
+with domain experts, we've learned about the possibility that
+an order cannot be allocated because we are _out of stock_, and
+we can capture that by using a _domain exception_:
 
 
 [[test_out_of_stock]]
-.Testing out of stock exception (test_allocate.py)
+.Testing out-of-stock exception (test_allocate.py)
 ====
 [source,python]
 ----
@@ -948,7 +935,7 @@ def test_raises_out_of_stock_exception_if_cannot_allocate():
 
 We won't bore you too much with the implementation, but the main thing
 to note is that we take care in naming our exceptions in the ubiquitous
-language, just like we do our Entities, Value Objects, and Services.
+language, just as we do our entities, value objects, and services.
 
 
 [[out_of_stock]]
@@ -970,42 +957,42 @@ def allocate(line: OrderLine, batches: List[Batch]) -> str:
 ====
 
 
-<<maps_chapter_01_withtext>> is a visual representation of where we ended up:
+<<maps_chapter_01_withtext>> is a visual representation of where we've ended up.
 
 [[maps_chapter_01_withtext]]
 .Our domain model at the end of the chapter
 image::images/apwp_0104.png[]
 
-That'll probably do for now! We have a Domain Service which we can use for our
-first use case.   But first we'll need a database...
+That'll probably do for now! We have a domain service that we can use for our
+first use case. But first we'll need a database...
 
-
-.Domain Modelling Wrap-Up
+[role="nobreakinside"]
+.Domain Modeling Recap
 *****************************************************************
 Domain modeling::
     This is the part of your code that is closest to the business,
     the most likely to change, and the place where you deliver the
-    most value to the business.  Make it easy to understand and modify
+    most value to the business. Make it easy to understand and modify.
 
-Distinguish Entities from Value Objects::
-    A Value Object is defined by its attributes.  It's usually best
-    implemented as an immutable type.  If you change an attribute on
-    a Value Object, it represents a different object.  In contrast,
-    an Entity has attributes that may vary over time, and still be the
+Distinguish entities from value objects::
+    A value object is defined by its attributes. It's usually best
+    implemented as an immutable type. If you change an attribute on
+    a Value Object, it represents a different object. In contrast,
+    an entity has attributes that may vary over time, and still be the
     same entity. It's important to define what _does_ uniquely identify
-    an Entity (usually some sort of name or reference field).
+    an entity (usually some sort of name or reference field).
 
 Not everything has to be an object::
-    Python is a multi-paradigm language, so let the "verbs" in your
-    code be functions.  For every `FooManager`, `BarBUilder` or `BazFactory`,
-    there's often a more expressive and readable `manage_foo()`, `build_bar()`
+    Python is a multiparadigm language, so let the "verbs" in your
+    code be functions. For every `FooManager`, `BarBUilder`, or `BazFactory`,
+    there's often a more expressive and readable `manage_foo()`, `build_bar()`,
     or `get_baz()` waiting to happen.
 
 This is the time to apply your best OO design principles::
-    Revisit the SOLID principles, and all the other good heuristics like "-a vs is-a",
-    "prefer composition over inheritance", and so on.
+    Revisit the SOLID principles and all the other good heuristics like "a versus is-a,"
+    "prefer composition over inheritance," and so on.
 
-You'll also want to think about consistency boundaries and Aggregates::
+You'll also want to think about consistency boundaries and aggregates::
     But that's a topic for <<chapter_07_aggregate>>.
 
 *****************************************************************

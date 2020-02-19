@@ -5,9 +5,9 @@
 You may be wondering who we are and why we wrote this book.
 
 At the end of Harry's last book,
-http://www.obeythetestinggoat.com/pages/book.html[Test-Driven Development with Python],
-he found himself asking a bunch of questions about architecture, such as:
-what's the best way of structuring your application so that it's easy to test?
+http://www.obeythetestinggoat.com/pages/book.html[_Test-Driven Development with Python_] (O'Reilly),
+he found himself asking a bunch of questions about architecture, such as,
+What's the best way of structuring your application so that it's easy to test?
 More specifically, so that your core business logic is covered by unit tests,
 and so that you minimize the number of integration and end-to-end tests you need?
 He made vague references to "Hexagonal Architecture" and "Ports and Adapters"
@@ -23,26 +23,26 @@ into Ian Cooper, who taught him new ways of writing and thinking about code.
 
 === Managing Complexity, Solving Business Problems
 
-We both work for MADE.com, a European e-commerce company that sells furniture
+We both work for MADE.com, a European ecommerce company that sells furniture
 online; there, we apply the techniques in this book to build distributed systems
-that model real world business problems. Our example domain is the first system
+that model real-world business problems. Our example domain is the first system
 Bob built for MADE, and this book is an attempt to write down all the _stuff_ we
 have to teach new programmers when they join one of our teams.
 
 MADE.com operates a global supply chain of freight partners and manufacturers.
-To try and keep costs low, we try to optimize the delivery of stock to our
+To keep costs low, we try to optimize the delivery of stock to our
 warehouses so that we don't have unsold goods lying around the place.
 
 Ideally, the sofa that you want to buy will arrive in port on the very day
 that you decide to buy it, and we'll ship it straight to your house without
 ever storing it. Getting the timing right is a tricky balancing act when goods take
-3 months to arrive by container ship. Along the way things get broken, or water
-damaged; storms cause unexpected delays, logistics partners mishandle goods,
+three months to arrive by container ship. Along the way, things get broken, or water
+damaged, storms cause unexpected delays, logistics partners mishandle goods,
 paperwork goes missing, customers change their minds and amend their orders,
 and so on.
 
-We solve those problems by building intelligent software that represents the
-kind of operations taking place in the real world so that we can automate as
+We solve those problems by building intelligent software representing the
+kinds of operations taking place in the real world so that we can automate as
 much of the business as possible.
 
 === Why Python?
@@ -51,180 +51,152 @@ If you're reading this book, we probably don't need to convince you that Python
 is great, so the real question is "Why does the _Python_ community need a book
 like this?"
 
-The answer is about Python's popularity and maturity--although Python is
+The answer is about Python's popularity and maturity: although Python is
 probably the world's fastest-growing programming language, and nearing the top
 of the absolute popularity tables, it's only just starting to take on the kinds
 of problems that the C# and Java world have been working on for years.
-Startups become real businesses, web apps and scripted automations are becoming
+Startups become real businesses; web apps and scripted automations are becoming
 (whisper it) _enterprise software_.
 
-In the Python world, we often quote the Zen of Python:footnote:[`python -c "import this"`]
-"there should be one--and preferably only one--obvious way to do it."
+In the Python world, we often quote the Zen of Python:
+"There should be one--and preferably only one--obvious way to do it."footnote:[`python -c "import this"`]
 Unfortunately, as project size grows, the most obvious way of doing things
 isn't always the way that helps you manage complexity and evolving
 requirements.
 
-None of the techniques and patterns we're going to discuss in this book are
-new, but they are mostly new to the Python world.  And this book won't be
-a replacement for the classics in the field like
-https://domainlanguage.com/ddd/[Eric Evans' _Domain-Driven Design_]
-or
-https://www.martinfowler.com/books/eaa.html[Martin Fowler's _Patterns of
-Enterprise Application Architecture_] (both of which we often refer to and
-encourage you to go and read).
+None of the techniques and patterns we discuss in this book are
+new, but they are mostly new to the Python world. And this book isn't
+a replacement for the classics in the field like Eric Evans's
+https://domainlanguage.com/ddd[_Domain-Driven Design_]
+or Martin Fowler's
+https://www.martinfowler.com/books/eaa.html[_Patterns of
+Enterprise Application Architecture_]  (both published by Addison-Wesley Professional)—which we often refer to and
+encourage you to go and read.
 
 But all the classic code examples in the literature do tend to be written in
-Java or pass:[C++]/#, and if you're a Python person and haven't used either of
+Java or pass:[<span class="keep-together">C++/#</span>], and if you're a Python person and haven't used either of
 those languages in a long time (or indeed ever), those code listings can be
-quite... trying. There's a reason the latest edition of that other classic text,
-https://martinfowler.com/books/refactoring.html[Refactoring], is in JavaScript.
+quite...trying. There's a reason the latest edition of that other classic text, Fowler's
+https://martinfowler.com/books/refactoring.html[_Refactoring_] (Addison-Wesley Professional), is in JavaScript.
 
-
-=== TDD, DDD and Event-Driven Architecture
+[role="pagebreak-before less_space"]
+=== TDD, DDD, and Event-Driven Architecture
 
 In order of notoriety, we know of three tools for managing complexity:
 
-1. Test-Driven Development (TDD) helps us to build code that is correct,
+1. _Test-driven development_ (TDD) helps us to build code that is correct,
    and enables us to refactor or add new features, without fear of regression.
-   But it can be hard to get the best out of our tests:  how do we make sure
+   But it can be hard to get the best out of our tests: How do we make sure
    that they run as fast as possible? That we get as much coverage and feedback
    from fast, dependency-free unit tests, and have the minimum number of slower,
-   flakey end-to-end tests?
+   flaky end-to-end tests?
 
-2. Domain-Driven Design (DDD) asks us to focus our efforts on building a good
+2. _Domain-driven design_ (DDD) asks us to focus our efforts on building a good
    model of the business domain, but how do we make sure that our models aren't
    encumbered with infrastructure concerns and become hard to change?
 
 3. Loosely coupled (micro)-services integrated via messages (sometimes called
-   Reactive Microservices) are a well established answer to managing complexity
+   _reactive microservices_) are a well-established answer to managing complexity
    across multiple applications or business domains. But it's not always
    obvious how to make them fit with the established tools of
-   the Python world--Flask, Django, Celery and so on.
+   the Python world--Flask, Django, Celery, and so on.
 
 Our aim with this book is to introduce several classic architectural patterns,
-and show how they support TDD, DDD and event-driven microservices.  We hope
+and show how they support TDD, DDD, and event-driven microservices.  We hope
 it will serve as a reference for implementing them in a Pythonic way, and that
-people can use it as a first step towards further research  in this field.
+people can use it as a first step toward further research  in this field.
 
 
 === Who Should Read This Book
 
-Here are a few things we assume about you, dear reader.
+Here are a few things we assume about you, dear reader:
 
-* We assume you've been close to some reasonably complex Python applications.
+* You've been close to some reasonably complex Python applications.
 
-* We assume you've seen some of the pain that comes with trying to manage
+* You've seen some of the pain that comes with trying to manage
   that complexity.
 
-* We do _not_ assume that you already know anything about DDD, or any of the
+* You don't necessarily know anything about DDD, or any of the
   classic application architecture patterns.
 
 We structure our explorations of architectural patterns around an example app,
-building it up chapter by chapter.  We use test-driven development (TDD) at
+building it up chapter by chapter. We use TDD at
 work, so we tend to show listings of tests first, followed by implementation.
 If you're not used to working test-first, it may feel a little strange at
-the beginning, but we hope you'll soon get used to seeing code "being used,"
-i.e. from the outside, before you see how it's built on the inside.
+the beginning, but we hope you'll soon get used to seeing code "being used"
+(i.e., from the outside) before you see how it's built on the inside.
 
-We use some specific Python frameworks and technologies, like Flask,
-SQLAlchemy, and Pytest, as well as Docker and Redis.  If you're already
+We use some specific Python frameworks and technologies, including Flask,
+SQLAlchemy, and pytest, as well as Docker and Redis. If you're already
 familiar with them, that won't hurt, but we don't think it's required.  One of
-our main aims with this book is to build an architecture where specific
+our main aims with this book is to build an architecture for which specific
 technology choices become minor implementation details.
-
-
-=== A note to our Early Release Readers
-
-// TODO remove (or amend) before production
-
-If you're reading this book via the Early Release Programme, or if you've found
-your way to a free online version, we want to ask you one, hugely important favor.
-Please, please send feedback.  It might be something as simple as a quick shout
-out on twitter (we are https://twitter.com/hjwp/[@hjwp] and
-https://twitter.com/bob_the_mighty/[@bob_the_mighty]), a quick email via
-mailto:authors@cosmicpython.com[authors@cosmicpython.com], or opening up issues
-or PRs on GitHub.  Even just hearing that people are reading it, with no
-actual feedback, cheers us on and validates that we have an audience. And
-if you have time to tell us your impressions, then we absolutely want to
-hear them, in any form.  Tell us if we're doing a good job explaining things,
-tell us where you found things confusing, tell us where we're overexplaining.
-Tell us about your own problems, and whether or not this book is helping;
-if you're struggling to see how this would apply "in the real world", tell
-us about that especially!  We're hoping to spend a good bit of time in the
-final chapter talking about "how do I get there from here", so the more
-that's inspired by real-life stories, the better.
-
-Most of all though, thanks for reading, and thanks for bearing with us
-while the book is still in its draft form!
-
 
 === A Brief Overview of What You'll Learn
 
-The book is divided into two parts; here's a look at the topics we'll cover,
-and which chapters they live in.
+The book is divided into two parts; here's a look at the topics we'll cover
+and the chapters they live in.
 
 ==== pass:[<a data-type="xref" data-xrefstyle="chap-num-title" href="#part1">#part1</a>]
 
-Domain Modelling and DDD (Chapters pass:[<a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_01_domain_model">#chapter_01_domain_model</a> and <a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_07_aggregate">#chapter_07_aggregate</a>])::
+Domain modeling and DDD (Chapters pass:[<a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_01_domain_model">#chapter_01_domain_model</a> and <a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_07_aggregate">#chapter_07_aggregate</a>])::
     At some level, everyone has learned the lesson that complex business
     problems need to be reflected in code, in the form of a model of the domain.
-    But why does it always seem to be so hard to do it, without getting tangled
+    But why does it always seem to be so hard to do, without getting tangled
     up with infrastructure concerns, with our web frameworks, or whatever else?
     In the first chapter we give a broad overview of _domain modeling_ and DDD, and
     show how to get started with a model that has no external dependencies, and
     fast unit tests. Later we return to DDD patterns to discuss how to choose
-    the right _Aggregate_, and how this choice relates to questions of data
+    the right aggregate, and how this choice relates to questions of data
     integrity.
 
-Repository, Service Layer and Unit of Work Patterns (Chapters pass:[<a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_02_repository">#chapter_02_repository</a>, <a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_04_service_layer">#chapter_04_service_layer</a> and <a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_05_high_gear_low_gear">#chapter_05_high_gear_low_gear</a>])::
+Repository, Service Layer, and Unit of Work patterns (Chapters pass:[<a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_02_repository">#chapter_02_repository</a>, <a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_04_service_layer">#chapter_04_service_layer</a>, and <a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_05_high_gear_low_gear">#chapter_05_high_gear_low_gear</a>])::
     In these three chapters we present three closely related and
     mutually reinforcing patterns that support our ambition to keep
     the model free of extraneous dependencies.  We build a layer of
-    abstraction around persistent storage, and we build a _Service
-    Layer_ to define the entrypoints to our system, and capture the
+    abstraction around persistent storage, and we build a service
+    layer to define the entrypoints to our system and capture the
     primary use cases. We show how this layer makes it easy to build
-    very thin entrypoints to our system, be it a Flask API or a CLI.
+    thin entrypoints to our system, whether it's a Flask API or a CLI.
 
 // [SG] Bit of pedantry - this is the first time you have used CLI acronym,
 // should be spelled out?
 
-Some thoughts on Testing and Abstractions (Chapters pass:[<a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_03_abstractions">#chapter_03_abstractions</a> + <a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_06_uow">#chapter_06_uow</a>])::
-    After presenting the first abstraction (Repository pattern), we take the
+Some thoughts on testing and abstractions (Chapters pass:[<a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_03_abstractions">#chapter_03_abstractions</a> and <a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_06_uow">#chapter_06_uow</a>])::
+    After presenting the first abstraction (the Repository pattern), we take the
     opportunity for a general discussion of how to choose abstractions, and
     what their role is in choosing how our software is coupled together. After
-    we introduce Service Layer, we talk a bit about achieving a _test pyramid_
+    we introduce the Service Layer pattern, we talk a bit about achieving a _test pyramid_
     and writing unit tests at the highest possible level of abstraction.
 
 
 
 ==== pass:[<a data-type="xref" data-xrefstyle="chap-num-title" href="#part2">#part2</a>]
 
-Chapters pass:[<a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_08_events_and_message_bus">#chapter_08_events_and_message_bus</a>-<a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_11_external_events">#chapter_11_external_events</a>]: Event-Driven Architecture::
-    We introduce three more mutually-reinforcing patterns, starting with
-    the concept of _Domain Events_, a vehicle for capturing the idea that some
-    interactions with a system are triggers for others.  We use  a _Message
-    Bus_ to allow actions to trigger events, and call appropriate _Handlers_.
+Event-driven architecture (Chapters pass:[<a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_08_events_and_message_bus">#chapter_08_events_and_message_bus</a>-<a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_11_external_events">#chapter_11_external_events</a>])::
+    We introduce three more mutually reinforcing patterns: the Domain Events, Message Bus, and Handler patterns. _Domain events_ are a vehicle for capturing the idea that some
+    interactions with a system are triggers for others. We use  a _message
+    bus_ to allow actions to trigger events, and call appropriate _handlers_.
     We move on to discuss how events can be used as a pattern for integration
-    between services, in a microservices architecture. Finally we add the
-    distinction between _Commands_ and _Events_.  Our application is now
+    between services, in a microservices architecture. Finally we distinguish between _commands_ and _events_. Our application is now
     fundamentally a message-processing system.
 
-<<chapter_12_cqrs>>: CQRS::
+Command-query responsibility segregation (<<chapter_12_cqrs>>)::
     An example of _command-query responsibility segregation_, with and without
     events.
 
-<<chapter_13_dependency_injection>> Dependency Injection::
-    We tidy up our explicit and implicit dependencies, and implement a very
+Dependency injection (<<chapter_13_dependency_injection>>)::
+    We tidy up our explicit and implicit dependencies, and implement a
     simple dependency injection framework.
 
 
-==== Epilogue
+==== Addtional Content
 
-How Do I Get There From Here? (<<epilogue_1_how_to_get_there_from_here>>)::
+How do i get there from here? (<<epilogue_1_how_to_get_there_from_here>>)::
     Implementing architectural patterns always looks easy when you show a simple
     example, starting from scratch, but many of you will probably be wondering how
-    to apply these principles to existing software.  We'll attempt to provide a
-    few pointers in this last chapter and some links to further reading.
+    to apply these principles to existing software. We'll provide a
+    few pointers in this epilogue and some links to further reading.
 
 
 
@@ -233,44 +205,42 @@ How Do I Get There From Here? (<<epilogue_1_how_to_get_there_from_here>>)::
 You're reading a book, but you'll probably agree with us when we say that
 the best way to learn about code is to code.  We learned most of what we know
 from pairing with people, writing code with them, and learning by doing, and
-we'd like to recreate that experience as much as possible for you in this book.
+we'd like to re-create that experience as much as possible for you in this book.
 
 As a result, we've structured the book around a single example project
-(although we do sometimes throw in other examples), which we build up as we go,
-and the narrative of the book is as if you're pairing with us as we go, and
+(although we do sometimes throw in other examples). We'll build up this project as the chapters progress, as if you've paired with us, and
 we're explaining what we're doing and why at each step.
 
 But to really get to grips with these patterns, you need to mess about with the
-code and actually get a feel for how it works.  You'll find all the code on
-GitHub; each chapter has its own branch.  You can find a list of them at
-https://github.com/cosmicpython/code/branches/all[github.com/cosmicpython/code/branches/all]
+code and get a feel for how it works. You'll find all the code on
+GitHub; each chapter has its own branch. You can find https://github.com/cosmicpython/code/branches/all[a list] of the branches on GitHub as well.
 
-Here are three different ways you might code along with the book:
+Here are three ways you might code along with the book:
 
-* Start your own repo and try and build up the app as we do, following the
+* Start your own repo and try to build up the app as we do, following the
   examples from listings in the book, and occasionally looking to our repo
-  for hints.  A word of warning however, if you've read Harry's previous book
-  and coded along with that, you'll find there is much more to figure out on
+  for hints. A word of warning, however: if you've read Harry's previous book
+  and coded along with that, you'll find that this book requires you to figure out more on
   your own; you may need to lean pretty heavily on the working versions on GitHub.
 
-* Try to apply each pattern, chapter-by-chapter, to your own (preferably
+* Try to apply each pattern, chapter by chapter, to your own (preferably
   small/toy) project, and see if you can make it work for your use case.  This
-  is high-risk / high-reward (and high effort besides!).  It may take quite some
+  is high risk/high reward (and high effort besides!). It may take quite some
   work to get things working for the specifics of your project, but on the other
-  hand you're likely to learn the most.
+  hand, you're likely to learn the most.
 
-* For less effort, in each chapter we'll outline an "exercise for the reader,"
-  and point you to a GitHub location where you can download some partially-finished
+* For less effort, in each chapter we outline an "Exercise for the Reader,"
+  and point you to a GitHub location where you can download some partially finished
   code for the chapter with a few missing parts to write yourself.
 
 Particularly if you're intending to apply some of these patterns in your own
-projects, then working through a simple example is a great way to get some
-safe practice.
+projects, working through a simple example is a great way to
+safely practice.
 
 TIP: At the very least, do a `git checkout` of the code from our repo as you
-    read each chapter.  Being able to jump in and see the code in the context of
+    read each chapter. Being able to jump in and see the code in the context of
     an actual working app will help answer a lot of questions as you go, and
-    makes everything more real.  You'll find instructions for how to do that
+    makes everything more real. You'll find instructions for how to do that
     at the beginning of each chapter.
 
 
@@ -283,7 +253,7 @@ If you want to re-use any of the content from this book and you have any
 worries about the license, contact O'Reilly at pass:[<a class="email"
 href="mailto:permissions@oreilly.com"><em>permissions@oreilly.com</em></a>].
 
-The print edition is licensed differently, please see the copyright page.
+The print edition is licensed differently; please see the copyright page.
 
 
 === Conventions Used in This Book
@@ -324,8 +294,6 @@ For more than 40 years, pass:[<a href="http://oreilly.com" class="orm:hideurl"><
 
 Our unique network of experts and innovators share their knowledge and expertise through books, articles, conferences, and our online learning platform. O’Reilly’s online learning platform gives you on-demand access to live training courses, in-depth learning paths, interactive coding environments, and a vast collection of text and video from O'Reilly and 200+ other publishers. For more information, please visit pass:[<a href="http://oreilly.com" class="orm:hideurl"><em>http://oreilly.com</em></a>].
 
-For more information, please visit http://oreilly.com/safari.
-
 === How to Contact O'Reilly
 
 Please address comments and questions concerning this book to the publisher:
@@ -341,7 +309,7 @@ Please address comments and questions concerning this book to the publisher:
 </ul>
 ++++
 
-We have a web page for this book, where we list errata, examples, and any additional information. You can access this page at link:$$http://www.oreilly.com/catalog/catalogpage$$[].
+We have a web page for this book, where we list errata, examples, and any additional information. You can access this page at https://oreil.ly/architecture-patterns-python[].
 
 ++++
 <!--Don't forget to update the link above.-->
@@ -359,13 +327,10 @@ Watch us on YouTube: link:$$http://www.youtube.com/oreillymedia$$[]
 
 === Acknowledgments
 
-NOTE: under construction.  do complain if your name is not here.  or if you
-    don't like your name being here!
-
-To our Tech Reviewers, David Seddon, Ed Jung and Hynek Schlawack: we absolutely
-did not deserve you. You were all incredibly dedicated, conscientious and
-rigorous.  Each one of you is immensely smart, and your different points of
-view were both useful and complementary with each other.  Thank you from the
+To our tech reviewers, David Seddon, Ed Jung, and Hynek Schlawack: we absolutely
+do not deserve you. You are all incredibly dedicated, conscientious, and
+rigorous. Each one of you is immensely smart, and your different points of
+view were both useful and complementary to each other. Thank you from the
 bottom of our hearts.
 
 Gigantic thanks also to our Early Release readers for their comments and
@@ -375,7 +340,7 @@ Ben Judson, James Gregory, Łukasz Lechowicz, Clinton Roy, Vitorino Araújo,
 Susan Goodbody, Josh Harwood, Daniel Butler, Liu Haibin, Jimmy Davies, Ignacio
 Vergara Kausel, Gaia Canestrani, Renne Rocha, pedroabi, Ashia Zawaduk, Jostein
 Leira, Brandon Rhodes,
-and many more, our apologies if we've missed your name on this list.
+and many more; our apologies if we've missed your name on this list.
 
 Super-mega-thanks to our editor Corbin Collins, for his gentle chivvying, and
 for being a tireless advocate of the reader; this book is immeasurably improved
@@ -383,4 +348,4 @@ thanks to you.
 
 // TODO thanks to rest of OR team.
 
-Any errors remaining in the book are our own, naturally
+Any errors remaining in the book are our own, naturally.

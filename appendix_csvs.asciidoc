@@ -1,13 +1,13 @@
 [[appendix_csvs]]
 [appendix]
-== Swapping Out the Infrastructure: Do Everything with CSVs
+== Swapping Out the Infrastructure: pass:[<span class="keep-together">Do Everything with CSVs</span>]
 
 This appendix is intended as a little illustration of the benefits of the
 Repository, Unit of Work, and Service Layer patterns. It's intended to
-follow on from <<chapter_06_uow>>.
+follow from <<chapter_06_uow>>.
 
 Just as we finish building out our Flask API and getting it ready for release,
-the business come to us apologetically saying they're not ready to use our API
+the business comes to us apologetically, saying they're not ready to use our API
 and could we build a thing that reads just batches and orders from a couple of
 CSVs and outputs a third with allocations.
 
@@ -18,9 +18,7 @@ service layer.  Switching to CSVs will be a simple matter of writing a couple
 of new `Repository` and `UnitOfWork` classes, and then we'll be able to reuse
 _all_ of our logic from the domain layer and the service layer.
 
-Here's some E2E test to show you how the CSVs flow in and out:
-
-
+Here's an E2E test to show you how the CSVs flow in and out:
 
 [[first_csv_test]]
 .A first CSV test (tests/e2e/test_csv.py)
@@ -62,7 +60,6 @@ def test_cli_app_reads_csvs_with_batches_and_orders_and_outputs_allocations(
 
 Diving in and implementing without thinking about repositories and all
 that jazz, you might start with something like this:
-
 
 
 [[first_cut_csvs]]
@@ -125,11 +122,11 @@ if __name__ == '__main__':
 
 //TODO: too much vertical whitespace in this listing
 
-It's actually not looking too bad!  And we're re-using our domain model objects
-and our domain service... 
+It's not looking too bad! And we're reusing our domain model objects
+and our domain service.
 
-But it's actually not going to work.  Existing allocations need to also be part
-of our permanent CSV storage.  We can write a second test to force us to improve
+But it's not going to work. Existing allocations need to also be part
+of our permanent CSV storage. We can write a second test to force us to improve
 things:
 
 [[second_csv_test]]
@@ -172,14 +169,10 @@ def test_cli_app_also_reads_existing_allocations_and_can_append_to_them(
 
 
 And we could keep hacking about and adding extra lines to that `load_batches` function,
-and some sort of way of tracking and saving new allocations... 
-
-But we already have a model for doing that!  It's called our Repository and our Unit
-of Work.
+and some sort of way of tracking and saving new allocations—but we already have a model for doing that! It's called our Repository and our Unit of Work patterns.
 
 All we need to do ("all we need to do") is reimplement those same abstractions, but
-with CSVs underlying them, instead of a database.  And as you'll see, it's
-actually quite straightforward.
+with CSVs underlying them instead of a database. And as you'll see, it really is relatively straightforward.
 
 
 === Implementing a Repository and Unit of Work for CSVs
@@ -188,9 +181,8 @@ actually quite straightforward.
 Here's what a CSV-based repository could look like.  It abstracts away all the
 logic for reading CSVs from disk, including the fact that it has to read _two
 different CSVs_, one for batches and one for allocations, and it just gives us
-the familiar `.list()` API which gives us the illusion of an in-memory
-collection of domain objects.
-
+the familiar `.list()` API, which gives us the illusion of an in-memory
+collection of domain objects:
 
 [[csv_repository]]
 .A repository that uses CSV as its storage mechanism (src/allocation/service_layer/csv_uow.py)
@@ -243,12 +235,12 @@ class CsvRepository(repository.AbstractRepository):
 // TODO (hynek) re self._load(): DUDE! no i/o in init!
 
 
-And here's what a Unit of Work for CSVs would look like:
+And here's what a UoW for CSVs would look like:
 
 
 
 [[csvs_uow]]
-.A Unit of Work for CSVs: commit = csv.writer. (src/allocation/service_layer/csv_uow.py)
+.A UoW for CSVs: commit = csv.writer. (src/allocation/service_layer/csv_uow.py)
 ====
 [source,python]
 ----
@@ -274,13 +266,13 @@ class CsvUnitOfWork(unit_of_work.AbstractUnitOfWork):
 
 
 And once we have that, our CLI app for reading and writing batches
-and allocations to CSV is just pared down to what it should be:  a bit
+and allocations to CSV is pared down to what it should be:  a bit
 of code for reading order lines, and a bit of code that invokes our
 _existing_ service layer:
 
 
 [[final_cli]]
-.Allocation with CSVs in 9 lines (src/bin/allocate-from-csv)
+.Allocation with CSVs in nine lines (src/bin/allocate-from-csv)
 ====
 [source,python]
 ----
@@ -297,7 +289,8 @@ def main(folder):
 ====
 
 
-Ta-da!   NOW ARE Y'ALL IMPRESSED OR WHAT?
+Ta-da! _Now are y'all impressed or what_?
 
-much love,
-Bob and Harry.
+Much love,
+
+Bob and Harry

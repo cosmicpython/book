@@ -1,17 +1,16 @@
 [[appendix_ds1_table]]
 [appendix]
-== Summary diagram and table
+== Summary Diagram and Table
 
 Here's what our architecture looks like by the end of the book:
 
 [[recap_diagram]]
-.Our architecture by the end of the book
 image::images/apwp_aa01.png["diagram showing all components: flask+eventconsumer, service layer, adapters, domain etc"]
 
-<<ds1_table>> shows a recap of each pattern and what it does.
+<<ds1_table>> recaps each pattern and what it does.
 
 [[ds1_table]]
-.The components of our architecture and what they all do.
+.The components of our architecture and what they all do
 [cols="1,1,2"]
 |===
 | Layer | Component | Description
@@ -23,9 +22,9 @@ __Defines the business logic.__
 
 | Entity | A domain object whose attributes may change, but that has a recognizable identity over time.
 
-| Value Object | An immutable domain object whose attributes entirely define it. It is fungible with other identical objects.
+| Value object | An immutable domain object whose attributes entirely define it. It is fungible with other identical objects.
 
-| Aggregate | Cluster of associated objects that we treat as a unit for the purpose of data changes.  Defines and enforces a consistency boundary.
+| Aggregate | Cluster of associated objects that we treat as a unit for the purpose of data changes. Defines and enforces a consistency boundary.
 
 | Event | Represents something that happened.
 
@@ -35,25 +34,25 @@ __Defines the business logic.__
 
 __Defines the jobs the system should perform and orchestrates different components.__
 
-| Handler | Receives a Command or Event and performs what needs to happen.
-| Unit of Work | Abstraction around data integrity. Each unit of work represents an atomic update.  Makes repositories available. Tracks new events on retrieved aggregates.
-| Message Bus (Internal) | Handles Commands and Events by routing them to the appropriate Handler.
+| Handler | Receives a command or event and performs what needs to happen.
+| Unit of work | Abstraction around data integrity. Each unit of work represents an atomic update. Makes repositories available. Tracks new events on retrieved aggregates.
+| Message bus (internal) | Handles commands and events by routing them to the appropriate handler.
 
 .2+a| *Adapters* (Secondary)
 
-__Concrete implementations of an interface that goes from our system out
-to the outside world / I/O.__
+__Concrete implementations of an interface that goes from our system
+to the outside world (I/O).__
 
-| Repository | Abstraction around persistent storage. Each Aggregate has its own Repository.
-| Event Publisher | Pushes Events onto the external message bus.
+| Repository | Abstraction around persistent storage. Each aggregate has its own repository.
+| Event publisher | Pushes events onto the external message bus.
 
 .2+a| *Entrypoints* (Primary adapters)
 
 __Translate external inputs into calls into the service layer.__
 
 | Web | Receives web requests and translates them into Commands, passing them to the Internal Message Bus.
-| Eventconsumer | Reads Events from the External Message Bus and translates them into Commands, passing them to the Internal Message Bus.
+| Event consumer | Reads events from the external message bus and translates them into commands, passing them to the internal message bus.
 
-| n/a | External Message Bus (Message Broker) | A piece of infrastructure that different services use to intercommunicate, via Events.
+| N/A | External message bus (message broker) | A piece of infrastructure that different services use to intercommunicate, via events.
 |===
 
