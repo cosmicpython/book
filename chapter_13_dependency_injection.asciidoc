@@ -231,29 +231,40 @@ onto the message bus feels like a violation of the SRP.
 Instead, we'll reach for a pattern called _Composition Root_ (a bootstrap
 script to you and me)footnote:[Because Python is not a "pure" OO language, Python developers aren't necessarily used to the concept of needing to _compose_ a set of objects into a working application. We just pick our entrypoint and run code from top to bottom.],
 and we'll do a bit of "manual DI" (dependency injection without a
-framework):footnote:[Mark Seemann calls this https://oreil.ly/iGpDL[_Pure DI_] or sometimes _Vanilla DI_.]
+frameworkfootnote:[Mark Seeman calls this https://blog.ploeh.dk/2012/11/06/WhentouseaDIContainer/[Pure DI], or sometimes "Vanilla DI".]),
+and it will all turn out something like <<bootstrap_diagram>>.
 
 
+[bootstrap_diagram]]
+.Bootstrapper between entrypoints and message bus
+image::images/apwp_1303.png[]
+[role="image-source"]
 ----
-Flask + Redis
-|
-| call
-V
-Bootstrapper:  prepares handlers with correct dependencies injected in
-|             (test bootstrapper will use fakes, prod one will use reals)
-|
-|  pass injected handlers to
-V
-Messagebus
-|
-|  dispatches events and commands to injected handlers
-|
-V
+[ditaa, apwp_1303]
+
++---------------+
+|  Entrpyoints  |
+| (Flask/Redis) |
++---------------+
+        |
+        | call
+        V
+ /--------------\
+ |              |  prepares handlers with correct dependencies injected in
+ | Bootstrapper |  (test bootstrapper will use fakes, prod one will use real)
+ |              |
+ \--------------/
+        |
+        | pass injected handlers to
+        V
+/---------------\
+|  Message Bus  |
++---------------+
+        |
+        | dispatches events and commands to injected handlers
+        |
+        V
 ----
-
-//TODO: betterify diagram? or just get rid of, in favour of the first?
-
-
 
 
 === Preparing Handlers: Manual DI with Closures and Partials
@@ -979,6 +990,9 @@ def test_out_of_stock_email(bus):
 
 
 And that's it really.
+
+
+===  Wrap-up
 
 [role="less_space nobreakinside"]
 .DI and Bootstrap Recap

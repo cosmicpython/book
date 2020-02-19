@@ -319,6 +319,9 @@ easily load and save domain model instances from and to the database. But if
 we never call that function, our domain model classes stay blissfully
 unaware of the database.
 
+// IDEA: add a note about mapper being maybe-deprecated, but link to
+// the mailing list post where mike shows how to reimplement it manually.
+
 This gives us all the benefits of SQLAlchemy, including the ability to use
 `alembic` for migrations, and the ability to transparently query using our
 domain classes, as we'll see.
