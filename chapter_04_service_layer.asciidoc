@@ -695,7 +695,7 @@ implement them.
 === Wrap-Up
 
 
-Adding the service layer has really bought us quite a lot:
+Adding the service layer((("service layer", "benefits of"))) has really bought us quite a lot:
 
 * Our Flask API endpoints become very thin and easy to write: their
   only responsibility is doing "web stuff," things like parsing JSON
@@ -828,7 +828,7 @@ Wonderful.  But there are still some bits of awkwardness to tidy up:
   You'll see!
 
 But first, as is customary, a pause for <<chapter_04_service_layer_tradeoffs>>,
-in which we consider the pros and cons of having a service layer at all.
+in which we consider((("service layer", "pros and cons or trade-offs"))) the pros and cons of having a service layer at all.
 
 
 [[chapter_04_service_layer_tradeoffs]]
@@ -857,8 +857,8 @@ a|
 * It's yet another layer of abstraction.
 
 * Putting too much logic into the service layer can lead to the _Anemic Domain_
-  anti-pattern. It's better to introduce this layer after you spot orchestration
-  logic creeping into your controllers.
+  anti-pattern.((("Anemic Domain anti-pattern"))) It's better to introduce this layer after you spot orchestration
+  logic creeping into your controllers.((("domain model", "getting benefits of rich model")))
 
 * You can get a lot of the benefits that come from having rich domain models
   by simply pushing logic out of your controllers and down to the model layer,
