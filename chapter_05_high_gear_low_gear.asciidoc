@@ -220,7 +220,7 @@ hazard, we again drop down to a low gear until we can pick up speed again.
 
 We still have direct dependencies on the domain in our service-layer
 tests, because we use domain objects to set up our test data and to invoke
-our service-layer functions.((("service layer", "fully decoupling from the domain", id="ix_serlaydec")))
+our service-layer functions.((("domain layer", "fully decoupling service layer from", id="ix_domlaydec")))((("service layer", "fully decoupling from the domain", id="ix_serlaydec")))
 
 To have a service layer that's fully decoupled from the domain, we need to
 rewrite its API to work in terms of primitives.
@@ -390,7 +390,7 @@ def test_allocate_errors_for_invalid_sku():
 
 This is a really nice place to be in.  Our service-layer tests depend on only
 the service layer itself, leaving us completely free to refactor the model as
-we see fit.((("service layer", "fully decoupling from the domain", startref="ix_serlaydec")))
+we see fit.((("domain layer", "fully decoupling service layer from", startref="ix_domlaydec")))((("service layer", "fully decoupling from the domain", startref="ix_serlaydec")))
 
 
 === Carrying the Improvement Through to the E2E Tests
