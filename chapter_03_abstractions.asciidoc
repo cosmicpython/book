@@ -94,7 +94,7 @@ left.
 
 === Abstracting State Aids Testability
 
-Let's see an example.((("testing", "abstracting state to aid testability", id="ix_tstabs")))((("abstractions", "abstracting state to aid testability", id="ix_absstate"))) Imagine we want to write code for synchronizing two
+Let's see an example.((("testing", "abstracting state to aid testability", id="ix_tstabs")))((("abstractions", "abstracting state to aid testability", id="ix_absstate")))((("state", "abstracting to aid testability", id="ix_stateabs"))) Imagine we want to write code for synchronizing two
 file directories, which we'll call the _source_ and the _destination_:
 
 * If a file exists in the source, but not the destination, copy the file over.
@@ -243,7 +243,7 @@ def test_when_a_file_has_been_renamed_in_the_source():
 
 Wowsers, that's a lot of setup for two simple cases! The problem is that
 our domain logic, "figure out the difference between two directories," is tightly
-coupled to the I/O code. We can't run our difference algorithm without calling
+coupled to the I/O code.((("coupling", "domain logic coupled with I/O"))) We can't run our difference algorithm without calling
 the `pathlib`, `shutil`, and `hashlib` modules.
 
 And the trouble is, even with our current requirements, we haven't written
@@ -261,7 +261,7 @@ Our high-level code is coupled to low-level details, and it's making life hard.
 As the scenarios we consider get more complex, our tests will get more unwieldy.
 We can definitely refactor these tests (some of the cleanup could go into pytest
 fixtures, for example) but as long as we're doing filesystem operations, they're
-going to stay slow, and hard to read and write.((("testing", "abstracting state to aid testability", startref="ix_tstabs")))((("abstractions", "abstracting state to aid testability", startref="ix_absstate")))
+going to stay slow, and hard to read and write.((("state", "abstracting to aid testability", startref="ix_stateabs")))((("testing", "abstracting state to aid testability", startref="ix_tstabs")))((("abstractions", "abstracting state to aid testability", startref="ix_absstate")))
 
 === Choosing the Right Abstraction(s)
 
