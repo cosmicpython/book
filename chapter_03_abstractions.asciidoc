@@ -265,11 +265,11 @@ going to stay slow, and hard to read and write.((("filesystems", "writing code t
 
 === Choosing the Right Abstraction(s)
 
-What could we do to rewrite our code to make it more testable?((("abstractions", "choosing right abstraction", id="ix_abscho")))
+What could we do to rewrite our code to make it more testable?((("filesystems", "writing code to synchronize source and target directories", "choosing right abstraction", id="ix_filesyncabs")))((("abstractions", "choosing right abstraction", id="ix_abscho")))
 
 First we need to think about what our code needs from the filesystem.
 Reading through the code, three distinct things are happening.
-We can think of these as three distinct _responsibilities_ that the code has:
+We can think ((("responsibilities of code")))of these as three distinct _responsibilities_ that the code has:
 
 1. We interrogate the filesystem by using `os.walk` and determine hashes for a
    series of paths. This is similar in both the source and the
@@ -281,7 +281,7 @@ We can think of these as three distinct _responsibilities_ that the code has:
 
 
 Remember that we want to find _simplifying abstractions_ for each of these
-responsibilities. That will let us hide the messy details so we can
+responsibilities.((("simplifying abstractions"))) That will let us hide the messy details so we can
 focus on the interesting logic.footnote:[If you're used to thinking in terms of
 interfaces, that's what we're trying to define here.]
 
@@ -291,7 +291,7 @@ NOTE: In this chapter, we're refactoring some gnarly code into a more testable
     example.
 
 For steps 1 and 2, we've already intuitively started using an abstraction, a
-dictionary of hashes to paths. You may already have been thinking, "Why not build up a dictionary for the destination folder as well as the source, and
+dictionary of hashes to paths.((("hashing a file", "dictionary of hashes to paths")))((("dictionaries", "for filesystem operations"))) You may already have been thinking, "Why not build up a dictionary for the destination folder as well as the source, and
 then we just compare two dicts?" That seems like a nice way to abstract
 the current state of the filesystem:
 
@@ -339,7 +339,7 @@ what _abstraction_ of filesystem actions will happen?"
 
 === Implementing Our Chosen Abstractions
 
-That's all very well, but how do we _actually_ write those new((("abstractions", "choosing right abstraction", startref="ix_abscho")))
+That's all very well, but how do we _actually_ write those new((("filesystems", "writing code to synchronize source and target directories", "choosing right abstraction", startref="ix_filesyncabs")))((("abstractions", "choosing right abstraction", startref="ix_abscho")))
 tests, and how do we change our implementation to make it all work?
 
 Our goal is to isolate the clever part of our system, and to be able to test it
