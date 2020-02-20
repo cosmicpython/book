@@ -687,7 +687,7 @@ dependency injection more explicit and centralized.
 
 We'll see this idea come up again and ((("testing", "after implementing chosen abstraction", "avoiding use of mock.patch", startref="ix_tstaftabsmck")))((("abstractions", "implementing chosen abstraction", startref="ix_absimpl")))((("testing", "after implementing chosen abstraction", startref="ix_tstaftabs")))((("filesystems", "writing code to synchronize source and target directories", "implementing chosen abstraction", startref="ix_filesyncimp")))again in the book: we can make our
 systems easier to test and maintain by simplifying the interface between our
-business logic and messy I/O.((("abstractions", "simplifying business logic from I/O, heuristic questions for"))) Finding the right abstraction is tricky, but here are
+business logic and messy I/O.((("abstractions", "simplifying interface between business logic from I/O")))((("business logic", "abstractions simplifying interace with messy I/O")))((("I/O", "simplifying interface with business logic using abstractions"))) Finding the right abstraction is tricky, but here are
 a few heuristics and questions to ask yourself:
 
 
