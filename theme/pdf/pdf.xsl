@@ -55,6 +55,11 @@
   </xsl:choose>
 </xsl:template>
 
+<!-- OVERRIDE FOR ADDING HANDLING FOR EPILOGUE XREFS-->
+  <xsl:template match="h:table|h:figure|h:div[@data-type='example']" mode="label.formal.ancestor">
+    <xsl:choose>
+      <!-- For Preface and Introduction, custom label prefixes for formal ancestor
+	   (don't use label.markup template here, as these labels are typically specific to just formal-object context -->
 	   <!--BEGIN OVERRIDE -->
 	     <xsl:when test="ancestor::h:section[@data-type = 'afterword']">E</xsl:when>
 	     <!-- END OVERRIDE-->
