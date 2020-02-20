@@ -177,9 +177,9 @@ Let's see how we might translate this to a relational database.
 
 ==== The "Normal" ORM Way: Model Depends on ORM
 
-These days, it's unlikely that your team members are hand-rolling their own SQL queries.
+These days, it's unlikely that your team members are hand-rolling their own SQL queries.((("domain model", "translating to relational database", "normal ORM way, model depends on ORM")))
 Instead, you're almost certainly using some kind of framework to generate
-SQL for you based on your model objects.
+SQL for you based on your model objects.((("SQL", "generating for domain model objects")))
 
 These frameworks are called _object-relational mappers_ (ORMs) because they exist to((("object-relational mappers (ORMs)")))
 bridge the conceptual gap between the world of objects and domain modeling, and
@@ -192,7 +192,7 @@ on particular databases technologies.footnote:[In this sense, using an ORM is
 already an example of the DIP. Instead of depending on hardcoded SQL, we depend
 on an abstraction, the ORM. But that's not enough for us, not in this book!]
 
-But if you follow the typical SQLAlchemy tutorial, you'll end up with something
+But if you follow the((("SQLAlchemy", "declarative syntax, model depends on ORM")))((("object-relational mappers (ORMs)", "SQLAlchemy, model depends on ORM"))) typical SQLAlchemy tutorial, you'll end up with something
 like this:
 
 
@@ -233,7 +233,7 @@ to database columns?
 .Django's ORM Is Essentially the Same, but More Restrictive
 *******************************************************************************
 
-If you're more used to Django, the preceding "declarative" SQLAlchemy snippet
+If you're more((("Django", "ORM example")))((("object-relational mappers (ORMs)", "Django ORM example"))) used to Django, the preceding "declarative" SQLAlchemy snippet
 translates to something like this:
 
 [[django_orm_example]]
