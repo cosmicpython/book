@@ -94,7 +94,7 @@ left.
 
 === Abstracting State Aids Testability
 
-Let's see an example. Imagine we want to write code for synchronizing two
+Let's see an example.((("abstractions", "abstracting state to aid testability", id="ix_absstate"))) Imagine we want to write code for synchronizing two
 file directories, which we'll call the _source_ and the _destination_:
 
 * If a file exists in the source, but not the destination, copy the file over.
@@ -261,7 +261,7 @@ Our high-level code is coupled to low-level details, and it's making life hard.
 As the scenarios we consider get more complex, our tests will get more unwieldy.
 We can definitely refactor these tests (some of the cleanup could go into pytest
 fixtures, for example) but as long as we're doing filesystem operations, they're
-going to stay slow, and hard to read and write.
+going to stay slow, and hard to read and write.((("abstractions", "abstracting state to aid testability", startref="ix_absstate")))
 
 === Choosing the Right Abstraction(s)
 
