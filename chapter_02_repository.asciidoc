@@ -515,7 +515,7 @@ may be), you'll want to be running some helpers like `pylint` and `mypy`.]
 *******************************************************************************
 
 We're using abstract base classes in this book for didactic reasons: we hope
-they help explain what the interface of the repository abstraction is.((("abstract base classes (ABCs)", "duck typing and protocols")))
+they help explain what the interface of the repository abstraction is.((("abstract base classes (ABCs)", "using duck typing and protocols instead of")))
 
 In real life, we've sometimes found ourselves deleting ABCs from our production
 code, because Python makes it too easy to ignore them, and they end up
@@ -540,7 +540,7 @@ nothing?  Well, programmers know the benefits of everything and the trade-offs
 of nothing.
 ____
 
-Whenever we introduce an architectural pattern in this book, we'll always
+Whenever we introduce((("Repository pattern", "trade-offs"))) an architectural pattern in this book, we'll always
 ask, "What do we get for this?  And what does it cost us?"
 
 Usually, at the very least, we'll be introducing an extra layer of abstraction,
@@ -560,7 +560,7 @@ simple abstraction over our storage layer, which we control. The Repository patt
 it easy to make fundamental changes to the way we store things (see
 <<appendix_csvs>>), and as we'll see, it is easy to fake out for unit tests.
 
-In addition, the Repository pattern is so common in the DDD world that, if you
+In addition, the ((("domain driven design (DDD)", "Repository pattern and")))Repository pattern is so common in the DDD world that, if you
 do collaborate with programmers who have come to Python from the Java and C#
 worlds, they're likely to recognize it. <<repository_pattern_diagram>> illustrates the pattern.
 
@@ -590,10 +590,10 @@ image::images/apwp_0205.png[]
 ----
 
 
-As always, we start with a test. This would probably be classified as an
+As always, we start with a test.((("Repository pattern", "testing the  repository with saving an object"))) This would probably be classified as an
 integration test, since we're checking that our code (the repository) is
 correctly integrated with the database; hence, the tests tend to mix
-raw SQL with calls and assertions on our own code.
+raw SQL with calls and assertions on our own code.((("SQL", "repository test for saving an object")))
 
 TIP: Unlike the ORM tests from earlier, these tests are good candidates for
     staying part of your codebase longer term, particularly if any parts of
@@ -628,7 +628,7 @@ def test_repository_can_save_a_batch(session):
 
 <3> We use the raw SQL to verify that the right data has been saved.
 
-The next test involves retrieving batches and allocations, so it's more
+The next test involves((("SQL", "repository test for retrieving complex object")))((("Repository pattern", "testing the repository with retrieving a complex object"))) retrieving batches and allocations, so it's more
 complex:
 
 
