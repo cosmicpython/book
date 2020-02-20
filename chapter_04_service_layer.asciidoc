@@ -1,7 +1,7 @@
 [[chapter_04_service_layer]]
 == Our First Use Case: Flask API and pass:[<span class="keep-together">Service Layer</span>]
 
-Back to our allocations project! <<maps_service_layer_before>> shows the point we reached at the end of <<chapter_02_repository>>, which covered the Repository pattern.((("service layer", id="ix_serlay")))
+Back to our allocations project! <<maps_service_layer_before>> shows the point we reached at the end of <<chapter_02_repository>>, which covered the Repository pattern.((("Flask framework", "Flask API and service layer", id="ix_Flskapp")))((("service layer", id="ix_serlay")))
 
 [[maps_service_layer_before]]
 .Before: we drive our app by talking to repositories and the domain model
@@ -863,5 +863,5 @@ a|
 * You can get a lot of the benefits that come from having rich domain models
   by simply pushing logic out of your controllers and down to the model layer,
   without needing to add an extra layer in between (aka "fat models, thin
-  controllers").((("service layer", startref="ix_serlay")))
+  controllers").((("Flask framework", "Flask API and service layer", startref="ix_Flskapp")))((("service layer", startref="ix_serlay")))
 |===
