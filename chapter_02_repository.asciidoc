@@ -92,7 +92,7 @@ _(What? Oh, "gubbins" is a British word for "stuff." You can just ignore that. I
 
 === Applying the DIP to Data Access
 
-As mentioned in <<introduction>>, a layered architecture is ((("layered architecture")))a common
+As mentioned in <<introduction>>, a layered architecture is ((("data access", "applying dependency inversion principle to")))((("layered architecture")))a common
 approach to structuring a system that has a UI, some logic, and a database (see
 <<layered_architecture2>>).
 
@@ -113,7 +113,7 @@ fine; depending on an ORM or a web framework is not.]
 We don't want infrastructure concerns bleeding over into our domain model and
 slowing our unit tests or our ability to make changes.
 
-Instead, as discussed in the introduction, we'll think of our model as being on the
+Instead, as discussed in the introduction, we'll ((("onion architecture")))think of our model as being on the
 "inside," and dependencies flowing inward to it; what people sometimes call
 _onion architecture_ (see <<onion_architecture>>).
 
@@ -149,7 +149,7 @@ yourself questions like this:
 > and what's an adapter? Why do you people have so many words for the same thing?
 
 Although some people like to nitpick over the differences, all these are
-pretty much names for the same thing, and((("dependency inversion principle"))) they all boil down to the
+pretty much names for the same thing, and((("Seemann, Mark, blog post")))((("dependency inversion principle"))) they all boil down to the
 dependency inversion principle: high-level modules (the domain) should
 not depend on low-level ones (the infrastructure).footnote:[Mark Seemann has
 https://oreil.ly/LpFS9[an excellent blog post]
@@ -163,7 +163,7 @@ and whether there is a Pythonic equivalent of interfaces,
 
 === Reminder: Our Model
 
-Let's remind ourselves of our domain model (see <<model_diagram_reminder>>):
+Let's remind ((("Repository pattern", "domain model recap")))ourselves of our domain model (see <<model_diagram_reminder>>):
 an allocation is the concept of linking an `OrderLine` to a `Batch`.  We're
 storing the allocations as a collection on our `Batch` object.
 
@@ -181,7 +181,7 @@ These days, it's unlikely that your team members are hand-rolling their own SQL 
 Instead, you're almost certainly using some kind of framework to generate
 SQL for you based on your model objects.
 
-These frameworks are called _object-relational mappers_ (ORMs) because they exist to
+These frameworks are called _object-relational mappers_ (ORMs) because they exist to((("object-relational mappers (ORMs)")))
 bridge the conceptual gap between the world of objects and domain modeling, and
 the world of databases and relational algebra.
 
