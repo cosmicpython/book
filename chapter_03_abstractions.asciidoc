@@ -340,7 +340,7 @@ what _abstraction_ of filesystem actions will happen?"
 === Implementing Our Chosen Abstractions
 
 That's all very well, but how do we _actually_ write those new((("filesystems", "writing code to synchronize source and target directories", "choosing right abstraction", startref="ix_filesyncabs")))((("abstractions", "choosing right abstraction", startref="ix_abscho")))
-tests, and how do we change our implementation to make it all work?((("filesystems", "writing code to synchronize source and target directories", "implementing chosen abstraction", id="ix_filesyncimp")))
+tests, and how do we change our implementation to make it all work?((("abstractions", "implementing chosen abstraction", id="ix_absimpl")))((("filesystems", "writing code to synchronize source and target directories", "implementing chosen abstraction", id="ix_filesyncimp")))
 
 Our goal is to isolate the clever part of our system, and to be able to test it
 thoroughly without needing to set up a real filesystem.((("testing", "after implementing chosen abstraction", id="ix_tstaftabs"))) We'll create a "core"
@@ -685,7 +685,7 @@ dependency injection more explicit and centralized.
 
 === Wrap-Up
 
-We'll see this idea come up again and ((("testing", "after implementing chosen abstraction", startref="ix_tstaftabs")))((("filesystems", "writing code to synchronize source and target directories", "implementing chosen abstraction", startref="ix_filesyncimp")))again in the book: we can make our
+We'll see this idea come up again and ((("abstractions", "implementing chosen abstraction", startref="ix_absimpl")))((("testing", "after implementing chosen abstraction", startref="ix_tstaftabs")))((("filesystems", "writing code to synchronize source and target directories", "implementing chosen abstraction", startref="ix_filesyncimp")))again in the book: we can make our
 systems easier to test and maintain by simplifying the interface between our
 business logic and messy I/O. Finding the right abstraction is tricky, but here are
 a few heuristics and questions to ask yourself:
