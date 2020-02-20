@@ -55,4 +55,34 @@
   </xsl:choose>
 </xsl:template>
 
+	   <!--BEGIN OVERRIDE -->
+	     <xsl:when test="ancestor::h:section[@data-type = 'afterword' and @class = 'epilogue']">E</xsl:when>
+	     <!-- END OVERRIDE-->
+	     
+      <xsl:when test="ancestor::h:section[@data-type = 'preface']">P</xsl:when>
+      <xsl:when test="ancestor::h:section[@data-type = 'introduction']">I</xsl:when>
+      <xsl:otherwise>
+	<!-- Otherwise, go ahead and use label.markup to get proper label numeral for ancestor -->
+	<xsl:apply-templates select="(ancestor::h:section[contains(@data-type, 'acknowledgments') or
+				     contains(@data-type, 'afterword') or
+				     contains(@data-type, 'appendix') or
+				     contains(@data-type, 'bibliography') or
+				     contains(@data-type, 'chapter') or
+				     contains(@data-type, 'colophon') or
+				     contains(@data-type, 'conclusion') or
+				     contains(@data-type, 'copyright-page') or
+				     contains(@data-type, 'dedication') or
+				     contains(@data-type, 'foreword') or
+				     contains(@data-type, 'glossary') or
+				     contains(@data-type, 'halftitlepage') or
+				     contains(@data-type, 'index') or
+				     contains(@data-type, 'introduction') or
+				     contains(@data-type, 'preface') or
+				     contains(@data-type, 'titlepage') or
+				     contains(@data-type, 'toc')]|
+				     ancestor::h:div[@data-type = 'part'])[last()]" mode="label.markup"/>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
 </xsl:stylesheet>
