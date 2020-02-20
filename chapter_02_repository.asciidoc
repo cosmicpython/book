@@ -690,7 +690,7 @@ call. Once you have one class tested for create/modify/save, you might be
 happy to go on and do the others with a minimal round-trip test, or even nothing
 at all, if they all follow a similar pattern. In our case, the ORM config
 that sets up the `._allocations` set is a little complex, so it merited a
-specific test.
+specific test.((("Repository pattern", "typical repository")))
 
 
 You end up with something like this:
@@ -718,7 +718,7 @@ class SqlAlchemyRepository(AbstractRepository):
 ====
 
 
-And now our Flask endpoint might look something like the following:
+And now our ((("APIs", "using repository directly in API endpoint")))((("Repository pattern", "using repository directly in API endpoint")))((("Flask framework", "API endpoint")))Flask endpoint might look something like the following:
 
 [[api_endpoint_with_repo]]
 .Using our repository directly in our API endpoint
@@ -743,7 +743,7 @@ def allocate_endpoint():
 .Exercise for the Reader
 ******************************************************************************
 We bumped into a friend at a DDD conference the other day who said, "I haven't
-used an ORM in 10 years." The Repository pattern and an ORM both act as abstractions
+used an ORM in 10 years." The Repository pattern and an ORM both act as abstractions((("object-relational mappers (ORMs)", "Repository pattern and")))((("Repository pattern", "ORMs and")))((("SQL", "ORM and Repository pattern as abstractions in front of")))
 in front of raw SQL, so using one behind the other isn't really necessary.  Why
 not have a go at implementing our repository without using the ORM? You'll find the code https://github.com/cosmicpython/code/tree/chapter_02_repository_exercise[on GitHub].
 
@@ -756,7 +756,7 @@ But the nice thing is, the rest of your application just doesn't care.
 
 === Building a Fake Repository for Tests Is Now Trivial!
 
-Here's one of the biggest benefits of the Repository pattern.
+Here's one of the biggest ((("Repository pattern", "building fake repository for tests")))((("sets", "fake repository as wrapper around a set")))benefits of the Repository pattern.
 
 
 [[fake_repository]]
@@ -810,16 +810,16 @@ TIP: Building fakes for your abstractions is an excellent way to get design
 We don't want to dwell on the terminology too much here because the main thing
 we want to focus on is dependency inversion, and the specifics of the
 technique you use don't matter too much. Also, we're aware that different
-people use slightly different definitions.
+people use slightly different definitions.((("ports", "defined")))
 
 Ports and adapters came out of the OO world, and the definition we hold onto
 is that the _port_ is the _interface_ between our application and whatever
 it is we wish to abstract away, and the _adapter_ is the _implementation_
-behind that interface or abstraction.
+behind that interface or abstraction.((("adapters", "defined")))
 
-Now Python doesn't have interfaces per se, so although it's
+Now Python doesn't have interfaces((("interfaces, Python and"))) per se, so although it's
 usually easy to identify an adapter, defining the port can be harder. If
-you're using an abstract base class, that's the port. If not, the port
+you're using an abstract base class, that's the port.((("duck typing", "for ports")))((("abstract base classes (ABCs)", "using for ports"))) If not, the port
 is just the duck type that your adapters conform to and that your core application
 expects-- he function and method names in use, and their argument names and types.
 
