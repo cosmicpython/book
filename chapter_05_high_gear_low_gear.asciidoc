@@ -2,7 +2,7 @@
 == TDD in High Gear and Low Gear
 
 We've introduced the service layer to capture some of the additional
-orchestration responsibilities we need from a working application. The service layer helps us
+orchestration responsibilities we need from a working application.((("test-driven development (TDD)", id="ix_TDD"))) The service layer helps us
 clearly define our use cases and the workflow for each: what
 we need to get from our repositories, what pre-checks and current state
 validation we should do, and what we save at the end.
@@ -511,6 +511,6 @@ Error handling counts as a feature::
     bubble up to your entrypoints (e.g., Flask) are handled in the same way.
     This means you need to test only the happy path for each feature, and
     reserve one end-to-end test for all unhappy paths (and many unhappy path
-    unit tests, of course).
+    unit tests, of course).((("test-driven development (TDD)", startref="ix_TDD")))
 
 ******************************************************************************
