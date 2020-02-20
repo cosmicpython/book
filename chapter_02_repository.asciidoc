@@ -269,7 +269,7 @@ inversion and the Repository pattern to Django.
 
 ==== Inverting the Dependency: ORM Depends on Model
 
-Well, thankfully, that's not the only way to use SQLAlchemy.((("data model", "translating to relational database", "ORM depends on the model")))((("dependency inversion principle", "ORM depends on the data model")))((("SQLAlchemy", "explicit ORM mapping with SQLAlchemy Table objects")))((("classical mapping")))  The alternative is
+Well, thankfully, that's not the only way to use SQLAlchemy.((("object-relational mappers (ORMs)", "ORM depends on the data model")))((("data model", "translating to relational database", "ORM depends on the model")))((("dependency inversion principle", "ORM depends on the data model")))((("SQLAlchemy", "explicit ORM mapping with SQLAlchemy Table objects")))((("classical mapping")))((("mappers")))  The alternative is
 to define your schema separately, and an explicit _mapper_ for how to convert
 between the schema and our domain model, what SQLAlchemy calls a
 https://oreil.ly/ZucTG[classical mapping].
@@ -324,7 +324,7 @@ This gives us all the benefits of SQLAlchemy, including the ability to use
 domain classes, as we'll see.
 
 When you're first trying to build your ORM config, it can be useful to write
-tests for it, as in the following example:
+tests for it, as in the ((("object-relational mappers (ORMs)", "ORM depends on the data model", "testing the ORM")))following example:
 
 
 [[orm_tests]]
@@ -358,7 +358,7 @@ def test_orderline_mapper_can_save_lines(session):
 ====
 
 <1> If you haven't used pytest, the `session` argument to this test needs
-    explaining. You don't need to worry about the details of pytest or its
+    explaining. ((("pytest", "session argument")))You don't need to worry about the details of pytest or its
     fixtures for the purposes of this book, but the short explanation is that
     you can define common dependencies for your tests as "fixtures," and
     pytest will inject them to the tests that need them by looking at their
