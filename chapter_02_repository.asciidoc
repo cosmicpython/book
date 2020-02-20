@@ -2,10 +2,10 @@
 == Repository Pattern
 
 It's time to make good on our promise to use the dependency inversion principle as
-a way of decoupling our core logic from infrastructural concerns.((("Repository pattern", id="ix_Repo")))
+a way of decoupling our core logic from infrastructural concerns.
 
 We'll introduce the _Repository_ pattern, a simplifying abstraction over data storage,
-allowing us to decouple our model layer from the data layer.((("data storage", "Repository pattern and"))) We'll present a
+allowing us to decouple our model layer from the data layer.((("data storage", "Repository pattern and")))((("Repository pattern"))) We'll present a
 concrete example of how this simplifying abstraction makes our system more
 testable by hiding the complexities of the database.
 
@@ -34,7 +34,7 @@ git checkout chapter_01_domain_model
 === Persisting Our Domain Model
 
 In <<chapter_01_domain_model>>r we built a simple domain model that can allocate orders
-to batches of stock.((("Repository pattern", "persisting the domain model")))((("domain modeling", "persisting the domain model"))) It's easy for us to write tests against this code because
+to batches of stock.((("domain model", "persisting"))) It's easy for us to write tests against this code because
 there aren't any dependencies or infrastructure to set up. If we needed to run
 a database or an API and create test data, our tests would be harder to write
 and maintain.
@@ -163,7 +163,7 @@ and whether there is a Pythonic equivalent of interfaces,
 
 === Reminder: Our Model
 
-Let's remind ((("domain model", id="ix_domod")))((("Repository pattern", "domain model recap")))ourselves of our domain model (see <<model_diagram_reminder>>):
+Let's remind ((("domain model", id="ix_domod")))ourselves of our domain model (see <<model_diagram_reminder>>):
 an allocation is the concept of linking an `OrderLine` to a `Batch`.  We're
 storing the allocations as a collection on our `Batch` object.
 
@@ -435,7 +435,7 @@ add a try finally to close the session
 
 === Introducing the Repository Pattern
 
-The _Repository pattern_ is an abstraction over persistent storage.((("domain model", startref="ix_domod"))) It hides the
+The _Repository pattern_ is an abstraction over persistent storage.((("domain model", startref="ix_domod")))((("Repository pattern", id="ix_Repo"))) It hides the
 boring details of data access by pretending that all of our data is in memory.
 
 If we had infinite memory in our laptops, we'd have no need for clumsy databases.
