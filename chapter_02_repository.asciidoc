@@ -394,7 +394,7 @@ maintainers, and Mike Bayer in particular.] As so often happens with
 architectural decisions, you'll need to consider a trade-off. As the
 Zen of Python says, "Practicality beats purity!"
 
-At this point, though, our API endpoint might look something like
+At this ((("SQLAlchemy", "using directly in API endpoint")))point, though, our API endpoint might look something like
 the following, and we could get it to work just fine.
 
 [[api_endpoint_with_session]]
