@@ -553,7 +553,7 @@ def test_when_a_file_has_been_renamed_in_the_source():
     ++assert 'foo' not in database++.
 
 <2> Each method in our `FakeFileSystem` just appends something to the list so we
-    can inspect it later. This is an example of a spy object.
+    can inspect it later. This is an example of a spy object.((("spy objects")))
 
 
 The advantage of this approach is that our tests act on the exact same function
@@ -592,7 +592,7 @@ code work with a `--dry-run` flag, nor will it help you run against an FTP
 server. For that, you'll need to introduce abstractions.
 
 *  Tests that use mocks _tend_ to be more coupled to the implementation details
-of the codebase. That's because mock tests verify the interactions between
+of the codebase. ((("coupling", "in tests that use mocks")))That's because mock tests verify the interactions between
 things: did we call `shutil.copy` with the right arguments? This coupling between
 code and test _tends_ to make tests more brittle, in our experience.
 
@@ -607,7 +607,7 @@ NOTE: Designing for testability really means designing for
 .Mocks Versus Fakes; Classic Style Versus London School TDD
 *******************************************************************************
 
-Here's a short and somewhat simplistic definition of the difference between
+Here's a short and somewhat((("test doubles", "mocks versus fakes")))((("mocking", "mocks versus fakes")))((("faking", "fakes versus mocks"))) simplistic definition of the difference between
 mocks and fakes:
 
 * Mocks are used to verify _how_ something gets used;  they have methods
@@ -620,22 +620,22 @@ our in-memory repository is a good example. But you can use them to make asserti
   the end state of a system, rather than the behaviors along the way, so
   they're associated with classic-style TDD.
 
-We're slightly conflating mocks with spies and fakes with stubs here, and you
+We're slightly conflating mocks with ((("Fowler, Martin")))((("stubbing", "mocks and stubs")))((("&quot;Mocks Aren&#x27;t Stubs&quot; (Fowler)", primary-sortas="Mocks")))spies and fakes with stubs here, and you
 can read the long, correct answer in Martin Fowler's classic essay on the subject
 called https://oreil.ly/yYjBN["Mocks Aren't Stubs"].
 
 It also probably doesn't help that the `MagicMock` objects provided by
 `unittest.mock` aren't, strictly speaking, mocks; they're spies, if anything.
-But they're also often used as stubs or dummies. There, we promise we're done with
+But they're also often used as stubs or dummies.((("test doubles", "mocks versus stubs"))) There, we promise we're done with
 the test double terminology nitpicks now.
 
 //IDEA (hynek) you could mention Alex Gaynor's `pretend` which gives you
 // stubs without mocks error-prone magic.
 
-What about London-school versus classic-style TDD? You can read more about those
+What about London-school versus classic-style TDD?((("London-school versus classic-style TDD")))((("test-driven development (TDD)", "classic versus London-school"))) You can read more about those
 two in Martin Fowler's article just cited, as well aso n the
 https://oreil.ly/H2im_[Software Engineering Stack Exchange site],
-but in this book we're pretty firmly in the classicist camp.  We like to
+but in this book we're pretty firmly in the classicist camp.((("Software Engineering Stack Exchange site")))  We like to
 build our tests around state, both in setup and assertions, and we like
 to work at the highest level of abstraction possible rather than doing
 checks on the behavior of intermediary collaborators.footnote:[
@@ -650,13 +650,13 @@ act as a record of our design choices, and serve to explain the system to us
 when we return to the code after a long absence.
 
 Tests that use too many mocks get overwhelmed with setup code that hides the
-story we care about.
+story we care about.((("mocking", "overmocked tests, pitfalls of")))
 
 Steve Freeman has a great example of overmocked tests in his talk
 https://oreil.ly/jAmtr["Test-Driven Development: That's Not What We Meant"].
 You should also check out this https://oreil.ly/s3e05[PyCon talk on Mocking Pitfalls]
 by our esteemed tech reviewer, Ed Jung, which also addresses mocking and its
-alternatives.
+alternatives.((("PyCon talk on Mocking Pitfalls")))((("Jung, Ed")))
 
 And while we're recommending talks, don't miss Brandon Rhodes talking about
 https://oreil.ly/oiXJM[hoisting I/O],
@@ -664,7 +664,7 @@ which really nicely covers the issues we're talking about, using another simple 
 
 
 TIP: In this chapter, we've spent a lot of time replacing end-to-end tests with
-    unit tests. That doesn't mean we think you should never use E2E tests!
+    unit tests.((("end-to-end tests", "replacement with unit tests")))((("unit testing", "unit tests replacing end-to-end tests"))) That doesn't mean we think you should never use E2E tests!
     In this book we're showing techniques to get you to a decent test
     pyramid, with as many unit tests as possible, and the minimum number of E2E
     tests you need to feel confident. Read on to <<types_of_test_rules_of_thumb>>
@@ -674,7 +674,7 @@ TIP: In this chapter, we've spent a lot of time replacing end-to-end tests with
 .So Which Do We Use Here? Functional or Object-Oriented Composition?
 ******************************************************************************
 Both. Our domain model is entirely free of dependencies and side effects,
-so that's our functional core. The service layer that we build around it
+so that's our functional core.((("object-oriented composition"))) The service layer that we build around it
 (in <<chapter_04_service_layer>>) allows us to drive the system edge to edge,
 and we use dependency injection to provide those services with stateful
 components, so we can still unit test them.
