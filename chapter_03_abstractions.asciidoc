@@ -20,7 +20,7 @@ git checkout chapter_03_abstractions
 
 
 A key theme in this book, hidden among the fancy patterns, is that we can use
-simple abstractions to hide messy details. When we're writing code for fun, or
+simple abstractions to hide messy details.((("katas"))) When we're writing code for fun, or
 in a kata,footnote:[A code kata is a small contained programming challenge often
 used to practice TDD. See https://oreil.ly/vhjju[Kata—The Only Way to Learn TDD].]
 we get to play with ideas freely, hammering things out and refactoring
@@ -28,14 +28,14 @@ aggressively. In a large-scale system, though, we become constrained by the
 decisions made elsewhere in the system.
 
 When we're unable to change component A for fear of breaking component B, we say
-that the components have become _coupled_. Locally, coupling is a good thing: it's
+that the components ((("coupling")))have become _coupled_. Locally, coupling is a good thing: it's
 a sign that our code is working together, each component supporting the others,
 fitting in place like the gears of a watch. In jargon, we say this works when
-there is high _cohesion_ between the coupled elements.
+there is high _cohesion_ between the coupled elements.((("cohesion", "high, between coupled elements")))
 
-Globally, coupling is a nuisance: it increases the risk and the cost of changing
+Globally, coupling is a nuisance: it increases((("coupling", "disadvantages of"))) the risk and the cost of changing
 our code, sometimes to the point where we feel unable to make some changes at
-all. This is the problem with the Ball of Mud pattern: as the application grows,
+all. ((("Ball of Mud pattern")))This is the problem with the Ball of Mud pattern: as the application grows,
 if we're unable to prevent coupling between elements that have no cohesion, that
 coupling increases superlinearly until we are no longer able to effectively
 change our systems.
