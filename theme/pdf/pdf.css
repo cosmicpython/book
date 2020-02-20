@@ -11,6 +11,11 @@ pre { page-break-inside: avoid; } */
  
 } */
 
+/* Epilogue figure label */
+section[data-type="afterword"] figcaption:before {
+  content: "Figure E-"counter(FigureNumber)". ";
+}
+
 /*less space for pagebreaks */
 .less_space {margin-top: 0 !important;}
 
