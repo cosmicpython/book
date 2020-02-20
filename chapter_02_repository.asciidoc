@@ -5,7 +5,7 @@ It's time to make good on our promise to use the dependency inversion principle 
 a way of decoupling our core logic from infrastructural concerns.((("Repository pattern", id="ix_Repo")))
 
 We'll introduce the _Repository_ pattern, a simplifying abstraction over data storage,
-allowing us to decouple our model layer from the data layer. We'll present a
+allowing us to decouple our model layer from the data layer.((("data storage", "Repository pattern and"))) We'll present a
 concrete example of how this simplifying abstraction makes our system more
 testable by hiding the complexities of the database.
 
@@ -34,7 +34,7 @@ git checkout chapter_01_domain_model
 === Persisting Our Domain Model
 
 In <<chapter_01_domain_model>>r we built a simple domain model that can allocate orders
-to batches of stock. It's easy for us to write tests against this code because
+to batches of stock.((("Repository pattern", "persisting the domain model")))((("domain modeling", "persisting the domain model"))) It's easy for us to write tests against this code because
 there aren't any dependencies or infrastructure to set up. If we needed to run
 a database or an API and create test data, our tests would be harder to write
 and maintain.
