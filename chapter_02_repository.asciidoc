@@ -163,7 +163,7 @@ and whether there is a Pythonic equivalent of interfaces,
 
 === Reminder: Our Model
 
-Let's remind ((("Repository pattern", "domain model recap")))ourselves of our domain model (see <<model_diagram_reminder>>):
+Let's remind ((("domain model", id="ix_domod")))((("Repository pattern", "domain model recap")))ourselves of our domain model (see <<model_diagram_reminder>>):
 an allocation is the concept of linking an `OrderLine` to a `Batch`.  We're
 storing the allocations as a collection on our `Batch` object.
 
@@ -187,7 +187,7 @@ the world of databases and relational algebra.
 
 The most important thing an ORM gives us is _persistence ignorance_: the idea
 that our fancy domain model doesn't need to know anything about how data is
-loaded or persisted. This helps keep our domain clean of direct dependencies
+loaded or persisted. ((("persistence ignorance")))This helps keep our domain clean of direct dependencies
 on particular databases technologies.footnote:[In this sense, using an ORM is
 already an example of the DIP. Instead of depending on hardcoded SQL, we depend
 on an abstraction, the ORM. But that's not enough for us, not in this book!]
@@ -435,7 +435,7 @@ add a try finally to close the session
 
 === Introducing the Repository Pattern
 
-The _Repository pattern_ is an abstraction over persistent storage. It hides the
+The _Repository pattern_ is an abstraction over persistent storage.((("domain model", startref="ix_domod"))) It hides the
 boring details of data access by pretending that all of our data is in memory.
 
 If we had infinite memory in our laptops, we'd have no need for clumsy databases.
