@@ -196,14 +196,14 @@ implementation.
 === High and Low Gear
 
 Most of the time, when we are adding a new feature or fixing a bug, we don't
-need to make extensive changes to the domain model. In these cases, we prefer
+need to make extensive changes to the domain model.((("test-driven development (TDD)", "high and low gear"))) In these cases, we prefer
 to write tests against services because of the lower coupling and higher coverage.
 
 For example, when writing an `add_stock` function, or a `cancel_order` feature,
 we can work more quickly and with less coupling by writing tests against the
-service layer.
+service layer.((("service layer", "writing tests against")))
 
-When starting a new project or when hitting a particularly gnarly problem,
+When starting a new project((("domain model", "writing tests against"))) or when hitting a particularly gnarly problem,
 we will drop back down to writing tests against the domain model so we
 get better feedback and executable documentation of our intent.
 
@@ -220,7 +220,7 @@ hazard, we again drop down to a low gear until we can pick up speed again.
 
 We still have direct dependencies on the domain in our service-layer
 tests, because we use domain objects to set up our test data and to invoke
-our service-layer functions.
+our service-layer functions.((("service layer", "fully decoupling from the domain", id="ix_serlaydec")))
 
 To have a service layer that's fully decoupled from the domain, we need to
 rewrite its API to work in terms of primitives.
@@ -390,7 +390,7 @@ def test_allocate_errors_for_invalid_sku():
 
 This is a really nice place to be in.  Our service-layer tests depend on only
 the service layer itself, leaving us completely free to refactor the model as
-we see fit.
+we see fit.((("service layer", "fully decoupling from the domain", startref="ix_serlaydec")))
 
 
 === Carrying the Improvement Through to the E2E Tests
