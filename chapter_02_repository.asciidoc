@@ -60,7 +60,7 @@ When we build our first API endpoint, we know we're going to have
 some code that looks more or less like the following.
 
 NOTE: We've used Flask because it's lightweight, but you don't need
-to be a Flask user to understand this book. In fact, we'll show you how
+to be a Flask user to understand this book.((("Flask framework"))) In fact, we'll show you how
 to make your choice of framework a minor detail.
 
 [role="pagebreak-before less_space"]
@@ -92,7 +92,7 @@ _(What? Oh, "gubbins" is a British word for "stuff." You can just ignore that. I
 
 === Applying the DIP to Data Access
 
-As mentioned in <<introduction>>, a layered architecture is a common
+As mentioned in <<introduction>>, a layered architecture is ((("layered architecture")))a common
 approach to structuring a system that has a UI, some logic, and a database (see
 <<layered_architecture2>>).
 
@@ -107,7 +107,7 @@ Model-View-Controller (MVC). In any case, the aim is to keep the layers
 separate (which is a good thing), and to have each layer depend only on the one
 below.
 
-But we want our domain model to have __no dependencies whatsoever__.footnote:[
+But we want((("dependencies", "none in domain model"))) our domain model to have __no dependencies whatsoever__.footnote:[
 I suppose we mean "no stateful dependencies." Depending on a helper library is
 fine; depending on an ORM or a web framework is not.]
 We don't want infrastructure concerns bleeding over into our domain model and
@@ -149,7 +149,7 @@ yourself questions like this:
 > and what's an adapter? Why do you people have so many words for the same thing?
 
 Although some people like to nitpick over the differences, all these are
-pretty much names for the same thing, and they all boil down to the
+pretty much names for the same thing, and((("dependency inversion principle"))) they all boil down to the
 dependency inversion principle: high-level modules (the domain) should
 not depend on low-level ones (the infrastructure).footnote:[Mark Seemann has
 https://oreil.ly/LpFS9[an excellent blog post]
