@@ -51,7 +51,7 @@ git checkout chapter_02_repository
 === Connecting Our Application to the Real World
 
 Like any good agile team, we're hustling to try to get an MVP out and
-in front of the users to start gathering feedback. We have the core
+in front of the users to start gathering feedback.((("service layer", "connecting our application to real world"))) We have the core
 of our domain model and the domain service we need to allocate orders,
 and we have the repository interface for permanent storage.
 
@@ -62,7 +62,7 @@ plan:
 1. Use Flask to put an API endpoint in front of our `allocate` domain service.
    Wire up the database session and our repository. Test it with
    an end-to-end test and some quick-and-dirty SQL to prepare test
-   data.
+   data.((("Flask framework", "putting API endpoint in front of allocate domain service")))
 
 2. Refactor out a service layer to serve as an abstraction to
    capture the use case, and sit between Flask and our domain model.
@@ -78,7 +78,7 @@ plan:
 
 No one is interested in getting into a long terminology debate about what
 counts as an end-to-end (E2E) test versus a functional test versus an acceptance test versus
-an integration test versus a unit test. Different projects need different
+an integration test versus a unit test.((("testing", "end-to-end test of allocate API")))((("end-to-end tests", "of allocate API")))((("APIs", "end-to-end test of allocate API"))) Different projects need different
 combinations of tests, and we've seen perfectly successful projects just split
 things into "fast tests" and "slow tests."
 
@@ -310,7 +310,7 @@ inverted test pyramid (or "ice-cream cone model" as Bob likes to call it).
 If we look at what our Flask app is doing, there's quite a lot of what we
 might call __orchestration__—fetching stuff out of our repository, validating
 our input against database state, handling errors, and committing in the
-happy path. ((("orchestration")))Most of these things don't have anything to do with having a
+happy path. ((("orchestration")))((("service layer", "introducing and using FakeRepository to unit test it", id="ix_serlayintr")))Most of these things don't have anything to do with having a
 web API endpoint (you'd need them if you were building a CLI, for example, see
 <<appendix_csvs>>), and they're not really things that need to be tested by
 end-to-end tests.
@@ -596,14 +596,14 @@ TIP: If you decide you want to build a read-only endpoint for retrieving allocat
 === Why Is Everything Called a Service?
 
 Some of you are probably scratching your heads at this point trying to figure
-out exactly what the difference is between a domain service and a service layer.
+out exactly what the difference((("service layer", "introducing and using FakeRepository to unit test it", startref="ix_serlayintr"))) is between a domain service and a service layer.((("service layer", "difference between domain service and")))((("services", "application service and domain service")))
 
 We're sorry—we didn't choose the names, or we'd have much cooler and friendlier
-ways to talk about this stuff.
+ways to talk about this stuff.((("application services")))
 
 We're using two things called a _service_ in this chapter. The first is an
 _application service_ (our service layer). Its job is to handle requests from the
-outside world, and to _orchestrate_ an operation. What we mean is that the
+outside world, and to _orchestrate_ an operation. ((("orchestration", "using application service")))What we mean is that the
 service layer _drives_ the application, by following a bunch of simple steps:
 
 * Get some data from the database
@@ -613,7 +613,7 @@ service layer _drives_ the application, by following a bunch of simple steps:
 This is the kind of boring work that has to happen for every operation in your
 system, and keeping it separate from business logic helps to keep things tidy.
 
-The second type of service is a _domain service_. This is the name for a piece of
+The second type of service is a _domain service_.((("domain services"))) This is the name for a piece of
 logic that belongs in the domain model but doesn't sit naturally inside a
 stateful entity or value object. For example, if you were building a shopping
 cart application, you might choose to build taxation rules as a domain service.
@@ -626,7 +626,7 @@ can do the job.
 === Putting Things in Folders to See Where It All Belongs
 
 As our application gets bigger, we'll need to keep tidying our directory
-structure. The layout of our project gives us useful hints about what kinds of
+structure.((("service layer", "putting project in folders")))((("projects", "organizing into folders")))((("directory structure", "putting project into folders"))) The layout of our project gives us useful hints about what kinds of
 object we'll find in each file.
 
 Here's one way we could organize things:
@@ -668,7 +668,7 @@ Here's one way we could organize things:
 ----
 ====
 
-<1> Let's have a folder for our domain model.  Currently that's just one file,
+<1> Let's have a folder for our domain model.((("domain model", "folder for")))  Currently that's just one file,
     but for a more complex application, you might have one file per class, you
     might have helper parent classes for `Entity`, `ValueObject`, and
     `Aggregate`, you might add an __exceptions.py__ for domain-layer exceptions,
@@ -678,16 +678,16 @@ Here's one way we could organize things:
     called _services.py_ for our service-layer functions.  You could
     add service-layer exceptions here, and as you'll see in the <<chapter_05_high_gear_low_gear>>, we'll add __unit_of_work.py__.
 
-<3> _Adapters_ is a nod to the ports and adapters terminology. This will fill
+<3> _Adapters_ is a nod to the ports and adapters terminology.((("adapters", "putting into folder"))) This will fill
     up with any other abstractions around external I/O (e.g., a __redis_client.py__).
     Strictly speaking, you would call these _secondary_ adapters or _driven_
-    adapters, or sometimes _inward-facing_ adapters.
+    adapters, or sometimes _inward-facing_ adapters.((("inward-facing adapters")))((("secondary adapters")))((("driven adapters")))
 
-<4> Entrypoints are the places we drive our application from. In the
+<4> Entrypoints are the places we drive our application from.((("entrypoints"))) In the
     official ports and adapters terminology, these are adapters too, and are
     referred to as _primary_, _driving_, or _outward-facing_ adapters.
 
-What about ports?  As you may remember, they are the abstract interfaces that the
+What about ports?((("ports", "putting in folder with adapters")))  As you may remember, they are the abstract interfaces that the
 adapters implement. We tend to keep them in the same file as the adapters that
 implement them.
 
