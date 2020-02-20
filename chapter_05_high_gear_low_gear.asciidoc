@@ -8,14 +8,14 @@ we need to get from our repositories, what pre-checks and current state
 validation we should do, and what we save at the end.
 
 But currently, many of our unit tests operate at a lower level, acting
-directly on the model. In this chapter we'll discuss the trade-offs
+directly on the model.((("test-driven development (TDD)", "unit tests operating at lower level, acting directly on model"))) In this chapter we'll discuss the trade-offs
 involved in moving those tests up to the service-layer level, and
 some more general testing guidelines.
 
 
 .Harry Says: Seeing a Test Pyramid in Action Was a Light-Bulb Moment
 *******************************************************************************
-Here are a few words from Harry directly:
+Here are a((("test-driven development (TDD)", "test pyramid, examining"))) few words from Harry directly:
 
 _I was initially skeptical of all Bob's architectural patterns, but seeing
 an actual test pyramid made me a convert._
@@ -35,7 +35,7 @@ my testing life._
 === How Is Our Test Pyramid Looking?
 
 Let's see what this move to using a service layer, with its own service-layer tests,
-does to our test pyramid:
+does to our((("test-driven development (TDD)", "test pyramid with service layer added")))((("service layer", "using, test pyramid and"))) test pyramid:
 
 [[test_pyramid]]
 .Counting types of tests
@@ -64,7 +64,7 @@ already a healthy-looking test pyramid.
 
 === Should Domain Layer Tests Move to the Service Layer?
 
-Let's see what happens if we take this a step further. Since we can test our
+Let's see what happens if we take this a step further. ((("service layer", "domain layer tests moving to")))((("test-driven development (TDD)", "domain layer tests moving to service layer")))((("domain layer", "tests moving to service layer")))Since we can test our
 software against the service layer, we don't really need tests for the domain
 model anymore. Instead, we could rewrite all of the domain-level tests from
 <<chapter_01_domain_model>> in terms of the service layer:
@@ -103,7 +103,7 @@ def test_prefers_warehouse_batches_to_shipments():
 ----
 ====
 
-Why would we want to do that?
+Why would we want to do that?((("service layer", "domain layer tests moving to", "reasons for")))((("domain layer", "tests moving to service layer", "reasons for")))
 
 Tests are supposed to help us change our system fearlessly, but often
 we see teams writing too many tests against their domain model. This causes
@@ -135,7 +135,7 @@ TIP: Every line of code that we put in a test is like a blob of glue, holding
 === On Deciding What Kind of Tests to Write
 
 You might be asking yourself, "Should I rewrite all my unit tests, then? Is it
-wrong to write tests against the domain model?" To answer those questions, it's
+wrong to write((("test-driven development (TDD)", "deciding what kinds of tests to write")))((("coupling", "trade-off between design feedback and")))((("domain model", "deciding whether to write tests against"))) tests against the domain model?" To answer those questions, it's
 important to understand the trade-off between coupling and design feedback (see
 <<test_spectrum_diagram>>).
 
@@ -155,7 +155,7 @@ image::images/apwp_0501.png[]
 ----
 
 
-Extreme programming (XP) exhorts us to "listen to the code." When we're writing
+Extreme programming (XP) exhorts((("extreme programming (XP)", "exhortation to listen to the code"))) us to "listen to the code." When we're writing
 tests, we might find that the code is hard to use or notice a code smell. This
 is a trigger for us to refactor, and reconsider our design.
 
