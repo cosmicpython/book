@@ -269,7 +269,7 @@ inversion and the Repository pattern to Django.
 
 ==== Inverting the Dependency: ORM Depends on Model
 
-Well, thankfully, that's not the only way to use SQLAlchemy.  The alternative is
+Well, thankfully, that's not the only way to use SQLAlchemy.((("data model", "translating to relational database", "ORM depends on the model")))((("dependency inversion principle", "ORM depends on the data model")))((("SQLAlchemy", "explicit ORM mapping with SQLAlchemy Table objects")))((("classical mapping")))  The alternative is
 to define your schema separately, and an explicit _mapper_ for how to convert
 between the schema and our domain model, what SQLAlchemy calls a
 https://oreil.ly/ZucTG[classical mapping].
