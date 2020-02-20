@@ -176,7 +176,7 @@ def allocate_endpoint():
 So far, so good. No need for too much more of your "architecture astronaut"
 nonsense, Bob and Harry, you may be thinking.
 
-But hang on a minute--there's no commit. We're not actually saving our
+But hang on a minute--there's no commit.((("databases", "testing allocations persisted to database"))) We're not actually saving our
 allocation to the database. Now we need a second test, either one that will
 inspect the database state after (not very black-boxy), or maybe one that
 checks that we can't allocate a second line if a first should have already
@@ -219,7 +219,7 @@ Not quite so lovely, but that will force us to add the commit.((("service layer"
 
 === Error Conditions That Require Database Checks
 
-If we keep going like this, though, things are going to get uglier and uglier.
+If we keep going like this, though, things ((("Flask framework", "Flask API and service layer", "error conditions requiring database checks")))((("service layer", "error conditions requiring database checks in Flask app")))are going to get uglier and uglier.
 
 Suppose we want to add a bit of error handling. What if the domain raises an
 error, for a SKU that's out of stock?  Or what about a SKU that doesn't even
@@ -310,7 +310,7 @@ inverted test pyramid (or "ice-cream cone model" as Bob likes to call it).
 If we look at what our Flask app is doing, there's quite a lot of what we
 might call __orchestration__—fetching stuff out of our repository, validating
 our input against database state, handling errors, and committing in the
-happy path. ((("orchestration")))((("service layer", "introducing and using FakeRepository to unit test it", id="ix_serlayintr")))Most of these things don't have anything to do with having a
+happy path. ((("Flask framework", "Flask API and service layer", "introducing service layer and fake repo to unit test it", id="ix_Flskappserly")))((("orchestration")))((("service layer", "introducing and using FakeRepository to unit test it", id="ix_serlayintr")))Most of these things don't have anything to do with having a
 web API endpoint (you'd need them if you were building a CLI, for example, see
 <<appendix_csvs>>), and they're not really things that need to be tested by
 end-to-end tests.
@@ -421,7 +421,7 @@ def test_commits():
 
 ==== A Typical Service Function
 
-We'll write a service ((("service layer", "typical service function")))((("functions", "service layer")))function that looks something like this:
+We'll write a service ((("Flask framework", "Flask API and service layer", "introducing service layer and fake repo to unit test it", startref="ix_Flskappserly")))((("service layer", "typical service function")))((("functions", "service layer")))((("Flask framework", "Flask API and service layer", "typical service layer function")))function that looks something like this:
 
 [[service_function]]
 .Basic allocation service (services.py)
@@ -494,7 +494,7 @@ abstractions intact.
 
 
 But the essentials of the service layer are there, and our Flask
-app now looks ((("service layer", "Flask app delegating to")))a lot cleaner:
+app now looks ((("Flask framework", "Flask API and service layer", "app delegating to service layer")))((("service layer", "Flask app delegating to")))a lot cleaner:
 
 
 [[flask_app_using_service_layer]]
@@ -532,7 +532,7 @@ codes, and JSON. All the orchestration logic is in the use case/service layer,
 and the domain logic stays in the domain.
 
 Finally, we can confidently strip down our E2E tests to just two, one for
-the happy path and one((("testing", "end-to-end test of allocate API", "testing happy and unhappy paths")))((("service layer", "end-to-end test of allocate API", "testing happy and unhappy paths"))) for the unhappy path:
+the happy path and one((("testing", "end-to-end test of allocate API", "testing happy and unhappy paths")))((("service layer", "end-to-end test of allocate API", "testing happy and unhappy paths")))((("Flask framework", "Flask API and service layer", "end-to-end tests for happy and unhappy paths"))) for the unhappy path:
 
 
 [[fewer_e2e_tests]]
@@ -578,7 +578,7 @@ we can test against the service layer in memory.
 .Exercise for the Reader
 ******************************************************************************
 Now that we have an allocate service, so why not build out a service for
-`deallocate`? We've added https://github.com/cosmicpython/code/tree/chapter_04_service_layer_exercise[an E2E test and a few stub service-layer tests] for
+`deallocate`?((("deallocate service, building (exerise)"))) We've added https://github.com/cosmicpython/code/tree/chapter_04_service_layer_exercise[an E2E test and a few stub service-layer tests] for
 you to get started on GitHub.
 
 If that's not enough, continue into the E2E tests and _flask_app.py_, and
@@ -596,7 +596,7 @@ TIP: If you decide you want to build a read-only endpoint for retrieving allocat
 === Why Is Everything Called a Service?
 
 Some of you are probably scratching your heads at this point trying to figure
-out exactly what the difference((("service layer", "introducing and using FakeRepository to unit test it", startref="ix_serlayintr"))) is between a domain service and a service layer.((("service layer", "difference between domain service and")))((("services", "application service and domain service")))
+out exactly what the difference((("service layer", "introducing and using FakeRepository to unit test it", startref="ix_serlayintr"))) is between a domain service and a service layer.((("service layer", "difference between domain service and")))((("services", "application service and domain service")))((("Flask framework", "Flask API and service layer", "different types of services")))
 
 We're sorry—we didn't choose the names, or we'd have much cooler and friendlier
 ways to talk about this stuff.((("application services")))
@@ -626,7 +626,7 @@ can do the job.
 === Putting Things in Folders to See Where It All Belongs
 
 As our application gets bigger, we'll need to keep tidying our directory
-structure.((("service layer", "putting project in folders")))((("projects", "organizing into folders")))((("directory structure", "putting project into folders"))) The layout of our project gives us useful hints about what kinds of
+structure.((("Flask framework", "Flask API and service layer", "putting project into folders")))((("service layer", "putting project in folders")))((("projects", "organizing into folders")))((("directory structure", "putting project into folders"))) The layout of our project gives us useful hints about what kinds of
 object we'll find in each file.
 
 Here's one way we could organize things:
@@ -695,7 +695,7 @@ implement them.
 === Wrap-Up
 
 
-Adding the service layer((("service layer", "benefits of"))) has really bought us quite a lot:
+Adding the service layer((("service layer", "benefits of")))((("Flask framework", "Flask API and service layer", "service layer benefits"))) has really bought us quite a lot:
 
 * Our Flask API endpoints become very thin and easy to write: their
   only responsibility is doing "web stuff," things like parsing JSON
@@ -719,7 +719,7 @@ Adding the service layer((("service layer", "benefits of"))) has really bought u
 ==== The DIP in Action
 
 <<service_layer_diagram_abstract_dependencies>> shows the
-dependencies of our service ((("service layer", "dependencies of")))((("dependencies", "abstract dependencies of service layer")))layer: the domain model,
+dependencies of our service ((("Flask framework", "Flask API and service layer", "service layer dependencies")))((("service layer", "dependencies of")))((("dependencies", "abstract dependencies of service layer")))layer: the domain model,
 and `AbstractRepository` (the port, in ports and adapters terminology).
 
 [[service_layer_diagram_abstract_dependencies]]
@@ -828,7 +828,7 @@ Wonderful.  But there are still some bits of awkwardness to tidy up:
   You'll see!
 
 But first, as is customary, a pause for <<chapter_04_service_layer_tradeoffs>>,
-in which we consider((("service layer", "pros and cons or trade-offs"))) the pros and cons of having a service layer at all.
+in which we consider((("Flask framework", "Flask API and service layer", "service layer pros and cons")))((("service layer", "pros and cons or trade-offs"))) the pros and cons of having a service layer at all.
 
 
 [[chapter_04_service_layer_tradeoffs]]
