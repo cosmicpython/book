@@ -310,13 +310,13 @@ inverted test pyramid (or "ice-cream cone model" as Bob likes to call it).
 If we look at what our Flask app is doing, there's quite a lot of what we
 might call __orchestration__—fetching stuff out of our repository, validating
 our input against database state, handling errors, and committing in the
-happy path. Most of these things don't have anything to do with having a
+happy path. ((("orchestration")))Most of these things don't have anything to do with having a
 web API endpoint (you'd need them if you were building a CLI, for example, see
 <<appendix_csvs>>), and they're not really things that need to be tested by
 end-to-end tests.
 
 It often makes sense to split out a service layer, sometimes called
-_orchestration layer_ or _use-case layer_.
+_orchestration layer_ or _use-case layer_.((("use-case layer", see="service layer")))((("orchestration layer", see="service layer")))
 
 Do you remember the `FakeRepository` that we prepared in <<chapter_03_abstractions>>?
 
