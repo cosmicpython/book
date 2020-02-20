@@ -569,7 +569,7 @@ enumerating tests for all the edge cases is now much easier.((("abstractions", "
 ==== Why Not Just Patch It Out?
 
 At this point you may be scratching your head and thinking,
-"Why don't you just use `mock.patch` and((("testing", "after implementing chosen abstraction", "avoiding use of mock.patch", id="ix_tstaftabsmck")))((("mock.patch method"))) save yourself the effort?""
+"Why don't you just use `mock.patch` and((("abstractions", "implementing chosen abstraction", "not using mock.patch for testing")))((("testing", "after implementing chosen abstraction", "avoiding use of mock.patch", id="ix_tstaftabsmck")))((("mock.patch method"))) save yourself the effort?""
 
 We avoid using mocks in this book and in our production code too.((("mocking", "avoiding use of mock.patch"))) We're not
 going to enter into a Holy War, but our instinct is that mocking frameworks,
@@ -626,7 +626,7 @@ called https://oreil.ly/yYjBN["Mocks Aren't Stubs"].
 
 It also probably doesn't help that the `MagicMock` objects provided by
 `unittest.mock` aren't, strictly speaking, mocks; they're spies, if anything.
-But they're also often used as stubs or dummies.((("test doubles", "mocks versus stubs"))) There, we promise we're done with
+But they're also often used as stubs or dummies.((("MagicMock objects")))((("unittest.mock function")))((("test doubles", "mocks versus stubs"))) There, we promise we're done with
 the test double terminology nitpicks now.
 
 //IDEA (hynek) you could mention Alex Gaynor's `pretend` which gives you
@@ -656,11 +656,11 @@ Steve Freeman has a great example of overmocked tests in his talk
 https://oreil.ly/jAmtr["Test-Driven Development: That's Not What We Meant"].
 You should also check out this https://oreil.ly/s3e05[PyCon talk on Mocking Pitfalls]
 by our esteemed tech reviewer, Ed Jung, which also addresses mocking and its
-alternatives.((("PyCon talk on Mocking Pitfalls")))((("Jung, Ed")))
+alternatives.((("&quot;Test-Driven Development: That&#x27;s Not What We Meant&quot;", primary-sortas="Test-Driven Development")))((("Freeman, Steve")))((("PyCon talk on Mocking Pitfalls")))((("Jung, Ed")))
 
 And while we're recommending talks, don't miss Brandon Rhodes talking about
 https://oreil.ly/oiXJM[hoisting I/O],
-which really nicely covers the issues we're talking about, using another simple example.
+which really nicely covers the issues we're talking about, using another simple example.((("hoisting I/O")))((("Rhodes, Brandon")))
 
 
 TIP: In this chapter, we've spent a lot of time replacing end-to-end tests with
@@ -697,7 +697,7 @@ a few heuristics and questions to ask yourself:
 
 * Where can I draw a line between my systems, where can I carve out a
   https://oreil.ly/zNUGG[seam]
-  to stick that abstraction in?
+  to stick that abstraction in?((("seams")))
 
 * What is a sensible way of dividing things into components with different
   responsibilities?  What implicit concepts can I make explicit?
