@@ -2,7 +2,7 @@
 == A Brief Interlude: On Coupling pass:[<span class="keep-together">and Abstractions</span>]
 
 Allow us a brief digression on the subject of abstractions, dear reader.
-We've talked about _abstractions_ quite a lot. The Repository pattern is an
+We've talked about _abstractions_ quite a lot.((("abstractions", id="ix_abs"))) The Repository pattern is an
 abstraction over permanent storage, for example. But what makes a good
 abstraction?  What do we want from them?  And how do they relate to testing?
 
@@ -705,6 +705,6 @@ a few heuristics and questions to ask yourself:
 * What are the dependencies and what is the core business logic?
 
 
-Practice makes less imperfect!
+Practice makes less imperfect!((("abstractions", startref="ix_abs")))
 
 And now back to our regular programming...
