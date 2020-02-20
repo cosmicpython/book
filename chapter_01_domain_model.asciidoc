@@ -883,7 +883,7 @@ def allocate(line: OrderLine, batches: List[Batch]) -> str:
 
 You may or may not like the use of `next()` in the preceding code, but we're pretty
 sure you'll agree that being able to use `sorted()` on our list of
-batches is nice, idiomatic Python.((("magic methods", "allowing use of domain model with idiomatic Python")))
+batches is nice, idiomatic Python.((("magic methods", "allowing use of domain model with idiomatic Python")))((("&#x5f;&#x5f;gt&#x5f;&#x5f; magic method", primary-sortas="gt")))
 
 To make it work, we implement +++<code>__gt__</code>+++ on our domain model:
 
