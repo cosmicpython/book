@@ -456,7 +456,7 @@ _edge-to-edge testing_.((("edge-to-edge testing", id="ix_edgetst")))
 ==== Testing Edge-to-Edge with Fakes and Dependency Injection
 
 When we start writing a new system, we often focus on the core logic first,
-driving it with direct unit tests.((("testing", "after implementing chosen abstraction", "edge-to-edge testing with fakes and dependency injection", id="ix_tstaftabsedge"))) At some point, though, we want to test bigger
+driving it with direct unit tests.((("abstractions", "implementing chosen abstraction", "edge-to-edge testing with fakes and dependency injection", id="ix_absimpltstfdi")))((("testing", "after implementing chosen abstraction", "edge-to-edge testing with fakes and dependency injection", id="ix_tstaftabsedge"))) At some point, though, we want to test bigger
 chunks of the system together.((("dependencies", "edge-to-edge testing with dependency injection", id="ix_depinj")))
 
 We _could_ return to our end-to-end tests, but those are still as tricky to
@@ -563,7 +563,7 @@ David Heinemeier Hansson, the creator of Ruby on Rails, famously described this
 as "test-induced design damage."
 
 In either case, we can now work on fixing all the bugs in our implementation;
-enumerating tests for all the edge cases is now much easier.((("dependencies", "edge-to-edge testing with dependency injection", startref="ix_depinj")))((("testing", "after implementing chosen abstraction", "edge-to-edge testing with fakes and dependency injection", startref="ix_tstaftabsedge")))((("edge-to-edge testing", startref="ix_edgetst")))
+enumerating tests for all the edge cases is now much easier.((("abstractions", "after implementing chosen abstraction", "edge-to-edge testing with fakes and dependency injection", startref="ix_absimpltstfdi")))((("dependencies", "edge-to-edge testing with dependency injection", startref="ix_depinj")))((("testing", "after implementing chosen abstraction", "edge-to-edge testing with fakes and dependency injection", startref="ix_tstaftabsedge")))((("edge-to-edge testing", startref="ix_edgetst")))
 
 
 ==== Why Not Just Patch It Out?
