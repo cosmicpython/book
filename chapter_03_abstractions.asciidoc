@@ -94,7 +94,7 @@ left.
 
 === Abstracting State Aids Testability
 
-Let's see an example.((("testing", "abstracting state to aid testability", id="ix_tstabs")))((("abstractions", "abstracting state to aid testability", id="ix_absstate")))((("state", "abstracting to aid testability", id="ix_stateabs"))) Imagine we want to write code for synchronizing two
+Let's see an example.((("testing", "abstracting state to aid testability", id="ix_tstabs")))((("abstractions", "abstracting state to aid testability", id="ix_absstate")))((("state", "abstracting to aid testability", id="ix_stateabs")))((("filesystems", "writing code to synchronize source and target directories", id="ix_filesync"))) Imagine we want to write code for synchronizing two
 file directories, which we'll call the _source_ and the _destination_:
 
 * If a file exists in the source, but not the destination, copy the file over.
@@ -104,7 +104,7 @@ file directories, which we'll call the _source_ and the _destination_:
 
 Our first and third requirements are simple enough: we can just compare two
 lists of paths. Our second is trickier, though. To detect renames,
-we'll have to inspect the content of files. For this, we can use a hashing
+we'll have to inspect the content of files.((("hashing a file"))) For this, we can use a hashing
 function like MD5 or SHA-1. The code to generate a SHA-1 hash from a file is simple
 enough:
 
@@ -261,7 +261,7 @@ Our high-level code is coupled to low-level details, and it's making life hard.
 As the scenarios we consider get more complex, our tests will get more unwieldy.
 We can definitely refactor these tests (some of the cleanup could go into pytest
 fixtures, for example) but as long as we're doing filesystem operations, they're
-going to stay slow, and hard to read and write.((("state", "abstracting to aid testability", startref="ix_stateabs")))((("testing", "abstracting state to aid testability", startref="ix_tstabs")))((("abstractions", "abstracting state to aid testability", startref="ix_absstate")))
+going to stay slow, and hard to read and write.((("filesystems", "writing code to synchronize source and target directories", startref="ix_filesync")))((("state", "abstracting to aid testability", startref="ix_stateabs")))((("testing", "abstracting state to aid testability", startref="ix_tstabs")))((("abstractions", "abstracting state to aid testability", startref="ix_absstate")))
 
 === Choosing the Right Abstraction(s)
 
