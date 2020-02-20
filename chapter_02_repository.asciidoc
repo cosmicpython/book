@@ -2,7 +2,7 @@
 == Repository Pattern
 
 It's time to make good on our promise to use the dependency inversion principle as
-a way of decoupling our core logic from infrastructural concerns.
+a way of decoupling our core logic from infrastructural concerns.((("Repository pattern", id="ix_Repo")))
 
 We'll introduce the _Repository_ pattern, a simplifying abstraction over data storage,
 allowing us to decouple our model layer from the data layer. We'll present a
@@ -959,4 +959,4 @@ You'll be wondering, how do we instantiate these repositories, fake or
 real? What will our Flask app actually look like? You'll find out in the next
 exciting installment, <<chapter_04_service_layer,the Service Layer pattern>>.
 
-But first, a brief digression.
+But first, a brief digression.((("Repository pattern", startref="ix_Repo")))
