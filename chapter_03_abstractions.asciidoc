@@ -265,7 +265,7 @@ going to stay slow, and hard to read and write.((("filesystems", "writing code t
 
 === Choosing the Right Abstraction(s)
 
-What could we do to rewrite our code to make it more testable?
+What could we do to rewrite our code to make it more testable?((("abstractions", "choosing right abstraction", id="ix_abscho")))
 
 First we need to think about what our code needs from the filesystem.
 Reading through the code, three distinct things are happening.
@@ -339,7 +339,7 @@ what _abstraction_ of filesystem actions will happen?"
 
 === Implementing Our Chosen Abstractions
 
-That's all very well, but how do we _actually_ write those new
+That's all very well, but how do we _actually_ write those new((("abstractions", "choosing right abstraction", startref="ix_abscho")))
 tests, and how do we change our implementation to make it all work?
 
 Our goal is to isolate the clever part of our system, and to be able to test it
