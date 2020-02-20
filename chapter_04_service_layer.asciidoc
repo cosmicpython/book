@@ -51,7 +51,7 @@ git checkout chapter_02_repository
 === Connecting Our Application to the Real World
 
 Like any good agile team, we're hustling to try to get an MVP out and
-in front of the users to start gathering feedback.((("service layer", "connecting our application to real world"))) We have the core
+in front of the users to start gathering feedback.((("Flask framework", "Flask API and service layer", "connecting the app to real world")))((("service layer", "connecting our application to real world"))) We have the core
 of our domain model and the domain service we need to allocate orders,
 and we have the repository interface for permanent storage.
 
@@ -78,7 +78,7 @@ plan:
 
 No one is interested in getting into a long terminology debate about what
 counts as an end-to-end (E2E) test versus a functional test versus an acceptance test versus
-an integration test versus a unit test.((("testing", "end-to-end test of allocate API")))((("end-to-end tests", "of allocate API")))((("APIs", "end-to-end test of allocate API"))) Different projects need different
+an integration test versus a unit test.((("Flask framework", "Flask API and service layer", "first API end-to-end test", id="ix_Flskappe2e")))((("testing", "end-to-end test of allocate API")))((("end-to-end tests", "of allocate API")))((("APIs", "end-to-end test of allocate API"))) Different projects need different
 combinations of tests, and we've seen perfectly successful projects just split
 things into "fast tests" and "slow tests."
 
@@ -126,13 +126,13 @@ def test_api_returns_allocation(add_stock):
 
 Everyone solves these problems in different ways, but you're going to need some
 way of spinning up Flask, possibly in a container, and also talking to a
-Postgres database. If you want to see how we did it, check out
+Postgres database.((("Flask framework", "Flask API and service layer", "first API end-to-end test", startref="ix_Flskappe2e"))) If you want to see how we did it, check out
 <<appendix_project_structure>>.
 
 
 === The Straightforward Implementation
 
-Implementing things in the most obvious way, you might get something like this:
+Implementing things in the most obvious way, you ((("service layer", "first cut of Flask app", id="ix_serlay1Flapp")))((("Flask framework", "Flask API and service layer", "first cut of the app", id="ix_Flskapp1st")))might get something like this:
 
 
 [[first_cut_flask_app]]
@@ -213,7 +213,7 @@ def test_allocations_are_persisted(add_stock):
 ----
 ====
 
-Not quite so lovely, but that will force us to add the commit.
+Not quite so lovely, but that will force us to add the commit.((("service layer", "first cut of Flask app", startref="ix_serlay1Flapp")))((("Flask framework", "Flask API and service layer", "first cut of the app", startref="ix_Flskapp1st")))
 
 
 
