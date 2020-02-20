@@ -719,7 +719,7 @@ Adding the service layer((("service layer", "benefits of"))) has really bought u
 ==== The DIP in Action
 
 <<service_layer_diagram_abstract_dependencies>> shows the
-dependencies of our service layer: the domain model,
+dependencies of our service ((("service layer", "dependencies of")))((("dependencies", "abstract dependencies of service layer")))layer: the domain model,
 and `AbstractRepository` (the port, in ports and adapters terminology).
 
 [[service_layer_diagram_abstract_dependencies]]
@@ -743,7 +743,7 @@ image::images/apwp_0403.png[]
 
 When we run the tests, <<service_layer_diagram_test_dependencies>> shows
 how we implement the abstract dependencies by using `FakeRepository` (the
-adapter).
+adapter).((("service layer", "dependencies of", "testing")))((("dependencies", "abstract dependencies of service layer", "testing")))
 
 [[service_layer_diagram_test_dependencies]]
 .Tests provide an implementation of the abstract dependency
@@ -773,7 +773,7 @@ image::images/apwp_0404.png[]
                          +----------------------+
 ----
 
-And when we actually run our app, we swap in the "real" dependency shown in
+And when we actually run our app, we swap in the "real" dependency((("service layer", "dependencies of", "real dependencies at runtime")))((("dependencies", "real service layer dependencies at runtime"))) shown in
 <<service_layer_diagram_runtime_dependencies>>.
 
 [[service_layer_diagram_runtime_dependencies]]
