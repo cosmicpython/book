@@ -56,7 +56,7 @@
 </xsl:template>
 
 	   <!--BEGIN OVERRIDE -->
-	     <xsl:when test="ancestor::h:section[@data-type = 'afterword' and @class = 'epilogue']">E</xsl:when>
+	     <xsl:when test="ancestor::h:section[@data-type = 'afterword']">E</xsl:when>
 	     <!-- END OVERRIDE-->
 	     
       <xsl:when test="ancestor::h:section[@data-type = 'preface']">P</xsl:when>
