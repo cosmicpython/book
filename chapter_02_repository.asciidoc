@@ -831,7 +831,7 @@ Concretely, in this chapter, `AbstractRepository` is the port, and
 === Wrap-Up
 
 Bearing the Rich Hickey quote in mind, in each chapter we'
-summarize the costs and benefits of each architectural pattern we introduce.
+summarize the costs and benefits((("Repository pattern", "and persistence ignorance, trade-offs")))((("persistence ignorance", "trade-offs"))) of each architectural pattern we introduce.
 We want to be clear that we're not saying every single application needs
 to be built this way; only sometimes does the complexity of the app and domain
 make it worth investing the time and effort in adding these extra layers of
@@ -893,7 +893,7 @@ TIP: If your app is just a simple CRUD (create-read-update-delete) wrapper
     around a database, then you don't need a domain model or a repository.
 
 But, the more complex the domain, the more an investment in freeing
-yourself from infrastructure concerns will pay off in terms of the ease of
+yourself from ((("&quot;Global Complexity, Local Simplicity&quot; post", primary-sortas="Global")))((("Vens, Rob")))((("domain model", "trade-offs as a diagram")))infrastructure concerns will pay off in terms of the ease of
 making changes.footnote:[Diagram inspired by a post called
 https://oreil.ly/fQXkP["Global Complexity, Local Simplicity"] by Rob Vens.]
 
@@ -945,7 +945,7 @@ needing to think about the database until later.
 Apply dependency inversion to your ORM::
     Our domain model should be free of infrastructure concerns,
     so your ORM should import your model, and not the other way
-    around.
+    around.((("Repository pattern", "recap of important points")))
 
 The Repository pattern is a simple abstraction around permanent storage::
     The repository gives you the illusion of a collection of in-memory
