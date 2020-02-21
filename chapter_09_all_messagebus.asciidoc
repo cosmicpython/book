@@ -110,7 +110,7 @@ event handlers:
 * `services.allocate()` could be the handler for an
   `AllocationRequired` event and could emit `Allocated` events as its output.
 
-* `services.add_batch()` could be the handler for a `BatchCreated`
+* `services.add_batch()` could((("BatchCreated event", "services.add_batch as handler for"))) be the handler for a `BatchCreated`
   event.footnote:[If you've done a bit of reading about event-driven
     architectures, you may be thinking, "Some of these events sound more like
     commands!" Bear with us! We're trying to introduce one concept at a time.
@@ -119,10 +119,10 @@ event handlers:
 
 Our new requirement will fit the same pattern:
 
-* An event called `BatchQuantityChanged` can invoke a handler called
+* An event called `BatchQuantityChanged` can invoke((("BatchQuantityChanged event", "invoking handler change_batch_quantity"))) a handler called
   `change_batch_quantity()`.
 
-* And the new `AllocationRequired` events that it may raise can be passed on to
+* And the new `AllocationRequired` events ((("AllocationRequired event", "passing to services.allocate")))that it may raise can be passed on to
   `services.allocate()` too, so there is no conceptual difference between a
   brand-new allocation coming from the API and a reallocation that's
   internally triggered by a deallocation.
@@ -154,7 +154,7 @@ responsibility for putting new events onto the message bus into the message bus 
 
 === Refactoring Service Functions to Message Handlers
 
-We start by defining the two events that ((("service functions", "refactoring to message handlers")))((("events and the message bus", "transforming our app into message processor", "refactoring service functions to message handlers")))capture our current API inputs:
+We start by defining the two events that ((("service functions", "refactoring to message handlers")))((("events and the message bus", "transforming our app into message processor", "refactoring service functions to message handlers")))((("BatchCreated event")))((("AllocationRequired event")))capture our current API inputs:
 `AllocationRequired` and `BatchCreated`:
 
 [[two_new_events]]
@@ -361,7 +361,7 @@ In _unit_of_work.py_, `publish_events()` becomes a less active method,
 
 ==== Our Tests Are All Written in Terms of Events Too
 
-Our tests now operate by creating events ((("events and the message bus", "transforming our app into message processor", "tests writtern to create events and put them on message bus")))((("testing", "tests written in terms of events")))and putting them on the
+Our tests now operate by creating events ((("events and the message bus", "transforming our app into message processor", "tests writtern to in terms of events")))((("testing", "tests written in terms of events")))and putting them on the
 message bus, rather than invoking service-layer functions directly:
 
 
@@ -486,7 +486,7 @@ We're done with our refactoring phase. ((("events and the message bus", "transfo
 change easy."  Let's implement our new requirement, shown in <<reallocation_sequence_diagram>>: we'll receive as our
 inputs some new `BatchQuantityChanged` events, pass them to a handler, which in
 turn might emit some `AllocationRequired` events, and those in turn will go
-back to our existing handler for allocation, to be reallocated.
+back to our existing handler for allocation, to be reallocated.((("reallocation", "sequence diagram for flow")))
 
 [[reallocation_sequence_diagram]]
 .Sequence diagram for reallocation flow
@@ -510,7 +510,7 @@ end
 @enduml
 ----
 
-WARNING: Whenever you split things out like this across two units of work,
+WARNING: Whenever you split((("Unit of Work pattern", "splitting operations across two UoWs")))((("data integrity", "issues arising from splitting operation across two UoWs"))) things out like this across two units of work,
     you now have two database transactions, so you are opening yourself up
     to integrity issues: something could happen that means the first completes
     but the second does not. You'll need to think about whether this is acceptable,
@@ -522,7 +522,7 @@ WARNING: Whenever you split things out like this across two units of work,
 ==== Our New Event
 
 The event that tells us a batch quantity has changed is simple; it just
-needs a batch reference and a new quantity:
+needs a batch((("BatchQuantityChanged event", "implementing"))) reference and a new quantity:
 
 
 [[batch_quantity_changed_event]]
@@ -542,7 +542,7 @@ class BatchQuantityChanged(Event):
 
 Following the ((("events and the message bus", "transforming our app into message processor", "implementing the new requirement", startref="ix_evntMBMPreq")))lessons learned in <<chapter_04_service_layer>>,
 we can operate in "high gear" and write our unit tests at the highest
-possible level of abstraction, in terms of events. Here's what they might
+possible level of abstraction, in terms of events.((("events and the message bus", "transforming our app into message processor", "test driving new handler")))((("testing", "tests written in terms of events", "handler tests for change_batch_quantity")))((("change_batch_quantity", "handler tests for"))) Here's what they might
 look like:
 
 
@@ -600,7 +600,7 @@ class TestChangeBatchQuantity:
 
 ==== Implementation
 
-Our new handler is very simple:
+Our new handler ((("change_batch_quantity", "implementation, handler delegating to model layer")))is very simple:
 
 [[change_quantity_handler]]
 .Handler delegates to model layer (src/allocation/service_layer/handlers.py)
@@ -620,7 +620,7 @@ def change_batch_quantity(
 // TODO (DS): Indentation looks off
 
 
-We realize we'll need a new query type on our repository:
+We realize we'll need a((("repositories", "new query type on our repository"))) new query type on our repository:
 
 [[get_by_batchref]]
 .A new query type on our repository (src/allocation/adapters/repository.py)
@@ -666,7 +666,7 @@ class SqlAlchemyRepository(AbstractRepository):
 ----
 ====
 
-And on our `FakeRepository` too:
+And ((("faking", "FakeRepository", "new query type on")))on our `FakeRepository` too:
 
 [[fakerepo_get_by_batchref]]
 .Updating the fake repo too (tests/unit/test_handlers.py)
@@ -690,7 +690,7 @@ class FakeRepository(repository.AbstractRepository):
 
 
 NOTE: We're adding a query to our repository to make this use case easier to
-implement. So long as our query is returning a single aggregate, we're not
+implement.((("aggregates", "query on repository returning single aggregate"))) So long as our query is returning a single aggregate, we're not
 bending any rules. If you find yourself writing complex queries on your
 repositories, you might want to consider a different design. Methods like `get_most_popular_products` or `find_products_by_order_id` in particular would
 definitely trigger our spidey sense. <<chapter_11_external_events>> and <<epilogue_1_how_to_get_there_from_here>> have some tips
@@ -699,7 +699,7 @@ on managing complex queries.
 ==== A New Method on the Domain Model
 
 We add the new method to the model, which does the quantity change and
-deallocation(s) inline, and publishes a new event.  We also modify the existing
+deallocation(s) inline, and publishes a new event.((("domain model", "new method on, change_batch_quantity")))  We also modify the existing
 allocate function to publish an event.
 
 
@@ -729,7 +729,7 @@ class Batch:
 ----
 ====
 
-We wire up our new handler:
+We wire ((("message bus", "wiring up new event handlers to")))up our new handler:
 
 
 [[full_messagebus]]
@@ -752,7 +752,7 @@ And our new requirement is fully implemented.
 [[fake_message_bus]]
 === Optionally: Unit Testing Event Handlers in Isolation with a Fake Message Bus
 
-Our main test for the reallocation workflow is _edge-to-edge_
+Our main test((("events and the message bus", "transforming our app into message processor", "unit testing event handlers with fake message bus")))((("testing", "tests written in terms of events", "unit testing event handlers with fake message bus")))((("message bus", "unit testing event handlers with fake message bus"))) for the reallocation workflow is _edge-to-edge_
 (see the example code in <<test-driving-ch9>>). It uses
 the real message bus, and it tests the whole flow, where the `BatchQuantityChanged`
 event handler triggers deallocation, and emits new `AllocationRequired` events, which in
@@ -763,7 +763,7 @@ Depending on the complexity of your chain of events, you may decide that you
 want to test some handlers in isolation from one another. You can do this
 using a "fake" message bus.
 
-In our case, we actually intervene by modifying the `publish_events()` method
+In our case, we actually intervene by ((("Unit of Work pattern", "fake message bus implemented in UoW")))modifying the `publish_events()` method
 on `FakeUnitOfWork`, and decouple it from the real message bus, instead making
 it record what events it sees:
 
@@ -791,7 +791,7 @@ Now when we invoke `messagebus.handle()` using the `FakeUnitOfWorkWithFakeMessag
 it runs only the handler for that event. So we can write a more isolated unit
 test: instead of checking all the side effects, we just check that
 `BatchQuantityChanged` leads to `AllocationRequired` if the quantity drops
-below the total already allocated:
+below the total already ((("reallocation", "testing in isolation using fake message bus")))allocated:
 
 
 [[test_handler_in_isolation]]
@@ -836,10 +836,10 @@ this only if necessary.
 A great way to force yourself to really understand some code is to refactor it.
 In the discussion of testing handlers in isolation, we used something called
 `FakeUnitOfWorkWithFakeMessageBus`, which is unnecessarily complicated, and
-violates the SRP.
+violates the SRP.((("message bus", "abstract message bus and its real and fake versions")))
 
 If we change the message bus to being a class,footnote:[The "simple"
-implementation in this chapter essentially uses the _messagebus.py_ module
+implementation ((("Singleton pattern, messagebus.py implementing")))in this chapter essentially uses the _messagebus.py_ module
 itself to implement Singleton Pattern.]
 then building a `FakeMessageBus` is more straightforward:
 
@@ -900,7 +900,7 @@ if you need more inspiration.
 === Why Have We Achieved?
 
 Our ongoing objective with these architectural patterns is to try to have
-the complexity of our application grow more slowly than its size.  When we
+the complexity of our application grow more slowly than its size.((("message bus", "whole app as, trade-offs")))((("events and the message bus", "transforming our app into message processor", "whole app as message bus, trade-offs")))  When we
 go all-in on the MessageBus, as always we pay a price in terms of architectural
 complexity (see <<chapter_09_all_messagebus_tradeoffs>>, but we buy ourselves a
 pattern that can handle almost arbitrarily complex requirements without needing
