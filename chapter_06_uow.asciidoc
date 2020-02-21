@@ -5,7 +5,7 @@ In this chapter we'll introduce the final piece of the puzzle that ties
 together ((("Unit of Work pattern", id="ix_UoW")))the repository and service layer patterns: the _Unit of Work pattern_.
 
 If the Repository pattern is our abstraction over the idea of persistent storage,
-the Unit of Work (UoW) pattern is our abstraction over the idea of _atomic operations_.((("atomic operations, Unit of Work pattern and"))) It
+the Unit of Work (UoW) pattern is our abstraction over the idea of _atomic operations_.((("atomic operations"))) It
 will allow us to finally, fully, decouple our service layer from the data layer.((("UoW", see="Unit of Work pattern")))
 
 
@@ -167,7 +167,7 @@ def get_allocated_batch_ref(session, orderid, sku):
 
 === Unit of Work and Its Context Manager
 
-In our tests we've implicitly defined an interface for what a UoW needs to do. Let's make that explicit by using an ((("abstractions", "AbstractUnitOfWork")))((("Unit of Work pattern", "and its context manager")))((("context manager", "abstract UoW context manager")))abstract
+In our tests we've implicitly defined an interface for what a UoW needs to do. Let's make that explicit by using an ((("abstractions", "AbstractUnitOfWork")))((("Unit of Work pattern", "and its context manager")))((("context manager", "Unit of Work and", id="ix_ctxtmgr")))abstract
 base class:
 
 
@@ -212,7 +212,7 @@ class AbstractUnitOfWork(abc.ABC):
 ==== The Real Unit of Work Uses SQLAlchemy Sessions
 
 The main thing that our concrete implementation adds is the
-database ((("SQLAlchemy", "database session for Unit of Work")))((("Unit of Work pattern", "real implementation using SQLAlchemy database session")))((("databases", "SQLAlchemy adding session for Unit of Work")))session:
+database ((("Unit of Work pattern", "and its context manager", "real UoW using SQLAlchemy session")))((("SQLAlchemy", "database session for Unit of Work")))((("databases", "SQLAlchemy adding session for Unit of Work")))session:
 
 [[unit_of_work]]
 .The real SQLAlchemy UoW (src/allocation/service_layer/unit_of_work.py)
@@ -346,7 +346,7 @@ start and stop units of work.
 "Don't Mock What You Don't Own" is a rule of thumb that forces us to build
 these simple abstractions over messy subsystems. This has the same performance
 benefit as mocking the SQLAlchemy session but encourages us to think carefully
-about our designs.
+about our designs.((("context manager", "Unit of Work and", startref="ix_ctxtmgr")))
 ********************************************************************************
 
 === Using the UoW in the Service Layer
