@@ -545,7 +545,7 @@ def change_batch_quantity(batchref: str, new_qty: int, uow: AbstractUnitOfWork):
 ====
 
 <1> Here we may need to deallocate any number of lines. If we get a failure
-    at any stage, we probably want to commit none of the changes.
+    at any stage, we probably want to commit none of the changes.((("Unit of Work pattern", "using UoW to group multiple operations into atomic unit", startref="ix_UoWatom")))
 
 
 === Tidying Up the Integration Tests
@@ -607,7 +607,7 @@ something you're particularly proud of?
 === Wrap-Up
 
 Hopefully we've convinced you that the Unit of Work pattern is useful, and
-that((("Unit of Work pattern", "using UoW to group multiple operations into atomic unit", startref="ix_UoWatom"))) the context manager is a really nice Pythonic way
+that the context manager is a really nice Pythonic way
 of visually grouping code into blocks that we want to happen atomically.
 
 This pattern is so useful, in fact, that SQLAlchemy already uses a UoW
