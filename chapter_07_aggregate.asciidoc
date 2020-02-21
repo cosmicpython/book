@@ -377,11 +377,11 @@ NOTE: This `Product` might not look like what you'd expect a `Product`
 [[bounded_contexts_sidebar]]
 .Aggregates, Bounded Contexts, and Microservices
 *******************************************************************************
-One of the most important contributions from Evans and the DDD community
+One of the most important((("bounded contexts"))) contributions from Evans and the DDD community
 is the concept of
 https://martinfowler.com/bliki/BoundedContext.html[_bounded contexts_].
 
-In essence, this was a reaction against attempts to capture entire businesses
+In essence, this ((("domain driven design (DDD)", "bounded contexts")))was a reaction against attempts to capture entire businesses
 into a single model. The word "customer" means different things to people
 in sales, customer service, logistics, support, and so on. Attributes
 needed in one context are irrelevant in another; more perniciously, concepts
