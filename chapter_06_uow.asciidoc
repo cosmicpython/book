@@ -492,7 +492,7 @@ so either the user did one, or we blow their changes away. Harsh but simple.
 
 === Examples: Using UoW to Group Multiple Operations into an Atomic Unit
 
-Here are a few examples showing the Unit of Work pattern in use. You can
+Here are a few examples showing the Unit of Work pattern in use.((("Unit of Work pattern", "using UoW to group multiple operations into atomic unit", id="ix_UoWatom"))) You can
 see how it leads to simple reasoning about what blocks of code happen
 together.
 
@@ -607,7 +607,7 @@ something you're particularly proud of?
 === Wrap-Up
 
 Hopefully we've convinced you that the Unit of Work pattern is useful, and
-that the context manager is a really nice Pythonic way
+that((("Unit of Work pattern", "using UoW to group multiple operations into atomic unit", startref="ix_UoWatom"))) the context manager is a really nice Pythonic way
 of visually grouping code into blocks that we want to happen atomically.
 
 This pattern is so useful, in fact, that SQLAlchemy already uses a UoW
