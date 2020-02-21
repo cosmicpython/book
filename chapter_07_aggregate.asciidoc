@@ -3,7 +3,7 @@
 
 In this chapter we'd like to revisit our domain model to talk about invariants
 and constraints, and see how our domain objects can maintain their own
-internal consistency, both conceptually and in persistent storage.  We'll
+internal consistency, both conceptually and in persistent storage.((("consistency boundaries")))  We'll
 discuss the concept of a _consistency boundary_, and show how making it
 explicit can help us to build high-performance software without compromising
 maintainability.
@@ -112,14 +112,14 @@ In a single-threaded, single-user application, it's relatively easy for us to
 maintain this invariant. We can just allocate stock one line at a time, and
 raise an error if there's no stock available.
 
-This gets much harder when we introduce the idea of _concurrency_. Suddenly we
+This gets much harder when we introduce the idea of _concurrency_.((("concurrency"))) Suddenly we
 might be allocating stock for multiple order lines simultaneously. We might
 even be allocating order lines at the same time as processing changes to the
 batches themselves.
 
 We usually solve this problem by applying _locks_ to our database tables. This
 prevents two operations from happening simultaneously on the same row or same
-table.
+table.((("locks on database tables")))
 
 As we start to think about scaling up our app, we realize that our model
 of allocating lines against all available batches may not scale. If we process
