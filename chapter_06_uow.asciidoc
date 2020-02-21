@@ -670,7 +670,7 @@ SQLAlchemy already implements this pattern::
 
 *****************************************************************
 
-<<chapter_06_uow_tradeoffs>> discusses some of the trade-offs.
+<<chapter_06_uow_tradeoffs>> discusses ((("Unit of Work pattern", "pros and cons or trade-offs")))some of the trade-offs.
 
 [[chapter_06_uow_tradeoffs]]
 [options="header"]
@@ -680,7 +680,7 @@ SQLAlchemy already implements this pattern::
 a|
 * We have a nice abstraction over the concept of atomic operations, and the
   context manager makes it easy to see, visually, what blocks of code are
-  grouped together atomically.
+  grouped together atomically.((("atomic operations", "Unit of Work as abstraction over")))((("transactions", "Unit of Work and")))
 
 * We have explicit control over when a transaction starts and finishes, and our
   application fails in a way that is safe by default. We never have to worry
