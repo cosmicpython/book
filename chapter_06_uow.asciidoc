@@ -492,7 +492,7 @@ so either the user did one, or we blow their changes away. Harsh but simple.
 
 === Examples: Using UoW to Group Multiple Operations into an Atomic Unit
 
-Here are a few examples showing the Unit of Work pattern in use.((("Unit of Work pattern", "using UoW to group multiple operations into atomic unit", id="ix_UoWatom"))) You can
+Here are a few examples showing the Unit of Work pattern in use.((("Unit of Work pattern", "using UoW to group multiple operations into atomic unit", id="ix_UoWatom")))((("atomic operations", "using Unit of Work to group  operations into atomic unit", id="ix_atomops"))) You can
 see how it leads to simple reasoning about what blocks of code happen
 together.
 
@@ -545,7 +545,7 @@ def change_batch_quantity(batchref: str, new_qty: int, uow: AbstractUnitOfWork):
 ====
 
 <1> Here we may need to deallocate any number of lines. If we get a failure
-    at any stage, we probably want to commit none of the changes.((("Unit of Work pattern", "using UoW to group multiple operations into atomic unit", startref="ix_UoWatom")))
+    at any stage, we probably want to commit none of the changes.((("atomic operations", "using Unit of Work to group  operations into atomic unit", startref="ix_atomops")))((("Unit of Work pattern", "using UoW to group multiple operations into atomic unit", startref="ix_UoWatom")))
 
 
 === Tidying Up the Integration Tests
