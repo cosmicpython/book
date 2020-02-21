@@ -107,8 +107,8 @@ class ChangeBatchQuantity(Command):  #<3>
 
 
 Just changing ((("events", "commands versus", startref="ix_evntcmd")))the names and verb tenses is all very well, but that won't
-change the behavior of our system.  We want to treat events and commands similarly,
-but not exactly the same.  Let's see how our message bus changes:
+change the behavior of our system. ((("exception handling", "differences for events and commands"))) We want to treat events and commands similarly,
+but not exactly the same.((("message bus", "dispatching events and commands differently")))  Let's see how our message bus changes:
 
 [[messagebus_dispatches_differently]]
 .Dispatch events and commands differently (src/allocation/service_layer/messagebus.py)
@@ -169,7 +169,7 @@ def handle_event(
 <2> It catches and logs errors, but doesn't let them interrupt
     message processing.
 
-And here's how we do commands:
+And here's((("commands", "exception handling"))) how we do commands:
 
 [[handle_command]]
 .Commands reraise exceptions (src/allocation/service_layer/messagebus.py)
@@ -204,7 +204,7 @@ def handle_command(
 
 
 We also change the single `HANDLERS` dict into different ones for
-commands and events. Commands can have only one handler, according
+commands and events. ((("dictionaries", "HANDLERS dicts for commands and events")))((("handlers", "new HANDLERS dicts for commands and events")))((("commands", "handlers for")))Commands can have only one handler, according
 to our convention:
 
 [[new_handlers_dicts]]
@@ -229,7 +229,7 @@ COMMAND_HANDLERS = {
 === Discussion: Events, Commands, and Error Handling
 
 Many developers get uncomfortable at this point, and ask, "What happens when an
-event fails to process? How am I supposed to make sure the system is in a
+event fails to process? ((("error handling", "events, commands, and", id="ix_errhnd")))((("commands", "events, commands, and error handling", id="ix_cmndeverr")))How am I supposed to make sure the system is in a
 consistent state?"
 
 If we manage to process half of the events during `messagebus.handle` before an
@@ -385,7 +385,7 @@ and end of the business processes. The names that we use in the code match the
 jargon used by our business stakeholders, and the handlers we've written match
 the steps of our natural language acceptance criteria. This concordance of names
 and structure helps us to reason about our systems as they grow larger and more
-complex.
+complex.((("error handling", "events, commands, and", startref="ix_errhnd")))((("commands", "events, commands, and error handling", startref="ix_cmndeverr")))
 
 
 [[recovering_from_errors]]
