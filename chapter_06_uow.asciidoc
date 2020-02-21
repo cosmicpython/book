@@ -6,7 +6,7 @@ together ((("Unit of Work pattern", id="ix_UoW")))the repository and service lay
 
 If the Repository pattern is our abstraction over the idea of persistent storage,
 the Unit of Work (UoW) pattern is our abstraction over the idea of _atomic operations_.((("atomic operations, Unit of Work pattern and"))) It
-will allow us to finally, fully, decouple our service layer from the data layer.
+will allow us to finally, fully, decouple our service layer from the data layer.((("UoW", see="Unit of Work pattern")))
 
 
 <<before_uow_diagram>> shows that, currently, a lot of communication occurs
@@ -167,7 +167,7 @@ def get_allocated_batch_ref(session, orderid, sku):
 
 === Unit of Work and Its Context Manager
 
-In our tests we've implicitly defined an interface for what a UoW needs to do. Let's make that explicit by using an ((("Unit of Work pattern", "and its context manager")))((("context manager", "abstract UoW context manager")))abstract
+In our tests we've implicitly defined an interface for what a UoW needs to do. Let's make that explicit by using an ((("abstractions", "AbstractUnitOfWork")))((("Unit of Work pattern", "and its context manager")))((("context manager", "abstract UoW context manager")))abstract
 base class:
 
 
@@ -198,7 +198,7 @@ class AbstractUnitOfWork(abc.ABC):
 
 <2> If you've never seen a context manager, +++<code>__enter__</code>+++ and +++<code>__exit__</code>+++ are
     the two magic methods that execute when we enter the `with` block and
-    when we exit it, respectively. They're our setup and teardown phases.
+    when we exit it, respectively.((("&#x5f;&#x5f;enter&#x5f;&#x5f; and &#x5f;&#x5f;exit&#x5f;&#x5f; magic methods", primary-sortas="enter and exit"))) They're our setup and teardown phases.((("magic methods", "&#x5f;&#x5f;enter&#x5f;&#x5f; and &#x5f;&#x5f;exit&#x5f;&#x5f;", secondary-sortas="enter")))
 
 <3> We'll call this method to explicitly commit our work when we're ready.
 
