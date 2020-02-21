@@ -64,14 +64,14 @@ an operation.
 === Invariants, Constraints, and Consistency
 
 The two words are somewhat interchangeable, but a _constraint_ is a
-rule that restricts the possible states our model can get into. An _invariant_
+rule that restricts the possible states our model can get into.((("domain model", "invariants, constraints, and consistency")))((("invariants", "invariants, constraints, and consistency"))) An _invariant_
 is defined a little more precisely, as a condition that is always true.
 
 If we were writing a hotel-booking system, we might have the constraint that double
-bookings are not allowed. This supports the invariant that a room cannot have more
+bookings are not allowed. ((("constraints")))This supports the invariant that a room cannot have more
 than one booking for the same night.
 
-Of course, sometimes we might need to temporarily _bend_ the rules. Perhaps we
+Of course, sometimes we might need to temporarily _bend_ the rules.((("consistency"))) Perhaps we
 need to shuffle the rooms around because of a VIP booking. While we're moving
 bookings around in memory, we might be double booked, but our domain model
 should ensure that, when we're finished, we end up in a final consistent state,
@@ -85,7 +85,7 @@ ____
 An order line can be allocated to only one batch at a time.
 ____
 
-This is a business rule that imposes an invariant. The invariant is that an
+This is a business rule that imposes an invariant.((("business rules", "invariants, constraints, and consistency"))) The invariant is that an
 order line is allocated to either zero or one batch, but never more than one.
 We need to make sure that our code never accidentally calls `Batch.allocate()`
 on two different batches for the same line, and currently, there's nothing
@@ -99,10 +99,10 @@ Let's look at another one of our business rules:
 [quote, The business]
 ____
 We can't allocate to a batch if the available quantity is less than the
-  quantity of the order line.
+  quantity of the order line.((("business rules", "invariants, concurrency, and locks")))
 ____
 
-Here the constraint is that we can't allocate more stock than is available to a
+Here the constraint is((("invariants", "invariants, concurrency, and locks"))) that we can't allocate more stock than is available to a
 batch, so we never oversell stock by allocating two customers to the same
 physical cushion, for example. Every time we update the state of the system, our code needs
 to ensure that we don't break the invariant, which is that the available
@@ -131,8 +131,8 @@ every single one--we'll get deadlocks or performance problems at the very least.
 === What Is an Aggregate?
 
 OK, so if we can't lock the whole database every time we want to allocate an
-order line, what should we do instead? We want to protect the invariants of our
-system but allow for the greatest degree of concurrency. Maintaining our
+order line, what should we do instead?((("aggregates", "about"))) We want to protect the invariants of our
+system but allow for the greatest degree of concurrency.((("invariants", "protecting while allowing concurrency")))((("concurrency", "allowing for greatest degree of"))) Maintaining our
 invariants inevitably means preventing concurrent writes; if multiple users can
 allocate `DEADLY-SPOON` at the same time, we run the risk of over-allocating.
 
@@ -142,7 +142,7 @@ same time because there's no invariant that covers them both. We don't need them
 to be consistent with each other.
 
 The _Aggregate_ pattern is a design pattern from the DDD community that helps us
-to resolve this tension. An _aggregate_ is just a domain object that contains
+to resolve this tension.((("domain driven design (DDD)", "Aggregate pattern")))((("Aggregate pattern"))) An _aggregate_ is just a domain object that contains
 other domain objects and lets us treat the whole collection as a single unit.
 
 The only way to modify the objects inside the aggregate is to load the whole
@@ -150,7 +150,7 @@ thing, and to call methods on the aggregate itself.
 
 As a model gets more complex and grows more entity and value objects,
 referencing each other in a tangled graph, it can be hard to keep track of who
-can modify what. Especially when we have _collections_ in the model as we do
+can modify what.((("collections"))) Especially when we have _collections_ in the model as we do
 (our batches are a collection), it's a good idea to nominate some entities to be
 the single entrypoint for modifying their related objects. It makes the system
 conceptually simpler and easy to reason about if you nominate some objects to be
@@ -164,9 +164,9 @@ run the risk of weird concurrency errors. Instead, we want each change to the
 basket to run in a single database transaction.
 
 We don't want to modify multiple baskets in a transaction, because there's no
-use case for changing the baskets of several customers at the same time. Each
+use case for changing the baskets of several customers at the same time.((("consistency boundaries"))) Each
 basket is a single _consistency boundary_ responsible for maintaining its own
-invariants.
+invariants.((("Evans, Eric")))
 
 [quote, Eric Evans, DDD blue book]
 ____
@@ -193,7 +193,7 @@ TIP: Just as we sometimes use pass:[<code><em>_leading_underscores</em></code>] 
 
 === Choosing an Aggregate
 
-What aggregate should we use for our system? The choice is somewhat arbitrary,
+What aggregate should we use for our system?((("aggregates", "choosing an aggregrate", id="ix_aggch"))) The choice is somewhat arbitrary,
 but it's important. The aggregate will be the boundary where we make sure
 every operation ends in a consistent state. This helps us to reason about our
 software and prevent weird race issues. We want to draw a boundary around a
@@ -408,7 +408,7 @@ aggregates low and their size manageable.
 Once again, we find ourselves forced to say that we can't give this issue
 the treatment it deserves here, and we can only encourage you to read up on it
 elsewhere. The Fowler link earlier is a good starting point, and either
-(or indeed, any) DDD book will have a chapter or more on bounded contexts.
+(or indeed, any) DDD book will have a chapter or more on bounded contexts.((("aggregates", "choosing an aggregrate", startref="ix_aggch")))
 
 *******************************************************************************
 
