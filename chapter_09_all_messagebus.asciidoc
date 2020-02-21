@@ -37,7 +37,7 @@ git checkout chapter_08_events_and_message_bus
 === A New Requirement Leads Us to a New Architecture
 
 Rich Hickey talks about _situated software,_ meaning software that runs for
-extended periods of time, managing a real-world process. Examples include
+extended periods of time, managing a real-world process. ((("situated software")))Examples include
 warehouse-management systems, logistics schedulers, and payroll systems.
 
 This software is tricky to write because unexpected things happen all the time
@@ -55,7 +55,7 @@ In all of these situations, we learn about the need to change batch quantities
 when they're already in the system. Perhaps someone made a mistake on the number
 in the manifest, or perhaps some sofas fell off a truck. Following a
 conversation with the business,footnote:[
-Event-based modeling is so popular that a practice called _event storming_ has
+Event-based modeling is so popular that a practice((("event storming"))) called _event storming_ has
 been developed for facilitating event-based requirements gathering and domain
 model elaboration.] we model the situation as in
 <<batch_changed_events_flow_diagram>>.
