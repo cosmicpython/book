@@ -25,7 +25,7 @@ Then we'll show how to use _Domain Events_ pattern to separate side effects from
 use cases, and how to use a simple _Message Bus_ pattern for triggering behavior
 based on those events. We'll show a few options for creating
 those events and how to pass them to the message bus, and finally we'll show
-how the Unit of Work pattern can be modified to connect the two together elegantly,
+how the Unit of Work pattern((("Unit of Work pattern", "modifying to connect domain events and message bus")))((("events and the message bus", "events flowing through the system"))) can be modified to connect the two together elegantly,
 as previewed in <<message_bus_diagram>>.
 
 
@@ -53,14 +53,14 @@ git checkout chapter_07_aggregate
 
 === Avoiding Making a Mess
 
-So. Email alerts when we run out of stock. When we have a new requirement like
+So. Email alerts when we run out of stock. ((("email", "sending email alerts when out of stock", id="ix_email")))((("events and the message bus", "sending email alerts when out of stock", id="ix_evntMBeml")))When we have a new requirement like
 this, which _really_ has nothing to do with the core domain, it's all too easy to
-start dumping these things into our web controllers.
+start dumping these things into our web controllers.((("web controllers", "sending email alters via, avoiding")))
 
 
 ==== First, Avoid Making a Mess of Our Web Controllers
 
-As a one-off hack, this _might_ be OK:
+As a one-off ((("events and the message bus", "sending email alerts when out of stock", "avoiding messing up web controllers")))hack, this _might_ be OK:
 
 [[email_in_flask]]
 .Just whack it in the endpoint—what could go wrong? (src/allocation/entrypoints/flask_app.py)
@@ -98,7 +98,7 @@ able to unit test this new feature.
 ==== And Let's Not Make a Mess of Our Model Either
 
 Assuming we don't want to put this code into our web controllers, because
-we want them to be as thin as possible, we may look at putting it right at
+we want them to be as ((("events and the message bus", "sending email alerts when out of stock", "avoiding messing up domain model")))((("domain model", "email sending code in, avoiding")))thin as possible, we may look at putting it right at
 the source, in the model:
 
 [[email_in_model]]
@@ -136,7 +136,7 @@ needing to change the rules of our domain model.
 
 The requirement "Try to allocate some stock, and send an email if it fails" is
 an example of workflow orchestration: it's a set of steps that the system has
-to follow to achieve a goal.
+to follow to achieve a goal.((("events and the message bus", "sending email alerts when out of stock", "out of place in the service layer")))((("service layer", "sending email alerts when out of stock, avoiding")))
 
 We've written a service layer to manage orchestration for us, but even here
 the feature feels out of place:
@@ -168,11 +168,11 @@ def allocate(
 
 Catching an exception and reraising it? It could be worse, but it's
 definitely making us unhappy. Why is it so hard to find a suitable home for
-this code?
+this code?((("events and the message bus", "sending email alerts when out of stock", startref="ix_evntMBeml")))((("email", "sending email alerts when out of stock", startref="ix_email")))
 
 === Single Responsibility Principle
 
-Really this is a violation of the __single responsibility principle__ (SRP).footnote:[
+Really this is a violation ((("events and the message bus", "sending email alerts when out of stock", "violating the single responsibility principle")))((("single responsibility principle (SRP)")))of the __single responsibility principle__ (SRP).footnote:[
 This principle is the _S_ in https://oreil.ly/AIdSD[SOLID].]
 Our use case is allocation. Our endpoint, service function, and domain methods
 are all called pass:[<code><span class="keep-together">allocate</span></code>], not `allocate_and_send_mail_if_out_of_stock`.
@@ -187,7 +187,7 @@ to change. When we switch from email to SMS, we shouldn't have to update our
 To solve the problem, we're going to split the orchestration
 into separate steps, so that the different concerns don't get tangled up.footnote:[
 Our tech reviewer Ed Jung likes to say that the move from imperative to event-based
-flow control changes what used to be _orchestration_ into _choreography_.] The
+flow control ((("orchestration", "changing to choreography")))((("choreography")))changes what used to be _orchestration_ into _choreography_.] The
 domain model's job is to know that we're out of stock, but the responsibility
 of sending an alert belongs elsewhere. We should be able to turn this feature
 on or off, or to switch to SMS notifications instead, without needing to change
@@ -208,12 +208,12 @@ We can implement them in a few ways, so we'll show a couple before settling on t
 ==== The Model Records Events
 
 First, rather than being concerned about emails, our model will be in charge of
-recording _events_—facts about things that have happened. We'll use a message
+recording _events_—facts about things that have happened.((("events and the message bus", "recording events"))) We'll use a message
 bus to respond to events, and invoke a new operation.
 
 ==== Events Are Simple Dataclasses
 
-An _event_ is a kind of _value object_. Events don't have any behavior, because
+An _event_ is a kind of _value object_.((("events and the message bus", "events as simple dataclasses")))((("dataclasses", "events"))) Events don't have any behavior, because
 they're pure data structures. We always name events in the language of the
 domain, and we think of them as part of our domain model.
 
@@ -248,10 +248,10 @@ class OutOfStock(Event):  #<2>
 
 ==== The Model Raises Events
 
-When our domain model records a fact that happened, we say it _raises_ an event.
+When our domain model records a fact that happened, we say it _raises_ an event.((("domain model", "raising events")))((("events and the message bus", "domain model raising events")))
 
 Here's what it will look like from the outside; if we ask `Product` to allocate
-but it can't, it should _raise_ an event:
+but it can't, it ((("aggregates", "testing Product object to raise events")))should _raise_ an event:
 
 
 [[test_raising_event]]
@@ -310,7 +310,7 @@ class Product:
 
 
 
-NOTE: We're actually addressing a code smell we had until now, which is that we were
+NOTE: We're actually addressing a ((("exceptions", "using for control flow")))((("control flow", "using exceptions for")))code smell we had until now, which is that we were
     https://oreil.ly/IQB51[using
     exceptions for control flow]. In general, if you're implementing domain
     events, don't raise exceptions to describe the same domain concept.
@@ -321,9 +321,9 @@ NOTE: We're actually addressing a code smell we had until now, which is that we 
 
 ==== The Message Bus Maps Events to Handlers
 
-A message bus basically says, "When I see this event, I should invoke the following
+A message bus ((("events and the message bus", "message bus mapping events to handlers")))((("message bus", "mapping events to handlers")))basically says, "When I see this event, I should invoke the following
 handler function." In other words, it's a simple publish-subscribe system.
-Handlers are _subscribed_ to receive events, which we publish to the bus. It
+Handlers are _subscribed_ to receive events, which we publish to the bus.((("publish-subscribe system, message bus as"))) It
 sounds harder than it is, and we usually implement it with a dict:
 
 [[messagebus]]
@@ -351,7 +351,7 @@ HANDLERS = {
 ====
 
 NOTE: Note that the message bus as implemented doesn't give us concurrency because
-    only one handler will run at a time.
+    only one handler will run at a time.((("concurrency", "not provided by message bus implementation")))
     Our objective isn't to support parallel threads, but to separate
     tasks conceptually, and keep each UoW as small as possible.
     This helps us to understand the codebase because the "recipe" for how to
@@ -363,13 +363,13 @@ NOTE: Note that the message bus as implemented doesn't give us concurrency becau
 .Is This Like Celery?
 *******************************************************************************
 _Celery_ is a popular tool in the Python world for deferring self-contained
-chunks of work to an asynchronous task queue. The message bus we're
+chunks of work to an asynchronous task queue.((("message bus", "Celery and")))((("Celery tool"))) The message bus we're
 presenting here is very different, so the short answer is no; our message bus
 has more in common with a Node.js app, a UI event loop, or an actor framework.
 
 If you do have a requirement for moving work off the main thread, you
 can still use our event-based metaphors, but we suggest you
-use _external events_ for that. There's more discussion in
+use _external events_ for that.((("external events"))) There's more discussion in
 <<chapter_11_external_events_tradeoffs>>, but essentially, if you
 implement a way of persisting events to a centralized store, you
 can subscribe other containers or other microservices to them. Then
@@ -391,9 +391,9 @@ and Python-only.
 === Option 1: The Service Layer Takes Events from the Model and Puts Them on the Message Bus
 
 Our domain model raises events, and our message bus will call the right
-handlers whenever an event happens. Now all we need is to connect the two. We
+handlers whenever an event happens.((("data model", "events from, passing to message bus in service layer")))((("message bus", "service layer with explicit message bus")))((("events and the message bus", "service layer with explicit message bus")))((("service layer", "taking events from model and putting them on message bus"))) Now all we need is to connect the two. We
 need something to catch events from the model and pass them to the message
-bus--the _publishing_ step.
+bus--the _publishing_ step.((("publish-subscribe system, message bus as", "publishing step")))
 
 The simplest way to do this is by adding some code into our service layer:
 
@@ -440,7 +440,7 @@ the message bus.
 === Option 2: The Service Layer Raises Its Own Events
 
 Another variant on this that we've used is to have the service layer
-in charge of creating and raising events directly, rather than having them
+in charge of creating and ((("service layer", "raising its own events")))((("events and the message bus", "service layer raising its own events")))((("message bus", "service layer raising events and calling messagebus.handle")))raising events directly, rather than having them
 raised by the domain model:
 
 
@@ -482,7 +482,7 @@ put the unit of work in charge of collecting and raising events.
 === Option 3: The UoW Publishes Events to the Message Bus
 
 The UoW already has a `try/finally`, and it knows about all the aggregates
-currently in play because it provides access to the repository. So it's
+currently in play because it provides access to the repository.((("events and the message bus", "UoW publishes events to message bus")))((("Unit of Work pattern", "UoW publishing events to message bus")))((("message bus", "Unit of Work publishing events to"))) So it's
 a good place to spot events and pass them to the message bus:
 
 
