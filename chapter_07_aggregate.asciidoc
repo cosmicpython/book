@@ -625,7 +625,7 @@ notice if there was a problem.
 
 _Pessimistic_ concurrency control((("pessimistic concurrency"))) works under the assumption that two users
 are going to cause conflicts, and we want to prevent them in all cases, so
-we lock everything just to be safe. In our example, that would mean locking
+we lock everything just to be safe. ((("SELECT FOR UPDATE statement")))In our example, that would mean locking
 the whole `batches` table, or using ++SELECT FOR UPDATE++—we're pretending
 that we've ruled those out for performance reasons, but in real life you'd
 want to do some evaluations and measurements of your own.((("locks on database tables", "pessimistic locking")))
@@ -718,10 +718,10 @@ Now to make sure((("testing", "for data integrity rules", id="ix_tstdi")))((("ag
 concurrent attempts to do allocation against the same `Product`, one of them
 should fail, because they can't both update the version number.
 
-First let's simulate a "slow" transaction using a function that does
+First let's ((("transactions", "simulating a slow transaction")))((("time.sleep function")))simulate a "slow" transaction using a function that does
 allocation, and then does an explicit sleep:footnote:[`time.sleep()` works well
 in our use case, but it's not the most reliable or efficient way to reproduce
-concurrency bugs.  Consider using semaphores or similar synchronization primitives
+concurrency bugs.((("concurrency", "reproducing behavior with time.sleep function")))((("time.sleep function", "reproducing concurrency behavior with")))  Consider using semaphores or similar synchronization primitives
 shared between your threads to get better guarantees of behavior.]
 
 [[time_sleep_thread]]
@@ -744,7 +744,7 @@ def try_to_allocate(orderid, sku, exceptions):
 ====
 
 
-Then we have our test invoke this slow allocation twice, concurrently, using
+Then we have our test invoke this slow((("concurrency", "integration test for")))((("integration tests", "for concurrency behavior"))) allocation twice, concurrently, using
 threads:
 
 [[data_integrity_test]]
@@ -803,7 +803,7 @@ def test_concurrent_updates_to_version_are_not_allowed(postgres_session_factory)
 
 ==== Enforcing Concurrency Rules by Using Database Transaction pass:[<span class="keep-together">Isolation Levels</span>]
 
-To get the test to pass as it is, we can set the transaction isolation level
+To get the test to pass ((("concurrency", "enforcing rules using database transactions")))((("transactions", "using to enforce concurrency rules")))as it is, we can set the transaction isolation level
 on our session:
 
 [[isolation_repeatable_read]]
@@ -818,20 +818,20 @@ DEFAULT_SESSION_FACTORY = sessionmaker(bind=create_engine(
 ----
 ====
 
-Transaction isolation levels are tricky stuff, so it's worth spending time
+Transaction ((("isolation levels (transaction)")))((("Postgres", "documentation for transaction isolation levels")))isolation levels are tricky stuff, so it's worth spending time
 understanding https://oreil.ly/5vxJA[the Postgres documentation].footnote:[If you're not using Postgres, you'll need to read different documentation. Annoyingly, different databases all have quite different definitions. Oracle's `SERIALIZABLE` is equivalent to Postgres's `REPETABLE READ`, for pass:[<span class="keep-together">example</span>].]
 
 ==== Pessimistic Concurrency Control Example: SELECT FOR UPDATE
 
-There are multiple ways to approach this, but we'll show one. https://oreil.ly/i8wKL[`SELECT FOR UPDATE`],
-produces different behavior; two concurrent transactions will not be allowed to
+There are multiple ways to approach this, but we'll show one.((("pessimistic concurrency", "example, SELECT FOR UPDATE"))) https://oreil.ly/i8wKL[`SELECT FOR UPDATE`],
+produces different behavior; two concurrent((("concurrency", "pessimistic concurrency example, SELECT FOR UPDATE")))((("SELECT FOR UPDATE statement", "pessimistic concurrency control example with"))) transactions will not be allowed to
 do a read on the same rows at the same time:
 
 `SELECT FOR UPDATE` is a way of picking a row or rows to use as a lock
 (although those rows don't have to be the ones you update).  If two
 transactions both try to `SELECT FOR UPDATE` a row at the same time, one will
 win, and the other will wait until the lock is released. So this is an example
-of pessimistic concurrency control.
+of pessimistic concurrency control.((("SQLAlchemy", "using DSL to specify FOR UPDATE")))
 
 Here's how you can use the SQLAlchemy DSL to specify `FOR UPDATE` at
 query time:
@@ -865,7 +865,7 @@ to
 read1, write1, read2, write2(succeed)
 ----
 
-Some people refer to this as the "read-modify-write" failure mode.
+Some people refer to ((("read-modify-write failure mode")))this as the "read-modify-write" failure mode.((("PostgresSQL", "Anti-Patterns: Read-Modify-Write Cycles")))
 Read https://oreil.ly/uXeZI["PostgreSQL Anti-Patterns: Read-Modify-Write Cycles"] for a good overview.
 
 //TODO maybe better diagrams here?
@@ -882,13 +882,13 @@ performing some performance experiments.((("testing", "for data integrity rules"
 
 Specific choices around concurrency control vary a lot based on business
 circumstances and storage technology choices, but we'd like to bring this
-chapter back to the conceptual idea of an Aggregate: we explicitly model an
+chapter back to the((("aggregates", "and consistency boundaries recap"))) conceptual idea of an Aggregate: we explicitly model an
 object as being the main entrypoint to some subset of our model, and to be in
 charge of enforcing the invariants and business rules that apply across all of
 those objects.
 
 Choosing the right aggregate is key, and it's a decision you may revisit
-over time. You can read more about it in multiple DDD books.
+over time.((("domain driven design (DDD)", "choosing the right aggregate, references on")))((("Effective Aggregate Design (Vernon)"))) You can read more about it in multiple DDD books.
 We also recommend these three online papers on
 https://dddcommunity.org/library/vernon_2011[Effective Aggregate Design]
 by Vaugh Vernon (the "red book" author).
