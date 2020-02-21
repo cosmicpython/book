@@ -560,11 +560,11 @@ NOTE: This section has a lot of implementation details, some of which are Postgr
     shouldn't expect to be able to copy and paste code from here into production.
 
 We don't want to hold a lock over the entire `batches` table, but how will we
-implement holding a lock over just the rows for a particular SKU?
+implement holding a lock over just the rows for a particular SKU?((("locks on database tables", "optimistic locking")))
 
 One answer is to have a single attribute on the `Product` model that acts as a marker for
 the whole state change being complete and to use it as the single resource
-that concurrent workers can fight over. If two transactions read the
+that concurrent workers can fight over.((("version numbers", "in the products table, implementing optimistic locking"))) If two transactions read the
 state of the world for `batches` at the same time, and both want to update
 the `allocations` tables, we force both to also try to update the
 `version_number` in the `products` table, in such a way that only one of them
@@ -578,10 +578,10 @@ TIP: Version numbers are just one way to implement optimistic locking. You
 
 <<version_numbers_sequence_diagram>> illustrates two concurrent
 transactions doing their read operations at the same time, so they see
-a `Product` with, for example, `version=3`.  They both call `Product.allocate()`
+a `Product` with, for example, `version=3`.((("Product object", "two transactions attempting concurrent update on")))  They both call `Product.allocate()`
 in order to modify a state. But we set up our database integrity
 rules such that only one of them is allowed to `commit` the new `Product`
-with `version=4`, and the other update will be rejected.
+with `version=4`, and the other update will be rejected.((("transactions", "concurrent, attempting update on Product")))
 
 [[version_numbers_sequence_diagram]]
 .Sequence diagram: two transactions attempting a concurrent update on product
@@ -623,23 +623,23 @@ make changes to the database. We think it's unlikely that they will conflict
 with each other, so we let them go ahead and just make sure we have a way to
 notice if there was a problem.
 
-_Pessimistic_ concurrency control works under the assumption that two users
+_Pessimistic_ concurrency control((("pessimistic concurrency"))) works under the assumption that two users
 are going to cause conflicts, and we want to prevent them in all cases, so
 we lock everything just to be safe. In our example, that would mean locking
 the whole `batches` table, or using ++SELECT FOR UPDATE++—we're pretending
 that we've ruled those out for performance reasons, but in real life you'd
-want to do some evaluations and measurements of your own.
+want to do some evaluations and measurements of your own.((("locks on database tables", "pessimistic locking")))
 
 With pessimistic locking, you don't need to think about handling failures
 because the database will prevent them for you (although you do need to think
-about deadlocks). With optimistic locking, you do need to explicitly handle
+about deadlocks).((("locks on database tables", "optimistic locking"))) With optimistic locking, you do need to explicitly handle
 the possibility of failures in the (hopefully unlikely) case of a clash.
 
 The usual way to handle a failure is to retry the failed operation from the
 beginning. Imagine we have two customers, Harry and Bob, and both submit orders
 for `SHINY-TABLE`. Both threads load the product at version 1 and allocate
 stock. The database prevents the concurrent update, and Bob's order fails with
-an error. When we _retry_ the operation, Bob's order loads the product at
+an error.((("retries, optimistic concurrency control and"))) When we _retry_ the operation, Bob's order loads the product at
 version 2, and tries to allocate again. If there is enough stock left, all is
 well; otherwise, he'll receive `OutOfStock`. Most operations can be retried this
 way in the case of a concurrency problem.
@@ -650,7 +650,7 @@ Read more on retries in <<recovering_from_errors>> and <<footguns>>.
 
 ==== Implementation Options for Version Numbers
 
-There are essentially three options for implementing version numbers:
+There are essentially three options((("version numbers", "implementation options for")))((("Product object", "version numbers implemented on"))) for implementing version numbers:
 
 1. `version_number` lives in the domain; we add it to the `Product` constructor,
    and `Product.allocate()` is responsible for incrementing it.
@@ -714,7 +714,7 @@ TIP: If you're scratching your head at this version number business, it might
 
 === Testing for Our Data Integrity Rules
 
-Now to make sure we can get the behavior we want: if we have two
+Now to make sure((("testing", "for data integrity rules", id="ix_tstdi")))((("aggregates", "testing for data integrity rules", id="ix_aggtstdi")))((("data integrity", "testing for", id="ix_daint"))) we can get the behavior we want: if we have two
 concurrent attempts to do allocation against the same `Product`, one of them
 should fail, because they can't both update the version number.
 
@@ -874,7 +874,7 @@ We don't really have time to discuss all the trade-offs between `REPEATABLE READ
 and `SELECT FOR UPDATE`, or optimistic versus pessimistic locking in general.
 But if you have a test like the one we've shown, you can specify the behavior
 you want and see how it changes. You can also use the test as a basis for
-performing some performance experiments.
+performing some performance experiments.((("testing", "for data integrity rules", startref="ix_tstdi")))((("data integrity", "testing for", startref="ix_daint")))((("aggregates", "testing for data integrity rules", startref="ix_aggtstdi")))
 
 
 
