@@ -270,7 +270,7 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 
 ==== Fake Unit of Work for Testing
 
-Here's how we use a fake UoW in((("Unit of Work pattern", "fake UoW for service layer testing")))((("faking", "FakeUnitOfWork for service layer testing")))((("testing", "fake UoW for service layer testing"))) our service-layer tests:
+Here's how we use a fake UoW in((("Unit of Work pattern", "and its context manager", "fake UoW for testing")))((("faking", "FakeUnitOfWork for service layer testing")))((("testing", "fake UoW for service layer testing"))) our service-layer tests:
 
 [[fake_unit_of_work]]
 .Fake UoW (tests/unit/test_services.py)
