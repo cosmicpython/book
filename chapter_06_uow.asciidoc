@@ -2,7 +2,7 @@
 == Unit of Work Pattern
 
 In this chapter we'll introduce the final piece of the puzzle that ties
-together the repository and service layer patterns: the _Unit of Work pattern_.
+together ((("Unit of Work pattern", id="ix_UoW")))the repository and service layer patterns: the _Unit of Work pattern_.
 
 If the Repository pattern is our abstraction over the idea of persistent storage,
 the Unit of Work (UoW) pattern is our abstraction over the idea of _atomic operations_. It
@@ -699,5 +699,5 @@ a|
 * We've made it look easy, but you have to think quite carefully about
   things like rollbacks, multithreading, and nested transactions. Perhaps just
   sticking to what Django or Flask-SQLAlchemy gives you will keep your life
-  simpler.
+  simpler.((("Unit of Work pattern", startref="ix_UoW")))
 |===
