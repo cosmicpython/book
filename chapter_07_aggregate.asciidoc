@@ -551,7 +551,7 @@ do them for you by magic!
 === Optimistic Concurrency with Version Numbers
 
 We have our new aggregate, so we've solved the conceptual problem of choosing
-an object to be in charge of consistency boundaries.((("optimistic concurrency with version numbers", id="ix_opticonc")))((("concurrency", "optimistic concurrency with version numbers", id="ix_concopt")))  Let's now spend a little
+an object to be in charge of consistency boundaries.((("aggregates", "optimistic concurrency with version numbers", id="ix_aggopticon")))((("optimistic concurrency with version numbers", id="ix_opticonc")))((("concurrency", "optimistic concurrency with version numbers", id="ix_concopt")))  Let's now spend a little
 time talking about how to enforce data integrity at the database level.
 
 NOTE: This section has a lot of implementation details, some of which are Postgres-specific, for example. But more generally, we're showing
@@ -709,7 +709,7 @@ TIP: If you're scratching your head at this version number business, it might
     that the `Product` database row is modified whenever we make a change to the
     `Product` aggregate. The version number is a simple human-comprehensible way
     to model a thing that changes on every write, but it could equally be a
-    random UUID every time.((("optimistic concurrency with version numbers", startref="ix_opticonc")))((("concurrency", "optimistic concurrency with version numbers", startref="ix_concopt")))
+    random UUID every time.((("aggregates", "optimistic concurrency with version numbers", startref="ix_aggopticon")))((("optimistic concurrency with version numbers", startref="ix_opticonc")))((("concurrency", "optimistic concurrency with version numbers", startref="ix_concopt")))
 
 
 === Testing for Our Data Integrity Rules
