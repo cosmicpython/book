@@ -524,7 +524,7 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 <2> After committing, we run through all the objects that our
     repository has seen and pass their events to the message bus.
 
-<3> That relies on the repository keeping track of aggregates that have been loaded
+<3> That relies on the repository ((("aggregates", "repository keeping track of aggregates passing through it")))((("repositories", "repository keeping track of aggregates passing through it")))keeping track of aggregates that have been loaded
     using a new attribute, `.seen`, as you'll see in the next listing.
 
 NOTE: Are you wondering about error handling, what happens if one of the
@@ -597,7 +597,7 @@ NOTE: The use of pass:[<code><em>._underscorey()</em></code>] methods and subcla
 
 After the UoW and repository collaborate in this way to automatically keep
 track of live objects and process their events, the service layer can be
-totally free of event-handling concerns:
+totally ((("service layer", "totally free of event handling concerns")))free of event-handling concerns:
 
 [[services_clean]]
 .Service layer is clean again (src/allocation/service_layer/services.py)
@@ -619,7 +619,7 @@ def allocate(
 ----
 ====
 
-We do also have to remember to change the fakes in the service layer and make them
+We do also have to remember to change the fakes ((("underscorey methods", "tweaking fakes in service layer to implement")))((("faking", "tweaking fakes in service layer to call super and implement underscorey methods")))((("service layer", "tweaking fakes in to call super and implement underscorey methods")))((("super function", "tweaking fakes in service layer to call")))in the service layer and make them
 call `super()` in the right places, and implement underscorey methods, but the
 changes are minimal:
 
@@ -667,7 +667,7 @@ Are you finding all those `._add()` and `._commit()` methods "super-gross," in
 the words of our beloved tech reviewer Hynek? Does it "make you want to beat
 Harry around the head with a plushie snake?" Hey, our code listings are
 meant to be only examples, not the perfect solution! Why not go see if you
-can do better?
+can do better?((("composition over inheritance", "TrackingModel wrapper class")))
 
 One _composition over inheritance_ way to go would be to implement a
 wrapper class:
