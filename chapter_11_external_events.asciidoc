@@ -192,7 +192,7 @@ how services quickly get tangled up.((("Ball of Mud pattern", "distributed ball 
 
 === Error Handling in Distributed Systems ===
 
-"Things break" is a universal law of software engineering.((("error handling", "in distributed systems", id="ix_errhnddst"))) What happens in our
+"Things break" is a universal law of software engineering.((("error handling", "in distributed systems", id="ix_errhnddst")))((("microservices", "event-based integration", "error handling in distributed systems", id="ix_mcroevnterr"))) What happens in our
 system when one of our requests fails? Let's say that a network error happens
 right after we take a user's order for three `MISBEGOTTEN-RUG`, as shown in
 <<command_flow_diagram_with_error>>.
@@ -263,7 +263,7 @@ http://www.connascence.io[connascence.io].
 
 === The Alternative: Temporal Decoupling Using Asynchronous Messaging
 
-How do we get ((("error handling", "in distributed systems", startref="ix_errhnddst")))appropriate coupling? We've already seen part of the answer, which is that we should think in
+How do we get ((("error handling", "in distributed systems", startref="ix_errhnddst")))((("microservices", "event-based integration", "error handling in distributed systems", startref="ix_mcroevnterr")))appropriate coupling? We've already seen part of the answer, which is that we should think in
 terms of verbs, not nouns. Our domain model is about modeling a business
 process. It's not a static data model about a thing; it's a model of a verb.
 
