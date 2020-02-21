@@ -498,7 +498,7 @@ together.
 
 ==== Example 1: Reallocate
 
-Suppose we want to be able to deallocate and then reallocate orders:
+Suppose we want to be able to deallocate and ((("reallocate service function")))((("Unit of Work pattern", "using UoW to group multiple operations into atomic unit", "reallocate function example")))then reallocate orders:
 
 [[reallocate]]
 .Reallocate service function
@@ -525,7 +525,7 @@ def reallocate(line: OrderLine, uow: AbstractUnitOfWork) -> str:
 ==== Example 2: Change Batch Quantity
 
 Our shipping company gives us a call to say that one of the container doors
-opened and half our sofas have fallen into the Indian Ocean. Oops!
+opened and half our sofas have fallen into the Indian Ocean. Oops!((("Unit of Work pattern", "using UoW to group multiple operations into atomic unit", "changing batch quantity example")))
 
 
 [[change_batch_quantity]]
@@ -551,7 +551,7 @@ def change_batch_quantity(batchref: str, new_qty: int, uow: AbstractUnitOfWork):
 === Tidying Up the Integration Tests
 
 We now have three sets of tests, all essentially pointing at the database:
-_test_orm.py_, _test_repository.py_,and _test_uow.py_. Should we throw any
+_test_orm.py_, _test_repository.py_,and _test_uow.py_. Should((("testing", "Unit of Work with integration tests", "tidying up tests")))((("Unit of Work pattern", "tidying up integration tests"))) we throw any
 away?
 
 ====
@@ -608,10 +608,10 @@ something you're particularly proud of?
 
 Hopefully we've convinced you that the Unit of Work pattern is useful, and
 that the context manager is a really nice Pythonic way
-of visually grouping code into blocks that we want to happen atomically.
+of visually grouping code into blocks that we want to happen atomically.((("Unit of Work pattern", "benefits of using")))
 
 This pattern is so useful, in fact, that SQLAlchemy already uses a UoW
-in the shape of the `Session` object. The `Session` object in SQLAlchemy is the way
+in the shape of the `Session` object.((("SQLAlchemy", "Session object")))((("Session object"))) The `Session` object in SQLAlchemy is the way
 that your application loads data from the database.
 
 Every time you load a new entity from the database, the session begins to _track_
@@ -628,7 +628,7 @@ SQLAlchemy `Session`.
 
 Lastly, we're motivated again by the dependency inversion principle: our
 service layer depends on a thin abstraction, and we attach a concrete
-implementation at the outside edge of the system. This lines up nicely with
+implementation at the outside edge of the system.((("dependency inversion principle"))) This lines up nicely with
 SQLAlchemy's own
 https://oreil.ly/tS0E0[recommendations]:
 
@@ -649,7 +649,7 @@ ____
 .Unit of Work Pattern Recap
 *****************************************************************
 The Unit of Work pattern is an abstraction around data integrity::
-    It helps to enforce the consistency of our domain model, and improves
+    It helps to enforce ((("Unit of Work pattern", "recap of important points")))the consistency of our domain model, and improves
     performance, by letting us perform a single _flush_ operation at the
     end of an operation.
 
