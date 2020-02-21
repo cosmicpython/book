@@ -3,7 +3,7 @@
 
 In the previous chapter, we talked about using events as a way of representing
 the inputs to our system, and turned our application into a message-processing
-machine.
+machine.((("commands", id="ix_cmnd")))
 
 To achieve that, we converted all our use-case functions to event handlers.
 When the API receives a POST to create a new batch, it builds a new `BatchCreated`
@@ -530,7 +530,7 @@ a|
 
 * We're expressly inviting failure. We know that sometimes things will break and
   we're choosing to handle that by making the failures smaller and more isolated.
-  This can make the system harder to reason about and requires better monitoring.
+  This can make the system harder to reason about and requires better monitoring.((("commands", startref="ix_cmnd")))
 |===
 
 
