@@ -75,7 +75,7 @@ Each "thing" in our system has an associated service, which exposes an HTTP API.
 
 Let's work through an example happy-path flow in <<command_flow_diagram_1>>:
 our users visit a website and can choose from products that are in stock. When
-they add an item to their basket, we will reserve some stock for them. When an
+they add an item to their basket, we will reserve some stock for them.((("commands", "command flow to reserve stock, confirm reservation, dispatch goods, and make customer VIP"))) When an
 order is complete, we confirm the reservation, which causes us to send dispatch
 instructions to the warehouse. Let's also say, if this is the customer's third
 order, we want to update the customer record to flag them as a VIP.
@@ -153,7 +153,7 @@ might mean we need to reallocate a customer's order.
 
 Where does this logic go?
 
-Well, the Warehouse system knows that the stock has been damaged, so maybe it
+Well, the Warehouse system ((("commands", "command flow when warehouse knows stock is damaged")))knows that the stock has been damaged, so maybe it
 should own this process, as shown in <<command_flow_diagram_2>>.
 
 [[command_flow_diagram_2]]
@@ -192,7 +192,7 @@ how services quickly get tangled up.((("Ball of Mud pattern", "distributed ball 
 
 === Error Handling in Distributed Systems ===
 
-"Things break" is a universal law of software engineering. What happens in our
+"Things break" is a universal law of software engineering.((("error handling", "in distributed systems", id="ix_errhnddst"))) What happens in our
 system when one of our requests fails? Let's say that a network error happens
 right after we take a user's order for three `MISBEGOTTEN-RUG`, as shown in
 <<command_flow_diagram_with_error>>.
@@ -263,7 +263,7 @@ http://www.connascence.io[connascence.io].
 
 === The Alternative: Temporal Decoupling Using Asynchronous Messaging
 
-How do we get appropriate coupling? We've already seen part of the answer, which is that we should think in
+How do we get ((("error handling", "in distributed systems", startref="ix_errhnddst")))appropriate coupling? We've already seen part of the answer, which is that we should think in
 terms of verbs, not nouns. Our domain model is about modeling a business
 process. It's not a static data model about a thing; it's a model of a verb.
 
