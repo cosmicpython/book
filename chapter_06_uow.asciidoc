@@ -5,14 +5,14 @@ In this chapter we'll introduce the final piece of the puzzle that ties
 together ((("Unit of Work pattern", id="ix_UoW")))the repository and service layer patterns: the _Unit of Work pattern_.
 
 If the Repository pattern is our abstraction over the idea of persistent storage,
-the Unit of Work (UoW) pattern is our abstraction over the idea of _atomic operations_. It
+the Unit of Work (UoW) pattern is our abstraction over the idea of _atomic operations_.((("atomic operations, Unit of Work pattern and"))) It
 will allow us to finally, fully, decouple our service layer from the data layer.
 
 
 <<before_uow_diagram>> shows that, currently, a lot of communication occurs
 across the layers of our infrastructure: the API talks directly to the database
 layer to start a session, it talks to the repository layer to initialize
-`SQLAlchemyRepository`, and it talks to the service layer to ask it to allocate.
+`SQLAlchemyRepository`, and it talks to the service layer to ask it to allocate.((("APIs", "without Unit of Work pattern, talking directly to three layers")))((("Unit of Work pattern", "without, API talking directly to three layers")))
 
 [[before_uow_diagram]]
 .Without UoW: API talks directly to three layers
@@ -22,14 +22,14 @@ image::images/apwp_0601.png[]
 things: it initializes a unit of work, and it invokes a service. The service
 collaborates with the UoW (we like to think of the UoW as being part of the
 service layer), but neither the service function itself nor Flask now needs
-to talk directly to the database.
+to talk directly to the database.((("Unit of Work pattern", "managing database state")))((("databases", "Unit of Work pattern managing state for")))
 
 
 [[after_uow_diagram]]
 .With UoW: UoW now manages database state
 image::images/apwp_0602.png[]
 
-And we'll do it all using a lovely piece of Python syntax, a context manager.
+And we'll do it all using a lovely piece((("context manager"))) of Python syntax, a context manager.
 
 
 [TIP]
@@ -50,7 +50,7 @@ git checkout chapter_04_service_layer
 
 //TODO (DS) do you talk anywhere about multiple repositories?
 
-Here's how the service layer will look, when we're finished:
+Here's how the service((("Unit of Work pattern", "collaboration with repository")))((("repositories", "Unit of Work collaborating with"))) layer will look, when we're finished:
 
 [[uow_preview]]
 .Preview of unit of work in action (src/allocation/service_layer/services.py)
@@ -70,17 +70,17 @@ def allocate(
 ----
 ====
 
-<1> We'll start a UoW as a context manager.
+<1> We'll start a UoW as a context manager.((("context manager", "starting Unit of Work as")))
 <2> `uow.batches` is the batches repo, so the UoW provides us
-    access to our permanent storage.
+    access to our permanent storage.((("storage", "permanent, UoW providing entrypoint to")))
 <3> When we're done, we commit or roll back our work, using the UoW.
 
 The UoW acts as a single entrypoint to our persistent storage, and
 keeps track of what objects were loaded and of the latest state.footnote:[
 You may have come across the word _collaborators_, to describe objects that work
-together to achieve a goal. The unit of work and the repository are a great
+together to achieve a goal.((("collaborators"))) The unit of work and the repository are a great
 example of collaborators in the object-modeling sense.
-In responsibility-driven design, clusters of objects that collaborate in their
+In responsibility-driven design, clusters of objects((("object neighborhoods"))) that collaborate in their
 roles are called _object neighborhoods_, which is, in our professional opinion,
 totally adorable.]
 
@@ -100,7 +100,7 @@ This gives us three useful things:
 === Test-Driving a UoW with Integration Tests
 
 Here's a test for a new `UnitofWork` (or UoW, which we pronounce "you-wow").
-It's a context manager that allows us to start a transaction, retrieve
+It's a((("integration tests", "test-driving Unit of Work with")))((("testing", "Unit of Work with integration tests")))((("Unit of Work pattern", "test driving with integration tests"))) context manager that allows us to start a transaction, retrieve
 things from repos, and commit:
 
 
@@ -135,7 +135,7 @@ def test_uow_can_retrieve_a_batch_and_allocate_to_it(session_factory):
 <3> We call `commit()` on it when we're done.
 
 For the curious, the `insert_batch` and `get_allocated_batch_ref` helpers
-look like this:
+look like((("SQL", "helpers for Unit of Work"))) this:
 
 [[sql_helpers]]
 .Helpers for doing SQL stuff (tests/integration/test_uow.py)
@@ -167,7 +167,7 @@ def get_allocated_batch_ref(session, orderid, sku):
 
 === Unit of Work and Its Context Manager
 
-In our tests we've implicitly defined an interface for what a UoW needs to do. Let's make that explicit by using an abstract
+In our tests we've implicitly defined an interface for what a UoW needs to do. Let's make that explicit by using an ((("Unit of Work pattern", "and its context manager")))((("context manager", "abstract UoW context manager")))abstract
 base class:
 
 
