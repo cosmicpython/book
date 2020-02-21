@@ -2,7 +2,7 @@
 == Going to Town on the Message Bus
 
 In this chapter, we'll start to make events more fundamental to the internal
-structure of our application. We'll move from the current state in
+structure of our application.((("events and the message bus", "transforming our app into message processor", id="ix_evntMBMP"))) We'll move from the current state in
 <<maps_chapter_08_before>>, where events are an optional
 side effect...
 
@@ -933,6 +933,6 @@ a|
 |===
 
 Now, you may be wondering, where are those `BatchQuantityChanged` events
-going to come from? The answer is revealed in a couple of chapters' time.  But
+going to come from? The answer is revealed in a couple of chapters' time.((("events and the message bus", "transforming our app into message processor", startref="ix_evntMBMP")))  But
 first, let's talk about <<chapter_10_commands,events versus commands>>.
 
