@@ -752,7 +752,7 @@ it comes to your own projects.
 
 === Building an Adapter "Properly": A Worked Example
 
-To really get a feel((("adapters", "building adapter and doing dependency injection for it", id="ix_adapDI")))((("adapters", "building adapter and doing dependency injection for it")))((("dependency injection", "doing for an adapter"))) for how it all works, let's work through an example of how
+To really get a feel((("adapters", "building adapter and doing dependency injection for it", id="ix_adapDI"))) for how it all works, let's work through an example of how
 you might build an adapter, and do dependency injection for it, "properly."
 
 At the moment, we have two types of dependencies:
@@ -825,7 +825,7 @@ class EmailNotifications(AbstractNotifications):
 ====
 
 
-We change the dependency in the bootstrap script:
+We change the dependency((("bootstrapping", "changing notifications dependency in bootstrap script"))) in the bootstrap script:
 
 [[notifications_in_bus]]
 .Notifications in message bus (src/allocation/bootstrap.py)
@@ -846,7 +846,7 @@ We change the dependency in the bootstrap script:
 
 ==== Make a Fake Version for Your Tests
 
-We work through and define a fake version for unit testing:
+We work through and define((("faking", "FakeNotifications for unit testing"))) a fake version for unit testing:
 
 
 [[fake_notifications]]
@@ -893,7 +893,7 @@ And we use it in our tests:
 
 Now we test the real thing, usually with an end-to-end or integration
 test.  We've used https://github.com/mailhog/MailHog[MailHog] as a
-real-ish email server for our Docker dev environment:
+real-ish email((("Docker dev environment", "with real rake email server"))) server for our Docker dev environment:
 
 
 [[docker_compose_with_mailhog]]
@@ -933,7 +933,7 @@ services:
 ====
 
 
-In our integration tests, we use the real `EmailNotifications` class,
+In our integration((("bootstrapping", "using to build message bus that talks to real notification class"))) tests, we use the real `EmailNotifications` class,
 talking to the MailHog server in the Docker cluster:
 
 
@@ -984,7 +984,7 @@ And that's it really.
 .DI and Bootstrap Recap
 ****
 * Once you have more than one adapter, you'll start to feel a lot of pain
-  from passing dependencies around manually, unless you do some kind of
+  from passing dependencies around((("bootstrapping", "dependency injection and bootstrap recap")))((("dependency injection", "recap of DI and bootstrap"))) manually, unless you do some kind of
   _dependency injection._
 
 * Setting up dependency injection is just one of many typical
@@ -1020,7 +1020,7 @@ In summary:
 .Exercise for the Reader 2
 ******************************************************************************
 
-You could do two things for practice regarding adapters:
+You could do two things ((("adapters", "exercise for the reader")))for practice regarding adapters:
 
 1. Try swapping out our notifications from email to, for example, SMS
     notifications using Twilio, or Slack notifications.  Can you find
