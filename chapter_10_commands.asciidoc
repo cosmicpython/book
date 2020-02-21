@@ -229,7 +229,7 @@ COMMAND_HANDLERS = {
 === Discussion: Events, Commands, and Error Handling
 
 Many developers get uncomfortable at this point, and ask, "What happens when an
-event fails to process? ((("error handling", "events, commands, and", id="ix_errhnd")))((("commands", "events, commands, and error handling", id="ix_cmndeverr")))How am I supposed to make sure the system is in a
+event fails to process? ((("events", "events, commands, and error handling", id="ix_evntcmderr")))((("error handling", "events, commands, and", id="ix_errhnd")))((("commands", "events, commands, and error handling", id="ix_cmndeverr")))How am I supposed to make sure the system is in a
 consistent state?"
 
 If we manage to process half of the events during `messagebus.handle` before an
@@ -385,7 +385,7 @@ and end of the business processes. The names that we use in the code match the
 jargon used by our business stakeholders, and the handlers we've written match
 the steps of our natural language acceptance criteria. This concordance of names
 and structure helps us to reason about our systems as they grow larger and more
-complex.((("error handling", "events, commands, and", startref="ix_errhnd")))((("commands", "events, commands, and error handling", startref="ix_cmndeverr")))
+complex.((("events", "events, commands, and error handling", startref="ix_evntcmderr")))((("error handling", "events, commands, and", startref="ix_errhnd")))((("commands", "events, commands, and error handling", startref="ix_cmndeverr")))
 
 
 [[recovering_from_errors]]
