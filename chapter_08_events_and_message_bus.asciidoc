@@ -2,7 +2,7 @@
 == Events and the Message Bus
 
 So far we've spent a lot of time and energy on a simple problem that we could
-easily have solved with Django. You might be asking if the increased testability
+easily have solved with Django.((("events and the message bus", id="ix_evntMB"))) You might be asking if the increased testability
 and expressiveness are _really_ worth all the effort.
 
 In practice, though, we find that it's not the obvious features that make a mess
@@ -21,7 +21,7 @@ mundane stuff that makes up so much of our systems.
 We'll start by doing the simplest, most expeditious thing, and talk about
 why it's exactly this kind of decision that leads us to the Big Ball of Mud.
 
-Then we'll show how to use _Domain Events_ pattern to separate side effects from our
+Then we'll show how to use _Domain Events_ pattern to separate side effects from our((("Domain Events pattern")))((("Message Bus pattern")))
 use cases, and how to use a simple _Message Bus_ pattern for triggering behavior
 based on those events. We'll show a few options for creating
 those events and how to pass them to the message bus, and finally we'll show
@@ -801,7 +801,7 @@ a|
   in the system where you can understand how a request will be fulfilled.
 
 * You also open yourself up to the possibility of circular dependencies between your
-  event handlers, and infinite loops.
+  event handlers, and infinite loops.((("events and the message bus", startref="ix_evntMB")))
 
 a|
 |===
