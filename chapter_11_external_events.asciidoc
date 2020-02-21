@@ -263,7 +263,7 @@ http://www.connascence.io[connascence.io].
 
 === The Alternative: Temporal Decoupling Using Asynchronous Messaging
 
-How do we get ((("error handling", "in distributed systems", startref="ix_errhnddst")))((("microservices", "event-based integration", "error handling in distributed systems", startref="ix_mcroevnterr")))appropriate coupling?((("microservices", "event-based integration", "temporal decoupling using asynchronous messaging")))((("coupling", "temporal decoupling using asynchronous messaging")))((("asynchronous messaging, temporal decoupling with")))((("temporal decoupling using asynchronous messaging")))((("messaging , asynchronous, temporal decoupling with"))) We've already seen part of the answer, which is that we should think in
+How do we get ((("error handling", "in distributed systems", startref="ix_errhnddst")))((("microservices", "event-based integration", "error handling in distributed systems", startref="ix_mcroevnterr")))appropriate coupling?((("microservices", "event-based integration", "temporal decoupling using asynchronous messaging")))((("coupling", "temporal decoupling using asynchronous messaging")))((("asynchronous messaging, temporal decoupling with")))((("temporal decoupling using asynchronous messaging")))((("messaging", "asynchronous, temporal decoupling with"))) We've already seen part of the answer, which is that we should think in
 terms of verbs, not nouns. Our domain model is about modeling a business
 process. It's not a static data model about a thing; it's a model of a verb.
 
@@ -305,11 +305,11 @@ we can do that locally.
 
 === Using a Redis Pub/Sub Channel for Integration
 
-Let's see how it will all work concretely. We'll need some way of getting
+Let's see how it will all work concretely.((("microservices", "event-based integration", "using Redis pub/sub channel for ntegration")))((("Redis pub/sub channel, using for microservices integration")))((("messaging", "using Redis pub/sub channel for microservices integration")))((("publish-subscribe systems", "using Redis pub/sub channel for microservices integration"))) We'll need some way of getting
 events out of one system and into another, like our message bus, but for
 services. This piece of infrastructure is often called a _message broker_. The
 role of a message broker is to take messages from publishers and deliver them
-to subscribers.
+to subscribers.((("message brokers")))
 
 At MADE.com, we use https://eventstore.org[Event Store]; Kafka or RabbitMQ
 are valid alternatives. A lightweight solution based on Redis
@@ -357,7 +357,7 @@ MessageBus -> Redis : publish to line_allocated channel
 
 === Test-Driving It All Using an End-To-End Test
 
-Here's how we might start with an end-to-end test.  We can use our existing
+Here's how we might start with an end-to-end test.((("testing", "end-to-end test of pub/sub model")))((("Redis pub/sub channel, using for microservices integration", "testing pub/sub model")))((("microservices", "event-based integration", "testing with end-to-end test", id="ix_mcroevnttst")))  We can use our existing
 API to create batches, and then we'll test both inbound and outbound messages:
 
 
@@ -428,7 +428,7 @@ be too much of a digression.
 ==== Redis Is Another Thin Adapter Around Our Message Bus
 
 Our Redis pub/sub listener (we call it an _event consumer_) is very much like
-Flask:  it translates from the outside world to our events:
+Flask:  it translates from((("message bus", "Redis pub/sub listener as thin adapter around")))((("Redis pub/sub channel, using for microservices integration", "testing pub/sub model", "Redis as thin adapter around message bus"))) the outside world to our events:
 
 
 [[redis_eventconsumer_first_cut]]
@@ -486,7 +486,7 @@ def publish(channel, event: events.Event):  #<1>
 
 ==== Our New Outgoing Event
 
-Here's what the `Allocated` event will look like:
+Here's what the `Allocated` event will ((("Allocated event")))look like:
 
 [[allocated_event]]
 .New event (src/allocation/domain/events.py)
@@ -530,7 +530,7 @@ class Product:
 
 
 The handler for `ChangeBatchQuantity` already exists, so all we need to add
-is a handler that publishes the outgoing event:
+is a handler((("message bus", "handler publishing outgoing event"))) that publishes the outgoing event:
 
 
 [[another_handler]]
@@ -545,7 +545,7 @@ HANDLERS = {
 ----
 ====
 
-Publishing the event uses our helper function from the Redis wrapper:
+Publishing the event((("Redis pub/sub channel, using for microservices integration", "testing pub/sub model", "publishing outgoing event"))) uses our helper function from the Redis wrapper:
 
 [[publish_event_handler]]
 .Publish to Tedis (src/allocation/service_layer/handlers.py)
@@ -563,7 +563,7 @@ def publish_allocated_event(
 .Internal Versus External Events
 *******************************************************************************
 It's a good idea to keep the distinction between internal and external events
-clear.  Some events may come from the outside, and some events may get upgraded
+clear.((("microservices", "event-based integration", "testing with end-to-end test", startref="ix_mcroevnttst")))((("events", "internal versus external")))  Some events may come from the outside, and some events may get upgraded
 and published externally, but not all of them.  This is particularly important
 if you get into
 https://oreil.ly/FXVil[event sourcing]
@@ -594,7 +594,7 @@ Events can come _from_ the outside, but they can also be published
 externally--our `publish` handler converts an event to a message on a Redis
 channel. We use events to talk to the outside world.  This kind of temporal
 decoupling buys us a lot of flexibility in our application integrations, but,
-as always, it comes at a cost.
+as always, it comes at a cost.((("Fowler, Martin")))
 
 [quote, Martin Fowler, What do you mean by “Event-Driven”? (martinfowler.com)]
 ____
@@ -608,7 +608,7 @@ ____
 <<chapter_11_external_events_tradeoffs>> shows some tradeoffs to think about.
 More generally, if you're moving from a model of synchronous messaging to an
 async one, you also open up a whole host of problems having to do with message
-reliability and eventual consistency. Read on to <<footguns>>.
+reliability and eventual consistency.((("microservices", "event-based integration", "trade-offs"))) Read on to <<footguns>>.
 
 
 [[chapter_11_external_events_tradeoffs]]
