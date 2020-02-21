@@ -775,7 +775,7 @@ def test_concurrent_updates_to_version_are_not_allowed(postgres_session_factory)
     )
     assert version == 2  #<2>
     [exception] = exceptions
-    assert 'could not serialize access due to concurrent update' in str(exception) #<3>
+    assert 'could not serialize access due to concurrent update' in str(exception)  #<3>
 
     orders = list(session.execute(
         "SELECT orderid FROM allocations"
