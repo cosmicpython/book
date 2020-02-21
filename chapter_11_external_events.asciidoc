@@ -40,10 +40,10 @@ git checkout chapter_10_commands
 
 === Distributed Ball of Mud, and Thinking in Nouns
 
-Before we get into that, let's talk about the alternatives.((("Ball of Mud pattern", "distributed ball of mud and thinking in nouns")))((("microservices", "event-based integration", "distributed Ball of Mud and thinking in nouns", id="ix_mcroevntBoM"))) We regularly talk to
+Before we get into that, let's talk about the alternatives.((("Ball of Mud pattern", "distributed ball of mud and thinking in nouns", id="ix_BoMdist")))((("microservices", "event-based integration", "distributed Ball of Mud and thinking in nouns", id="ix_mcroevntBoM"))) We regularly talk to
 engineers who are trying to build out a microservices architecture. Often they
 are migrating from an existing application, and their first instinct is to
-split their system into _nouns_.((("nouns, splitting system into")))
+split their system into _nouns_.((("nouns, splitting system into", id="ix_noun")))
 
 What nouns have we introduced so far in our system? Well, we have batches of
 stock, orders, products, and customers. So a naive attempt at breaking
@@ -188,7 +188,7 @@ Warehouse; but in order to handle problems at the warehouse, our Warehouse
 system drives Batches, which drives Orders.
 
 Multiply this by all the other workflows we need to provide, and you can see
-how services quickly get tangled up.((("microservices", "event-based integration", "distributed Ball of Mud and thinking in nouns", startref="ix_mcroevntBoM")))
+how services quickly get tangled up.((("Ball of Mud pattern", "distributed ball of mud and thinking in nouns", startref="ix_BoMdist")))((("nouns, splitting system into", startref="ix_noun")))((("microservices", "event-based integration", "distributed Ball of Mud and thinking in nouns", startref="ix_mcroevntBoM")))
 
 === Error Handling in Distributed Systems ===
 
