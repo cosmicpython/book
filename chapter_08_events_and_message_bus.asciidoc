@@ -664,10 +664,10 @@ using ABCs, they'll help remind you when things get out of sync.
 ******************************************************************************
 
 Are you finding all those `._add()` and `._commit()` methods "super-gross," in
-the words of our beloved tech reviewer Hynek? Does it "make you want to beat
+the words of our beloved tech reviewer Hynek? ((("underscorey methods", "avoiding by implementing TrackingRepository wrapper class")))Does it "make you want to beat
 Harry around the head with a plushie snake?" Hey, our code listings are
 meant to be only examples, not the perfect solution! Why not go see if you
-can do better?((("composition over inheritance", "TrackingModel wrapper class")))
+can do better?((("repositories", "TrackerRepository wrapper class")))((("composition over inheritance", "TrackingRepository wrapper class")))((("inheritance", "avoiding use of with wrapper class")))
 
 One _composition over inheritance_ way to go would be to implement a
 wrapper class:
@@ -701,14 +701,14 @@ class TrackingRepository:
     and `.get()` methods, avoiding weird underscore methods.
 
 See if you can apply a similar pattern to our UoW class, in
-order to get rid of those Java-y `_commit()` methods too. You can find the code on https://github.com/cosmicpython/code/tree/chapter_08_events_and_message_bus_exercise[GitHub].
+order to get rid of those Java-y `_commit()` methods too.((("Unit of Work pattern", "getting rid of underscorey methods in UoW class"))) You can find the code on https://github.com/cosmicpython/code/tree/chapter_08_events_and_message_bus_exercise[GitHub].
 
-Switching all the ABCs to `typing.Protocol` is a good way to force yourself to avoid using inheritance. Let us know if you come up with something nice!
+Switching all ((("abstract base classes (ABCs)", "switiching to typing.Protocol")))the ABCs to `typing.Protocol` is a good way to force yourself to avoid using inheritance. Let us know if you come up with something nice!
 ******************************************************************************
 
 === Wrap-Up
 
-Domain events give us a way to handle workflows in our system. We often find,
+Domain events give us a way to handle workflows in our system.((("events and the message bus", "domain events and message bus wrapup"))) We often find,
 listening to our domain experts, that they express requirements in a causal or
 temporal way; for example, "When we try to allocate stock, but there's none
 available, then we should send an email to the buying team."
@@ -721,7 +721,7 @@ Events are useful for more than just sending email, though. In <<chapter_05_high
 spent a lot of time convincing you that you should define aggregates, or
 boundaries where we guarantee consistency. People often ask, "What
 should I do if I need to change multiple aggregates as part of a request?" Now
-we have the tools we need to answer the question.
+we have the tools we need to answer the question.((("aggregates", "changing multiple aggregates in a request")))
 
 If we have two things that can be transactionally isolated (e.g., an order and a
 product) then we can make them _ by using events. When an
@@ -737,35 +737,35 @@ detail as we build a more complex workflow with our new message bus.
 Events can help with the single responsibility principle::
     Code gets tangled up when we mix multiple concerns in one place. Events can
     help us to keep things tidy by separating primary use cases from secondary
-    ones.
+    ones.((("events and the message bus", "domain events and message bus recap")))
     We also use events for communicating between aggregates so that we don't
     need to run long-running transactions that lock against multiple tables.
 
 A message bus routes messages to handlers::
     You can think of a message bus as a dict that maps from events to their
-    consumers. It doesn't "know" anything about the meaning of events; it's just
+    consumers.((("message bus", "recap"))) It doesn't "know" anything about the meaning of events; it's just
     a piece of dumb infrastructure for getting messages around the system.
 
 Option 1: Service layer raises events and passes them to message bus::
     The simplest way to start using events in your system is to raise them from
     handlers, by calling `bus.handle(some_new_event)` after you commit your
-    unit of work.
+    unit of work.((("service layer", "raising events and passing them to message bus")))
 
 Option 2: Domain model raises events, service layer passes them to message bus::
-    The logic about when to raise an event really should live with the model, so
+    The logic about ((("domain model", "raising events and service layer passing them to message bus")))when to raise an event really should live with the model, so
     we can improve our system's design and testability by raising events from
     the domain model. It's easy for our handlers to collect events off the model
     objects after `commit` and pass them to the bus.
 
 Option 3: UoW collects events from aggregates and passes them to message bus::
-    Adding `bus.handle(aggregate.events)` to every handler is annoying, so we
+    Adding `bus.handle(aggregate.events)` to every ((("Unit of Work pattern", "UoW collecting events from aggregates and passing them to message bus")))((("aggregates", "UoW collecting events from and passing them to message bus")))handler is annoying, so we
     can tidy up by making our unit of work responsible for raising events that
     were raised by loaded objects.
     This is the most complex design and might rely on ORM magic, but it's clean
     and easy to use once it's set up.
 *****************************************************************
 
-And <<chapter_08_events_and_message_bus_tradeoffs>> shows the trade-offs as we
+And <<chapter_08_events_and_message_bus_tradeoffs>> shows ((("events and the message bus", "pros and cons or trade-offs")))((("message bus", "pros and cons or trade-offs")))the trade-offs as we
 see them:
 
 [[chapter_08_events_and_message_bus_tradeoffs]]
@@ -791,7 +791,7 @@ a|
   people.
 
 * What's more, that hidden event-handling code executes _synchronously_,
-  meaning your service-layer function
+  meaning your service-layer function((("synchronous execution of event-handling code")))
   doesn't finish until all the handlers for any events are finished. That
   could cause unexpected performance problems in your web endpoints
   (adding asynchronous processing is possible but makes things even _ confusing).
@@ -800,7 +800,7 @@ a|
   are split across a chain of multiple handlers, there is no single place
   in the system where you can understand how a request will be fulfilled.
 
-* You also open yourself up to the possibility of circular dependencies between your
+* You also open yourself up to((("dependencies", "circular dependencies between event handlers"))) the possibility of circular dependencies between your
   event handlers, and infinite loops.((("events and the message bus", startref="ix_evntMB")))
 
 a|
