@@ -703,7 +703,7 @@ class TrackingRepository:
 See if you can apply a similar pattern to our UoW class, in
 order to get rid of those Java-y `_commit()` methods too.((("Unit of Work pattern", "getting rid of underscorey methods in UoW class"))) You can find the code on https://github.com/cosmicpython/code/tree/chapter_08_events_and_message_bus_exercise[GitHub].
 
-Switching all ((("abstract base classes (ABCs)", "switiching to typing.Protocol")))the ABCs to `typing.Protocol` is a good way to force yourself to avoid using inheritance. Let us know if you come up with something nice!
+Switching all ((("abstract base classes (ABCs)", "switching to typing.Protocol")))the ABCs to `typing.Protocol` is a good way to force yourself to avoid using inheritance. Let us know if you come up with something nice!
 ******************************************************************************
 
 === Wrap-Up
