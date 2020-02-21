@@ -424,7 +424,7 @@ NOTE: The rule that repositories should only return aggregates is the main place
     where we enforce the convention that aggregates are the only way into our
     domain model.  Be wary of breaking it!
 
-In our case, we'll switch from `BatchRepository` to `ProductRepository`:
+In our case, we'll((("ProductRepository object")))((("Unit of Work pattern", "UoW and product repository"))) switch from `BatchRepository` to `ProductRepository`:
 
 
 [[new_uow_and_repository]]
@@ -451,8 +451,8 @@ class AbstractProductRepository(abc.ABC):
 ====
 
 The ORM layer will need some tweaks so that the right batches automatically get
-loaded and associated with `Product` objects. The nice thing is, the Repository
-pattern means we don't have to worry about that yet. We can just use
+loaded and associated with `Product` objects.((("object-relational mappers (ORMs)", "associating right batches with Product objects")))((("service layer", "using Product objects"))) The nice thing is, the Repository
+pattern means we don't have to worry about that yet.((("Product object", "service layer using"))) We can just use
 our `FakeRepository` and then feed through the new model into our service
 layer, to see how it looks with `Product` as its main entrypoint:
 
@@ -493,7 +493,7 @@ def allocate(
 
 We've mentioned a few times that we're modeling with aggregates because we want
 to have high-performance software, but here we are loading _all_ the batches when
-we only need one. You might expect that to be inefficient, but there are a few
+we only need one.((("aggregates", "performance and")))((("performance", "impact of use of aggregates"))) You might expect that to be inefficient, but there are a few
 reasons why we're comfortable here.
 
 First, we're purposefully modeling our data so that we can make a single
@@ -529,7 +529,7 @@ minds if find our boundaries are causing performance woes.
 ******************************************************************************
 You've just seen the main top layers of the code, so this shouldn't be too hard,
 but we'd like you to implement the `Product` aggregate starting from `Batch`,
-just as we did.
+just as we did.((("aggregates", "exercise for the reader")))
 
 Of course, you could cheat and copy/paste from the previous listings, but even
 if you do that, you'll still have to solve a few challenges on your own,
@@ -551,7 +551,7 @@ do them for you by magic!
 === Optimistic Concurrency with Version Numbers
 
 We have our new aggregate, so we've solved the conceptual problem of choosing
-an object to be in charge of consistency boundaries.  Let's now spend a little
+an object to be in charge of consistency boundaries.((("optimistic concurrency with version numbers", id="ix_opticonc")))((("concurrency", "optimistic concurrency with version numbers", id="ix_concopt")))  Let's now spend a little
 time talking about how to enforce data integrity at the database level.
 
 NOTE: This section has a lot of implementation details, some of which are Postgres-specific, for example. But more generally, we're showing
@@ -709,7 +709,7 @@ TIP: If you're scratching your head at this version number business, it might
     that the `Product` database row is modified whenever we make a change to the
     `Product` aggregate. The version number is a simple human-comprehensible way
     to model a thing that changes on every write, but it could equally be a
-    random UUID every time.
+    random UUID every time.((("optimistic concurrency with version numbers", startref="ix_opticonc")))((("concurrency", "optimistic concurrency with version numbers", startref="ix_concopt")))
 
 
 === Testing for Our Data Integrity Rules
