@@ -212,7 +212,7 @@ class AbstractUnitOfWork(abc.ABC):
 ==== The Real Unit of Work Uses SQLAlchemy Sessions
 
 The main thing that our concrete implementation adds is the
-database session:
+database ((("SQLAlchemy", "database session for Unit of Work")))((("Unit of Work pattern", "real implementation using SQLAlchemy database session")))((("databases", "SQLAlchemy adding session for Unit of Work")))session:
 
 [[unit_of_work]]
 .The real SQLAlchemy UoW (src/allocation/service_layer/unit_of_work.py)
@@ -251,7 +251,7 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
     can use SQLite instead.
 
 <2> The +++<code>__enter__</code>+++ method is responsible for starting a database session, and instantiating
-    a real repository that can use that session.
+    a real repository that can use that session.((("&#x5f;&#x5f;enter&#x5f;&#x5f; and &#x5f;&#x5f;exit&#x5f;&#x5f; magic methods", primary-sortas="enter and exit")))
 
 <3> We close the session on exit.
 
