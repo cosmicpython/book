@@ -30,7 +30,7 @@ git checkout chapter_09_all_messagebus
 === Commands and Events
 
 Like events, _commands_ are a type of message--instructions sent by one part of
-a system to another.((("commands", "events versus", id="ix_cmdevnt"))) We usually represent commands with dumb data
+a system to another.((("events", "commands versus", id="ix_evntcmd")))((("commands", "events versus", id="ix_cmdevnt"))) We usually represent commands with dumb data
 structures and can handle them in much the same way as events.
 
 The differences between commands and events, though, are important.
@@ -106,7 +106,7 @@ class ChangeBatchQuantity(Command):  #<3>
 === Differences in Exception Handling
 
 
-Just changing ((("commands", "events versus", startref="ix_cmdevnt")))the names and verb tenses is all very well, but that won't
+Just changing ((("events", "commands versus", startref="ix_evntcmd")))((("commands", "events versus", startref="ix_cmdevnt")))the names and verb tenses is all very well, but that won't
 change the behavior of our system.  We want to treat events and commands similarly,
 but not exactly the same.  Let's see how our message bus changes:
 
