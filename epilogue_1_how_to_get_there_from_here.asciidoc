@@ -51,7 +51,7 @@ tax_.
 
 === Separating Entangled Responsibilities
 
-At the beginning of the book, we said that the main characteristic of a big ball
+At the beginning of the book, we said that the main characteristic((("Ball of Mud pattern", "separating responsibilities")))((("responsibilities of code", "separating responsibilities"))) of a big ball
 of mud is homogeneity: every part of the system looks the same, because we
 haven't been clear about the responsibilities of each component. To fix that,
 we'll need to start separating out responsibilities and introducing clear
@@ -104,7 +104,7 @@ was invoked from a web frontend.
 ********************************************************************************
 Many years ago, Bob worked for a software company that had outsourced the first
 version of its application, an online collaboration platform for sharing and
-working on files.
+working on files.((("layered architecture", "case study, layering an overgrown system")))((("responsibilities of code", "separating responsibilities", "case study, layering overgrown system")))
 
 When the company brought development in-house, it passed through several
 generations of developers' hands, and each wave of new developers added more
@@ -185,7 +185,7 @@ under test, and how to start separating responsibilities.
 === Identifying Aggregates and Bounded Contexts
 
 Part of the problem with the codebase in our case study was that the object
-graph was highly connected. Each account had many workspaces, and each workspace had
+graph was highly connected.((("aggregates", "identifying aggregates and bounded contexts", id="ix_aggID")))((("bounded contexts", "identifying aggregates and", id="ix_BCID"))) Each account had many workspaces, and each workspace had
 many members, all of whom had their own accounts. Each workspace contained many
 documents, which had many versions.
 
@@ -457,9 +457,9 @@ for workspace_id in workspaces:
 === An Event-Driven Approach to Go to Microservices via Strangler Pattern
 
 The _Strangler Fig_ pattern involves creating a new system around the edges
-of an old system, while keeping it running. Bits of old functionality
+of an old system, while keeping it running.((("bounded contexts", "identifying aggregates and", startref="ix_BCID")))((("aggregates", "identifying aggregates and bounded contexts", startref="ix_aggID"))) Bits of old functionality
 are gradually intercepted and replaced until the old system is left
-doing nothing at all, and can be switched off.
+doing nothing at all, and can be switched off.((("microservices", "event-driven approach, using Strangler pattern", id="ix_mcroevntSp")))((("event-driven architecture", "going to microservices via Strangler pattern", id="ix_evntgo")))
 
 When building the availability service, we used a technique called _event
 interception_ to move functionality from one place to another. This is a three-step
@@ -473,7 +473,7 @@ own domain model.
 
 3. Replace the older system with the new.
 
-We used event interception to move from <<strangler_before>>...
+We used event((("Strangler pattern, going to microservices via", id="ix_Strang"))) interception to move from <<strangler_before>>...
 
 [[strangler_before]]
 .Before: strong, bidirectional coupling based on XML-RPC
@@ -577,13 +577,13 @@ TIP: When deploying an event-driven system, start with a "walking skeleton."
 
 Given a deployment pipeline, the infrastructure we needed, and a basic domain
 model, we were off. A couple months later, we were in production and serving
-real customers.
+real customers.((("Strangler pattern, going to microservices via", startref="ix_Strang")))((("microservices", "event-driven approach, using Strangler pattern", startref="ix_mcroevntSp")))((("event-driven architecture", "going to microservices via Strangler pattern", startref="ix_evntgo")))
 
 === Convincing Your Stakeholders to Try Something New
 
 If you're thinking about carving a new system out of a big ball of mud, you're
 probably suffering problems with reliability, performance, maintainability, or
-all three simultaneously. Deep intractable problems call for drastic measures!
+all three simultaneously.((("stakeholders, convinging to try something new", id="ix_stkhld"))) Deep intractable problems call for drastic measures!
 
 We recommend _domain modeling_ as a first step. In many overgrown systems, the
 engineers, product owners, and customers no longer speak the same language.
@@ -693,7 +693,7 @@ right—and others will too._
 
 === Questions Our Tech Reviewers Asked That We Couldn't Work into Prose
 
-Do I need to do all of this at once? Can I just do a bit at a time?::
+Do I need to do all of this at once?((("stakeholders, convinging to try something new", startref="ix_stkhld")))((("questions from tech reviewers", id="ix_qstTR"))) Can I just do a bit at a time?::
 No, you can absolutely adopt these techniques bit by bit. If you have an existing system, we recommend building a service layer to try to keep orchestration in one place. Once you have that, it's much easier to push logic into the model and push edge concerns like validation or error handling to the entrypoints.
 +
 It's worth having a service layer even if you still have a big messy Django ORM because it's a way to start understanding the boundaries of operations.
@@ -766,13 +766,13 @@ I'm using Django, Can I still do this?::
 === Footguns
 
 OK, so we've given you a whole bunch of new toys to play with. Here's the
-fine print. Harry and Bob do not recommend that you copy and paste our code into
+fine print.((("questions from tech reviewers", startref="ix_qstTR"))) Harry and Bob do not recommend that you copy and paste our code into
 a production system and rebuild your automated trading platform on Redis
 pub-sub. For reasons of brevity and simplicity, we've hand-waved a lot of tricky
 subjects. Here's a list of things we think you should know before trying this
 for real.
 
-Reliable messaging is hard::
+Reliable((("messaging", "reliable messaging is hard"))) messaging is hard::
 
 Redis `PUB/SUB` is not reliable and shouldn't be used as a general-purpose
 messaging tool. We picked it because it's familiar and easy to run. At MADE, we
@@ -789,12 +789,12 @@ In <<chapter_08_events_and_message_bus>> we update our process so that _dealloca
 _reallocating_ the line happen in two separate units of work.
 You will need monitoring to know when these transactions fail, and tooling to
 replay events. Some of this is made easier by using a transaction log as your
-message broker (e.g., Kafka, EventStore). You might also look at the
+message broker (e.g., Kafka, EventStore). ((("Outbox pattern")))You might also look at the
 https://oreil.ly/sLfnp[Outbox pattern].
 
 We don't discuss idempotency::
 
-We haven't given any real thought to what happens when handlers are retried.
+We haven't given any real ((("messaging", "idempotent message handling")))((("idempotent message handling")))thought to what happens when handlers are retried.
 In practice you will want to make handlers idempotent so that calling them
 repeatedly with the same message will not make repeated changes to state.
 This is a key technique for building reliability, because it enables us to
@@ -803,7 +803,7 @@ safely retry events when they fail.
 There's a lot of good material on idempotent message handling, try starting
 with https://oreil.ly/yERzR["How to Ensure Idempotency in an Eventual Consistent DDD/CQRS Application"] and https://oreil.ly/Ekuhi["(Un) Reliability in messaging"].
 
-Your events will need to change their schema over time::
+Your events ((("events", "changing schema over time")))will need to change their schema over time::
 
 You'll need to find some way of documenting your events and sharing schema
 with consumers. We like using JSON schema and markdown because it's simple but
@@ -812,7 +812,7 @@ there is other prior art. Greg Young wrote an entire book on managing event-driv
 
 === More Required Reading
 
-A couple more books we'd like to recommend to help you on your way:
+A couple more books we'd like to((("resources, additional required reading"))) recommend to help you on your way:
 
 * _Clean Architectures in Python_ by Leonardo Giordani (Leanpub), which came out in 2019, is one of the few previous books on application architecture in Python.
 
