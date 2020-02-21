@@ -203,10 +203,10 @@ guaranteed. The failure state of our batches service has bubbled up and is
 affecting the reliability of our order service.
 
 When two things have to be changed together, we say that they are _coupled_. We
-can think of this failure cascade as a kind of _temporal coupling_: every part
+can think of this failure ((("coupling", "failure cascade as temporal coupling")))((("temporal coupling")))cascade as a kind of _temporal coupling_: every part
 of the system has to work at the same time for any part of it to work. As the
 system gets bigger, there is an exponentially increasing probability that some
-part is degraded.
+part is degraded.((("commands", "command flow with error")))
 
 [[command_flow_diagram_with_error]]
 .Command flow with error
@@ -233,7 +233,7 @@ Orders --> Customer: ???
 .Connascence
 *******************************************************************************
 We're using the term _coupling_ here, but there's another way to describe
-the relationships between our systems. _Connascence_ is a term used by some
+the relationships((("connascence"))) between our systems. _Connascence_ is a term used by some
 authors to describe the different types of coupling.
 
 Connascence isn't _bad_, but some types of connascence are _stronger_ than
@@ -254,7 +254,7 @@ components need to agree on only the name of an event, and the names of fields
 it carries.
 
 We can never completely avoid coupling, except by having our software not talk
-to any other software. What we want is to avoid _inappropriate_ coupling.
+to any other software. ((("coupling", "avoiding inappropriate coupling")))What we want is to avoid _inappropriate_ coupling.
 Connascence provides a mental model for understanding the strength and type of
 coupling inherent in different architectural styles. Read all about it at
 http://www.connascence.io[connascence.io].
