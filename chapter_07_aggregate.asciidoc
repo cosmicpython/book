@@ -6,7 +6,7 @@ and constraints, and see how our domain objects can maintain their own
 internal consistency, both conceptually and in persistent storage.((("consistency boundaries")))  We'll
 discuss the concept of a _consistency boundary_, and show how making it
 explicit can help us to build high-performance software without compromising
-maintainability.
+maintainability.((("aggregates", "Product aggregate")))((("Product object")))
 
 <<maps_chapter_06>> shows a preview of where we're headed: we'll introduce
 a new model object called `Product` to wrap multiple batches, and make
@@ -38,16 +38,16 @@ git checkout chapter_06_uow
 === Why Not Just Run Everything in a Spreadsheet?
 
 What's the point of a domain model, anyway? What's the fundamental problem
-we're trying to address?
+we're trying to address?((("domain model", "using spreadsheets instead of")))
 
 Couldn't we just run everything in a spreadsheet? Many of our users would be
-delighted by that. Business users _like_ spreadsheets because they're simple,
+delighted by that.((("spreadsheets", "using instead of domain model"))) Business users _like_ spreadsheets because they're simple,
 familiar, and yet enormously powerful.
 
 In fact, an enormous number of business processes do operate by manually sending
 spreadsheets back and forth over email. This "CSV over SMTP" architecture has
 low initial complexity but tends not to scale very well because it's difficult
-to apply logic and maintain consistency.
+to apply logic and maintain consistency.((("CSV over SMTP architecture")))
 
 // IDEA: better examples?
 
