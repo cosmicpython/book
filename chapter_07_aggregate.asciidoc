@@ -201,7 +201,7 @@ small number of objects—the smaller, the better, for performance—that have t
 be consistent with one another, and we need to give it a good name.
 
 The object we're manipulating under the covers is `Batch`. What do we call a
-collection of batches? How should we divide all the batches in the system into
+collection of batches? ((("batches", "collection of")))How should we divide all the batches in the system into
 discreet islands of consistency?
 
 We _could_ use `Shipment` as our boundary. Each shipment contains several
@@ -223,7 +223,7 @@ domain language back in <<chapter_01_domain_model>>.
 
 So the plan is this: when we want to allocate an order line, instead of
 <<before_aggregates_diagram>>, where we look up all the `Batch` objects in
-the world and pass them to the `allocate()` domain service...
+the world and pass((("batches", "allocate against all batches using domain service")))((("allocate service", "allocating against all batches with"))) them to the `allocate()` domain service...
 
 
 [[before_aggregates_diagram]]
@@ -274,7 +274,7 @@ allocate --> allocate_domain_service: allocate(orderline, batches)
 ...we'll move to the world of <<after_aggregates_diagram>>, in which there is a new
 `Product` object for the particular SKU of our order line, and it will be in charge
 of all the batches _for that SKU_, and we can call a `.allocate()` method on that
-instead.
+instead.((("Product object", "asking Product to allocate against its batches")))((("batches", "asking Product to allocate against")))
 
 [[after_aggregates_diagram]]
 .After: ask Product to allocate against its batches
@@ -321,7 +321,7 @@ Product o- Batch: has
 @enduml
 ----
 
-Let's see how that looks in code form:
+Let's see how that looks ((("Product object", "code for")))in code form:
 
 
 [[product_aggregate]]
@@ -350,7 +350,7 @@ class Product:
 
 <1> `Product`'s main identifier is the `sku`.
 
-<2> Our `Product` class holds a reference to a collection of `batches` for that SKU.
+<2> Our `Product` class holds a reference to a collection of `batches` for that SKU.((("allocate service", "moving to be a method on Product aggregate")))
 
 <3> Finally, we can move the `allocate()` domain service to
     be a method on the pass:[<code><span class="keep-together">Product</span></code>] aggregate.
@@ -362,7 +362,7 @@ class Product:
 NOTE: This `Product` might not look like what you'd expect a `Product`
     model to look like.  No price, no description, no dimensions.
     Our allocation service doesn't care about any of those things.
-    This is the power of bounded contexts; the concept
+    This is the((("bounded contexts", "product concept and"))) power of bounded contexts; the concept
     of a product in one app can be very different from another.
     See the following sidebar for more
     discussion.
@@ -393,7 +393,7 @@ explicitly.
 
 This concept translates very well to the world of microservices, where each
 microservice is free to have its own concept of "customer," and rules for
-translating that to and from other microservices it integrates with.
+translating that to and from other microservices it integrates with.((("microservices", "bounded contexts and")))
 
 In our example, the allocation service has `Product(sku, batches)`,
 whereas the ecommerce will have `Product(sku, description, price, image_url,
@@ -417,7 +417,7 @@ elsewhere. The Fowler link earlier is a good starting point, and either
 
 Once you define certain entities to be aggregates, we need to apply the rule
 that they are the only entities that are publicly accessible to the outside
-world.  In other words, the only repositories we are allowed should be
+world.((("repositories", "one aggregrate &#x3D; one repository")))((("aggregates", "one aggregrate &#x3D; one repository")))  In other words, the only repositories we are allowed should be
 repositories that return aggregates.
 
 NOTE: The rule that repositories should only return aggregates is the main place
