@@ -1,0 +1,11 @@
+version: "3.7"
+services:
+  asciidoctor:
+    build: 
+      context: . 
+      dockerfile: Dockerfile
+    volumes:
+      - .:/documents/
+
+volumes:
+  book-data:
