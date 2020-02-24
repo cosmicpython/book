@@ -3,9 +3,10 @@
 
 In this chapter we're going to start with a fairly uncontroversial insight:
 reads (queries) and writes (commands) are different, so they
-should be treated differently (or have their responsibilities segregated, if you will). Then we're going to push that insight as far
-as we can. If you're anything like Harry, this will all seem extreme at first,
-but, hopefully, we can make the argument that it's not _totally_ unreasonable.
+should be treated differently (or have their responsibilities segregated, if you will).((("queries", seealso="command-query responsibility segregation")))((("command-query responsibility segregation (CQRS)", id="ix_CQRS")))
+Then we're going to push that insight as far as we can. If you're anything like
+Harry, this will all seem extreme at first, but, hopefully, we can make the
+argument that it's not _totally_ unreasonable.
 
 <<maps_chapter_11>> shows where we might end up.
 
@@ -33,7 +34,7 @@ git checkout chapter_11_external_events
 === Domain Models Are for Writing
 
 We've spent a lot of time in this book talking about how to build software that
-enforces the rules of our domain. These rules, or constraints, will be different
+enforces the rules of our domain.((("command-query responsibility segregation (CQRS)", "domain models for writing")))((("domain model", "writing data"))) These rules, or constraints, will be different
 for every application, and they make up the interesting core of our systems.
 
 In this book, we've set explicit constraints like "You can't allocate more stock
@@ -79,7 +80,7 @@ What about reads, though?
 
 === Most Users Aren't Going to Buy Your Furniture
 
-At MADE.com, we have a system very like the allocation service. In a busy day, we
+At MADE.com, we have a ((("command-query responsibility segregation (CQRS)", "reads")))system very like the allocation service. In a busy day, we
 might process one hundred orders in an hour, and we have a big gnarly system for
 allocating stock to those orders.
 
@@ -92,7 +93,7 @@ The _domain_ is the same--we're concerned with batches of stock, and their
 arrival date, and the amount that's still available--but the access pattern
 is very different. For example, our customers won't notice if the query
 is a few seconds out of date, but if our allocate service is inconsistent,
-we'll make a mess of their orders. We can take advantage of this difference by
+we'll make a mess of their orders.((("consistency", "eventually consistent reads")))((("eventually consistent reads"))) We can take advantage of this difference by
 making our reads _eventually consistent_ in order to make them perform better.
 
 [role="nobreakinside less_space"]
@@ -100,7 +101,7 @@ making our reads _eventually consistent_ in order to make them perform better.
 *******************************************************************************
 
 This idea of trading consistency against performance makes a lot of developers
-nervous at first, so let's talk quickly about that.
+nervous at first, so let's talk quickly about that.((("consistency", "attainment of read consistency")))((("command-query responsibility segregation (CQRS)", "reads", "consistency of")))
 
 Let's imagine that our "Get Available Stock" query is 30 seconds out of date
 when Bob visits the page for `ASYMMETRICAL-DRESSER`.
@@ -141,7 +142,7 @@ read side, because stale data is essentially unavoidable.
 *******************************************************************************
 
 We can think of these requirements as forming two halves of a system:
-the read side, and the write side, shown in <<read_and_write_table>>.
+the read side, and the((("command-query responsibility segregation (CQRS)", "read side and write side"))) write side, shown in <<read_and_write_table>>.
 
 [[read_and_write_table]]
 .Read versus write
@@ -163,7 +164,7 @@ domain model are just bloat.
 === Post/Redirect/Get and CQS
 
 If you do web development, you're probably familiar with the
-Post/Redirect/Get pattern. In this technique, a web endpoint accepts an
+Post/Redirect/Get pattern. ((("Post/Redirect/Get pattern")))((("command-query responsibility segregation (CQRS)", "Post/Redirect/Get pattern and CQS")))In this technique, a web endpoint accepts an
 HTTP POST, and responds with a redirect to see the result. For example, we might
 accept a POST to _/batches_ to create a new batch, and redirect the user to
 _/batches/123_ to see their newly created batch.
@@ -176,9 +177,9 @@ with a broken page when they try to GET a POST endpoint.
 
 Both these problems happen because we're returning data in response to a write
 operation. Post/Redirect/Get sidesteps the issue by separating the read and
-write phases of our operation.
+write phases of our operation.((("Post/Redirect/Get pattern", "command-query separation (CQS)")))
 
-This technique is a simple example of command-query separation (CQS). In CQS we
+This technique is a simple ((("CQS (command-query separation)")))example of command-query separation (CQS). In CQS we
 follow one simple rule: functions should either modify state, or answer
 questions, but never both. This makes software easier to reason about: we should
 always be able to ask, "Are the lights on?" without flicking the light switch.
@@ -239,7 +240,7 @@ def test_unhappy_path_returns_400_and_error_message():
 ----
 ====
 
-OK, what might the Flask app look like?
+OK, what might((("Flask framework", "endpoint for viewing allocations"))) the Flask app look like?((("views", "read-only")))
 
 
 [[flask_app_calls_view]]
@@ -267,7 +268,7 @@ def allocations_view_endpoint(orderid):
 [[hold-on-ch12]]
 === Hold On to Your Lunch, Folks
 
-Hmm, so we can probably just add a list method to our existing repository
+Hmm, so we can probably just ((("command-query responsibility segregation (CQRS)", "building read-only views into our data")))((("repositories", "adding list method to existing repository object")))((("SQL", "raw SQL in views")))add a list method to our existing repository
 object:
 
 
@@ -322,7 +323,7 @@ TIP: Splitting out your read-only views from your state-modifying
 
 === Testing CQRS Views
 
-Before we get into exploring various options, let's talk about testing.
+Before we get ((("views", "testing CQRS views")))((("testing", "integration test for CQRS view")))((("command-query responsibility segregation (CQRS)", "testing views")))into exploring various options, let's talk about testing.
 Whichever approaches you decide to go for, you're probably going to need
 at least one integration test.  Something like this:
 
@@ -393,7 +394,7 @@ code with more complex business logic.
 
 === "Obvious" Alternative 1: Using the Existing Repository
 
-How about adding a helper method to our `products` repository?
+How about adding((("views", "simple view that uses the repository")))((("repositories", "simple view using existing repository")))((("command-query responsibility segregation (CQRS)", "simple view using existing repository"))) a helper method to our `products` repository?
 
 
 [[view_using_repo]]
@@ -458,7 +459,7 @@ downside, it all feels quite clunky.
 
 What we're seeing here are the effects of having a domain model that
 is designed primarily for write operations, while our requirements for
-reads are often conceptually quite different.
+reads are often conceptually quite different.((("domain model", "not optimized for read operations")))((("command-query responsibility segregation (CQRS)", "domain model not optimized for read operations")))
 
 This is the chin-stroking-architect's justification for CQRS.  As we've said before,
 a domain model is not a data model--we're trying to capture the way the
@@ -483,7 +484,7 @@ TIP: This justification for CQRS is related to the justification for the Domain
 ===  "Obvious" Alternative 2: Using the ORM
 
 You may be thinking, OK, if our repository is clunky, and working with
-`Products` is clunky, then I can at least  use my ORM and work with `Batches`.
+`Products` is clunky, then I can at least ((("object-relational mappers (ORMs)", "simple view using the ORM")))((("views", "simple view that uses the ORM")))((("command-query responsibility segregation (CQRS)", "view that uses the ORM"))) use my ORM and work with `Batches`.
 That's what it's for!
 
 [[view_using_orm]]
@@ -531,10 +532,10 @@ https://oreil.ly/OkBOS[`SELECT N+1`]
 problem is a common performance problem with ORMs: when retrieving a list of
 objects, your ORM will often perform an initial query to, say, get all the IDs
 of the objects it needs, and then issue individual queries for each object to
-retrieve their attributes. This is especially likely if there are any foreign-key relationships on your objects.
+retrieve their attributes. ((("command-query responsibility segregation (CQRS)", "SELECT N+1 and other performance problems")))((("SELECT N+1")))((("object-relational mappers (ORMs)", "SELECT N+1 performance problem")))This is especially likely if there are any foreign-key relationships on your objects.
 
 NOTE: In all fairness we should say that SQLAlchemy is quite good at avoiding
-    the `SELECT N+1` problem. It doesn't display it in the preceding example, and
+    the `SELECT N+1` problem.((("SQLAlchemy", "SELECT N+1 problem and")))((("eager loading"))) It doesn't display it in the preceding example, and
     you can request
     https://oreil.ly/XKDDm[eager loading]
     explicitly to avoid it when dealing with joined objects.
@@ -550,7 +551,7 @@ build read replicas, or even add caching layers.
 === Time to Completely Jump the Shark
 
 On that note: have we convinced you that our raw SQL version isn't so weird as
-it first seemed? Perhaps we were exaggerating for effect? Just you wait.
+it first seemed?((("command-query responsibility segregation (CQRS)", "denormalized copy of your data optimized for read operations")))((("views", "keeping totally separate, denormalized datastore for view model"))) Perhaps we were exaggerating for effect? Just you wait.
 
 So. Reasonable or not, that hardcoded SQL query is pretty ugly, right? What if
 we made it nicer...
@@ -594,7 +595,7 @@ isn't uncommon, once you've reached the limits of what you can do with indexes.
 Even with well-tuned indexes, a relational database uses a lot of CPU to perform
 joins. The fastest queries will always be pass:[<code>SELECT * from <em>mytable</em> WHERE <em>key</em> = :<em>value</em></code>].
 
-More than raw speed, though, this approach buys us scale. When we're writing
+More than raw speed, though, this approach buys us scale.((("SELECT * FROM WHERE queries"))) When we're writing
 data to a relational database, we need to make sure that we get a lock over the
 rows we're changing so we don't run into consistency problems.
 
@@ -610,7 +611,7 @@ TIP: Because read replicas can be inconsistent, there's no limit to how many we
 Keeping the read model up to date is the challenge!  Database views
 (materialized or otherwise) and triggers are a common solution, but that limits
 you to your database. We'd like to show you how to reuse our event-driven
-architecture instead.
+architecture instead.((("event handlers", "updating read model table using")))((("command-query responsibility segregation (CQRS)", "updating read model table using event handler")))((("views", "updating read model table using event handler")))
 
 
 ==== Updating a Read Model Table Using an Event Handler
@@ -729,7 +730,7 @@ DB -> View: some allocations
 [role="nobreakinside less_space"]
 .Rebuilding from Scratch
 *******************************************************************************
-"What happens when it breaks?" should be the first question we ask as engineers.
+"What happens when it breaks?" should be the first question we ask as engineers.((("command-query responsibility segregation (CQRS)", "rebuilding view model from scratch")))((("views", "rebuilding view model from scratch")))
 
 How do we deal with a view model that hasn't been updated because of a bug or
 temporary outage? Well, this is just another case where events and commands can
@@ -753,7 +754,7 @@ data.
 === Changing Our Read Model Implementation Is Easy
 
 Let's see the flexibility that our event-driven model buys us in action,
-by seeing what happens if we ever decide we want to implement a read model by
+by seeing what happens if we ever decide ((("Redis", "changing read model implementation to use")))((("command-query responsibility segregation (CQRS)", "changing read model implementation to use Redis")))we want to implement a read model by
 using a totally separate storage engine, Redis.
 
 Just watch:
@@ -818,7 +819,7 @@ implementation: setup puts messages on the message bus, and the assertions
 are against our view.
 
 TIP: Event handlers are a great way to manage updates to a read model,
-    if you decide you need one.  They also make it easy to change the
+    if you decide you need one.((("event handlers", "managing updates to read model")))  They also make it easy to change the
     implementation of that read model at a later date.
 
 .Exercise for the Reader
@@ -834,7 +835,7 @@ to Redis), and see which you prefer.
 
 === Wrap-Up: But Would You Really?
 
-<<view_model_tradeoffs>> proposes some pros and cons for each of our options.
+<<view_model_tradeoffs>> proposes some((("command-query responsibility segregation (CQRS)", "trade-offs for view model options")))((("views", "trade-offs for view model options"))) pros and cons for each of our options.
 
 [[view_model_tradeoffs]]
 [options="header"]
@@ -871,7 +872,7 @@ to Redis), and see which you prefer.
 //      it's insane/too complex/too-hard and want to fall back to a CRUD hammer.
 //
 
-As it happens, the allocation service at MADE.com does use "full-blown" CQRS,
+As it happens, the((("command-query responsibility segregation (CQRS)", "full-blown CQRS versus simpler options"))) allocation service at MADE.com does use "full-blown" CQRS,
 with a read model stored in Redis, and even a second layer of cache provided
 by Varnish. But its use cases are quite a bit different from what
 we've shown here. For the kind of allocation service we're building, it seems
@@ -891,6 +892,6 @@ entities to our domain model. The allocation service thinks in terms of
 `Batches` for a single SKU, but users care about allocations for a whole order,
 with multiple SKUs, so using the ORM ends up being a little awkward. We'd be
 quite tempted to go with the raw-SQL view we showed right at the beginning of
-the chapter.
+the chapter.((("command-query responsibility segregation (CQRS)", startref="ix_CQRS")))
 
 On that note, let's sally forth into our final chapter.

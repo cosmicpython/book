@@ -3,9 +3,9 @@
 == Repository and Unit of Work pass:[<span class="keep-together">Patterns with Django</span>]
 
 Suppose you wanted to use Django instead of SQLAlchemy and Flask. How
-might things look?
+might things look?((("Django", id="ix_Django")))
 
-The first thing is to choose where to install it. We put it in a separate
+The first thing is to choose where to install it.((("Django", "installing"))) We put it in a separate
 package next to our main allocation code:
 
 
@@ -64,7 +64,7 @@ git checkout appendix_django
 
 We used a plug in called
 https://github.com/pytest-dev/pytest-django[`pytest-django`] to help with test
-database management.
+database management.((("Repository pattern", "with Django", id="ix_RepoDjango")))((("Django", "Repository pattern with", id="ix_DjangoRepo")))
 
 Rewriting the first repository test was a minimal change, just rewriting
 some raw SQL with a call to the Django ORM/QuerySet language:
@@ -160,7 +160,7 @@ help minimize boilerplate for this sort of thing.]
 
 ==== Custom Methods on Django ORM Classes to Translate to/from Our Domain Model
 
-Those custom methods look something like this:
+Those custom methods ((("object-relational mappers (ORMs)", "Django, custom methods to translate to/from domain model")))((("domain model", "Django custom ORM methods for conversion")))look something like this:
 
 [[django_models]]
 .Django ORM with custom methods for domain model conversion (src/djangoproject/alloc/models.py)
@@ -220,14 +220,14 @@ class OrderLine(models.Model):
 
 
 NOTE: As in <<chapter_02_repository>>, we use dependency inversion.
-    The ORM (Django) depends on the model, and not the other way around.
+    The ORM (Django) depends on the model, and not the other way around.((("Repository pattern", "with Django", startref="ix_RepoDjango")))((("Django", "Repository pattern with", startref="ix_DjangoRepo")))
 
 
 
 === Unit of Work Pattern with Django
 
 
-The tests don't change too much:
+The tests((("Unit of Work pattern", "with Django", id="ix_UoWDjango")))((("Django", "Unit of Work pattern with", id="ix_DjangoUoW"))) don't change too much:
 
 [[test_uow_django]]
 .Adapted UoW tests (tests/integration/test_uow.py)
@@ -318,13 +318,13 @@ class DjangoUnitOfWork(AbstractUnitOfWork):
     instrumenting the domain model instances themselves, the
     `commit()` command needs to explicitly go through all the
     objects that have been touched by every repository and manually
-    update them back to the ORM.
+    update them back to the ORM.((("Unit of Work pattern", "with Django", startref="ix_UoWDjango")))((("Django", "Unit of Work pattern with", startref="ix_DjangoUoW")))
 
 
 
 === API: Django Views Are Adapters
 
-The Django _views.py_ file ends up being almost identical to the
+The Django _views.py_ file ends ((("views", "Django views as adapters")))((("adapters", "Django views")))((("Django", "views are adapters")))((("APIs", "Django views as adapters")))up being almost identical to the
 old _flask_app.py_, because our architecture means it's a very
 thin wrapper around our service layer (which didn't change at all, by the way):
 
@@ -370,7 +370,7 @@ def allocate(request):
 === Why Was This All So Hard?
 
 OK, it works, but it does feel like more effort than Flask/SQLAlchemy. Why is
-that?
+that?((("Django", "using, difficulty of")))
 
 The main reason at a low level is because Django's ORM doesn't work in the same
 way.  We don't have an equivalent of the SQLAlchemy classical mapper, so our
@@ -397,7 +397,7 @@ around the workflow of state changes.  The Django admin bypasses all of that.
 === What to Do If You Already Have Django
 
 So what should you do if you want to apply some of the patterns in this book
-to a Django app? We'd say the following:
+to a Django app?((("Django", "applying patterns to Django app"))) We'd say the following:
 
 * The Repository and Unit of Work patterns are going to be quite a lot of work. The
   main thing they will buy you in the short term is faster unit tests, so
@@ -430,7 +430,7 @@ your _models.py_, which you can then keep as minimal as possible.
 Suppose you're working on a Django project that you're not sure is going
 to get complex enough to warrant the patterns we recommend, but you still
 want to put a few steps in place to make your life easier, both in the medium
-term, and if you want to migrate to some of our patterns later. Consider the following:
+term, and if you want to migrate to some of our patterns later.((("Django", "applying patterns to Django app", "steps along the way"))) Consider the following:
 
 * One piece of advice we've heard is to put a __logic.py__ into every Django app,
   from day one. This gives you a place to put business logic, and to keep your
@@ -454,5 +454,5 @@ NOTE: We'd like to give a shout out to David Seddon and Ashia Zawaduk for
     stop us from saying anything really stupid about a topic we don't really
     have enough personal experience of, but they may have failed.
 
-For more thoughts and actual lived experience dealing with existing
+For more ((("Django", startref="ix_Django")))thoughts and actual lived experience dealing with existing
 applications, refer to the <<epilogue_1_how_to_get_there_from_here>>.

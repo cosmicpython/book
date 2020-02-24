@@ -2,7 +2,7 @@
 == Events and the Message Bus
 
 So far we've spent a lot of time and energy on a simple problem that we could
-easily have solved with Django. You might be asking if the increased testability
+easily have solved with Django.((("events and the message bus", id="ix_evntMB"))) You might be asking if the increased testability
 and expressiveness are _really_ worth all the effort.
 
 In practice, though, we find that it's not the obvious features that make a mess
@@ -21,11 +21,11 @@ mundane stuff that makes up so much of our systems.
 We'll start by doing the simplest, most expeditious thing, and talk about
 why it's exactly this kind of decision that leads us to the Big Ball of Mud.
 
-Then we'll show how to use _Domain Events_ pattern to separate side effects from our
+Then we'll show how to use _Domain Events_ pattern to separate side effects from our((("Domain Events pattern")))((("Message Bus pattern")))
 use cases, and how to use a simple _Message Bus_ pattern for triggering behavior
 based on those events. We'll show a few options for creating
 those events and how to pass them to the message bus, and finally we'll show
-how the Unit of Work pattern can be modified to connect the two together elegantly,
+how the Unit of Work pattern((("Unit of Work pattern", "modifying to connect domain events and message bus")))((("events and the message bus", "events flowing through the system"))) can be modified to connect the two together elegantly,
 as previewed in <<message_bus_diagram>>.
 
 
@@ -53,14 +53,14 @@ git checkout chapter_07_aggregate
 
 === Avoiding Making a Mess
 
-So. Email alerts when we run out of stock. When we have a new requirement like
+So. Email alerts when we run out of stock. ((("email", "sending email alerts when out of stock", id="ix_email")))((("events and the message bus", "sending email alerts when out of stock", id="ix_evntMBeml")))When we have a new requirement like
 this, which _really_ has nothing to do with the core domain, it's all too easy to
-start dumping these things into our web controllers.
+start dumping these things into our web controllers.((("web controllers", "sending email alters via, avoiding")))
 
 
 ==== First, Avoid Making a Mess of Our Web Controllers
 
-As a one-off hack, this _might_ be OK:
+As a one-off ((("events and the message bus", "sending email alerts when out of stock", "avoiding messing up web controllers")))hack, this _might_ be OK:
 
 [[email_in_flask]]
 .Just whack it in the endpoint—what could go wrong? (src/allocation/entrypoints/flask_app.py)
@@ -98,7 +98,7 @@ able to unit test this new feature.
 ==== And Let's Not Make a Mess of Our Model Either
 
 Assuming we don't want to put this code into our web controllers, because
-we want them to be as thin as possible, we may look at putting it right at
+we want them to be as ((("events and the message bus", "sending email alerts when out of stock", "avoiding messing up domain model")))((("domain model", "email sending code in, avoiding")))thin as possible, we may look at putting it right at
 the source, in the model:
 
 [[email_in_model]]
@@ -136,7 +136,7 @@ needing to change the rules of our domain model.
 
 The requirement "Try to allocate some stock, and send an email if it fails" is
 an example of workflow orchestration: it's a set of steps that the system has
-to follow to achieve a goal.
+to follow to achieve a goal.((("events and the message bus", "sending email alerts when out of stock", "out of place in the service layer")))((("service layer", "sending email alerts when out of stock, avoiding")))
 
 We've written a service layer to manage orchestration for us, but even here
 the feature feels out of place:
@@ -168,11 +168,11 @@ def allocate(
 
 Catching an exception and reraising it? It could be worse, but it's
 definitely making us unhappy. Why is it so hard to find a suitable home for
-this code?
+this code?((("events and the message bus", "sending email alerts when out of stock", startref="ix_evntMBeml")))((("email", "sending email alerts when out of stock", startref="ix_email")))
 
 === Single Responsibility Principle
 
-Really this is a violation of the __single responsibility principle__ (SRP).footnote:[
+Really this is a violation ((("events and the message bus", "sending email alerts when out of stock", "violating the single responsibility principle")))((("single responsibility principle (SRP)")))of the __single responsibility principle__ (SRP).footnote:[
 This principle is the _S_ in https://oreil.ly/AIdSD[SOLID].]
 Our use case is allocation. Our endpoint, service function, and domain methods
 are all called pass:[<code><span class="keep-together">allocate</span></code>], not `allocate_and_send_mail_if_out_of_stock`.
@@ -187,7 +187,7 @@ to change. When we switch from email to SMS, we shouldn't have to update our
 To solve the problem, we're going to split the orchestration
 into separate steps, so that the different concerns don't get tangled up.footnote:[
 Our tech reviewer Ed Jung likes to say that the move from imperative to event-based
-flow control changes what used to be _orchestration_ into _choreography_.] The
+flow control ((("orchestration", "changing to choreography")))((("choreography")))changes what used to be _orchestration_ into _choreography_.] The
 domain model's job is to know that we're out of stock, but the responsibility
 of sending an alert belongs elsewhere. We should be able to turn this feature
 on or off, or to switch to SMS notifications instead, without needing to change
@@ -208,12 +208,12 @@ We can implement them in a few ways, so we'll show a couple before settling on t
 ==== The Model Records Events
 
 First, rather than being concerned about emails, our model will be in charge of
-recording _events_—facts about things that have happened. We'll use a message
+recording _events_—facts about things that have happened.((("events and the message bus", "recording events"))) We'll use a message
 bus to respond to events, and invoke a new operation.
 
 ==== Events Are Simple Dataclasses
 
-An _event_ is a kind of _value object_. Events don't have any behavior, because
+An _event_ is a kind of _value object_.((("events and the message bus", "events as simple dataclasses")))((("dataclasses", "events"))) Events don't have any behavior, because
 they're pure data structures. We always name events in the language of the
 domain, and we think of them as part of our domain model.
 
@@ -248,10 +248,10 @@ class OutOfStock(Event):  #<2>
 
 ==== The Model Raises Events
 
-When our domain model records a fact that happened, we say it _raises_ an event.
+When our domain model records a fact that happened, we say it _raises_ an event.((("domain model", "raising events")))((("events and the message bus", "domain model raising events")))
 
 Here's what it will look like from the outside; if we ask `Product` to allocate
-but it can't, it should _raise_ an event:
+but it can't, it ((("aggregates", "testing Product object to raise events")))should _raise_ an event:
 
 
 [[test_raising_event]]
@@ -310,7 +310,7 @@ class Product:
 
 
 
-NOTE: We're actually addressing a code smell we had until now, which is that we were
+NOTE: We're actually addressing a ((("exceptions", "using for control flow")))((("control flow", "using exceptions for")))code smell we had until now, which is that we were
     https://oreil.ly/IQB51[using
     exceptions for control flow]. In general, if you're implementing domain
     events, don't raise exceptions to describe the same domain concept.
@@ -321,9 +321,9 @@ NOTE: We're actually addressing a code smell we had until now, which is that we 
 
 ==== The Message Bus Maps Events to Handlers
 
-A message bus basically says, "When I see this event, I should invoke the following
+A message bus ((("events and the message bus", "message bus mapping events to handlers")))((("message bus", "mapping events to handlers")))basically says, "When I see this event, I should invoke the following
 handler function." In other words, it's a simple publish-subscribe system.
-Handlers are _subscribed_ to receive events, which we publish to the bus. It
+Handlers are _subscribed_ to receive events, which we publish to the bus.((("publish-subscribe system, message bus as"))) It
 sounds harder than it is, and we usually implement it with a dict:
 
 [[messagebus]]
@@ -351,7 +351,7 @@ HANDLERS = {
 ====
 
 NOTE: Note that the message bus as implemented doesn't give us concurrency because
-    only one handler will run at a time.
+    only one handler will run at a time.((("concurrency", "not provided by message bus implementation")))
     Our objective isn't to support parallel threads, but to separate
     tasks conceptually, and keep each UoW as small as possible.
     This helps us to understand the codebase because the "recipe" for how to
@@ -363,13 +363,13 @@ NOTE: Note that the message bus as implemented doesn't give us concurrency becau
 .Is This Like Celery?
 *******************************************************************************
 _Celery_ is a popular tool in the Python world for deferring self-contained
-chunks of work to an asynchronous task queue. The message bus we're
+chunks of work to an asynchronous task queue.((("message bus", "Celery and")))((("Celery tool"))) The message bus we're
 presenting here is very different, so the short answer is no; our message bus
 has more in common with a Node.js app, a UI event loop, or an actor framework.
 
 If you do have a requirement for moving work off the main thread, you
 can still use our event-based metaphors, but we suggest you
-use _external events_ for that. There's more discussion in
+use _external events_ for that.((("external events"))) There's more discussion in
 <<chapter_11_external_events_tradeoffs>>, but essentially, if you
 implement a way of persisting events to a centralized store, you
 can subscribe other containers or other microservices to them. Then
@@ -391,9 +391,9 @@ and Python-only.
 === Option 1: The Service Layer Takes Events from the Model and Puts Them on the Message Bus
 
 Our domain model raises events, and our message bus will call the right
-handlers whenever an event happens. Now all we need is to connect the two. We
+handlers whenever an event happens.((("data model", "events from, passing to message bus in service layer")))((("message bus", "service layer with explicit message bus")))((("events and the message bus", "service layer with explicit message bus")))((("service layer", "taking events from model and putting them on message bus"))) Now all we need is to connect the two. We
 need something to catch events from the model and pass them to the message
-bus--the _publishing_ step.
+bus--the _publishing_ step.((("publish-subscribe system, message bus as", "publishing step")))
 
 The simplest way to do this is by adding some code into our service layer:
 
@@ -440,7 +440,7 @@ the message bus.
 === Option 2: The Service Layer Raises Its Own Events
 
 Another variant on this that we've used is to have the service layer
-in charge of creating and raising events directly, rather than having them
+in charge of creating and ((("service layer", "raising its own events")))((("events and the message bus", "service layer raising its own events")))((("message bus", "service layer raising events and calling messagebus.handle")))raising events directly, rather than having them
 raised by the domain model:
 
 
@@ -482,7 +482,7 @@ put the unit of work in charge of collecting and raising events.
 === Option 3: The UoW Publishes Events to the Message Bus
 
 The UoW already has a `try/finally`, and it knows about all the aggregates
-currently in play because it provides access to the repository. So it's
+currently in play because it provides access to the repository.((("events and the message bus", "UoW publishes events to message bus")))((("Unit of Work pattern", "UoW publishing events to message bus")))((("message bus", "Unit of Work publishing events to"))) So it's
 a good place to spot events and pass them to the message bus:
 
 
@@ -524,7 +524,7 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 <2> After committing, we run through all the objects that our
     repository has seen and pass their events to the message bus.
 
-<3> That relies on the repository keeping track of aggregates that have been loaded
+<3> That relies on the repository ((("aggregates", "repository keeping track of aggregates passing through it")))((("repositories", "repository keeping track of aggregates passing through it")))keeping track of aggregates that have been loaded
     using a new attribute, `.seen`, as you'll see in the next listing.
 
 NOTE: Are you wondering about error handling, what happens if one of the
@@ -597,7 +597,7 @@ NOTE: The use of pass:[<code><em>._underscorey()</em></code>] methods and subcla
 
 After the UoW and repository collaborate in this way to automatically keep
 track of live objects and process their events, the service layer can be
-totally free of event-handling concerns:
+totally ((("service layer", "totally free of event handling concerns")))free of event-handling concerns:
 
 [[services_clean]]
 .Service layer is clean again (src/allocation/service_layer/services.py)
@@ -619,7 +619,7 @@ def allocate(
 ----
 ====
 
-We do also have to remember to change the fakes in the service layer and make them
+We do also have to remember to change the fakes ((("underscorey methods", "tweaking fakes in service layer to implement")))((("faking", "tweaking fakes in service layer to call super and implement underscorey methods")))((("service layer", "tweaking fakes in to call super and implement underscorey methods")))((("super function", "tweaking fakes in service layer to call")))in the service layer and make them
 call `super()` in the right places, and implement underscorey methods, but the
 changes are minimal:
 
@@ -664,10 +664,10 @@ using ABCs, they'll help remind you when things get out of sync.
 ******************************************************************************
 
 Are you finding all those `._add()` and `._commit()` methods "super-gross," in
-the words of our beloved tech reviewer Hynek? Does it "make you want to beat
+the words of our beloved tech reviewer Hynek? ((("underscorey methods", "avoiding by implementing TrackingRepository wrapper class")))Does it "make you want to beat
 Harry around the head with a plushie snake?" Hey, our code listings are
 meant to be only examples, not the perfect solution! Why not go see if you
-can do better?
+can do better?((("repositories", "TrackerRepository wrapper class")))((("composition over inheritance", "TrackingRepository wrapper class")))((("inheritance", "avoiding use of with wrapper class")))
 
 One _composition over inheritance_ way to go would be to implement a
 wrapper class:
@@ -701,14 +701,14 @@ class TrackingRepository:
     and `.get()` methods, avoiding weird underscore methods.
 
 See if you can apply a similar pattern to our UoW class, in
-order to get rid of those Java-y `_commit()` methods too. You can find the code on https://github.com/cosmicpython/code/tree/chapter_08_events_and_message_bus_exercise[GitHub].
+order to get rid of those Java-y `_commit()` methods too.((("Unit of Work pattern", "getting rid of underscorey methods in UoW class"))) You can find the code on https://github.com/cosmicpython/code/tree/chapter_08_events_and_message_bus_exercise[GitHub].
 
-Switching all the ABCs to `typing.Protocol` is a good way to force yourself to avoid using inheritance. Let us know if you come up with something nice!
+Switching all ((("abstract base classes (ABCs)", "switching to typing.Protocol")))the ABCs to `typing.Protocol` is a good way to force yourself to avoid using inheritance. Let us know if you come up with something nice!
 ******************************************************************************
 
 === Wrap-Up
 
-Domain events give us a way to handle workflows in our system. We often find,
+Domain events give us a way to handle workflows in our system.((("events and the message bus", "domain events and message bus wrapup"))) We often find,
 listening to our domain experts, that they express requirements in a causal or
 temporal way; for example, "When we try to allocate stock, but there's none
 available, then we should send an email to the buying team."
@@ -721,7 +721,7 @@ Events are useful for more than just sending email, though. In <<chapter_05_high
 spent a lot of time convincing you that you should define aggregates, or
 boundaries where we guarantee consistency. People often ask, "What
 should I do if I need to change multiple aggregates as part of a request?" Now
-we have the tools we need to answer the question.
+we have the tools we need to answer the question.((("aggregates", "changing multiple aggregates in a request")))
 
 If we have two things that can be transactionally isolated (e.g., an order and a
 product) then we can make them _ by using events. When an
@@ -737,35 +737,35 @@ detail as we build a more complex workflow with our new message bus.
 Events can help with the single responsibility principle::
     Code gets tangled up when we mix multiple concerns in one place. Events can
     help us to keep things tidy by separating primary use cases from secondary
-    ones.
+    ones.((("events and the message bus", "domain events and message bus recap")))
     We also use events for communicating between aggregates so that we don't
     need to run long-running transactions that lock against multiple tables.
 
 A message bus routes messages to handlers::
     You can think of a message bus as a dict that maps from events to their
-    consumers. It doesn't "know" anything about the meaning of events; it's just
+    consumers.((("message bus", "recap"))) It doesn't "know" anything about the meaning of events; it's just
     a piece of dumb infrastructure for getting messages around the system.
 
 Option 1: Service layer raises events and passes them to message bus::
     The simplest way to start using events in your system is to raise them from
     handlers, by calling `bus.handle(some_new_event)` after you commit your
-    unit of work.
+    unit of work.((("service layer", "raising events and passing them to message bus")))
 
 Option 2: Domain model raises events, service layer passes them to message bus::
-    The logic about when to raise an event really should live with the model, so
+    The logic about ((("domain model", "raising events and service layer passing them to message bus")))when to raise an event really should live with the model, so
     we can improve our system's design and testability by raising events from
     the domain model. It's easy for our handlers to collect events off the model
     objects after `commit` and pass them to the bus.
 
 Option 3: UoW collects events from aggregates and passes them to message bus::
-    Adding `bus.handle(aggregate.events)` to every handler is annoying, so we
+    Adding `bus.handle(aggregate.events)` to every ((("Unit of Work pattern", "UoW collecting events from aggregates and passing them to message bus")))((("aggregates", "UoW collecting events from and passing them to message bus")))handler is annoying, so we
     can tidy up by making our unit of work responsible for raising events that
     were raised by loaded objects.
     This is the most complex design and might rely on ORM magic, but it's clean
     and easy to use once it's set up.
 *****************************************************************
 
-And <<chapter_08_events_and_message_bus_tradeoffs>> shows the trade-offs as we
+And <<chapter_08_events_and_message_bus_tradeoffs>> shows ((("events and the message bus", "pros and cons or trade-offs")))((("message bus", "pros and cons or trade-offs")))the trade-offs as we
 see them:
 
 [[chapter_08_events_and_message_bus_tradeoffs]]
@@ -791,7 +791,7 @@ a|
   people.
 
 * What's more, that hidden event-handling code executes _synchronously_,
-  meaning your service-layer function
+  meaning your service-layer function((("synchronous execution of event-handling code")))
   doesn't finish until all the handlers for any events are finished. That
   could cause unexpected performance problems in your web endpoints
   (adding asynchronous processing is possible but makes things even _ confusing).
@@ -800,8 +800,8 @@ a|
   are split across a chain of multiple handlers, there is no single place
   in the system where you can understand how a request will be fulfilled.
 
-* You also open yourself up to the possibility of circular dependencies between your
-  event handlers, and infinite loops.
+* You also open yourself up to((("dependencies", "circular dependencies between event handlers"))) the possibility of circular dependencies between your
+  event handlers, and infinite loops.((("events and the message bus", startref="ix_evntMB")))
 
 a|
 |===
