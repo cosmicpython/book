@@ -23,7 +23,7 @@ an actual test pyramid made me a convert._
 _Once you implement domain modeling and the service layer, you really actually can
 get to a stage where unit tests outnumber integration and end-to-end tests by
 an order of magnitude.  Having worked in places where the E2E test build would
-take hours ("wait 'til tomorrow," essentially), I can't tell you what a
+take hours ("wait &#x27;til tomorrow," essentially), I can't tell you what a
 difference it makes to be able to run all your tests in minutes or seconds._
 
 _Read on for some guidelines on how to decide what kinds of tests to write
@@ -157,7 +157,7 @@ image::images/apwp_0501.png[]
 
 Extreme programming (XP) exhorts((("extreme programming (XP)", "exhortation to listen to the code"))) us to "listen to the code." When we're writing
 tests, we might find that the code is hard to use or notice a code smell. This
-is a trigger for us to refactor, and reconsider our design.
+is a trigger for us to refactor, and to reconsider our design.
 
 We only get that feedback, though, when we're working closely with the target
 code. A test for the HTTP API tells us nothing about the fine-grained design of
@@ -199,7 +199,7 @@ Most of the time, when we are adding a new feature or fixing a bug, we don't
 need to make extensive changes to the domain model.((("test-driven development (TDD)", "high and low gear"))) In these cases, we prefer
 to write tests against services because of the lower coupling and higher coverage.
 
-For example, when writing an `add_stock` function, or a `cancel_order` feature,
+For example, when writing an `add_stock` function or a `cancel_order` feature,
 we can work more quickly and with less coupling by writing tests against the
 service layer.((("service layer", "writing tests against")))
 
@@ -216,7 +216,7 @@ hazard, we again drop down to a low gear until we can pick up speed again.
 
 
 [[primitive_obsession]]
-=== Fully Decoupling the Service Layer Tests from the Domain
+=== Fully Decoupling the Service-Layer Tests from the Domain
 
 We still have direct dependencies on the domain in our service-layer
 tests, because we use domain objects to set up our test data and to invoke
@@ -311,7 +311,7 @@ into one place.
 ==== Adding a Missing Service
 
 We could go one step further, though. ((("test-driven development (TDD)", "fully decoupling service layer from the domain", "adding missing service")))If we had a service to add stock,
-we could use that, and make our service-layer tests fully expressed
+we could use that and make our service-layer tests fully expressed
 in terms of the service layer's official use cases, removing all dependencies
 on the domain:
 
@@ -400,8 +400,8 @@ tests from the model, adding an API endpoint to((("APIs", "adding API for adding
 the need for the ugly `add_stock` fixture, and our E2E tests could be free
 of those hardcoded SQL queries and the direct dependency on the database.
 
-Thanks to our service function, adding the endpoint is easy, just a little
-JSON wrangling and a single function call:
+Thanks to our service function, adding the endpoint is easy, with just a little
+JSON wrangling and a single function call required:
 
 
 [[api_for_add_batch]]
@@ -482,7 +482,7 @@ things will help along the way:
 
 [role="nobreakinside less_space"]
 [[types_of_test_rules_of_thumb]]
-.Test Recap
+. Recap: Rules of Thumb for Different Types of Test
 ******************************************************************************
 
 Aim for one end-to-end test per feature::
@@ -502,14 +502,14 @@ can be useful. But see also <<chapter_08_events_and_message_bus>> and
 <<fake_message_bus>>.]
 
 Maintain a small core of tests written against your domain model::
-    These tests ((("domain model", "maintaining small core of tests written against")))have highly focused coverage and are more brittle, but have
+    These tests ((("domain model", "maintaining small core of tests written against")))have highly focused coverage and are more brittle, but they have
     the highest feedback. Don't be afraid to delete these tests if the
     functionality is later covered by tests at the service layer.
 
 Error handling counts as a feature::
     Ideally, your application will be structured such that all errors that
     bubble ((("error handling", "counting as a feature")))up to your entrypoints (e.g., Flask) are handled in the same way.
-    This means you need to test only the happy path for each feature, and
+    This means you need to test only the happy path for each feature, and to
     reserve one end-to-end test for all unhappy paths (and many unhappy path
     unit tests, of course).((("test-driven development (TDD)", startref="ix_TDD")))
 

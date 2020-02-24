@@ -2,11 +2,11 @@
 == Unit of Work Pattern
 
 In this chapter we'll introduce the final piece of the puzzle that ties
-together ((("Unit of Work pattern", id="ix_UoW")))the repository and service layer patterns: the _Unit of Work pattern_.
+together ((("Unit of Work pattern", id="ix_UoW")))the Repository and Service Layer patterns: the _Unit of Work_ pattern.
 
 If the Repository pattern is our abstraction over the idea of persistent storage,
 the Unit of Work (UoW) pattern is our abstraction over the idea of _atomic operations_.((("atomic operations"))) It
-will allow us to finally, fully, decouple our service layer from the data layer.((("UoW", see="Unit of Work pattern")))
+will allow us to finally and fully decouple our service layer from the data layer.((("UoW", see="Unit of Work pattern")))
 
 
 <<before_uow_diagram>> shows that, currently, a lot of communication occurs
@@ -34,8 +34,8 @@ And we'll do it all using a lovely piece((("context manager"))) of Python syntax
 
 [TIP]
 ====
-You can find the code for this chapter is in the
-https://github.com/cosmicpython/code/tree/chapter_06_uow[chapter_06_uow] branch on GitHub.
+The code for this chapter is in the
+https://github.com/cosmicpython/code/tree/chapter_06_uow[chapter_06_uow] branch on GitHub:
 
 ----
 git clone https://github.com/cosmicpython/code.git
@@ -50,7 +50,7 @@ git checkout chapter_04_service_layer
 
 //TODO (DS) do you talk anywhere about multiple repositories?
 
-Here's how the service((("Unit of Work pattern", "collaboration with repository")))((("repositories", "Unit of Work collaborating with"))) layer will look, when we're finished:
+Let's see the unit of work (or UoW, which we pronounce "you-wow") in action. Here's how the service((("Unit of Work pattern", "collaboration with repository")))((("repositories", "Unit of Work collaborating with"))) layer will look when we're finished:
 
 [[uow_preview]]
 .Preview of unit of work in action (src/allocation/service_layer/services.py)
@@ -75,9 +75,9 @@ def allocate(
     access to our permanent storage.((("storage", "permanent, UoW providing entrypoint to")))
 <3> When we're done, we commit or roll back our work, using the UoW.
 
-The UoW acts as a single entrypoint to our persistent storage, and
-keeps track of what objects were loaded and of the latest state.footnote:[
-You may have come across the word _collaborators_, to describe objects that work
+The UoW acts as a single entrypoint to our persistent storage, and it
+ keeps track of what objects were loaded and of the latest state.footnote:[
+You may have come across the use of the word _collaborators_ to describe objects that work
 together to achieve a goal.((("collaborators"))) The unit of work and the repository are a great
 example of collaborators in the object-modeling sense.
 In responsibility-driven design, clusters of objects((("object neighborhoods"))) that collaborate in their
@@ -99,9 +99,7 @@ This gives us three useful things:
 
 === Test-Driving a UoW with Integration Tests
 
-Here's a test for a new `UnitofWork` (or UoW, which we pronounce "you-wow").
-It's a((("integration tests", "test-driving Unit of Work with")))((("testing", "Unit of Work with integration tests")))((("Unit of Work pattern", "test driving with integration tests"))) context manager that allows us to start a transaction, retrieve
-things from repos, and commit:
+Here are our ((("integration tests", "test-driving Unit of Work with")))((("testing", "Unit of Work with integration tests")))((("Unit of Work pattern", "test driving with integration tests")))integration tests for the UOW:
 
 
 [[test_unit_of_work]]
@@ -126,7 +124,7 @@ def test_uow_can_retrieve_a_batch_and_allocate_to_it(session_factory):
 ----
 ====
 
-<1> We initialize the UoW by using our custom session factory,
+<1> We initialize the UoW by using our custom session factory
     and get back a `uow` object to use in our `with` block.
 
 <2> The UoW gives us access to the batches repository via
@@ -250,7 +248,7 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
     but we allow that to be overridden in our integration tests so that we
     can use SQLite instead.
 
-<2> The +++<code>__enter__</code>+++ method is responsible for starting a database session, and instantiating
+<2> The +++<code>__enter__</code>+++ method is responsible for starting a database session and instantiating
     a real repository that can use that session.((("&#x5f;&#x5f;enter&#x5f;&#x5f; and &#x5f;&#x5f;exit&#x5f;&#x5f; magic methods", primary-sortas="enter and exit")))
 
 <3> We close the session on exit.
@@ -314,13 +312,13 @@ def test_allocate_returns_allocation():
 <2> Notice the similarity with the fake `commit()` function
     from `FakeSession` (which we can now get rid of). But it's
     a substantial improvement because we're now faking out
-    code that we wrote, rather than third-party code. Some
+    code that we wrote rather than third-party code. Some
     people say, https://github.com/testdouble/contributing-tests/wiki/Don%27t-mock-what-you-don%27t-own["Don't mock what you don't own"].
 
 <3> In our tests, we can instantiate a UoW and pass it to
     our service layer, rather than passing a repository and a session.
     This is considerably less cumbersome.
-    
+
 [role="nobreakinside less_space"]
 .Don't Mock What You Don't Own
 ********************************************************************************
@@ -343,7 +341,7 @@ use that to clearly separate responsibilities. Our UoW is much simpler
 than a session, and we feel comfortable with the service layer being able to
 start and stop units of work.
 
-"Don't Mock What You Don't Own" is a rule of thumb that forces us to build
+"Don't mock what you don't own" is a rule of thumb that forces us to build
 these simple abstractions over messy subsystems. This has the same performance
 benefit as mocking the SQLAlchemy session but encourages us to think carefully
 about our designs.((("context manager", "Unit of Work and", startref="ix_ctxtmgr")))
@@ -425,7 +423,7 @@ def test_rolls_back_on_error(session_factory):
 
 TIP: We haven't shown it here, but it can be worth testing some of the more
     "obscure" database behavior, like transactions, against the "real"
-    database; i.e., the same engine.((("databases", "testing transactions against real database"))) For now, we're getting away with using
+    database—that is, the same engine.((("databases", "testing transactions against real database"))) For now, we're getting away with using
     SQLite instead of Postgres, but in <<chapter_07_aggregate>>, we'll switch
     some of the tests to using the real database. It's convenient that our UoW
     class makes that easy!
@@ -435,7 +433,7 @@ TIP: We haven't shown it here, but it can be worth testing some of the more
 
 Now we briefly digress on different ways of implementing the UoW pattern.((("Unit of Work pattern", "explicit versus implicit commits")))((("commits", "explicit versus implicit")))((("implicit versus explicit commits")))
 
-We could imagine a slightly different version of the UoW, which commits by default,
+We could imagine a slightly different version of the UoW that commits by default
 and rolls back only if it spots an exception:
 
 [[uow_implicit_commit]]
@@ -525,7 +523,7 @@ def reallocate(line: OrderLine, uow: AbstractUnitOfWork) -> str:
 ==== Example 2: Change Batch Quantity
 
 Our shipping company gives us a call to say that one of the container doors
-opened and half our sofas have fallen into the Indian Ocean. Oops!((("Unit of Work pattern", "using UoW to group multiple operations into atomic unit", "changing batch quantity example")))
+opened, and half our sofas have fallen into the Indian Ocean. Oops!((("Unit of Work pattern", "using UoW to group multiple operations into atomic unit", "changing batch quantity example")))
 
 
 [[change_batch_quantity]]
@@ -551,7 +549,7 @@ def change_batch_quantity(batchref: str, new_qty: int, uow: AbstractUnitOfWork):
 === Tidying Up the Integration Tests
 
 We now have three sets of tests, all essentially pointing at the database:
-_test_orm.py_, _test_repository.py_,and _test_uow.py_. Should((("testing", "Unit of Work with integration tests", "tidying up tests")))((("Unit of Work pattern", "tidying up integration tests"))) we throw any
+_test_orm.py_, _test_repository.py_, and _test_uow.py_. Should((("testing", "Unit of Work with integration tests", "tidying up tests")))((("Unit of Work pattern", "tidying up integration tests"))) we throw any
 away?
 
 ====
@@ -576,7 +574,7 @@ away?
 ====
 
 You should always feel free to throw away tests if you think they're not going to
-add value, longer term. We'd say that _test_orm.py_ was primarily a tool to help
+add value longer term. We'd say that _test_orm.py_ was primarily a tool to help
 us learn SQLAlchemy, so we won't need that long term, especially if the main things
 it's doing are covered in _test_repository.py_. That last test, you might keep around,
 but we could certainly see an argument for just keeping everything at the highest
@@ -634,7 +632,7 @@ https://oreil.ly/tS0E0[recommendations]:
 
 [quote, SQLALchemy "Session Basics" Documentation]
 ____
-the life cycle of the session (and usually the transaction) separate and
+Keep the life cycle of the session (and usually the transaction) separate and
 external. The most comprehensive approach, recommended for more substantial
 applications, will try to keep the details of session, transaction, and
 exception management as far as possible from the details of the program doing
@@ -660,7 +658,7 @@ It works closely with the Repository and Service Layer patterns::
 
 This is a lovely case for a context manager::
     Context managers are an idiomatic way of defining scope in Python. We can use a
-    context manager to automatically rollback our work at the end of a request,
+    context manager to automatically roll back our work at the end of a request,
     which means the system is safe by default.
 
 SQLAlchemy already implements this pattern::

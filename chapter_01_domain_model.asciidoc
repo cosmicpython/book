@@ -47,7 +47,7 @@ but it does mean that some predictions fall outside of its domain.
 Domain-driven design, or DDD, popularized the concept of domain modeling,footnote:[
 DDD did not originate domain modeling. Eric Evans refers to _Object Design_
 by Rebecca Wirfs-Brock and Alan McKean  (Addison-Wesley Professional), which introduced responsibility-driven
-design of which DDD is a special case dealing with the domain.((("domain-driven design (DDD)"))) But even that is
+design, of which DDD is a special case dealing with the domain.((("domain-driven design (DDD)"))) But even that is
 too late, and OO enthusiasts will tell you to look further back to Ivar
 Jacobson and Grady Booch; the term has been around since the mid-1980s.]
 and it's been a hugely successful movement in transforming the way people
@@ -79,7 +79,7 @@ businesses. All business people have these mental maps--they're how humans think
 about complex processes.
 
 You can tell when they're navigating these maps because they use business speak.
-Jargon arises naturally between people who are collaborating on complex systems.
+Jargon arises naturally among people who are collaborating on complex systems.
 
 Imagine that you, our unfortunate reader, were suddenly transported light years
 away from Earth aboard an alien spaceship with your friends and family and had
@@ -111,7 +111,7 @@ retailer. We source our furniture from manufacturers all over the world and
 sell it across Europe.
 
 When you buy a sofa or a coffee table, we have to figure out how best
-to get your goods from Poland or China or Vietnam, and into your living room.
+to get your goods from Poland or China or Vietnam and into your living room.
 
 At a high level, we have separate systems that are responsible for buying
 stock, selling stock to customers, and shipping goods to customers. A
@@ -183,11 +183,12 @@ conversation with our domain experts about allocation.
 |===
 
 a| A _product_ is identified by a _SKU_, pronounced "skew," which is short for
-  _stock keeping unit_.
+  _stock-keeping unit_.
 
-a| _Customers_ place _orders_. An order is identified by an _order reference_,
+a| _Customers_ place _orders_. An order is identified by an _order reference_
   and comprises multiple _order lines_, where each line has a _SKU_ and a
   _quantity_. For example:
+
 
 ----
 - 10 units of RED-CHAIR
@@ -195,7 +196,7 @@ a| _Customers_ place _orders_. An order is identified by an _order reference_,
 ----
 
 a| The purchasing department orders small _batches_ of stock. A _batch_ of stock
-  has a unique ID called a _reference_, a _SKU_ and a _quantity_.
+  has a unique ID called a _reference_, a _SKU_, and a _quantity_.
 
 a| We need to _allocate_ _order lines_ to _batches_. When we've allocated an
   order line to a batch, we will send stock from that specific batch to the
@@ -307,14 +308,14 @@ class Batch:
 
 <1> `OrderLine` is an immutable dataclass
     with no behavior.footnote:[In previous Python versions, we
-    might have used a named tuple. You could also check out Hynek Schlawack's
+    might have used a namedtuple. You could also check out Hynek Schlawack's
     excellent https://pypi.org/project/attrs[attrs].]
 
 <2> We're not showing imports in most code listings, in an attempt to keep them
     clean. We're hoping you can guess
     that this came via `from dataclasses import dataclass`; likewise,
     `typing.Optional` and `datetime.date`. If you want to double-check
-    anything, you can see the full, working code for each chapter in
+    anything, you can see the full working code for each chapter in
     its branch (e.g.,
     https://github.com/python-leap/code/tree/chapter_01_domain_model[chapter_01_domain_model]).
 
@@ -410,7 +411,7 @@ implementation:
 
 
 [[domain_model_complete]]
-.A decent first cut of the domain model (model.py)
+. The domain model now tracks allocations (model.py)
 ====
 [source,python]
 [role="non-head"]
@@ -518,7 +519,7 @@ warehouse in a different region if we're out of stock in the home region. And
 so on.  A real business in the real world knows how to pile on complexity faster
 than we can show on the page!
 
-But taking this simple domain model as a placeholder for something more complex, we're going to extend our simple domain model in the rest of the book, and
+But taking this simple domain model as a placeholder for something more complex, we're going to extend our simple domain model in the rest of the book and
 plug it into the real world of APIs and databases and spreadsheets. We'll
 see how sticking rigidly to our principles of encapsulation and careful
 layering will help us to avoid a ball of mud.((("type hints")))
@@ -557,7 +558,7 @@ class Batch:
 That would allow our type checker to make sure that we don't pass a `Sku` where a
 `Reference` is expected, for example.
 
-Whether you think this is wonderful or appalling is a matter of debate.footnote:[It is appalling. Please, please don't do this. —Harry.]
+Whether you think this is wonderful or appalling is a matter of debate.footnote:[It is appalling. Please, please don't do this. —Harry]
 
 *******************************************************************************
 
@@ -565,7 +566,7 @@ Whether you think this is wonderful or appalling is a matter of debate.footnote:
 
 We've used `line` liberally in the previous code listings, but what is a
 line?((("data modeling", "unit testing domain models", "dataclasses for value objects")))((("dataclasses", "use for value objects")))((("value objects", "using dataclasses for"))) In our business language, an _order_ has multiple _line_ items, where
-each line has a SKU, and a quantity. We can imagine that a simple YAML file
+each line has a SKU and a quantity. We can imagine that a simple YAML file
 containing order information might look like this:
 
 
@@ -595,7 +596,7 @@ it's not something that uniquely identifies the line itself.)
 Whenever we have a business concept that has data but no identity, we
 often choose to represent it using the _Value Object_ pattern. A _value object_ is any
 domain object that is uniquely identified by the data it holds; we usually
-make them immutable.((("value objects", "defined")))
+make them immutable:((("value objects", "defined")))
 
 // [SG] seems a bit odd to hear about value objects before any mention of entities.
 
@@ -613,8 +614,8 @@ class OrderLine:
 ----
 ====
 
-One of the nice things ((("named tuples", seealso="dataclasses")))that dataclasses (or named tuples) give us is _value
-equality_ which is the fancy way of saying, "Two lines with the same `orderid`,
+One of the nice things ((("named tuples", seealso="dataclasses")))that dataclasses (or namedtuples) give us is _value
+equality_, which is the fancy way of saying, "Two lines with the same `orderid`,
 `sku`, and `qty` are equal."
 
 
@@ -690,7 +691,7 @@ def multiplying_two_money_values_is_an_error():
 
 An order line is uniquely identified by its order ID, SKU, and quantity; if we
 change one of those values, we now have a new line.((("data modeling", "unit testing domain models", "value objects and entities")))((("value objects", "and entities", secondary-sortas="entities"))) That's the definition of a
-value object: any object that is identified by only its data, and doesn't have a
+value object: any object that is identified only by its data and doesn't have a
 long-lived identity. What about a batch, though? That _is_ identified by a
 reference.
 
@@ -787,8 +788,8 @@ free by specifying `@frozen=True` on the dataclass.
 For entities, the simplest option is to say that the hash is ++None++, meaning
 that the object is not hashable and cannot, for example, be used in a set.
 If for some reason you decide you really do want to use set or dict operations
-with entities, the hash should be based on the attribute(s), like
-`.reference`, that define the entity's unique identity over time. You should
+with entities, the hash should be based on the attribute(s), such as
+`.reference`, that defines the entity's unique identity over time. You should
 also try to somehow make _that_ attribute read-only.
 
 WARNING: This is tricky territory; you shouldn't modify +++<code>__hash__</code>+++ without
@@ -806,7 +807,7 @@ represent all our stock.((("domain modeling", "functions for domain services", i
 
 [quote, Eric Evans, Domain-Driven Design]
 ____
-Sometimes, it just isn't a Thing.
+Sometimes, it just isn't a thing.
 ____
 
 Evans discusses the idea of Domain Service
@@ -934,7 +935,7 @@ def test_raises_out_of_stock_exception_if_cannot_allocate():
 
 We won't bore you too much with the implementation, but the main thing
 to note is that we take care in naming our exceptions in the ubiquitous
-language, just as we do our entities, value objects, and services.
+language, just as we do our entities, value objects, and services:
 
 
 [[out_of_stock]]
@@ -977,7 +978,7 @@ Distinguish entities from value objects::
     A value object is defined by its attributes.((("value objects", "entities versus")))((("entities", "value objects versus"))) It's usually best
     implemented as an immutable type. If you change an attribute on
     a Value Object, it represents a different object. In contrast,
-    an entity has attributes that may vary over time, and still be the
+    an entity has attributes that may vary over time and it will still be the
     same entity. It's important to define what _does_ uniquely identify
     an entity (usually some sort of name or reference field).
 

@@ -4,7 +4,7 @@
 Allow us a brief digression on the subject of abstractions, dear reader.
 We've talked about _abstractions_ quite a lot.((("abstractions", id="ix_abs"))) The Repository pattern is an
 abstraction over permanent storage, for example. But what makes a good
-abstraction?  What do we want from them?  And how do they relate to testing?
+abstraction?  What do we want from abstractions?  And how do they relate to testing?
 
 
 [TIP]
@@ -21,7 +21,7 @@ git checkout chapter_03_abstractions
 
 A key theme in this book, hidden among the fancy patterns, is that we can use
 simple abstractions to hide messy details.((("katas"))) When we're writing code for fun, or
-in a kata,footnote:[A code kata is a small contained programming challenge often
+in a kata,footnote:[A code kata is a small, contained programming challenge often
 used to practice TDD. See https://oreil.ly/vhjju[Kata—The Only Way to Learn TDD].]
 we get to play with ideas freely, hammering things out and refactoring
 aggressively. In a large-scale system, though, we become constrained by the
@@ -29,12 +29,12 @@ decisions made elsewhere in the system.
 
 When we're unable to change component A for fear of breaking component B, we say
 that the components ((("coupling")))have become _coupled_. Locally, coupling is a good thing: it's
-a sign that our code is working together, each component supporting the others,
+a sign that our code is working together, each component supporting the others, all of them
 fitting in place like the gears of a watch. In jargon, we say this works when
 there is high _cohesion_ between the coupled elements.((("cohesion", "high, between coupled elements")))
 
 Globally, coupling is a nuisance: it increases((("coupling", "disadvantages of"))) the risk and the cost of changing
-our code, sometimes to the point where we feel unable to make some changes at
+our code, sometimes to the point where we feel unable to make any changes at
 all. ((("Ball of Mud pattern")))This is the problem with the Ball of Mud pattern: as the application grows,
 if we're unable to prevent coupling between elements that have no cohesion, that
 coupling increases superlinearly until we are no longer able to effectively
@@ -85,7 +85,7 @@ between the two. If we need to change system B, there's a good chance that the
 change will ripple through to system A.
 
 In <<coupling_illustration2>>, though, we have reduced the degree of coupling by inserting a
-new, simpler, abstraction. Because it is simpler, system A has fewer
+new, simpler abstraction. Because it is simpler, system A has fewer
 kinds of dependencies on the abstraction. The abstraction serves to
 protect us from change by hiding away the complex details of whatever system B
 does--we can change the arrows on the right without changing the ones on the
@@ -97,10 +97,10 @@ left.
 Let's see an example.((("testing", "abstracting state to aid testability", id="ix_tstabs")))((("abstractions", "abstracting state to aid testability", id="ix_absstate")))((("state", "abstracting to aid testability", id="ix_stateabs")))((("filesystems", "writing code to synchronize source and target directories", id="ix_filesync"))) Imagine we want to write code for synchronizing two
 file directories, which we'll call the _source_ and the _destination_:
 
-* If a file exists in the source, but not the destination, copy the file over.
-* If a file exists in the source, but has a different name than in the destination,
+* If a file exists in the source but not in the destination, copy the file over.
+* If a file exists in the source, but it has a different name than in the destination,
   rename the destination file to match.
-* If a file exists in the destination but not the source, remove it.
+* If a file exists in the destination but not in the source, remove it.
 
 Our first and third requirements are simple enough: we can just compare two
 lists of paths. Our second is trickier, though. To detect renames,
@@ -249,8 +249,8 @@ the `pathlib`, `shutil`, and `hashlib` modules.
 And the trouble is, even with our current requirements, we haven't written
 enough tests: the current implementation has several bugs (the
 `shutil.move()` is wrong, for example).  Getting decent coverage and revealing
-these bugs means writing more tests, bu if they're all as unwieldy as the preceding
-ones, that's going to get real painful, real quick.
+these bugs means writing more tests, but if they're all as unwieldy as the preceding
+ones, that's going to get real painful real quickly.
 
 On top of that, our code isn't very extensible. Imagine trying to implement
 a `--dry-run` flag that gets our code to just print out what it's going to
@@ -261,14 +261,14 @@ Our high-level code is coupled to low-level details, and it's making life hard.
 As the scenarios we consider get more complex, our tests will get more unwieldy.
 We can definitely refactor these tests (some of the cleanup could go into pytest
 fixtures, for example) but as long as we're doing filesystem operations, they're
-going to stay slow, and hard to read and write.((("filesystems", "writing code to synchronize source and target directories", startref="ix_filesync")))((("state", "abstracting to aid testability", startref="ix_stateabs")))((("testing", "abstracting state to aid testability", startref="ix_tstabs")))((("abstractions", "abstracting state to aid testability", startref="ix_absstate")))
+going to stay slow and be hard to read and write.((("filesystems", "writing code to synchronize source and target directories", startref="ix_filesync")))((("state", "abstracting to aid testability", startref="ix_stateabs")))((("testing", "abstracting state to aid testability", startref="ix_tstabs")))((("abstractions", "abstracting state to aid testability", startref="ix_absstate")))
 
 === Choosing the Right Abstraction(s)
 
 What could we do to rewrite our code to make it more testable?((("filesystems", "writing code to synchronize source and target directories", "choosing right abstraction", id="ix_filesyncabs")))((("abstractions", "choosing right abstraction", id="ix_abscho")))
 
-First we need to think about what our code needs from the filesystem.
-Reading through the code, three distinct things are happening.
+First, we need to think about what our code needs from the filesystem.
+Reading through the code, we can see that three distinct things are happening.
 We can think ((("responsibilities of code")))of these as three distinct _responsibilities_ that the code has:
 
 1. We interrogate the filesystem by using `os.walk` and determine hashes for a
@@ -277,7 +277,7 @@ We can think ((("responsibilities of code")))of these as three distinct _respons
 
 2. We decide whether a file is new, renamed, or redundant.
 
-3. We copy, move, or delete, files to match the source.
+3. We copy, move, or delete files to match the source.
 
 
 Remember that we want to find _simplifying abstractions_ for each of these
@@ -308,7 +308,7 @@ We're going to make our program output a list of commands that look like this:
     ("COPY", "sourcepath", "destpath"),
     ("MOVE", "old", "new"),
 
-Now we could write tests that just use two filesystem dicts as inputs, and
+Now we could write tests that just use two filesystem dicts as inputs, and we would
 expect lists of tuples of strings representing actions as outputs.((("commands", "program output as list of commands")))
 
 Instead of saying, "Given this actual filesystem, when I run my function,
@@ -344,11 +344,11 @@ tests, and how do we change our implementation to make it all work?((("abstracti
 
 Our goal is to isolate the clever part of our system, and to be able to test it
 thoroughly without needing to set up a real filesystem.((("testing", "after implementing chosen abstraction", id="ix_tstaftabs"))) We'll create a "core"
-of code that has no dependencies on external state, and then see how it responds
+of code that has no dependencies on external state and then see how it responds
 when we give it input from the outside world (this kind of approach was characterized
 by Gary Bernhardt as
 https://www.destroyallsoftware.com/screencasts/catalog/functional-core-imperative-shell[Functional
-Core, Imperative Shell] (FCIS).
+Core, Imperative Shell], or FCIS).
 
 Let's start off by splitting the code ((("business logic", "separating from state in code")))((("state", "splitting off from logic in the program")))to separate the stateful parts from
 the logic:
@@ -427,7 +427,8 @@ Our tests now act directly on the `determine_actions()` function:
     def test_when_a_file_exists_in_the_source_but_not_the_destination():
         src_hashes = {'hash1': 'fn1'}
         dst_hashes = {}
-        actions = list(determine_actions(src_hashes, dst_hashes, Path('/src'), Path('/dst')))
+        actions = list(
+            determine_actions(src_hashes, dst_hashes, Path('/src'), Path('/dst')))
         assert actions == [('copy', Path('/src/fn1'), Path('/dst/fn1'))]
 ...
 
@@ -453,7 +454,7 @@ be unit tested _and_ end-to-end tested; it's an approach Bob calls
 _edge-to-edge testing_.((("edge-to-edge testing", id="ix_edgetst")))
 
 
-==== Testing Edge-to-Edge with Fakes and Dependency Injection
+==== Testing Edge to Edge with Fakes and Dependency Injection
 
 When we start writing a new system, we often focus on the core logic first,
 driving it with direct unit tests.((("abstractions", "implementing chosen abstraction", "edge-to-edge testing with fakes and dependency injection", id="ix_absimpltstfdi")))((("testing", "after implementing chosen abstraction", "edge-to-edge testing with fakes and dependency injection", id="ix_tstaftabsedge"))) At some point, though, we want to test bigger
@@ -461,7 +462,7 @@ chunks of the system together.((("dependencies", "edge-to-edge testing with depe
 
 We _could_ return to our end-to-end tests, but those are still as tricky to
 write and maintain as before. ((("faking", "faking I/O in edge-to-edge test")))Instead, we often write tests that invoke a whole
-system together, but fake the I/O, sort of _edge to edge_.
+system together but fake the I/O, sort of _edge to edge_:
 
 
 [[di_version]]
@@ -604,7 +605,7 @@ NOTE: Designing for testability really means designing for
     that admits novel use cases.
 
 [role="nobreakinside less_space"]
-.Mocks Versus Fakes; Classic Style Versus London School TDD
+.Mocks Versus Fakes; Classic-Style Versus London-School TDD
 *******************************************************************************
 
 Here's a short and somewhat((("test doubles", "mocks versus fakes")))((("mocking", "mocks versus fakes")))((("faking", "fakes versus mocks"))) simplistic definition of the difference between
@@ -615,9 +616,9 @@ mocks and fakes:
   TDD.
 
 * Fakes are working implementations of the thing they're replacing, but
-  they're designed for use only in tests. They wouldn't work "in real life;"
+  they're designed for use only in tests. They wouldn't work "in real life";
 our in-memory repository is a good example. But you can use them to make assertions about
-  the end state of a system, rather than the behaviors along the way, so
+  the end state of a system rather than the behaviors along the way, so
   they're associated with classic-style TDD.
 
 We're slightly conflating mocks with ((("Fowler, Martin")))((("stubbing", "mocks and stubs")))((("&quot;Mocks Aren&#x27;t Stubs&quot; (Fowler)", primary-sortas="Mocks")))spies and fakes with stubs here, and you
@@ -633,20 +634,19 @@ the test double terminology nitpicks now.
 // stubs without mocks error-prone magic.
 
 What about London-school versus classic-style TDD?((("London-school versus classic-style TDD")))((("test-driven development (TDD)", "classic versus London-school"))) You can read more about those
-two in Martin Fowler's article just cited, as well aso n the
+two in Martin Fowler's article that we just cited, as well as on the
 https://oreil.ly/H2im_[Software Engineering Stack Exchange site],
 but in this book we're pretty firmly in the classicist camp.((("Software Engineering Stack Exchange site")))  We like to
-build our tests around state, both in setup and assertions, and we like
+build our tests around state both in setup and in assertions, and we like
 to work at the highest level of abstraction possible rather than doing
 checks on the behavior of intermediary collaborators.footnote:[
-Which is not to say that we think the London School people are wrong. Some insanely smart people that work way. It's just not what we're
-used to.]
+Which is not to say that we think the London school people are wrong. Some insanely smart people work that way. It's just not what we're used to.]
 
 Read more on this in <<kinds_of_tests>>.
 *******************************************************************************
 
 We view TDD as a design practice first and a testing practice second. The tests
-act as a record of our design choices, and serve to explain the system to us
+act as a record of our design choices and serve to explain the system to us
 when we return to the code after a long absence.
 
 Tests that use too many mocks get overwhelmed with setup code that hides the
@@ -654,24 +654,24 @@ story we care about.((("mocking", "overmocked tests, pitfalls of")))
 
 Steve Freeman has a great example of overmocked tests in his talk
 https://oreil.ly/jAmtr["Test-Driven Development: That's Not What We Meant"].
-You should also check out this https://oreil.ly/s3e05[PyCon talk on Mocking Pitfalls]
+You should also check out this https://oreil.ly/s3e05[PyCon talk, "Mocking and Patching Pitfalls"],
 by our esteemed tech reviewer, Ed Jung, which also addresses mocking and its
 alternatives.((("&quot;Test-Driven Development: That&#x27;s Not What We Meant&quot;", primary-sortas="Test-Driven Development")))((("Freeman, Steve")))((("PyCon talk on Mocking Pitfalls")))((("Jung, Ed")))
 
 And while we're recommending talks, don't miss Brandon Rhodes talking about
-https://oreil.ly/oiXJM[hoisting I/O],
+https://oreil.ly/oiXJM["Hoisting Your I/O"],
 which really nicely covers the issues we're talking about, using another simple example.((("hoisting I/O")))((("Rhodes, Brandon")))
 
 
 TIP: In this chapter, we've spent a lot of time replacing end-to-end tests with
     unit tests.((("end-to-end tests", "replacement with unit tests")))((("unit testing", "unit tests replacing end-to-end tests"))) That doesn't mean we think you should never use E2E tests!
     In this book we're showing techniques to get you to a decent test
-    pyramid, with as many unit tests as possible, and the minimum number of E2E
+    pyramid with as many unit tests as possible, and with the minimum number of E2E
     tests you need to feel confident. Read on to <<types_of_test_rules_of_thumb>>
     for more details.
 
 
-.So Which Do We Use Here? Functional or Object-Oriented Composition?
+.So Which Do We Use In This Book? Functional or Object-Oriented Composition?
 ******************************************************************************
 Both. Our domain model is entirely free of dependencies and side effects,
 so that's our functional core.((("object-oriented composition"))) The service layer that we build around it
@@ -692,7 +692,7 @@ a few heuristics and questions to ask yourself:
 
 
 * Can I choose a familiar Python data structure to represent the state of the
-  messy system, and try to imagine a single function that can return that
+  messy system and then try to imagine a single function that can return that
   state?
 
 * Where can I draw a line between my systems, where can I carve out a
@@ -702,7 +702,7 @@ a few heuristics and questions to ask yourself:
 * What is a sensible way of dividing things into components with different
   responsibilities?  What implicit concepts can I make explicit?
 
-* What are the dependencies and what is the core business logic?
+* What are the dependencies, and what is the core business logic?
 
 
 Practice makes less imperfect!((("abstractions", startref="ix_abs")))

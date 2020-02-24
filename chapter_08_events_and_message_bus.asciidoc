@@ -21,7 +21,7 @@ mundane stuff that makes up so much of our systems.
 We'll start by doing the simplest, most expeditious thing, and talk about
 why it's exactly this kind of decision that leads us to the Big Ball of Mud.
 
-Then we'll show how to use _Domain Events_ pattern to separate side effects from our((("Domain Events pattern")))((("Message Bus pattern")))
+Then we'll show how to use the _Domain Events_ pattern to separate side effects from our((("Domain Events pattern")))((("Message Bus pattern")))
 use cases, and how to use a simple _Message Bus_ pattern for triggering behavior
 based on those events. We'll show a few options for creating
 those events and how to pass them to the message bus, and finally we'll show
@@ -39,7 +39,7 @@ image::images/apwp_0801.png[]
 [TIP]
 ====
 The code for this chapter is in the
-https://github.com/cosmicpython/code/tree/chapter_08_events_and_message_bus[chapter_08_events_and_message_bus] branch.
+https://github.com/cosmicpython/code/tree/chapter_08_events_and_message_bus[chapter_08_events_and_message_bus] branch on GitHub:
 
 ----
 git clone https://github.com/cosmicpython/code.git
@@ -53,12 +53,11 @@ git checkout chapter_07_aggregate
 
 === Avoiding Making a Mess
 
-So. Email alerts when we run out of stock. ((("email", "sending email alerts when out of stock", id="ix_email")))((("events and the message bus", "sending email alerts when out of stock", id="ix_evntMBeml")))When we have a new requirement like
-this, which _really_ has nothing to do with the core domain, it's all too easy to
+So. Email alerts when we run out of stock. ((("email", "sending email alerts when out of stock", id="ix_email")))((("events and the message bus", "sending email alerts when out of stock", id="ix_evntMBeml")))When we have new requirements like ones that _really_ have nothing to do with the core domain, it's all too easy to
 start dumping these things into our web controllers.((("web controllers", "sending email alters via, avoiding")))
 
 
-==== First, Avoid Making a Mess of Our Web Controllers
+==== First, Let's Avoid Making a Mess of Our Web Controllers
 
 As a one-off ((("events and the message bus", "sending email alerts when out of stock", "avoiding messing up web controllers")))hack, this _might_ be OK:
 
@@ -136,7 +135,7 @@ needing to change the rules of our domain model.
 
 The requirement "Try to allocate some stock, and send an email if it fails" is
 an example of workflow orchestration: it's a set of steps that the system has
-to follow to achieve a goal.((("events and the message bus", "sending email alerts when out of stock", "out of place in the service layer")))((("service layer", "sending email alerts when out of stock, avoiding")))
+to follow to pass:[<span class="keep-together">achieve</span>] a goal.((("events and the message bus", "sending email alerts when out of stock", "out of place in the service layer")))((("service layer", "sending email alerts when out of stock, avoiding")))
 
 We've written a service layer to manage orchestration for us, but even here
 the feature feels out of place:
@@ -357,7 +356,7 @@ NOTE: Note that the message bus as implemented doesn't give us concurrency becau
     This helps us to understand the codebase because the "recipe" for how to
     run each use-case is written in a single place.
     See the following sidebar.
-    
+
 [role="nobreakinside less_space"]
 [[celery_sidebar]]
 .Is This Like Celery?

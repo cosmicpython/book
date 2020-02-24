@@ -1,15 +1,15 @@
 [[chapter_07_aggregate]]
 == Aggregates and Consistency Boundaries
 
-In this chapter we'd like to revisit our domain model to talk about invariants
+In this chapter, we'd like to revisit our domain model to talk about invariants
 and constraints, and see how our domain objects can maintain their own
 internal consistency, both conceptually and in persistent storage.((("consistency boundaries")))  We'll
-discuss the concept of a _consistency boundary_, and show how making it
+discuss the concept of a _consistency boundary_ and show how making it
 explicit can help us to build high-performance software without compromising
 maintainability.((("aggregates", "Product aggregate")))((("Product object")))
 
 <<maps_chapter_06>> shows a preview of where we're headed: we'll introduce
-a new model object called `Product` to wrap multiple batches, and make
+a new model object called `Product` to wrap multiple batches, and we'll make
 the old `allocate()` domain service available as a method on `Product` instead.
 
 [[maps_chapter_06]]
@@ -23,7 +23,7 @@ Why? Let's find out.
 [TIP]
 ====
 The code for this chapter is on GitHub at
-https://github.com/cosmicpython/code/tree/appendix_csvs[appendix_csvs].
+https://github.com/cosmicpython/code/tree/appendix_csvs[appendix_csvs]:
 
 ----
 git clone https://github.com/cosmicpython/code.git
@@ -41,7 +41,7 @@ What's the point of a domain model, anyway? What's the fundamental problem
 we're trying to address?((("domain model", "using spreadsheets instead of")))
 
 Couldn't we just run everything in a spreadsheet? Many of our users would be
-delighted by that.((("spreadsheets", "using instead of domain model"))) Business users _like_ spreadsheets because they're simple,
+pass:[<span class="keep-together">delighted</span>] by that.((("spreadsheets", "using instead of domain model"))) Business users _like_ spreadsheets because they're simple,
 familiar, and yet enormously powerful.
 
 In fact, an enormous number of business processes do operate by manually sending
@@ -64,8 +64,8 @@ an operation.
 === Invariants, Constraints, and Consistency
 
 The two words are somewhat interchangeable, but a _constraint_ is a
-rule that restricts the possible states our model can get into.((("domain model", "invariants, constraints, and consistency")))((("invariants", "invariants, constraints, and consistency"))) An _invariant_
-is defined a little more precisely, as a condition that is always true.
+rule that restricts the possible states our model can get into,((("domain model", "invariants, constraints, and consistency")))((("invariants", "invariants, constraints, and consistency"))) while an _invariant_
+is defined a little more precisely as a condition that is always true.
 
 If we were writing a hotel-booking system, we might have the constraint that double
 bookings are not allowed. ((("constraints")))This supports the invariant that a room cannot have more
@@ -134,7 +134,7 @@ OK, so if we can't lock the whole database every time we want to allocate an
 order line, what should we do instead?((("aggregates", "about"))) We want to protect the invariants of our
 system but allow for the greatest degree of concurrency.((("invariants", "protecting while allowing concurrency")))((("concurrency", "allowing for greatest degree of"))) Maintaining our
 invariants inevitably means preventing concurrent writes; if multiple users can
-allocate `DEADLY-SPOON` at the same time, we run the risk of over-allocating.
+allocate `DEADLY-SPOON` at the same time, we run the risk of overallocating.
 
 On the other hand, there's no reason we can't allocate `DEADLY-SPOON` at the
 same time as `FLIMSY-DESK`. It's safe to allocate two products at the
@@ -185,11 +185,11 @@ ____
 
 Per Evans, our aggregate has a root entity (the Cart) that encapsulates access
 to items. Each item has its own identity, but other parts of the system will always
-refer to the cart as only an indivisible whole.
+refer to the cart only as an indivisible whole.
 
 TIP: Just as we sometimes use pass:[<code><em>_leading_underscores</em></code>] to mark methods or functions
     as "private," you can think of aggregates as being the "public" classes of our
-    model, and the rest of the entities and value objects are "private."
+    model, and the rest of the entities and value objects as "private."
 
 === Choosing an Aggregate
 
@@ -198,11 +198,11 @@ but it's important. The aggregate will be the boundary where we make sure
 every operation ends in a consistent state. This helps us to reason about our
 software and prevent weird race issues. We want to draw a boundary around a
 small number of objects—the smaller, the better, for performance—that have to
-be consistent with one another, and we need to give it a good name.
+be consistent with one another, and we need to give this boundary a good name.
 
 The object we're manipulating under the covers is `Batch`. What do we call a
 collection of batches? ((("batches", "collection of")))How should we divide all the batches in the system into
-discreet islands of consistency?
+discrete islands of consistency?
 
 We _could_ use `Shipment` as our boundary. Each shipment contains several
 batches, and they all travel to our warehouse at the same time. Or perhaps we
@@ -382,7 +382,7 @@ is the concept of
 https://martinfowler.com/bliki/BoundedContext.html[_bounded contexts_].
 
 In essence, this ((("domain driven design (DDD)", "bounded contexts")))was a reaction against attempts to capture entire businesses
-into a single model. The word "customer" means different things to people
+into a single model. The word _customer_ means different things to people
 in sales, customer service, logistics, support, and so on. Attributes
 needed in one context are irrelevant in another; more perniciously, concepts
 with the same name can have entirely different meanings in different contexts.
@@ -392,13 +392,13 @@ around each context, and handle the translation between different contexts
 explicitly.
 
 This concept translates very well to the world of microservices, where each
-microservice is free to have its own concept of "customer," and rules for
+microservice is free to have its own concept of "customer" and its own rules for
 translating that to and from other microservices it integrates with.((("microservices", "bounded contexts and")))
 
 In our example, the allocation service has `Product(sku, batches)`,
 whereas the ecommerce will have `Product(sku, description, price, image_url,
-dimensions, etc...)`. As a rule of thumb, your domain models should only
-include the data that they need for performing calculations.
+dimensions, etc...)`. As a rule of thumb, your domain models should
+include only the data that they need for performing calculations.
 
 Whether or not you have a microservices architecture, a key consideration
 in choosing your aggregates is also choosing the bounded context that they
@@ -407,7 +407,7 @@ aggregates low and their size manageable.
 
 Once again, we find ourselves forced to say that we can't give this issue
 the treatment it deserves here, and we can only encourage you to read up on it
-elsewhere. The Fowler link earlier is a good starting point, and either
+elsewhere. The Fowler link at the start of this sidebar is a good starting point, and either
 (or indeed, any) DDD book will have a chapter or more on bounded contexts.((("aggregates", "choosing an aggregrate", startref="ix_aggch")))
 
 *******************************************************************************
@@ -454,7 +454,7 @@ The ORM layer will need some tweaks so that the right batches automatically get
 loaded and associated with `Product` objects.((("object-relational mappers (ORMs)", "associating right batches with Product objects")))((("service layer", "using Product objects"))) The nice thing is, the Repository
 pattern means we don't have to worry about that yet.((("Product object", "service layer using"))) We can just use
 our `FakeRepository` and then feed through the new model into our service
-layer, to see how it looks with `Product` as its main entrypoint:
+layer to see how it looks with `Product` as its main entrypoint:
 
 [[service_layer_uses_products]]
 .Service layer (src/allocation/service_layer/services.py)
@@ -498,15 +498,15 @@ reasons why we're comfortable here.
 
 First, we're purposefully modeling our data so that we can make a single
 query to the database to read, and a single update to persist our changes. This
-tends to perform much better than systems that issue lots of ad-hoc queries. In
-systems that don't model this way, we often find that transactions get slowly
-longer and more complex as the software evolves.
+tends to perform much better than systems that issue lots of ad hoc queries. In
+systems that don't model this way, we often find that transactions slowly
+get longer and more complex as the software evolves.
 
 Second, our data structures are minimal and comprise a few strings and
 integers per row. We can easily load tens or even hundreds of batches in a few
 milliseconds.
 
-Third, we only expect to have 20 or so batches of each product at a time.
+Third, we expect to have only 20 or so batches of each product at a time.
 Once a batch is used up, we can discount it from our calculations. This means
 that the amount of data we're fetching shouldn't get out of control over time.
 
@@ -514,15 +514,15 @@ If we _did_ expect to have thousands of active batches for a product, we'd have
 a couple of options. For one, we could use lazy-loading for the batches in a
 product. From the perspective of our code, nothing would change, but in the
 background, SQLAlchemy would page through data for us. This would lead to more
-requests, each fetching a smaller number of rows. Because we only need to find a
+requests, each fetching a smaller number of rows. Because we need to find only a
 single batch with enough capacity for our order, this might work pretty well.
 
 If all else failed, we'd just look for a different aggregate. Maybe we could
-split up batches by region, or by warehouse. Maybe we could redesign our data
+split up batches by region or by warehouse. Maybe we could redesign our data
 access strategy around the shipment concept. The Aggregate pattern is designed
 to help manage some technical constraints around consistency and performance.
-There isn't _one_ correct Aggregate, and we should feel comfortable changing our
-minds if find our boundaries are causing performance woes.
+There isn't _one_ correct aggregate, and we should feel comfortable changing our
+minds if we find our boundaries are causing performance woes.
 
 [role="nobreakinside less_space"]
 .Exercise for the Reader
@@ -540,8 +540,7 @@ You'll find the code https://github.com/cosmicpython/code/tree/chapter_07_aggreg
 `allocate()` function, so you should be able to evolve that toward the real
 thing.
 
-We've marked a couple of tests with `@pytest.skip()`. Come back to them
-when you're done and you've read the rest of this chapter, to have a go
+We've marked a couple of tests with `@pytest.skip()`. After you've read the rest of this chapter, come back to these tests to have a go
 at implementing version numbers. Bonus points if you can get SQLAlchemy to
 do them for you by magic!
 
@@ -554,9 +553,7 @@ We have our new aggregate, so we've solved the conceptual problem of choosing
 an object to be in charge of consistency boundaries.((("aggregates", "optimistic concurrency with version numbers", id="ix_aggopticon")))((("optimistic concurrency with version numbers", id="ix_opticonc")))((("concurrency", "optimistic concurrency with version numbers", id="ix_concopt")))  Let's now spend a little
 time talking about how to enforce data integrity at the database level.
 
-NOTE: This section has a lot of implementation details, some of which are Postgres-specific, for example. But more generally, we're showing
-    one approach to managing concurrency issues, but it's just one approach.
-    Real requirements in this area vary a lot from project to project. You
+NOTE: This section has a lot of implementation details: for example, some of it is Postgres-specific.  But more generally, we're showing one way of managing concurrency issues, but it is just one approach.  Real requirements in this area vary a lot from project to project. You
     shouldn't expect to be able to copy and paste code from here into production.
 
 We don't want to hold a lock over the entire `batches` table, but how will we
@@ -581,7 +578,7 @@ transactions doing their read operations at the same time, so they see
 a `Product` with, for example, `version=3`.((("Product object", "two transactions attempting concurrent update on")))  They both call `Product.allocate()`
 in order to modify a state. But we set up our database integrity
 rules such that only one of them is allowed to `commit` the new `Product`
-with `version=4`, and the other update will be rejected.((("transactions", "concurrent, attempting update on Product")))
+with `version=4`, and the other update is rejected.((("transactions", "concurrent, attempting update on Product")))
 
 [[version_numbers_sequence_diagram]]
 .Sequence diagram: two transactions attempting a concurrent update on product
@@ -621,10 +618,10 @@ What we've implemented here is called _optimistic_ concurrency control because
 our default assumption is that everything will be fine when two users want to
 make changes to the database. We think it's unlikely that they will conflict
 with each other, so we let them go ahead and just make sure we have a way to
-notice if there was a problem.
+notice if there is a problem.
 
 _Pessimistic_ concurrency control((("pessimistic concurrency"))) works under the assumption that two users
-are going to cause conflicts, and we want to prevent them in all cases, so
+are going to cause conflicts, and we want to prevent conflicts in all cases, so
 we lock everything just to be safe. ((("SELECT FOR UPDATE statement")))In our example, that would mean locking
 the whole `batches` table, or using ++SELECT FOR UPDATE++—we're pretending
 that we've ruled those out for performance reasons, but in real life you'd
@@ -632,15 +629,15 @@ want to do some evaluations and measurements of your own.((("locks on database t
 
 With pessimistic locking, you don't need to think about handling failures
 because the database will prevent them for you (although you do need to think
-about deadlocks).((("locks on database tables", "optimistic locking"))) With optimistic locking, you do need to explicitly handle
+about deadlocks).((("locks on database tables", "optimistic locking"))) With optimistic locking, you need to explicitly handle
 the possibility of failures in the (hopefully unlikely) case of a clash.
 
 The usual way to handle a failure is to retry the failed operation from the
-beginning. Imagine we have two customers, Harry and Bob, and both submit orders
+beginning. Imagine we have two customers, Harry and Bob, and each submits an order
 for `SHINY-TABLE`. Both threads load the product at version 1 and allocate
 stock. The database prevents the concurrent update, and Bob's order fails with
 an error.((("retries, optimistic concurrency control and"))) When we _retry_ the operation, Bob's order loads the product at
-version 2, and tries to allocate again. If there is enough stock left, all is
+version 2 and tries to allocate again. If there is enough stock left, all is
 well; otherwise, he'll receive `OutOfStock`. Most operations can be retried this
 way in the case of a concurrency problem.
 
@@ -668,14 +665,14 @@ There are essentially three options((("version numbers", "implementation options
 Option 3 isn't ideal, because there's no real way of doing it without having to
 assume that _all_ products have changed, so we'll be incrementing version numbers
 when we don't have to.footnote:[Perhaps we could get some ORM/SQLAlchemy magic to tell
-us when an object is dirty, but how would that work in the generic case; e.g., for a
+us when an object is dirty, but how would that work in the generic case—for example, for a
 CsvRepository?]
 
 Option 2 involves mixing the responsibility for mutating state between the service
 layer and the domain layer, so it's a little messy as well.
 
 So in the end, even though version numbers don't _have_ to be a domain concern,
-you might decide the cleanest trade-off is to put them in the domain.
+you might decide the cleanest trade-off is to put them in the domain:
 
 [[product_aggregate_with_version_number]]
 .Our chosen aggregate, Product (src/allocation/domain/model.py)
@@ -707,7 +704,7 @@ class Product:
 TIP: If you're scratching your head at this version number business, it might
     help to remember that the _number_ isn't important. What's important is
     that the `Product` database row is modified whenever we make a change to the
-    `Product` aggregate. The version number is a simple human-comprehensible way
+    `Product` aggregate. The version number is a simple, human-comprehensible way
     to model a thing that changes on every write, but it could equally be a
     random UUID every time.((("aggregates", "optimistic concurrency with version numbers", startref="ix_aggopticon")))((("optimistic concurrency with version numbers", startref="ix_opticonc")))((("concurrency", "optimistic concurrency with version numbers", startref="ix_concopt")))
 
@@ -718,8 +715,8 @@ Now to make sure((("testing", "for data integrity rules", id="ix_tstdi")))((("ag
 concurrent attempts to do allocation against the same `Product`, one of them
 should fail, because they can't both update the version number.
 
-First let's ((("transactions", "simulating a slow transaction")))((("time.sleep function")))simulate a "slow" transaction using a function that does
-allocation, and then does an explicit sleep:footnote:[`time.sleep()` works well
+First, let's ((("transactions", "simulating a slow transaction")))((("time.sleep function")))simulate a "slow" transaction using a function that does
+allocation and then does an explicit sleep:footnote:[`time.sleep()` works well
 in our use case, but it's not the most reliable or efficient way to reproduce
 concurrency bugs.((("concurrency", "reproducing behavior with time.sleep function")))((("time.sleep function", "reproducing concurrency behavior with")))  Consider using semaphores or similar synchronization primitives
 shared between your threads to get better guarantees of behavior.]
@@ -818,12 +815,12 @@ DEFAULT_SESSION_FACTORY = sessionmaker(bind=create_engine(
 ----
 ====
 
-Transaction ((("isolation levels (transaction)")))((("Postgres", "documentation for transaction isolation levels")))isolation levels are tricky stuff, so it's worth spending time
-understanding https://oreil.ly/5vxJA[the Postgres documentation].footnote:[If you're not using Postgres, you'll need to read different documentation. Annoyingly, different databases all have quite different definitions. Oracle's `SERIALIZABLE` is equivalent to Postgres's `REPETABLE READ`, for pass:[<span class="keep-together">example</span>].]
+TIP: Transaction ((("isolation levels (transaction)")))((("Postgres", "documentation for transaction isolation levels")))isolation levels are tricky stuff, so it's worth spending time
+understanding https://oreil.ly/5vxJA[the Postgres documentation].footnote:[If you're not using Postgres, you'll need to read different documentation. Annoyingly, different databases all have quite different definitions. Oracle's `SERIALIZABLE` is equivalent to Postgres's `REPEATABLE READ`, for pass:[<span class="keep-together">example</span>].]
 
 ==== Pessimistic Concurrency Control Example: SELECT FOR UPDATE
 
-There are multiple ways to approach this, but we'll show one.((("pessimistic concurrency", "example, SELECT FOR UPDATE"))) https://oreil.ly/i8wKL[`SELECT FOR UPDATE`],
+There are multiple ways to approach this, but we'll show one.((("pessimistic concurrency", "example, SELECT FOR UPDATE"))) https://oreil.ly/i8wKL[`SELECT FOR UPDATE`]
 produces different behavior; two concurrent((("concurrency", "pessimistic concurrency example, SELECT FOR UPDATE")))((("SELECT FOR UPDATE statement", "pessimistic concurrency control example with"))) transactions will not be allowed to
 do a read on the same rows at the same time:
 
@@ -878,19 +875,19 @@ performing some performance experiments.((("testing", "for data integrity rules"
 
 
 
-=== Aggregates Wrap-up
+=== Wrap-Up
 
 Specific choices around concurrency control vary a lot based on business
 circumstances and storage technology choices, but we'd like to bring this
 chapter back to the((("aggregates", "and consistency boundaries recap"))) conceptual idea of an Aggregate: we explicitly model an
-object as being the main entrypoint to some subset of our model, and to be in
+object as being the main entrypoint to some subset of our model, and as being in
 charge of enforcing the invariants and business rules that apply across all of
 those objects.
 
 Choosing the right aggregate is key, and it's a decision you may revisit
 over time.((("domain driven design (DDD)", "choosing the right aggregate, references on")))((("Vernon, Vaughn")))((("Effective Aggregate Design (Vernon)"))) You can read more about it in multiple DDD books.
 We also recommend these three online papers on
-https://dddcommunity.org/library/vernon_2011[Effective Aggregate Design]
+https://dddcommunity.org/library/vernon_2011[effective aggregate design]
 by Vaughn Vernon (the "red book" author).
 
 [role="nobreakinside less_space"]
@@ -948,19 +945,19 @@ a|
 
 
 
-=== Part One Recap
+=== Part I Recap
 
 Do you remember <<recap_components_diagram>>, the diagram we showed at the
-beginning of the book to preview where we were heading?((("applications", "component diagram at end of Part One")))
+beginning of <<part1>> to preview where we were heading?((("applications", "component diagram at end of Part One")))
 
 [[recap_components_diagram]]
-.A component diagram for our app at the end of Part One
+.A component diagram for our app at the end of Part I
 image::images/apwp_p101.png[]
 
-So that's where we are, at the end of part one. What have we achieved? We've
+So that's where we are at the end of Part I. What have we achieved? We've
 seen how to build a domain model that's exercised by a set of
 high-level unit tests. Our tests are living documentation: they describe the
-behavior of our system--the rules that we agreed with our business
+behavior of our system--the rules upon which we agreed with our business
 stakeholders--in nice readable code. When our business requirements change, we
 have confidence that our tests will help us to prove the new functionality, and
 when new developers join the project, they can read our tests to understand how
@@ -968,13 +965,12 @@ things work.
 
 We've decoupled the infrastructural parts of our system, like the database and
 API handlers, so that we can plug them into the outside of our application.
-This helps us to keep our codebase well organized, and stops us from building a
+This helps us to keep our codebase well organized and stops us from building a
 big ball of mud.
 
-By applying the dependency inversion principle, and((("ports", "ports-and-adapters inspired patterns")))((("adapters", "ports-and-adapters inspired patterns"))) by using the ports-and-adapters
-inspired patterns like Repository and Unit of Work, we've made it possible to
-do TDD in both high gear and low gear, and to maintain a healthy test pyramid.
-We can test our system edge-to-edge, and the need for integration and
+By applying the dependency inversion principle, and((("ports", "ports-and-adapters inspired patterns")))((("adapters", "ports-and-adapters inspired patterns"))) by using ports-and-adapters-inspired patterns like Repository and Unit of Work, we've made it possible to
+do TDD in both high gear and low gear and to maintain a healthy test pyramid.
+We can test our system edge to edge, and the need for integration and
 end-to-end tests is kept to a minimum.
 
 Lastly, we've talked about the idea of consistency boundaries. We don't want to
@@ -982,17 +978,17 @@ lock our entire system whenever we make a change, so we have to choose which
 parts are consistent with one another.
 
 For a small system, this is everything you need to go and play with the ideas of
-Domain-Driven Design. You now have the tools to build database agnostic domain
+domain-driven design. You now have the tools to build database-agnostic domain
 models that represent the shared language of your business experts. Hurrah!
 
 NOTE: At the risk of laboring the point--we've been at pains to point out that
     each pattern comes at a cost.((("patterns", "deciding whether you need to use them"))) Each layer of indirection has a price in terms
-    of complexity and duplication in our code, and will be confusing to programmers
+    of complexity and duplication in our code and will be confusing to programmers
     who've never seen them before. If your app is essentially a simple CRUD
-    wrapper around a database, and isn't likely to be anything more than that
-    in the forseeable future, _you don't need these patterns_. Go ahead and
+    wrapper around a database and isn't likely to be anything more than that
+    in the foreseeable future, _you don't need these patterns_. Go ahead and
     use Django, and save yourself a lot of bother.((("CRUD wrapper around a database")))
 
-In part two, we'll zoom out and talk about a bigger topic: if aggregates are our
-boundary, and we can only update one at a time, how do we model processes that
+In Part II, we'll zoom out and talk about a bigger topic: if aggregates are our
+boundary, and we can update only one at a time, how do we model processes that
 cross consistency boundaries?

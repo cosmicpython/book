@@ -8,7 +8,7 @@ ____
 I'm sorry that I long ago coined the term "objects" for this topic because it
 gets many people to focus on the lesser idea.
 
-The big idea is "messaging"...The key in making great and growable systems is
+The big idea is "messaging."...The key in making great and growable systems is
 much more to design how its modules communicate rather than what their internal
 properties and behaviors should be.
 ____
@@ -17,7 +17,7 @@ It's all very well being able to write _one_ domain model to manage a single bit
 of business process, but what happens when we need to write _many_ models? In
 the real world, our applications sit within an organization and need to exchange
 information with other parts of the system. You may remember our context
-diagram, <<allocation_context_diagram_again>>.
+diagram shown in <<allocation_context_diagram_again>>.
 
 Faced with this requirement, many teams reach for microservices integrated
 via HTTP APIs. But if they're not careful, they'll end up producing the most

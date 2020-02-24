@@ -15,12 +15,12 @@ cases of our system.
 
 We'll also discuss testing: by combining the Service Layer with our Repository
 abstraction over the database, we're able to write fast tests, not just of
-our domain model, but the entire workflow for a use case.
+our domain model but of the entire workflow for a use case.
 
 <<maps_service_layer_after>> shows what we're aiming for: we're going to
 add a Flask API that will talk to the service layer, which will serve as the
 entrypoint to our domain model. Because our service layer depends on the
-`AbstractRepository`, we can unit test it by using `FakeRepository`, but run it our production code using `SqlAlchemyRepository`.
+`AbstractRepository`, we can unit test it by using `FakeRepository` but run it our production code using `SqlAlchemyRepository`.
 
 NOTE: In our diagrams, we are using the convention that new components
     are highlighted with bold text/lines (and yellow/orange color, if you're
@@ -36,7 +36,7 @@ image::images/apwp_0402.png[]
 [TIP]
 ====
 The code for this chapter is in the
-https://github.com/cosmicpython/code/tree/chapter_04_service_layer[chapter_04_service_layer] branch on GitHub.
+https://github.com/cosmicpython/code/tree/chapter_04_service_layer[chapter_04_service_layer] branch on GitHub:
 
 ----
 git clone https://github.com/cosmicpython/code.git
@@ -56,7 +56,7 @@ of our domain model and the domain service we need to allocate orders,
 and we have the repository interface for permanent storage.
 
 Let's plug all the moving parts together as quickly as we
-can, and then refactor toward a cleaner architecture. Here's our
+can and then refactor toward a cleaner architecture. Here's our
 plan:
 
 1. Use Flask to put an API endpoint in front of our `allocate` domain service.
@@ -64,17 +64,17 @@ plan:
    an end-to-end test and some quick-and-dirty SQL to prepare test
    data.((("Flask framework", "putting API endpoint in front of allocate domain service")))
 
-2. Refactor out a service layer to serve as an abstraction to
-   capture the use case, and sit between Flask and our domain model.
+2. Refactor out a service layer that can serve as an abstraction to
+   capture the use case and that will sit between Flask and our domain model.
    Build some service-layer tests and show how they can use
    `FakeRepository`.
 
 3. Experiment with different types of parameters for our service layer
-   functions; show that using primitive data types allows the service-layer's
+   functions; show that using primitive data types allows the service layer's
    clients (our tests and our Flask API) to be decoupled from the model layer.
 
 
-=== A First End-To-End Test
+=== A First End-to-End Test
 
 No one is interested in getting into a long terminology debate about what
 counts as an end-to-end (E2E) test versus a functional test versus an acceptance test versus
@@ -82,7 +82,7 @@ an integration test versus a unit test.((("Flask framework", "Flask API and serv
 combinations of tests, and we've seen perfectly successful projects just split
 things into "fast tests" and "slow tests."
 
-For now, we want to write one, or maybe two, tests that are going to exercise
+For now, we want to write one or maybe two tests that are going to exercise
 a "real" API endpoint (using HTTP) and talk to a real database. Let's call
 them _end-to-end tests_ because it's one of the most self-explanatory names.
 
@@ -113,7 +113,7 @@ def test_api_returns_allocation(add_stock):
 ----
 ====
 
-<1> `random_sku()`, `random_batchref()`, etc., are little helper functions that
+<1> `random_sku()`, `random_batchref()`, and so on are little helper functions that
     generate randomized characters by using the `uuid` module. Because
     we're running against an actual database now, this is one way to prevent
     various tests and runs from interfering with each other.
@@ -122,10 +122,10 @@ def test_api_returns_allocation(add_stock):
     manually inserting rows into the database using SQL. We'll show a nicer
     way of doing this later in the chapter.
 
-<3> _config.py_ is a module where we keep configuration information.
+<3> _config.py_ is a module in which we keep configuration information.
 
 Everyone solves these problems in different ways, but you're going to need some
-way of spinning up Flask, possibly in a container, and also talking to a
+way of spinning up Flask, possibly in a container, and of talking to a
 Postgres database.((("Flask framework", "Flask API and service layer", "first API end-to-end test", startref="ix_Flskappe2e"))) If you want to see how we did it, check out
 <<appendix_project_structure>>.
 
@@ -266,7 +266,7 @@ def test_400_message_for_invalid_sku():  #<2>
     so it's invalid as far as our app is concerned.
 
 
-And, sure we could implement it in the Flask app too:
+And sure, we could implement it in the Flask app too:
 
 [[flask_error_handling]]
 .Flask app starting to get crufty (flask_app.py)
@@ -302,7 +302,7 @@ def allocate_endpoint():
 
 But our Flask app is starting to look a bit unwieldy.  And our number of
 E2E tests is starting to get out of control, and soon we'll end up with an
-inverted test pyramid (or "ice-cream cone model" as Bob likes to call it).
+inverted test pyramid (or "ice-cream cone model," as Bob likes to call it).
 
 
 === Introducing a Service Layer, and Using FakeRepository to Unit Test It
@@ -311,12 +311,12 @@ If we look at what our Flask app is doing, there's quite a lot of what we
 might call __orchestration__—fetching stuff out of our repository, validating
 our input against database state, handling errors, and committing in the
 happy path. ((("Flask framework", "Flask API and service layer", "introducing service layer and fake repo to unit test it", id="ix_Flskappserly")))((("orchestration")))((("service layer", "introducing and using FakeRepository to unit test it", id="ix_serlayintr")))Most of these things don't have anything to do with having a
-web API endpoint (you'd need them if you were building a CLI, for example, see
+web API endpoint (you'd need them if you were building a CLI, for example; see
 <<appendix_csvs>>), and they're not really things that need to be tested by
 end-to-end tests.
 
-It often makes sense to split out a service layer, sometimes called
-_orchestration layer_ or _use-case layer_.((("use-case layer", see="service layer")))((("orchestration layer", see="service layer")))
+It often makes sense to split out a service layer, sometimes called an
+_orchestration layer_ or a _use-case layer_.((("use-case layer", see="service layer")))((("orchestration layer", see="service layer")))
 
 Do you remember the `FakeRepository` that((("faking", "FakeRepository"))) we prepared in <<chapter_03_abstractions>>?
 
@@ -475,7 +475,7 @@ def allocate(line: OrderLine, repo: AbstractRepository, session) -> str:
 
 It depends on a repository.((("AbstractRepository", "service function depending on")))((("repositories", "service layer function depending on abstract repository")))  We've chosen to make the dependency explicit,
 and we've used the type hint to say that we depend on `AbstractRepository`.
-This means it'll work both when the tests give it a `FakeRepository`, and
+This means it'll work both when the tests give it a `FakeRepository` and
 when the Flask app gives it a `SqlAlchemyRepository`.((("dependencies", "depending on abstractions")))
 
 If you remember <<dip>>,
@@ -484,10 +484,10 @@ _high-level module_, the service layer, depends on the repository abstraction.
 And the _details_ of the implementation for our specific choice of persistent
 storage also depend on that same abstraction.
 
-See Figures pass:[<a href="#service_layer_diagram_abstract_dependencies" data-xrefstyle="select:labelnumber">#service_layer_diagram_abstract_dependencies</a> and <a href="#service_layer_diagram_test_dependencies" data-xrefstyle="select:labelnumber">#service_layer_diagram_test_dependencies</a>].
+See Figures pass:[<a data-type="xref" href="#service_layer_diagram_abstract_dependencies" data-xrefstyle="select:labelnumber">#service_layer_diagram_abstract_dependencies</a> and <a data-type="xref" href="#service_layer_diagram_test_dependencies" data-xrefstyle="select:labelnumber">#service_layer_diagram_test_dependencies</a>].
 
 See also in <<appendix_csvs>> a worked example of swapping out the
-_details_ of which persistent storage system to use, while leaving the
+_details_ of which persistent storage system to use while leaving the
 abstractions intact.
 
 *******************************************************************************
@@ -577,7 +577,7 @@ we can test against the service layer in memory.
 [role="nobreakinside less_space"]
 .Exercise for the Reader
 ******************************************************************************
-Now that we have an allocate service, so why not build out a service for
+Now that we have an allocate service, why not build out a service for
 `deallocate`?((("deallocate service, building (exerise)"))) We've added https://github.com/cosmicpython/code/tree/chapter_04_service_layer_exercise[an E2E test and a few stub service-layer tests] for
 you to get started on GitHub.
 
@@ -603,8 +603,8 @@ ways to talk about this stuff.((("application services")))
 
 We're using two things called a _service_ in this chapter. The first is an
 _application service_ (our service layer). Its job is to handle requests from the
-outside world, and to _orchestrate_ an operation. ((("orchestration", "using application service")))What we mean is that the
-service layer _drives_ the application, by following a bunch of simple steps:
+outside world and to _orchestrate_ an operation. ((("orchestration", "using application service")))What we mean is that the
+service layer _drives_ the application by following a bunch of simple steps:
 
 * Get some data from the database
 * Update the domain model
@@ -619,7 +619,7 @@ stateful entity or value object. For example, if you were building a shopping
 cart application, you might choose to build taxation rules as a domain service.
 Calculating tax is a separate job from updating the cart, and it's an important
 part of the model, but it doesn't seem right to have a persisted entity for
-the job. Instead a stateless TaxCalculator class, or a `calculate_tax` function
+the job. Instead a stateless TaxCalculator class or a `calculate_tax` function
 can do the job.
 
 
@@ -669,14 +669,14 @@ Here's one way we could organize things:
 ====
 
 <1> Let's have a folder for our domain model.((("domain model", "folder for")))  Currently that's just one file,
-    but for a more complex application, you might have one file per class, you
+    but for a more complex application, you might have one file per class; you
     might have helper parent classes for `Entity`, `ValueObject`, and
-    `Aggregate`, you might add an __exceptions.py__ for domain-layer exceptions,
-    and as you'll see in <<part2>>, __commands.py__ and __events.py__.
+    `Aggregate`, you might add an __exceptions.py__ for domain-layer exceptions
+    and, as you'll see in <<part2>>, __commands.py__ and __events.py__.
 
 <2> We'll distinguish the service layer. Currently that's just one file
     called _services.py_ for our service-layer functions.  You could
-    add service-layer exceptions here, and as you'll see in the <<chapter_05_high_gear_low_gear>>, we'll add __unit_of_work.py__.
+    add service-layer exceptions here, and as you'll see in <<chapter_05_high_gear_low_gear>>, we'll add __unit_of_work.py__.
 
 <3> _Adapters_ is a nod to the ports and adapters terminology.((("adapters", "putting into folder"))) This will fill
     up with any other abstractions around external I/O (e.g., a __redis_client.py__).
@@ -698,7 +698,7 @@ implement them.
 Adding the service layer((("service layer", "benefits of")))((("Flask framework", "Flask API and service layer", "service layer benefits"))) has really bought us quite a lot:
 
 * Our Flask API endpoints become very thin and easy to write: their
-  only responsibility is doing "web stuff," things like parsing JSON
+  only responsibility is doing "web stuff," such as parsing JSON
   and producing the right HTTP codes for happy or unhappy cases.
 
 * We've defined a clear API for our domain, a set of use cases or
@@ -719,7 +719,7 @@ Adding the service layer((("service layer", "benefits of")))((("Flask framework"
 ==== The DIP in Action
 
 <<service_layer_diagram_abstract_dependencies>> shows the
-dependencies of our service ((("Flask framework", "Flask API and service layer", "service layer dependencies")))((("service layer", "dependencies of")))((("dependencies", "abstract dependencies of service layer")))layer: the domain model,
+dependencies of our service ((("Flask framework", "Flask API and service layer", "service layer dependencies")))((("service layer", "dependencies of")))((("dependencies", "abstract dependencies of service layer")))layer: the domain model
 and `AbstractRepository` (the port, in ports and adapters terminology).
 
 [[service_layer_diagram_abstract_dependencies]]
