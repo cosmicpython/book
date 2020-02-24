@@ -2,11 +2,11 @@
 
 import subprocess
 from pathlib import Path
-from chapters import CHAPTERS, NO_EXERCISE
+from chapters import CHAPTERS, NO_EXERCISE, STANDALONE
 
 processes = []
 
-for chapter in CHAPTERS:
+for chapter in CHAPTERS + STANDALONE:
     print('pushing', chapter)
     processes.append(subprocess.Popen(
         ['git', 'push', '-v', '--force-with-lease', 'origin', chapter],
