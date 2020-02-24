@@ -4,12 +4,8 @@
 /* Globally preventing code blocks from breaking across pages
 pre { page-break-inside: avoid; } */
 
-/* handling for elements to keep them from breaking across pages
-.nobreakinside {
- page-break-inside: avoid; 
- page-break-before: auto;
- 
-} */
+/* handling for elements to keep them from breaking across pages */
+.nobreakinside { page-break-inside: avoid; } 
 
 /* Epilogue figure label */
 section[data-type="afterword"] figcaption:before {
