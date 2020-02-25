@@ -16,13 +16,13 @@ system. Internally, the core of our application is now a message processor.
 Let's follow through on that so it becomes a message processor _externally_ as
 well. As shown in <<message_processor_diagram>>, our application will receive
 events from external sources via an external message bus (we'll use Redis pub/sub
-queues as an example), and publish its outputs, in the form of events, back
+queues as an example) and publish its outputs, in the form of events, back
 there as well.
 
 [TIP]
 ====
 The code for this chapter is in the
-https://github.com/cosmicpython/code/tree/chapter_11_external_events[chapter_11_external_events] branch on GitHub.
+https://github.com/cosmicpython/code/tree/chapter_11_external_events[chapter_11_external_events] branch on GitHub:
 
 [[message_processor_diagram]]
 .Our application is a message processor
@@ -51,7 +51,7 @@ up the system might have looked like <<batches_context_diagram>> (notice that
 we've named our system after a noun, _Batches_, instead of _Allocation_).
 
 [[batches_context_diagram]]
-.Context diagram for the Batches service
+.Context diagram with noun-based services
 image::images/apwp_1102.png[]
 [role="image-source"]
 ----
@@ -138,16 +138,16 @@ the different symbols.
 We can think of each of these steps as a command in our system: `ReserveStock`,
 pass:[<span class="keep-together"><code>ConfirmReservation</code></span>], `DispatchGoods`, `MakeCustomerVIP`, and so forth.
 
-This style of architecture, where we create a microservice per database table,
+This style of architecture, where we create a microservice per database table
 and treat our HTTP APIs as CRUD interfaces to anemic models, is the most common
 initial way for people to approach service-oriented design.
 
-This works _fine_ for systems that are very simple, but quickly degrades into
+This works _fine_ for systems that are very simple, but it can quickly degrade into
 a distributed ball of mud.
 
 To see why, let's consider another case. Sometimes, when stock arrives at the
 warehouse, we discover that items have been water damaged during transit. We
-can't sell water-damaged sofas, so we have to throw them away, and request more
+can't sell water-damaged sofas, so we have to throw them away and request more
 stock from our partners. We also need to update our stock model, and that
 might mean we need to reallocate a customer's order.
 
@@ -248,9 +248,9 @@ When thinking about error conditions here, we're talking about Connascence of
 Timing: multiple things have to happen, one after another, for the operation to
 work.
 
-When we replace our RPC style system with events, we replace both of these types
+When we replace our RPC-style system with events, we replace both of these types
 of connascence with a _weaker_ type. That's Connascence of Name: multiple
-components need to agree on only the name of an event, and the names of fields
+components need to agree only on the name of an event and the names of fields
 it carries.
 
 We can never completely avoid coupling, except by having our software not talk
@@ -296,7 +296,7 @@ to handle degraded behavior: we can still take orders if the allocation system
 is having a bad day.
 
 Second, we're reducing the strength of coupling between our systems. If we
-need to change the order of operations, or to introduce new steps in the process,
+need to change the order of operations or to introduce new steps in the process,
 we can do that locally.
 
 // IDEA: need to add an example of a process change.  And/or explain "locally"
@@ -355,7 +355,7 @@ MessageBus -> Redis : publish to line_allocated channel
 
 
 
-=== Test-Driving It All Using an End-To-End Test
+=== Test-Driving It All Using an End-to-End Test
 
 Here's how we might start with an end-to-end test.((("testing", "end-to-end test of pub/sub model")))((("Redis pub/sub channel, using for microservices integration", "testing pub/sub model")))((("microservices", "event-based integration", "testing with end-to-end test", id="ix_mcroevnttst")))  We can use our existing
 API to create batches, and then we'll test both inbound and outbound messages:
@@ -411,7 +411,7 @@ def test_change_batch_quantity_leading_to_reallocation():
     look out for the expected reallocation.
 
 <4> Because of the asynchronous nature of the system under test, we need to use
-    the `tenacity` library again to add a retry loop. Firs, because it may
+    the `tenacity` library again to add a retry loop—first, because it may
     take some time for our new `line_allocated` message to arrive, but also
     because it won't be the only message on that channel.
 
@@ -428,7 +428,7 @@ be too much of a digression.
 ==== Redis Is Another Thin Adapter Around Our Message Bus
 
 Our Redis pub/sub listener (we call it an _event consumer_) is very much like
-Flask:  it translates from((("message bus", "Redis pub/sub listener as thin adapter around")))((("Redis pub/sub channel, using for microservices integration", "testing pub/sub model", "Redis as thin adapter around message bus"))) the outside world to our events:
+Flask: it translates from((("message bus", "Redis pub/sub listener as thin adapter around")))((("Redis pub/sub channel, using for microservices integration", "testing pub/sub model", "Redis as thin adapter around message bus"))) the outside world to our events:
 
 
 [[redis_eventconsumer_first_cut]]
@@ -462,8 +462,8 @@ def handle_change_batch_quantity(m):
     convert it to a `Command`, and pass it to the service layer--much as the
     Flask adapter does.
 
-We also build a new downstream adapter to do the opposite job: it converts
-domain events to public events:
+We also build a new downstream adapter to do the opposite job—converting
+ domain events to public events:
 
 [[redis_eventpubisher_first_cut]]
 .Simple Redis message publisher (src/allocation/adapters/redis_eventpublisher.py)
@@ -564,7 +564,7 @@ def publish_allocated_event(
 *******************************************************************************
 It's a good idea to keep the distinction between internal and external events
 clear.((("microservices", "event-based integration", "testing with end-to-end test", startref="ix_mcroevnttst")))((("events", "internal versus external")))  Some events may come from the outside, and some events may get upgraded
-and published externally, but not all of them.  This is particularly important
+and published externally, but not all of them will.  This is particularly important
 if you get into
 https://oreil.ly/FXVil[event sourcing]
 (very much a topic for another book, though).
@@ -579,11 +579,11 @@ TIP: Outbound events are one of the places it's important to apply validation.
 *******************************************************************************
 
 A nice simple one for this chapter: make it so that the main `allocate()` use
-case can also be invoked by an event on a Redis channel, as well (or instead of)
+case can also be invoked by an event on a Redis channel, as well as (or instead of)
 via the API.
 
-You'll want to add a new E2E test, and feed through some changes into
-__redis_eventconsumer.py__.
+You'll want to add a new E2E test and feed through some changes into
+pass:[<span class="keep-together"><code>redis_eventconsumer.py</code></span>].
 
 *******************************************************************************
 
@@ -593,19 +593,19 @@ __redis_eventconsumer.py__.
 Events can come _from_ the outside, but they can also be published
 externally--our `publish` handler converts an event to a message on a Redis
 channel. We use events to talk to the outside world.  This kind of temporal
-decoupling buys us a lot of flexibility in our application integrations, but,
+decoupling buys us a lot of flexibility in our application integrations, but
 as always, it comes at a cost.((("Fowler, Martin")))
 
 [quote, Martin Fowler, What do you mean by “Event-Driven”? (martinfowler.com)]
 ____
 Event notification is nice because it implies a low level of coupling, and is
-pretty simple to set up. It can become problematic, however, if there is
+pretty simple to set up. It can become problematic, however, if there really is
 a logical flow that runs over various event notifications. [...] It can be hard to
-see as it's not explicit in any program text; this can make it hard to debug
+see such a flow as it's not explicit in any program text....This can make it hard to debug
 and modify.
 ____
 
-<<chapter_11_external_events_tradeoffs>> shows some tradeoffs to think about.
+<<chapter_11_external_events_tradeoffs>> shows some trade-offs to think about.
 More generally, if you're moving from a model of synchronous messaging to an
 async one, you also open up a whole host of problems having to do with message
 reliability and eventual consistency.((("microservices", "event-based integration", "trade-offs"))) Read on to <<footguns>>.
@@ -617,7 +617,7 @@ reliability and eventual consistency.((("microservices", "event-based integratio
 |===
 |Pros|Cons
 a|
-* Avoids the Distributed Big Ball of Mud.
+* Avoids the distributed big ball of mud.
 * Services are decoupled: it's easier to change individual services and add
   new ones.
 

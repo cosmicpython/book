@@ -22,13 +22,13 @@ image::images/apwp_0902.png[]
 [TIP]
 ====
 The code for this chapter is in the
-https://github.com/cosmicpython/code/tree/chapter_09_all_messagebus[chapter_09_all_messagebus] branch on GitHub.
+https://github.com/cosmicpython/code/tree/chapter_09_all_messagebus[chapter_09_all_messagebus] branch on GitHub:
 
 ----
 git clone https://github.com/cosmicpython/code.git
 cd code
 git checkout chapter_09_all_messagebus
-# or to code along, checkout the previous chapter:
+# or to code along, check out the previous chapter:
 git checkout chapter_08_events_and_message_bus
 ----
 ====
@@ -51,7 +51,7 @@ in the real world of physical objects and unreliable humans. For example:
 * A global shortage of sequins means we're unable to manufacture our next batch
   of pass:[<code>SPARKLY-BOOKCASE</code>].
 
-In all of these situations, we learn about the need to change batch quantities
+In these types of situations, we learn about the need to change batch quantities
 when they're already in the system.((("batches", "batch quantities changed means deallocate and reallocate"))) Perhaps someone made a mistake on the number
 in the manifest, or perhaps some sofas fell off a truck. Following a
 conversation with the business,footnote:[
@@ -140,22 +140,21 @@ Refactoring] workflow, aka "Make the change easy; then((("preparatory refactorin
   become the handler for an event called `AllocationRequired`.
 
 2. We build an end-to-end test that puts `BatchQuantityChanged` events
-  into the system, and looks for `Allocated` events coming out.
+  into the system and looks for `Allocated` events coming out.
 
-3. Our implementation will be conceptually very simple: a new
+3. Our implementation will conceptually be very simple: a new
   handler for `BatchQuantityChanged` events, whose implementation will emit
   `AllocationRequired` events, which in turn will be handled by the exact same
   handler for allocations that the API uses.
 
 
 Along the way, we'll make a small tweak to the message bus and UoW, moving the
-responsibility for putting new events onto the message bus into the message bus itself.
+responsibility for putting new events on the message bus into the message bus itself.
 
 
 === Refactoring Service Functions to Message Handlers
 
-We start by defining the two events that ((("service functions", "refactoring to message handlers")))((("events and the message bus", "transforming our app into message processor", "refactoring service functions to message handlers")))((("BatchCreated event")))((("AllocationRequired event")))capture our current API inputs:
-`AllocationRequired` and `BatchCreated`:
+We start by defining the two events that ((("service functions", "refactoring to message handlers")))((("events and the message bus", "transforming our app into message processor", "refactoring service functions to message handlers")))((("BatchCreated event")))((("AllocationRequired event")))capture our current API inputs—`AllocationRequired` and `BatchCreated`:
 
 [[two_new_events]]
 .BatchCreated and AllocationRequired events (src/allocation/domain/events.py)
@@ -179,7 +178,7 @@ class AllocationRequired(Event):
 ----
 ====
 
-Then we rename _services.py_ to _handlers.py_; add the existing message handler
+Then we rename _services.py_ to _handlers.py_; we add the existing message handler
 for `send_out_of_stock_notification`; and most importantly, we change all the
 handlers so that they have the same inputs, an event and a UoW:
 
@@ -251,7 +250,7 @@ The change might be clearer as a diff:
 ----
 ====
 
-Along the way, we've made enriched our service-layer's API more structured and consistent. It was a scattering of
+Along the way, we've made our service-layer's API more structured and more consistent. It was a scattering of
 primitives, and now it uses well-defined objects (see the following sidebar).
 
 [role="nobreakinside less_space"]
@@ -265,7 +264,7 @@ In OO circles, people ((("primitive obsession")))talk about _primitive obsession
 primitives in public APIs, and instead wrap them with custom value classes, they
 would say. In the Python world, a lot of people would be quite skeptical of
 that as a rule of thumb. When mindlessly applied, it's certainly a recipe for
-unnecessary complexity. So that's not what we're doing _per se_.
+unnecessary complexity. So that's not what we're doing per se.
 
 The move from domain objects to((("primitives", "moving from domain objects to, in service layer"))) primitives bought us a nice bit of decoupling:
 our client code was no longer coupled directly to the domain, so the service
@@ -273,12 +272,12 @@ layer could present an API that stays the same even if we decide to make changes
 to our model, and vice versa.
 
 So have we gone backward? Well, our core domain model objects are still free to
-vary, but instead we've coupled the external world to our event classes instead.
+vary, but instead we've coupled the external world to our event classes.
 They're part of the domain too, but the hope is that they vary less often, so
 they're a sensible artifact to couple on.
 
 And what have we bought ourselves? Now, when invoking a use case in our application,
-we no longer need to remember a particular combination of primitives, just a single
+we no longer need to remember a particular combination of primitives, but just a single
 event class that represents the input to our application. That's conceptually
 quite nice. On top of that, as you'll see in <<appendix_validation>>, those
 event classes can be a nice place to do some input validation.
@@ -312,7 +311,7 @@ def handle(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):  #<1>
 <1> The message bus now gets passed the UoW each time it starts up.
 <2> When we begin handling our first event, we start a queue.
 <3> We pop events from the front of the queue and invoke their handlers (the
-    pass:[<span class="keep-together"><code>HANDLERS</code></span>] dict hasn't changed, it still maps event types to handler functions).
+    pass:[<span class="keep-together"><code>HANDLERS</code></span>] dict hasn't changed; it still maps event types to handler functions).
 <4> The message bus passes the UoW down to each handler.
 <5> After each handler finishes, we collect any new events that have been
     generated and add them to the queue.
@@ -351,7 +350,7 @@ In _unit_of_work.py_, `publish_events()` becomes a less active method,
 <1> The `unit_of_work` module now no longer depends on `messagebus`.
 <2> We no longer `publish_events` automatically on commit. The message bus
     is keeping track of the event queue instead.
-<3> And the UoW no longer actively puts events onto the message bus; it
+<3> And the UoW no longer actively puts events on the message bus; it
     just makes them available.
 
 
@@ -405,7 +404,7 @@ class TestAddBatch:
 
 Our API and our service layer currently((("events and the message bus", "transforming our app into message processor", "temporary hack, message bus returning results")))((("messaege bus", "returning results in temporary hack"))) want to know the allocated batch reference
 when they invoke our `allocate()` handler. This means we need to put in
-a temporary hack on our message bus to let it return events.
+a temporary hack on our message bus to let it return events:
 
 [[hack_messagebus_results]]
 .Message bus returns results (src/allocation/service_layer/messagebus.py)
@@ -474,7 +473,7 @@ fully event-driven:
 * We use events as our data structure for capturing inputs to the system,
   as well as for handing off of internal work packages.
 
-* The entire app is now best described as a message processor, or event processor
+* The entire app is now best described as a message processor, or an event processor
   if you prefer.  We'll talk about the distinction in the
   <<chapter_10_commands, next chapter>>.
 
@@ -484,7 +483,7 @@ fully event-driven:
 
 We're done with our refactoring phase. ((("events and the message bus", "transforming our app into message processor", "implementing the new requirement", id="ix_evntMBMPreq")))Let's see if we really have "made the
 change easy."  Let's implement our new requirement, shown in <<reallocation_sequence_diagram>>: we'll receive as our
-inputs some new `BatchQuantityChanged` events, pass them to a handler, which in
+inputs some new `BatchQuantityChanged` events and pass them to a handler, which in
 turn might emit some `AllocationRequired` events, and those in turn will go
 back to our existing handler for allocation, to be reallocated.((("reallocation", "sequence diagram for flow")))
 
@@ -510,10 +509,10 @@ end
 @enduml
 ----
 
-WARNING: Whenever you split((("Unit of Work pattern", "splitting operations across two UoWs")))((("data integrity", "issues arising from splitting operation across two UoWs"))) things out like this across two units of work,
+WARNING: When you split((("Unit of Work pattern", "splitting operations across two UoWs")))((("data integrity", "issues arising from splitting operation across two UoWs"))) things out like this across two units of work,
     you now have two database transactions, so you are opening yourself up
-    to integrity issues: something could happen that means the first completes
-    but the second does not. You'll need to think about whether this is acceptable,
+    to integrity issues: something could happen that means the first transaction completes
+    but the second one does not. You'll need to think about whether this is acceptable,
     and whether you need to notice when it happens and do something about it.
     See <<footguns>> for more discussion.
 
@@ -699,8 +698,8 @@ on managing complex queries.
 ==== A New Method on the Domain Model
 
 We add the new method to the model, which does the quantity change and
-deallocation(s) inline, and publishes a new event.((("domain model", "new method on, change_batch_quantity")))  We also modify the existing
-allocate function to publish an event.
+deallocation(s) inline and publishes a new event.((("domain model", "new method on, change_batch_quantity")))  We also modify the existing
+allocate function to publish an event:
 
 
 [[change_batch_model_layer]]
@@ -764,7 +763,7 @@ want to test some handlers in isolation from one another. You can do this
 using a "fake" message bus.
 
 In our case, we actually intervene by ((("Unit of Work pattern", "fake message bus implemented in UoW")))modifying the `publish_events()` method
-on `FakeUnitOfWork`, and decouple it from the real message bus, instead making
+on `FakeUnitOfWork` and decoupling it from the real message bus, instead making
 it record what events it sees:
 
 
@@ -835,7 +834,7 @@ this only if necessary.
 *******************************************************************************
 A great way to force yourself to really understand some code is to refactor it.
 In the discussion of testing handlers in isolation, we used something called
-`FakeUnitOfWorkWithFakeMessageBus`, which is unnecessarily complicated, and
+`FakeUnitOfWorkWithFakeMessageBus`, which is unnecessarily complicated and
 violates the SRP.((("message bus", "abstract message bus and its real and fake versions")))
 
 If we change the message bus to being a class,footnote:[The "simple"
@@ -893,7 +892,7 @@ if you need more inspiration.
 * Handlers are the way we react to events. They can call down to our
   model or call out to external services.  We can define multiple
   handlers for a single event if we want to. Handlers can also raise other
-  events. This allows us to be very granular about what a handler does,
+  events. This allows us to be very granular about what a handler does
   and really stick to the SRP.
 
 
@@ -901,8 +900,8 @@ if you need more inspiration.
 
 Our ongoing objective with these architectural patterns is to try to have
 the complexity of our application grow more slowly than its size.((("message bus", "whole app as, trade-offs")))((("events and the message bus", "transforming our app into message processor", "whole app as message bus, trade-offs")))  When we
-go all-in on the MessageBus, as always we pay a price in terms of architectural
-complexity (see <<chapter_09_all_messagebus_tradeoffs>>, but we buy ourselves a
+go all in on the MessageBus, as always we pay a price in terms of architectural
+complexity (see <<chapter_09_all_messagebus_tradeoffs>>), but we buy ourselves a
 pattern that can handle almost arbitrarily complex requirements without needing
 any further conceptual or architectural change to the way we do things.
 
@@ -933,6 +932,6 @@ a|
 |===
 
 Now, you may be wondering, where are those `BatchQuantityChanged` events
-going to come from? The answer is revealed in a couple of chapters' time.((("events and the message bus", "transforming our app into message processor", startref="ix_evntMBMP")))  But
+going to come from? The answer is revealed in a couple chapters' time.((("events and the message bus", "transforming our app into message processor", startref="ix_evntMBMP")))  But
 first, let's talk about <<chapter_10_commands,events versus commands>>.
 

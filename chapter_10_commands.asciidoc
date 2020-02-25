@@ -2,21 +2,21 @@
 == Commands and Command Handler
 
 In the previous chapter, we talked about using events as a way of representing
-the inputs to our system, and turned our application into a message-processing
+the inputs to our system, and we turned our application into a message-processing
 machine.((("commands", id="ix_cmnd")))
 
 To achieve that, we converted all our use-case functions to event handlers.
 When the API receives a POST to create a new batch, it builds a new `BatchCreated`
 event and handles it as if it were an internal event.
-This might have felt counterintuitive. After all, the batch _hasn't_ been
+This might feel counterintuitive. After all, the batch _hasn't_ been
 created yet; that's why we called the API. We're going to fix that conceptual
-wart by introducing commands, and show how they can be handled by the same
-message bus, but with slightly different rules.
+wart by introducing commands and showing how they can be handled by the same
+message bus but with slightly different rules.
 
 [TIP]
 ====
 The code for this chapter is in the
-https://github.com/cosmicpython/code/tree/chapter_10_commands[chapter_10_commands] branch on GitHub.
+https://github.com/cosmicpython/code/tree/chapter_10_commands[chapter_10_commands] branch on GitHub:
 
 ----
 git clone https://github.com/cosmicpython/code.git
@@ -58,7 +58,7 @@ succeeded or failed. <<events_vs_commands_table>> recaps the differences.
 .Events versus commands
 |===
 e|      e| Event e| Command
-| Named | Past tense | Imperative tense
+| Named | Past tense | Imperative mood
 | Error handling | Fail independently | Fail noisily
 | Sent to | All listeners | One recipient
 |===
@@ -106,7 +106,7 @@ class ChangeBatchQuantity(Command):  #<3>
 === Differences in Exception Handling
 
 
-Just changing ((("events", "commands versus", startref="ix_evntcmd")))the names and verb tenses is all very well, but that won't
+Just changing ((("events", "commands versus", startref="ix_evntcmd")))the names and verbs is all very well, but that won't
 change the behavior of our system. ((("exception handling", "differences for events and commands"))) We want to treat events and commands similarly,
 but not exactly the same.((("message bus", "dispatching events and commands differently")))  Let's see how our message bus changes:
 
@@ -166,7 +166,7 @@ def handle_event(
 <1> Events go to a dispatcher that can delegate to multiple handlers per
     event.
 
-<2> It catches and logs errors, but doesn't let them interrupt
+<2> It catches and logs errors but doesn't let them interrupt
     message processing.
 
 And here's((("commands", "exception handling"))) how we do commands:
@@ -228,7 +228,7 @@ COMMAND_HANDLERS = {
 
 === Discussion: Events, Commands, and Error Handling
 
-Many developers get uncomfortable at this point, and ask, "What happens when an
+Many developers get uncomfortable at this point and ask, "What happens when an
 event fails to process? ((("events", "events, commands, and error handling", id="ix_evntcmderr")))((("error handling", "events, commands, and", id="ix_errhnd")))((("commands", "events, commands, and error handling", id="ix_cmndeverr")))How am I supposed to make sure the system is in a
 consistent state?"
 
@@ -243,8 +243,8 @@ completed.
 
 For example, we could allocate three units of `DESIRABLE_BEANBAG` to a customer's
 order but somehow fail to reduce the amount of remaining stock. This would
-cause an inconsistent state: the three units of stock are both allocated and
-available depending on how you look at it. Later, we might allocate those
+cause an inconsistent state: the three units of stock are both allocated _and_
+available, depending on how you look at it. Later, we might allocate those
 same beanbags to another customer, causing a headache for customer support.
 
 In our allocation service, though, we've already taken steps to prevent that
@@ -258,7 +258,7 @@ a particular order line is allocated to the product, or it is not--there's no
 room for inconsistent states.
 
 By definition, we don't require two aggregates to be immediately consistent, so
-if we fail to process an event, and update only a single aggregate, our system
+if we fail to process an event and update only a single aggregate, our system
 can still be made eventually consistent. We shouldn't violate any constraints of
 the system.
 
@@ -269,7 +269,7 @@ a single _aggregate_ and either succeed or fail in totality. Any other bookkeepi
 don't require the event handlers to succeed in order for the command to be
 successful.
 
-Let's take another example to see why not.
+Let's look at another example (from a different, imaginary projet) to see why not.
 
 Imagine we are building an ecommerce website that sells expensive luxury goods.
 Our marketing department wants to reward customers for repeat visits. We will
@@ -355,7 +355,7 @@ def congratulate_vip_customer(uow, event: CustomerBecameVip): #<4>
 <3> Our second handler updates the `History` object to record that an order was
     pass:[<span class="keep-together">created</span>].
 
-<4> Finally we send an email to the customer when they become a VIP.
+<4> Finally, we send an email to the customer when they become a VIP.
 
 //IDEA: Sequence diagram here?
 
@@ -496,7 +496,7 @@ things half-finished.
 WARNING: At some point, regardless of tenacity, we'll have to give up trying to
     process the message. Building reliable systems with distributed messages is
     hard, and we have to skim over some tricky bits. There are pointers to more
-    reference materials in <<epilogue_1_how_to_get_there_from_here>>.
+    reference materials in the pass:[<a href="epilogue_1_how_to_get_there_from_here">epilogue</a>].
 
 
 === Wrap-Up
@@ -504,9 +504,9 @@ WARNING: At some point, regardless of tenacity, we'll have to give up trying to
 In this book we decided to introduce the concept of events before the concept
 of commands, but other guides often do it the other way around.((("commands", "splitting commands and events, trade-offs")))((("events", "splitting command and events, trade-offs")))  Making
 explicit the requests that our system can respond to by giving them a name
-and their own datastructure is quite a fundamental thing to do.  You'll
-sometimes see people use the name _Command Handler Pattern_ to describe what
-we're doing with Events, Commands and Message Bus.((("Command Handler pattern")))
+and their own data structure is quite a fundamental thing to do.  You'll
+sometimes see people use the name _Command Handler_ pattern to describe what
+we're doing with Events, Commands, and Message Bus.((("Command Handler pattern")))
 
 <<chapter_10_commands_and_events_tradeoffs>> discusses some of the things you
 should think about before you jump on board.
@@ -526,9 +526,9 @@ a|
 
 a|
 * The semantic differences between commands and events can be subtle. Expect
-  bike-shedding arguments over the differences.
+  bikeshedding arguments over the differences.
 
-* We're expressly inviting failure. We know that sometimes things will break and
+* We're expressly inviting failure. We know that sometimes things will break, and
   we're choosing to handle that by making the failures smaller and more isolated.
   This can make the system harder to reason about and requires better monitoring.((("commands", startref="ix_cmnd")))
 |===

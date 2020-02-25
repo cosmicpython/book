@@ -4,11 +4,11 @@
 
 Whenever we're ((("validation", id="ix_valid")))teaching and talking about these techniques, one question that
 comes up over and over is "Where should I do validation? Does that belong with
-my business logic, in the domain model, or is that an infrastructural concern?"
+my business logic in the domain model, or is that an infrastructural concern?"
 
 As with any architectural question, the answer is: it depends!
 
-The most important consideration is that we want to keep our code well-separated
+The most important consideration is that we want to keep our code well separated
 so that each part of the system is simple. We don't want to clutter our code
 with irrelevant detail.
 
@@ -23,7 +23,7 @@ If the input is invalid, the operation can't continue but should exit with
 some kind of error.
 
 In other words, validation is about creating _preconditions_. We find it useful
-to separate our preconditions into three sub-types: syntax, semantics, and
+to separate our preconditions into three subtypes: syntax, semantics, and
 pragmatics.
 
 === Validating Syntax
@@ -41,7 +41,7 @@ How does this map to our application? Here are some examples of syntactic rules:
 * A SKU is a string.
 
 These are rules about the shape and structure of incoming data. An `Allocate`
-command without a SKU or order ID isn't a valid message. It's the equivalent
+command without a SKU or an order ID isn't a valid message. It's the equivalent
 of the phrase "Allocate three to."
 
 We tend to validate these rules at the edge of the system. Our rule of thumb is
@@ -91,7 +91,7 @@ class Allocate(Command):
 
 This can get repetitive, though, since we need to specify our fields twice,
 so we might want to introduce a helper library that can unify the validation and
-declaration of our message types.
+declaration of our message types:
 
 
 [[command_factory]]
@@ -123,12 +123,12 @@ AddStock = command(
 ====
 
 <1> The `command` function takes a message name, plus kwargs for the fields of
-    the message payload, where the name of the kwarg is the name of the field, and
+    the message payload, where the name of the kwarg is the name of the field and
     the value is the parser.
 <2> We use the `make_dataclass` function from the dataclass module to dynamically
     create our message type.
 <3> We patch the `from_json` method onto our dynamic dataclass.
-<4> We can create reusable parsers for quantity, or SKU, etc., to keep things DRY.
+<4> We can create reusable parsers for quantity, SKU, and so on to keep things DRY.
 <5> Declaring a message type becomes a one-liner.
 
 This comes at the expense of losing the types on your dataclass, so bear that
@@ -152,11 +152,11 @@ as lenient as possible when we're receiving messages from others.
 For example, our system _could_ validate the format of a SKU. We've been using
 made-up SKUs like `UNFORGIVING-CUSHION` and `MISBEGOTTEN-POUFFE`. These follow
 a simple pattern: two words, separated by dashes, where the second word is the
-type of product, and the first word an adjective.
+type of product and the first word is an adjective.
 
 Developers _love_ to validate this kind of thing in their messages, and reject
 anything that looks like an invalid SKU. This causes horrible problems down the
-line when some anarchist releases a product named `COMFY-CHAISE-LOUNGE` or when
+line when some anarchist releases a product named `COMFY-CHAISE-LONGUE` or when
 a snafu at the supplier results in a shipment of `CHEAP-CARPET-2`.
 
 Really, as the allocation system, it's _none of our business_ what the format of
@@ -179,11 +179,11 @@ among systems. This likewise fails the robustness test.
 //
 
 Let's imagine, for example, that the procurement system adds new fields to the
-`ChangeBatchQuantity` message that record the reason for the change, and the
+`ChangeBatchQuantity` message that record the reason for the change and the
 email of the user responsible for the change.
 
 Since these fields don't matter to the allocation service, we should simply
-ignore them. We can do that in the `Schema` library by passing the keyword arg
+ignore them. We can do that in the `schema` library by passing the keyword arg
 `ignore_extra_keys=True`.
 
 This pattern, whereby we extract only the fields we care about and do minimal
@@ -289,7 +289,6 @@ def bad_request(e: ValidationError):
 
 And here's how we might plug it in to our asynchronous message processor:
 
--
 [[validation_pubsub]]
 .Validation errors when handling Redis messages (src/allocation/redis_pubsub.py)
 ====
@@ -306,8 +305,8 @@ def handle_change_batch_quantity(m, bus: messagebus.MessageBus):
 ====
 
 Notice that our entrypoints are solely concerned with how to get a message from
-the outside world, and how to report success or failure. Our message bus takes
-care of validating our requests, and routing them to the correct handler, and
+the outside world and how to report success or failure. Our message bus takes
+care of validating our requests and routing them to the correct handler, and
 our handlers are exclusively focused on the logic of our use case.
 
 TIP: When you receive an invalid message, there's usually little you can do but
@@ -323,7 +322,7 @@ TIP: When you receive an invalid message, there's usually little you can do but
 While syntax is concerned with the structure of messages, _semantics_ is the study
 of _meaning_ in messages. The sentence "Undo no dogs from ellipsis four" is
 syntactically valid and has the same structure as the sentence "Allocate one
-teapot to order five,"" but is meaningless.
+teapot to order five,"" but it is meaningless.
 
 We can read this JSON blob as an `Allocate` command but can't successfully
 execute it, because it's _nonsense_:
@@ -343,7 +342,7 @@ execute it, because it's _nonsense_:
 ====
 
 We tend to validate semantic concerns at the message-handler layer with a kind
-of contract-based programming.
+of contract-based programming:
 
 
 [[ensure_dot_py]]
@@ -352,7 +351,7 @@ of contract-based programming.
 [source,python]
 ----
 """
-This module contains pre-conditions that we apply to our handlers.
+This module contains preconditions that we apply to our handlers.
 """
 
 class MessageUnprocessable(Exception):  #<1>
@@ -475,7 +474,7 @@ is insanely risky, and only a fool would attempt it. Context is everything.
 
 In software terms, the pragmatics of an operation are usually managed by the
 domain model. When we receive a message like "allocate three million units of
-`SCARCE-CLOCK` to order 76543," the message is _syntactically_ valid, and
+`SCARCE-CLOCK` to order 76543," the message is _syntactically_ valid and
 _semantically_ valid, but we're unable to comply because we don't have the stock
 available.
 [role="nobreakinside less_space"]
