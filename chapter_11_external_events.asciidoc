@@ -559,9 +559,8 @@ def publish_allocated_event(
 ----
 ====
 
-[role="nobreakinside less_space"]
-.Internal Versus External Events
-*******************************************************************************
+===== Internal versus external events
+
 It's a good idea to keep the distinction between internal and external events
 clear.((("microservices", "event-based integration", "testing with end-to-end test", startref="ix_mcroevnttst")))((("events", "internal versus external")))  Some events may come from the outside, and some events may get upgraded
 and published externally, but not all of them will.  This is particularly important
@@ -569,7 +568,6 @@ if you get into
 https://oreil.ly/FXVil[event sourcing]
 (very much a topic for another book, though).
 
-*******************************************************************************
 
 TIP: Outbound events are one of the places it's important to apply validation.
     See <<appendix_validation>> for some validation philosophy and pass:[<span class="keep-together">examples</span>].
@@ -596,14 +594,21 @@ channel. We use events to talk to the outside world.  This kind of temporal
 decoupling buys us a lot of flexibility in our application integrations, but
 as always, it comes at a cost.((("Fowler, Martin")))
 
-[quote, Martin Fowler, What do you mean by “Event-Driven”? (martinfowler.com)]
-____
+++++
+<blockquote>
+
+<p>
 Event notification is nice because it implies a low level of coupling, and is
 pretty simple to set up. It can become problematic, however, if there really is
-a logical flow that runs over various event notifications. [...] It can be hard to
+a logical flow that runs over various event notifications...It can be hard to
 see such a flow as it's not explicit in any program text....This can make it hard to debug
 and modify.
-____
+</p>
+
+<p data-type="attribution">Martin Fowler, <a href="https://oreil.ly/uaPNt"><span class="roman">"What do you mean by 'Event-Driven'"</span></a></p>
+
+</blockquote>
+++++
 
 <<chapter_11_external_events_tradeoffs>> shows some trade-offs to think about.
 More generally, if you're moving from a model of synchronous messaging to an
