@@ -219,6 +219,7 @@ We could store them in _model.py_, but we may as well keep them in their own fil
  (this might be a good time to consider refactoring out a directory called
 _domain_ so that we have _domain/model.py_ and _domain/events.py_):
 
+[role="nobreakinside less_space"]
 [[events_dot_py]]
 .Event classes (src/allocation/domain/events.py)
 ====
