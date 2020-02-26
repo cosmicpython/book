@@ -36,13 +36,13 @@ image::images/apwp_0402.png[]
 [TIP]
 ====
 The code for this chapter is in the
-https://oreil.ly/TBRuy[chapter_04_service_layer] branch on GitHub:
+chapter_04_service_layer branch https://oreil.ly/TBRuy[on GitHub]:
 
 ----
 git clone https://github.com/cosmicpython/code.git
 cd code
 git checkout chapter_04_service_layer
-# or to code along, check out the previous chapter:
+# or to code along, checkout the previous chapter:
 git checkout chapter_02_repository
 ----
 ====
@@ -584,7 +584,7 @@ refactor the Flask adapter to be more RESTful. Notice how doing so doesn't
 require any change to our service layer or domain layer!
 
 TIP: If you decide you want to build a read-only endpoint for retrieving allocation
-    info, just do the simplest thing that can possibly work^TM^, which is
+    info, just do "the simplest thing that can possibly work," which is
     `repo.get()` right in the Flask handler. We'll talk more about reads versus
     writes in <<chapter_12_cqrs>>.
 
@@ -670,7 +670,7 @@ Here's one way we could organize things:
     but for a more complex application, you might have one file per class; you
     might have helper parent classes for `Entity`, `ValueObject`, and
     `Aggregate`, you might add an __exceptions.py__ for domain-layer exceptions
-    and, as you'll see in <<part2>>, __commands.py__ and __events.py__.
+    and, as you'll see in <<part2>>, pass:[<span class="keep-together"><em>commands.py</em></span>] and __events.py__.
 
 <2> We'll distinguish the service layer. Currently that's just one file
     called _services.py_ for our service-layer functions.  You could
