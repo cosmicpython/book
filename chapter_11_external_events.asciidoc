@@ -19,14 +19,14 @@ events from external sources via an external message bus (we'll use Redis pub/su
 queues as an example) and publish its outputs, in the form of events, back
 there as well.
 
+[[message_processor_diagram]]
+.Our application is a message processor
+image::images/apwp_1101.png[]
+
 [TIP]
 ====
 The code for this chapter is in the
 https://github.com/cosmicpython/code/tree/chapter_11_external_events[chapter_11_external_events] branch on GitHub:
-
-[[message_processor_diagram]]
-.Our application is a message processor
-image::images/apwp_1101.png[]
 
 ----
 git clone https://github.com/cosmicpython/code.git
