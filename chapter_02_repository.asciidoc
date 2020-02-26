@@ -99,7 +99,7 @@ As mentioned in the pass:[<a data-type="xref" href="introduction">introduction</
 
 [[layered_architecture2]]
 .Layered architecture
-image::images/apwp_0002.png[]
+image::images/apwp_0202.png[]
 
 
 Django's Model-View-Template structure is closely related, as is
@@ -144,9 +144,9 @@ image::images/apwp_0203.png[]
 If you've been reading about architectural patterns, you may be asking
 yourself questions like this:
 
-> Is this ports and adapters? Or is it hexagonal architecture? Is that the same
-> as onion architecture? What about the clean architecture? What's a port,
-> and what's an adapter? Why do you people have so many words for the same thing?
+____
+_Is this ports and adapters? Or is it hexagonal architecture? Is that the same as onion architecture? What about the clean architecture? What's a port, and what's an adapter? Why do you people have so many words for the same thing?_
+____
 
 Although some people like to nitpick over the differences, all these are
 pretty much names for the same thing, and((("Seemann, Mark, blog post")))((("dependency inversion principle"))) they all boil down to the
@@ -821,7 +821,7 @@ Now Python doesn't have interfaces((("interfaces, Python and"))) per se, so alth
 usually easy to identify an adapter, defining the port can be harder. If
 you're using an abstract base class, that's the port.((("duck typing", "for ports")))((("abstract base classes (ABCs)", "using for ports"))) If not, the port
 is just the duck type that your adapters conform to and that your core application
-expects-- he function and method names in use, and their argument names and types.
+expects—the function and method names in use, and their argument names and types.
 
 Concretely, in this chapter, `AbstractRepository` is the port, and
 `SqlAlchemyRepository` and `FakeRepository` are the adapters.
@@ -887,15 +887,15 @@ Postgres fields) you usually lose the portability.
 
 <<domain_model_tradeoffs_diagram>> shows the basic thesis: yes, for simple
 cases, a decoupled domain model is harder work than a simple ORM/ActiveRecord
-pattern.
+pattern.footnote:[Diagram inspired by a post called
+https://oreil.ly/fQXkP["Global Complexity, Local Simplicity"] by Rob Vens.]
 
 TIP: If your app is just a simple CRUD (create-read-update-delete) wrapper
     around a database, then you don't need a domain model or a repository.
 
 But the more complex the domain, the more an investment in freeing
 yourself from ((("&quot;Global Complexity, Local Simplicity&quot; post", primary-sortas="Global")))((("Vens, Rob")))((("domain model", "trade-offs as a diagram")))infrastructure concerns will pay off in terms of the ease of
-making changes.footnote:[Diagram inspired by a post called
-https://oreil.ly/fQXkP["Global Complexity, Local Simplicity"] by Rob Vens.]
+making changes.
 
 
 [[domain_model_tradeoffs_diagram]]
