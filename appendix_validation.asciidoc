@@ -20,9 +20,7 @@ Inputs that match the criteria are considered _valid_, and inputs that don't
 are _invalid_.
 
 If the input is invalid, the operation can't continue but should exit with
-some kind of error.
-
-In other words, validation is about creating _preconditions_. We find it useful
+some kind of error. In other words, validation is about creating _preconditions_. We find it useful
 to separate our preconditions into three subtypes: syntax, semantics, and
 pragmatics.
 
