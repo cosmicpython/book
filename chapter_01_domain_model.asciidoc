@@ -45,7 +45,7 @@ but it does mean that some predictions fall outside of its domain.
 *****************************************************************
 
 Domain-driven design, or DDD, popularized the concept of domain modeling,footnote:[
-DDD did not originate domain modeling. Eric Evans refers to _Object Design_
+DDD did not originate domain modeling. Eric Evans refers to the 2002 book _Object Design_
 by Rebecca Wirfs-Brock and Alan McKean  (Addison-Wesley Professional), which introduced responsibility-driven
 design, of which DDD is a special case dealing with the domain.((("domain-driven design (DDD)"))) But even that is
 too late, and OO enthusiasts will tell you to look further back to Ivar
@@ -984,7 +984,7 @@ Distinguish entities from value objects::
 
 Not everything has to be an object::
     Python is a multiparadigm language, so let the "verbs" in your
-    code be functions. For every `FooManager`, `BarBUilder`, or `BazFactory`,
+    code be functions. For every `FooManager`, `BarBuilder`, or `BazFactory`,
     there's often a more expressive and readable `manage_foo()`, `build_bar()`,
     or `get_baz()` waiting to happen.((("functions")))
 
