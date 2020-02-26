@@ -211,7 +211,7 @@ We can't allocate the same line twice. For example:
 Batches have an _ETA_ if they are currently shipping, or they may be in _warehouse stock_. We allocate to warehouse stock in preference to shipment batches. We allocate to shipment batches in order of which has the earliest ETA.
 ****
 
-[role="pagebreak-before less_space"]
+[role="nobreakinside less_space"]
 .Exercise for the Reader
 ******************************************************************************
 Why not have a go at solving this problem yourself? Write a few unit tests to
