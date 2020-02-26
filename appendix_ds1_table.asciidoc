@@ -50,7 +50,7 @@ to the outside world (I/O).__
 
 __Translate external inputs into calls into the service layer.__
 
-| Web | Receives web requests and translates them into Commands, passing them to the Internal Message Bus.
+| Web | Receives web requests and translates them into commands, passing them to the internal message bus.
 | Event consumer | Reads events from the external message bus and translates them into commands, passing them to the internal message bus.
 
 | N/A | External message bus (message broker) | A piece of infrastructure that different services use to intercommunicate, via events.((("architecture, summary diagram and table", startref="ix_archsumm")))
