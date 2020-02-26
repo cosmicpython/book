@@ -168,7 +168,7 @@ use case for changing the baskets of several customers at the same time.((("cons
 basket is a single _consistency boundary_ responsible for maintaining its own
 invariants.((("Evans, Eric")))
 
-[quote, Eric Evans, DDD blue book]
+[quote, Eric Evans, Domain-Driven Design blue book]
 ____
 // We need an abstraction for encapsulating references within the model.
 An AGGREGATE is a cluster of associated objects that we treat as a unit for the
@@ -581,7 +581,7 @@ rules such that only one of them is allowed to `commit` the new `Product`
 with `version=4`, and the other update is rejected.((("transactions", "concurrent, attempting update on Product")))
 
 [[version_numbers_sequence_diagram]]
-.Sequence diagram: two transactions attempting a concurrent update on product
+.Sequence diagram: two transactions attempting a concurrent update on `Product`
 image::images/apwp_0704.png[]
 [role="image-source"]
 ----
@@ -666,7 +666,7 @@ Option 3 isn't ideal, because there's no real way of doing it without having to
 assume that _all_ products have changed, so we'll be incrementing version numbers
 when we don't have to.footnote:[Perhaps we could get some ORM/SQLAlchemy magic to tell
 us when an object is dirty, but how would that work in the generic case—for example, for a
-CsvRepository?]
+`CsvRepository`?]
 
 Option 2 involves mixing the responsibility for mutating state between the service
 layer and the domain layer, so it's a little messy as well.
