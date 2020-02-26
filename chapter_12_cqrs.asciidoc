@@ -16,10 +16,6 @@ https://github.com/cosmicpython/code/tree/chapter_12_cqrs[chapter_12_cqrs] branc
 
 First, though, why bother?
 
-[[maps_chapter_11]]
-.Separating reads from writes
-image::images/apwp_1201.png[]
-
 ----
 git clone https://github.com/cosmicpython/code.git
 cd code
@@ -28,6 +24,10 @@ git checkout chapter_12_cqrs
 git checkout chapter_11_external_events
 ----
 ====
+
+[[maps_chapter_11]]
+.Separating reads from writes
+image::images/apwp_1201.png[]
 
 
 === Domain Models Are for Writing
@@ -416,7 +416,7 @@ def allocations(orderid: str, uow: unit_of_work.AbstractUnitOfWork):
 ----
 ====
 
-<1> Our repository returns product objects, and we need to find all the
+<1> Our repository returns `Product` objects, and we need to find all the
     products for the SKUs in a given order, so we'll build a new helper method
     called `.for_order()` on the repository.
 
@@ -424,7 +424,7 @@ def allocations(orderid: str, uow: unit_of_work.AbstractUnitOfWork):
     get all the possible batches with a list comprehension.
 
 <3> We filter _again_ to get just the batches for our specific
-    order. That, in turn, relies on our batch objects being able to tell us
+    order. That, in turn, relies on our `Batch` objects being able to tell us
     which order IDs it has allocated to it.
 
 We implement that last using a `.orderid` property:
