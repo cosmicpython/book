@@ -32,7 +32,7 @@ In linguistics, the _syntax_ of a language is the set of rules that govern the
 structure of grammatical sentences. For example, in English, the sentence
 "Allocate three units of `TASTELESS-LAMP` to order twenty-seven" is grammatically
 sound, while the phrase "hat hat hat hat hat hat wibble" is not. We can describe
-grammatically correct sentences as _well-formed_.
+grammatically correct sentences as _well formed_.
 
 How does this map to our application? Here are some examples of syntactic rules:
 
@@ -477,6 +477,12 @@ domain model. When we receive a message like "allocate three million units of
 `SCARCE-CLOCK` to order 76543," the message is _syntactically_ valid and
 _semantically_ valid, but we're unable to comply because we don't have the stock
 available.
+
+TIP: Once you've validated the syntax and semantics of your commands
+    at the edges of your system, the domain is the place for the rest
+    of your validation.  Validation of pragmatics is often a core part
+    of your business rules.((("validation", startref="ix_valid")))
+    
 [role="nobreakinside less_space"]
 .Validation Recap
 *****************************************************************
@@ -510,8 +516,4 @@ Locate each of the three types of validation in the right place::
 
 *****************************************************************
 
-TIP: Once you've validated the syntax and semantics of your commands
-    at the edges of your system, the domain is the place for the rest
-    of your validation.  Validation of pragmatics is often a core part
-    of your business rules.((("validation", startref="ix_valid")))
 
