@@ -12,7 +12,7 @@ just enough code for you to go ahead and write something from scratch.
 
 The code we've shown in this book isn't battle-hardened production code: it's a
 set of Lego blocks that you can play with to make your first house, spaceship,
-and skyscraper.
+and pass:[<span class="keep-together">skyscraper</span>].
 
 That leaves us with two big tasks. We want to talk
 about how to start applying these ideas for real in an existing system, and we
@@ -99,6 +99,26 @@ In our case, most of our use cases were part of the manager classes and had
 names like Create Workspace or Delete Document Version. Each use case
 was invoked from a web frontend.
 
+We aim to create a single function or class for each of these supported
+operations that deals with _orchestrating_ the work to be done. Each use case
+should do the following:
+
+* Start its own database transaction if needed
+* Fetch any required data
+* Check any preconditions (see the Ensure pattern in <<appendix_validation>>)
+* Update the domain model
+* Persist any changes
+
+Each use case should succeed or fail as an atomic unit. You might need to call
+one use case from another. That's OK; just make a note of it, and try to
+avoid long-running database transactions.
+
+NOTE: One of the biggest problems we had was that manager methods called other
+manager methods, and data access could happen from the model objects themselves.
+It was hard to understand what each operation did without going on a treasure hunt across the codebase. Pulling all the logic into a single method, and using
+a UoW to control our transactions, made the system easier to reason
+about.
+
 [role="less_space nobreakinside"]
 .Case Study: Layering an Overgrown System
 ********************************************************************************
@@ -142,26 +162,6 @@ The resulting command handlers were _long_ and messy, but we'd made a start at
 introducing order to the chaos.
 ********************************************************************************
 
-Our goal is to create a single function or class for each of these supported
-operations that deals with _orchestrating_ the work to be done. Each use case
-should do the following:
-
-* Start its own database transaction if needed
-* Fetch any required data
-* Check any preconditions (see the Ensure pattern in <<appendix_validation>>)
-* Update the domain model
-* Persist any changes
-
-Each use case should succeed or fail as an atomic unit. You might need to call
-one use case from another. That's OK; just make a note of it, and try to
-avoid long-running database transactions.
-
-NOTE: One of the biggest problems we had was that manager methods called other
-manager methods, and data access could happen from the model objects themselves.
-It was hard to understand what each operation did without going on a treasure hunt across the codebase. Pulling all the logic into a single method, and using
-a UoW to control our transactions, made the system easier to reason
-about.
-
 This is a good opportunity to pull any data-access or orchestration code out of
 the domain model and into the use cases. We should also try to pull I/O
 concerns (e.g., sending email, writing files) out of the domain model and up into
@@ -178,8 +178,8 @@ handling. Once you've done this step, you'll have a grasp of what your program
 actually _does_, and a way to make sure each operation has a clearly defined
 start and finish. We'll have taken a step toward building a pure domain model.
 
-Read _Working Effectively with Legacy Code_ by Michael C. Feathers (Prentice Hall) for guidance on how to get legacy code
-under test and how to start separating responsibilities.
+Read _Working Effectively with Legacy Code_ by Michael C. Feathers (Prentice Hall) for guidance on getting legacy code
+under test and starting separating responsibilities.
 
 
 === Identifying Aggregates and Bounded Contexts
@@ -522,8 +522,13 @@ Rel(ecom, fulfilment, "Sends orders", "xml-rpc")
 Practically, this was a several month-long project. Our first step was to write a
 domain model that could represent batches, shipments, and products. We used TDD
 to build a toy system that could answer a single question: "If I want N units of
-HAZARDOUS_RUG, how long will they take to be delivered?"
+pass:[<span class="keep-together">HAZARDOUS_RUG</span>], how long will they take to be delivered?"
 
+TIP: When deploying an event-driven system, start with a "walking skeleton."
+    Deploying a system that just logs its input forces us to tackle all the
+    infrastructural questions and start working in production.
+
+[role="nobreakinside less_space"]
 .Case Study: Carving Out a Microservice to Replace a Domain
 ********************************************************************************
 MADE.com started out with _two_ monoliths: one for the frontend ecommerce
@@ -568,10 +573,6 @@ the "Hello World" of event-driven architecture. It forced us to deploy a message
 bus, hook up a producer and consumer, build a deployment pipeline, and write a
 simple message handler.
 
-TIP: When deploying an event-driven system, start with a "walking skeleton."
-    Deploying a system that just logs its input forces us to tackle all the
-    infrastructural questions and start working in production.
-
 Given a deployment pipeline, the infrastructure we needed, and a basic domain
 model, we were off. A couple months later, we were in production and serving
 real customers.((("Strangler pattern, going to microservices via", startref="ix_Strang")))((("microservices", "event-driven approach, using Strangler pattern", startref="ix_mcroevntSp")))((("event-driven architecture", "going to microservices via Strangler pattern", startref="ix_evntgo")))
@@ -588,6 +589,7 @@ Business stakeholders speak about the system in abstract, process-focused terms,
 while developers are forced to speak about the system as it physically exists in
 its wild and chaotic state.
 
+[role="nobreakinside less_space"]
 .Case Study: The User Model
 ********************************************************************************
 We mentioned earlier that the account and user model in our first system were
@@ -632,7 +634,7 @@ line model. You can treat this as a lunchtime workshop, or as a spike at the
 beginning of a project. Once you can demonstrate the value of modeling, it's
 easier to make the argument for structuring the project to optimize for modeling.
 
-
+[role="nobreakinside less_space"]
 .Case Study: David Seddon on Taking Small Steps
 *******************************************************************************
 _Hi, I'm David, one of the tech reviewers on this book. I've worked on

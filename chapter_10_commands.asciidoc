@@ -16,13 +16,13 @@ message bus but with slightly different rules.
 [TIP]
 ====
 The code for this chapter is in the
-https://oreil.ly/U_VGa[chapter_10_commands] branch on GitHub:
+chapter_10_commands branch https://oreil.ly/U_VGa[on GitHub]:
 
 ----
 git clone https://github.com/cosmicpython/code.git
 cd code
 git checkout chapter_10_commands
-# or to code along, check out the previous chapter:
+# or to code along, checkout the previous chapter:
 git checkout chapter_09_all_messagebus
 ----
 ====
@@ -494,7 +494,7 @@ things half-finished.
 WARNING: At some point, regardless of tenacity, we'll have to give up trying to
     process the message. Building reliable systems with distributed messages is
     hard, and we have to skim over some tricky bits. There are pointers to more
-    reference materials in the pass:[<a href="epilogue_1_how_to_get_there_from_here">epilogue</a>].
+    reference materials in the <<epilogue_1_how_to_get_there_from_here, epilogue>>.
 
 
 === Wrap-Up

@@ -22,14 +22,14 @@ Why? Let's find out.
 
 [TIP]
 ====
-The code for this chapter is on GitHub at
-https://oreil.ly/vlnGg[appendix_csvs]:
+The code for this chapter is in the appendix_csvs branch
+https://oreil.ly/vlnGg[on GitHub]:
 
 ----
 git clone https://github.com/cosmicpython/code.git
 cd code
 git checkout appendix_csvs
-# or to code along, check out the previous chapter:
+# or to code along, checkout the previous chapter:
 git checkout chapter_06_uow
 ----
 ====
@@ -115,7 +115,7 @@ raise an error if there's no stock available.
 This gets much harder when we introduce the idea of _concurrency_.((("concurrency"))) Suddenly we
 might be allocating stock for multiple order lines simultaneously. We might
 even be allocating order lines at the same time as processing changes to the
-batches themselves.
+batches pass:[<span class="keep-together">themselves</span>].
 
 We usually solve this problem by applying _locks_ to our database tables. This
 prevents two operations from happening simultaneously on the same row or same
@@ -358,16 +358,6 @@ class Product:
 // IDEA (hynek): random nitpick: exceptions denoting errors should be
 // named *Error.  Are you doing this to save space in the listing?
 
-
-NOTE: This `Product` might not look like what you'd expect a `Product`
-    model to look like.  No price, no description, no dimensions.
-    Our allocation service doesn't care about any of those things.
-    This is the((("bounded contexts", "product concept and"))) power of bounded contexts; the concept
-    of a product in one app can be very different from another.
-    See the following sidebar for more
-    discussion.
-
-
 //IDEA: talk about magic methods on aggregates maybe?  ie, a non-aggregate entity
 //      might have a __hash__ so that we can put it into a set, but because you
 //      are never supposed to have a collection of aggregates, they could return
@@ -411,6 +401,16 @@ elsewhere. The Fowler link at the start of this sidebar is a good starting point
 (or indeed, any) DDD book will have a chapter or more on bounded contexts.((("aggregates", "choosing an aggregrate", startref="ix_aggch")))
 
 *******************************************************************************
+
+
+NOTE: This `Product` might not look like what you'd expect a `Product`
+    model to look like.  No price, no description, no dimensions.
+    Our allocation service doesn't care about any of those things.
+    This is the((("bounded contexts", "product concept and"))) power of bounded contexts; the concept
+    of a product in one app can be very different from another.
+    See the following sidebar for more
+    discussion.
+
 
 
 === One Aggregate = One Repository
@@ -581,7 +581,7 @@ rules such that only one of them is allowed to `commit` the new `Product`
 with `version=4`, and the other update is rejected.((("transactions", "concurrent, attempting update on Product")))
 
 [[version_numbers_sequence_diagram]]
-.Sequence diagram: two transactions attempting a concurrent update on `Product`
+.Sequence diagram: two transactions attempting a concurrent update on pass:[<code><span class="keep-together">Product</span></code>]
 image::images/apwp_0704.png[]
 [role="image-source"]
 ----
@@ -618,7 +618,7 @@ What we've implemented here is called _optimistic_ concurrency control because
 our default assumption is that everything will be fine when two users want to
 make changes to the database. We think it's unlikely that they will conflict
 with each other, so we let them go ahead and just make sure we have a way to
-notice if there is a problem.
+notice if there is a pass:[<span class="keep-together">problem</span>].
 
 _Pessimistic_ concurrency control((("pessimistic concurrency"))) works under the assumption that two users
 are going to cause conflicts, and we want to prevent conflicts in all cases, so
@@ -863,7 +863,7 @@ read1, write1, read2, write2(succeed)
 ----
 
 Some people refer to ((("read-modify-write failure mode")))this as the "read-modify-write" failure mode.((("PostgresSQL", "Anti-Patterns: Read-Modify-Write Cycles")))
-Read https://oreil.ly/uXeZI["PostgreSQL Anti-Patterns: Read-Modify-Write Cycles"] for a good overview.
+Read https://oreil.ly/uXeZI["PostgreSQL Anti-Patterns: Read-Modify-Write Cycles"] for a good pass:[<span class="keep-together">overview</span>].
 
 //TODO maybe better diagrams here?
 

@@ -39,13 +39,13 @@ image::images/apwp_0801.png[]
 [TIP]
 ====
 The code for this chapter is in the
-https://oreil.ly/M-JuL[chapter_08_events_and_message_bus] branch on GitHub:
+chapter_08_events_and_message_bus branch https://oreil.ly/M-JuL[on GitHub]:
 
 ----
 git clone https://github.com/cosmicpython/code.git
 cd code
 git checkout chapter_08_events_and_message_bus
-# or to code along, check out the previous chapter:
+# or to code along, checkout the previous chapter:
 git checkout chapter_07_aggregate
 ----
 ====
@@ -377,7 +377,7 @@ multiple processes--which may be different containers within the same
 service, or totally different microservices.
 
 If you follow us in this approach, your API for distributing tasks
-is your event pass:[<span class="keep-together">classes--</span>]or a JSON representation of them. This allows
+is your event pass:[<span class="keep-together">classes—</span>]or a JSON representation of them. This allows
 you a lot of flexibility in who you distribute tasks to; they need not
 necessarily be Python services. Celery's API for distributing tasks is
 essentially "function name plus arguments," which is more restrictive,
@@ -763,9 +763,9 @@ should I do if I need to change multiple aggregates as part of a request?" Now
 we have the tools we need to answer that question.((("aggregates", "changing multiple aggregates in a request")))
 
 If we have two things that can be transactionally isolated (e.g., an order and a
-product), then we can make them _eventually consistent_ by using events. When an
+pass:[<span class="keep-together">product</span>]), then we can make them _eventually consistent_ by using events. When an
 order is canceled, we should find the products that were allocated to it
-and remove the allocations.
+and remove the pass:[<span class="keep-together">allocations</span>].
 
 [role="nobreakinside less_space"]
 .Domain Events and the Message Bus Recap

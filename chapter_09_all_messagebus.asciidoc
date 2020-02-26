@@ -22,13 +22,13 @@ image::images/apwp_0902.png[]
 [TIP]
 ====
 The code for this chapter is in the
-https://oreil.ly/oKNkn[chapter_09_all_messagebus] branch on GitHub:
+chapter_09_all_messagebus branch https://oreil.ly/oKNkn[on GitHub]:
 
 ----
 git clone https://github.com/cosmicpython/code.git
 cd code
 git checkout chapter_09_all_messagebus
-# or to code along, check out the previous chapter:
+# or to code along, checkout the previous chapter:
 git checkout chapter_08_events_and_message_bus
 ----
 ====
@@ -692,7 +692,7 @@ NOTE: We're adding a query to our repository to make this use case easier to
 implement.((("aggregates", "query on repository returning single aggregate"))) So long as our query is returning a single aggregate, we're not
 bending any rules. If you find yourself writing complex queries on your
 repositories, you might want to consider a different design. Methods like `get_most_popular_products` or `find_products_by_order_id` in particular would
-definitely trigger our spidey sense. <<chapter_11_external_events>> and the pass:[<a href="epilogue_1_how_to_get_there_from_here">epilogue</a>] have some tips on managing complex queries.
+definitely trigger our spidey sense. <<chapter_11_external_events>> and the <<epilogue_1_how_to_get_there_from_here, epilogue>> have some tips on managing complex queries.
 
 ==== A New Method on the Domain Model
 
