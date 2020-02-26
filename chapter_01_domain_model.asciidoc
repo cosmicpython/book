@@ -182,31 +182,22 @@ conversation with our domain experts about allocation.
 [[allocation_notes]]
 .Some Notes on Allocation
 ****
-A _product_ is identified by a _SKU_, pronounced "skew," which is short for
-  _stock-keeping unit_.
-
-_Customers_ place _orders_. An order is identified by an _order reference_
-  and comprises multiple _order lines_, where each line has a _SKU_ and a
-  _quantity_. For example:
+A _product_ is identified by a _SKU_, pronounced "skew," which is short for _stock-keeping unit_. _Customers_ place _orders_. An order is identified by an _order reference_
+and comprises multiple _order lines_, where each line has a _SKU_ and a _quantity_. For example:
 
 - 10 units of RED-CHAIR
 - 1 unit of TASTELESS-LAMP
 
-The purchasing department orders small _batches_ of stock. A _batch_ of stock
-  has a unique ID called a _reference_, a _SKU_, and a _quantity_.
+The purchasing department orders small _batches_ of stock. A _batch_ of stock has a unique ID called a _reference_, a _SKU_, and a _quantity_.
 
 We need to _allocate_ _order lines_ to _batches_. When we've allocated an
-  order line to a batch, we will send stock from that specific batch to the
-  customer's delivery address.
-
-When we allocate _x_ units of stock to a batch, the _available quantity_ is
-  reduced by _x_. For example:
+order line to a batch, we will send stock from that specific batch to the
+customer's delivery address. When we allocate _x_ units of stock to a batch, the _available quantity_ is reduced by _x_. For example:
 
 - We have a batch of 20 SMALL-TABLE, and we allocate an order line for 2 SMALL-TABLE.
 - The batch should have 18 SMALL-TABLE remaining.
 
-We can't allocate to a batch if the available quantity is less than the
-  quantity of the order line. For example:
+We can't allocate to a batch if the available quantity is less than the quantity of the order line. For example:
 
 - We have a batch of 1 BLUE-CUSHION, and an order line for 2 BLUE-CUSHION.
 - We should not be able to allocate the line to the batch.
@@ -217,11 +208,7 @@ We can't allocate the same line twice. For example:
 - If we allocate the order line again to the same batch, the batch should still
   have an available quantity of 8.
 
-Batches have an _ETA_ if they are currently shipping, or they may be in
-  _warehouse stock_.
-
-We allocate to warehouse stock in preference to shipment batches.
-We allocate to shipment batches in order of which has the earliest ETA.
+Batches have an _ETA_ if they are currently shipping, or they may be in _warehouse stock_. We allocate to warehouse stock in preference to shipment batches. We allocate to shipment batches in order of which has the earliest ETA.
 ****
 
 [role="pagebreak-before less_space"]

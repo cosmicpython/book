@@ -59,7 +59,6 @@ bottom-up development and start to think about storage and databases.
 When we build our first API endpoint, we know we're going to have
 some code that looks more or less like the following.
 
-[role="pagebreak-before less_space"]
 [[api_endpoint_pseudocode]]
 .What our first API endpoint will look like
 ====
@@ -274,7 +273,6 @@ to define your schema separately, and an explicit _mapper_ for how to convert
 between the schema and our domain model, what SQLAlchemy calls a
 https://oreil.ly/ZucTG[classical mapping]:
 
-[role="pagebreak-before less_space"]
 [[sqlalchemy_classical_mapper]]
 .Explicit ORM mapping with SQLAlchemy Table objects (orm.py)
 ====
