@@ -91,7 +91,7 @@ service, in separate transactions. Once again, our message bus helps us to
 enforce the single responsibility principle, and it allows us to make choices about
 transactions and data integrity.
 
-[role="pagebreak-before less_space”]
+[role="pagebreak-before less_space"]
 ==== Imagining an Architecture Change: Everything Will Be an pass:[<span class="keep-together">Event Handler</span>]
 
 But before we jump in, think about where we're headed. ((("events and the message bus", "transforming our app into message processor", "imagined architecture, everything will be an event handler")))((("event handlers", "imagined architecture in which everything is an event handler"))) There are two
