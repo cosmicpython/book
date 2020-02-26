@@ -88,10 +88,9 @@ In <<coupling_illustration2>>, though, we have reduced the degree of coupling by
 new, simpler abstraction. Because it is simpler, system A has fewer
 kinds of dependencies on the abstraction. The abstraction serves to
 protect us from change by hiding away the complex details of whatever system B
-does--we can change the arrows on the right without changing the ones on the
-left.
+does—we can change the arrows on the right without changing the ones on the left.
 
-[role="pagebreak-before less_space”]
+[role="pagebreak-before less_space"]
 === Abstracting State Aids Testability
 
 Let's see an example.((("testing", "abstracting state to aid testability", id="ix_tstabs")))((("abstractions", "abstracting state to aid testability", id="ix_absstate")))((("state", "abstracting to aid testability", id="ix_stateabs")))((("filesystems", "writing code to synchronize source and target directories", id="ix_filesync"))) Imagine we want to write code for synchronizing two
