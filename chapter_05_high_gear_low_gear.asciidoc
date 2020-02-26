@@ -359,7 +359,7 @@ def allocate(
 
 NOTE: Should you write a new service just because it would help remove
     dependencies from your tests?  Probably not.  But in this case, we
-    almost definitely would need an `add_batch` service one day anyway.
+    almost definitely would need an `add_batch` service one day pass:[<span class="keep-together">anyway</span>].
 
 That now allows us to rewrite _all_ of our service-layer tests purely
 in terms of the services themselves, using only primitives, and without
