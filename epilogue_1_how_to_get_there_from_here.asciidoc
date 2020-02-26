@@ -254,12 +254,11 @@ NOTE: We talked about the infamous `SELECT N+1` problem in <<chapter_11_external
 we might choose to use different techniques when reading data for queries versus
 reading data for commands.
 
-Mostly we did this by replacing direct references with identifiers:
+Mostly we did this by replacing direct references with identifiers.
 
-Before:
+Before aggregates:
 
 [[aggregates_before]]
-.Before aggregates
 image::images/apwp_ep02.png[]
 [role="image-source"]
 ----
@@ -342,9 +341,8 @@ User --> Account
 
 ----
 
-After:
+After modeling with aggregates:
 [[aggregates_after]]
-.After modeling with aggregates
 image::images/apwp_ep03.png[]
 [role="image-source"]
 ----
@@ -766,13 +764,13 @@ I'm using Django. Can I still do this?::
 OK, so we've given you a whole bunch of new toys to play with. Here's the
 fine print.((("questions from tech reviewers", startref="ix_qstTR"))) Harry and Bob do not recommend that you copy and paste our code into
 a production system and rebuild your automated trading platform on Redis
-pub-sub. For reasons of brevity and simplicity, we've hand-waved a lot of tricky
+pub/sub. For reasons of brevity and simplicity, we've hand-waved a lot of tricky
 subjects. Here's a list of things we think you should know before trying this
 for real.
 
 Reliable((("messaging", "reliable messaging is hard"))) messaging is hard::
 
-Redis `PUB/SUB` is not reliable and shouldn't be used as a general-purpose
+Redis pub/sub is not reliable and shouldn't be used as a general-purpose
 messaging tool. We picked it because it's familiar and easy to run. At MADE, we
 run Event Store as our messaging tool, but we've had experience with RabbitMQ and
 Amazon EventBridge.
@@ -799,7 +797,7 @@ This is a key technique for building reliability, because it enables us to
 safely retry events when they fail.
 
 There's a lot of good material on idempotent message handling, try starting
-with https://oreil.ly/yERzR["How to Ensure Idempotency in an Eventual Consistent DDD/CQRS Application"] and https://oreil.ly/Ekuhi["(Un) Reliability in Messaging"].
+with https://oreil.ly/yERzR["How to Ensure Idempotency in an Eventual Consistent DDD/CQRS Application"] and https://oreil.ly/Ekuhi["(Un)Reliability in Messaging"].
 
 Your events ((("events", "changing schema over time")))will need to change their schema over time::
 
