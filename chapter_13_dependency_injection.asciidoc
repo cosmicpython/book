@@ -19,6 +19,13 @@ for our purposes.((("composition root")))
 a bootstrapper: the entrypoints do a lot of initialization and passing around
 of our main dependency, the UoW.
 
+[TIP]
+====
+If you haven't already, it's worth reading <<chapter_03_abstractions>>
+    before continuing with this chapter, particularly the discussion of
+    functional versus object-oriented dependency management.
+====
+
 [[bootstrap_chapter_before_diagram]]
 .Without bootstrap: entrypoints do a lot
 image::images/apwp_1301.png[]
@@ -52,13 +59,6 @@ git checkout chapter_12_cqrs
 ----
 ====
 
-
-[TIP]
-====
-If you haven't already, it's worth reading <<chapter_03_abstractions>>
-    before continuing with this chapter, particularly the discussion of
-    functional versus object-oriented dependency management.
-====
 
 For our database dependency, we've built a careful framework of explicit
 dependencies and easy options for overriding them in tests. Our main handler
