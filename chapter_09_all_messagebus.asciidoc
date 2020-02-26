@@ -792,7 +792,7 @@ test: instead of checking all the side effects, we just check that
 `BatchQuantityChanged` leads to `AllocationRequired` if the quantity drops
 below the total already ((("reallocation", "testing in isolation using fake message bus")))allocated:
 
-[role="pagebreak-before less_space"]
+[role="nobreakinside less_space"]
 [[test_handler_in_isolation]]
 .Testing reallocation in isolation (tests/unit/test_handlers.py)
 ====
