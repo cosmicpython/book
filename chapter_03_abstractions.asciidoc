@@ -262,6 +262,7 @@ We can definitely refactor these tests (some of the cleanup could go into pytest
 fixtures, for example) but as long as we're doing filesystem operations, they're
 going to stay slow and be hard to read and write.((("filesystems", "writing code to synchronize source and target directories", startref="ix_filesync")))((("state", "abstracting to aid testability", startref="ix_stateabs")))((("testing", "abstracting state to aid testability", startref="ix_tstabs")))((("abstractions", "abstracting state to aid testability", startref="ix_absstate")))
 
+[role="pagebreak-before less_space"]
 === Choosing the Right Abstraction(s)
 
 What could we do to rewrite our code to make it more testable?((("filesystems", "writing code to synchronize source and target directories", "choosing right abstraction", id="ix_filesyncabs")))((("abstractions", "choosing right abstraction", id="ix_abscho")))
