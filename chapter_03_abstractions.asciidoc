@@ -10,7 +10,7 @@ abstraction?  What do we want from abstractions?  And how do they relate to test
 [TIP]
 ====
 The code for this chapter is in the
-https://github.com/cosmicpython/code/tree/appendix_project_structure[chapter_03_abstractions] branch on GitHub.
+https://github.com/cosmicpython/code/tree/appendix_project_structure[chapter_03_abstractions] branch on GitHub:
 
 ----
 git clone https://github.com/cosmicpython/code.git
@@ -22,7 +22,7 @@ git checkout chapter_03_abstractions
 A key theme in this book, hidden among the fancy patterns, is that we can use
 simple abstractions to hide messy details.((("katas"))) When we're writing code for fun, or
 in a kata,footnote:[A code kata is a small, contained programming challenge often
-used to practice TDD. See https://oreil.ly/vhjju[Kata—The Only Way to Learn TDD].]
+used to practice TDD. See https://oreil.ly/vhjju["Kata—The Only Way to Learn TDD"] by Peter Provost.]
 we get to play with ideas freely, hammering things out and refactoring
 aggressively. In a large-scale system, though, we become constrained by the
 decisions made elsewhere in the system.
