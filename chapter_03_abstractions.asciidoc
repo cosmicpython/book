@@ -287,8 +287,8 @@ interfaces, that's what we're trying to define here.]
 
 NOTE: In this chapter, we're refactoring some gnarly code into a more testable
     structure by identifying the separate tasks that need to be done and giving
-    each task to a clearly defined actor, along similar lines to the `duckduckgo`
-    example.
+    each task to a clearly defined actor, along similar lines to <<ddg_example, the `duckduckgo`
+    example>>.
 
 For steps 1 and 2, we've already intuitively started using an abstraction, a
 dictionary of hashes to paths.((("hashing a file", "dictionary of hashes to paths")))((("dictionaries", "for filesystem operations"))) You may already have been thinking, "Why not build up a dictionary for the destination folder as well as the source, and

@@ -14,8 +14,6 @@ but hopefully we can make the argument that it's not _totally_ unreasonable.
 The code for this chapter is in the
 https://oreil.ly/YbWGT[chapter_12_cqrs] branch on GitHub.
 
-First, though, why bother?
-
 ----
 git clone https://github.com/cosmicpython/code.git
 cd code
@@ -29,6 +27,7 @@ git checkout chapter_11_external_events
 .Separating reads from writes
 image::images/apwp_1201.png[]
 
+First, though, why bother?
 
 === Domain Models Are for Writing
 
@@ -189,8 +188,7 @@ NOTE: When building APIs, we can apply the same design technique by returning a
     but the logical separation of work into a write phase and a query phase.
 
 As you'll see, we can use the CQS principle to make our systems faster and more
-scalable, but first, let's fix the CQS violation in our existing code. A few
-chapters ago, we introduced an `allocate` endpoint that takes an order and
+scalable, but first, let's fix the CQS violation in our existing code. Ages ago, we introduced an `allocate` endpoint that takes an order and
 calls our service layer to allocate some stock. At the end of the call, we
 return a 200 OK and the batch ID. That's led to some ugly design flaws so that
 we can get the data we need. Let's change it to return a simple OK message and
@@ -335,11 +333,11 @@ at least one integration test.  Something like this:
 def test_allocations_view(sqlite_session_factory):
     uow = unit_of_work.SqlAlchemyUnitOfWork(sqlite_session_factory)
     messagebus.handle(commands.CreateBatch('sku1batch', 'sku1', 50, None), uow)  #<1>
-    messagebus.handle(commands.CreateBatch('sku2batch', 'sku2', 50, date.today()), uow)
+    messagebus.handle(commands.CreateBatch('sku2batch', 'sku2', 50, today()), uow)
     messagebus.handle(commands.Allocate('order1', 'sku1', 20), uow)
     messagebus.handle(commands.Allocate('order1', 'sku2', 20), uow)
     # add a spurious batch and order to make sure we're getting the right ones
-    messagebus.handle(commands.CreateBatch('sku1batch-later', 'sku1', 50, date.today()), uow)
+    messagebus.handle(commands.CreateBatch('sku1batch-later', 'sku1', 50, today()), uow)
     messagebus.handle(commands.Allocate('otherorder', 'sku1', 30), uow)
     messagebus.handle(commands.Allocate('otherorder', 'sku2', 10), uow)
 
@@ -851,7 +849,7 @@ to Redis), and see which you prefer.
 
 | Use hand-rolled SQL
 | Offers fine control over performance with a standard query syntax.
-| Changes to KU schema have to be made to your hand-rolled queries _and_ your
+| Changes to DB schema have to be made to your hand-rolled queries _and_ your
   ORM definitions. Highly normalized schemas may still have performance
   limitations.
 

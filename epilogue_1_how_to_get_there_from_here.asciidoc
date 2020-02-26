@@ -689,6 +689,8 @@ right—and others will too._
 
 === Questions Our Tech Reviewers Asked That We Couldn't Work into Prose
 
+Here are some questions we heard during drafting that we couldn't find a good place to address elsewhere in the book:
+
 Do I need to do all of this at once?((("stakeholders, convinging to try something new", startref="ix_stkhld")))((("questions from tech reviewers", id="ix_qstTR"))) Can I just do a bit at a time?::
 No, you can absolutely adopt these techniques bit by bit. If you have an existing system, we recommend building a service layer to try to keep orchestration in one place. Once you have that, it's much easier to push logic into the model and push edge concerns like validation or error handling to the entrypoints.
 +

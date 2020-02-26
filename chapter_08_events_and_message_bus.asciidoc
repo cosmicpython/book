@@ -715,6 +715,47 @@ The magic words "When X, then Y" often tell us about an event that we can make
 concrete in our system. Treating events as first-class things in our model helps
 us make our code more testable and observable, and it helps isolate concerns.
 
+And <<chapter_08_events_and_message_bus_tradeoffs>> shows ((("events and the message bus", "pros and cons or trade-offs")))((("message bus", "pros and cons or trade-offs")))the trade-offs as we
+see them.
+
+[[chapter_08_events_and_message_bus_tradeoffs]]
+[options="header"]
+.Domain events: the trade-offs
+|===
+|Pros|Cons
+a|
+* A message bus gives us a nice way to separate responsibilities when we have
+  to take multiple actions in response to a request.
+
+* Event handlers are nicely decoupled from the "core" application logic,
+  making it easy to change their implementation later.
+
+* Domain events are a great way to model the real world, and we can use them
+  as part of our business language when modeling with stakeholders.
+
+a|
+
+* The message bus is an additional thing to wrap your head around; the implementation
+  in which the unit of work raises events for us is _neat_ but also magic. It's not
+  obvious when we call `commit` that we're also going to go and send email to
+  people.
+
+* What's more, that hidden event-handling code executes _synchronously_,
+  meaning your service-layer function((("synchronous execution of event-handling code")))
+  doesn't finish until all the handlers for any events are finished. That
+  could cause unexpected performance problems in your web endpoints
+  (adding asynchronous processing is possible but makes things even _more_ confusing).
+
+* More generally, event-driven workflows can be confusing because after things
+  are split across a chain of multiple handlers, there is no single place
+  in the system where you can understand how a request will be fulfilled.
+
+* You also open yourself up to((("dependencies", "circular dependencies between event handlers"))) the possibility of circular dependencies between your
+  event handlers, and infinite loops.((("events and the message bus", startref="ix_evntMB")))
+
+a|
+|===
+
 Events are useful for more than just sending email, though. In <<chapter_05_high_gear_low_gear>> we
 spent a lot of time convincing you that you should define aggregates, or
 boundaries where we guarantee consistency. People often ask, "What
@@ -722,12 +763,9 @@ should I do if I need to change multiple aggregates as part of a request?" Now
 we have the tools we need to answer that question.((("aggregates", "changing multiple aggregates in a request")))
 
 If we have two things that can be transactionally isolated (e.g., an order and a
-product), then we can make them _ by using events. When an
+product), then we can make them _eventually consistent_ by using events. When an
 order is canceled, we should find the products that were allocated to it
 and remove the allocations.
-
-In <<chapter_09_all_messagebus>>, we'll look at this idea in more
-detail as we build a more complex workflow with our new message bus.
 
 [role="nobreakinside less_space"]
 .Domain Events and the Message Bus Recap
@@ -763,43 +801,6 @@ Option 3: UoW collects events from aggregates and passes them to message bus::
     and easy to use once it's set up.
 *****************************************************************
 
-And <<chapter_08_events_and_message_bus_tradeoffs>> shows ((("events and the message bus", "pros and cons or trade-offs")))((("message bus", "pros and cons or trade-offs")))the trade-offs as we
-see them.
+In <<chapter_09_all_messagebus>>, we'll look at this idea in more
+detail as we build a more complex workflow with our new message bus.
 
-[[chapter_08_events_and_message_bus_tradeoffs]]
-[options="header"]
-.Domain events: the trade-offs
-|===
-|Pros|Cons
-a|
-* A message bus gives us a nice way to separate responsibilities when we have
-  to take multiple actions in response to a request.
-
-* Event handlers are nicely decoupled from the "core" application logic,
-  making it easy to change their implementation later.
-
-* Domain events are a great way to model the real world, and we can use them
-  as part of our business language when modeling with stakeholders.
-
-a|
-
-* The message bus is an additional thing to wrap your head around; the implementation
-  in which the unit of work raises events for us is _neat_ but also magic. It's not
-  obvious when we call `commit` that we're also going to go and send email to
-  people.
-
-* What's more, that hidden event-handling code executes _synchronously_,
-  meaning your service-layer function((("synchronous execution of event-handling code")))
-  doesn't finish until all the handlers for any events are finished. That
-  could cause unexpected performance problems in your web endpoints
-  (adding asynchronous processing is possible but makes things even _ confusing).
-
-* More generally, event-driven workflows can be confusing because after things
-  are split across a chain of multiple handlers, there is no single place
-  in the system where you can understand how a request will be fulfilled.
-
-* You also open yourself up to((("dependencies", "circular dependencies between event handlers"))) the possibility of circular dependencies between your
-  event handlers, and infinite loops.((("events and the message bus", startref="ix_evntMB")))
-
-a|
-|===

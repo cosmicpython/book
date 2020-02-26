@@ -371,7 +371,7 @@ def test_change_batch_quantity_leading_to_reallocation():
     orderid, sku = random_orderid(), random_sku()
     earlier_batch, later_batch = random_batchref('old'), random_batchref('newer')
     api_client.post_to_add_batch(earlier_batch, sku, qty=10, eta='2011-01-02')  #<2>
-    api_client.post_to_add_batch(later_batch, sku, qty=10, eta='2011-01-02')  #<2>
+    api_client.post_to_add_batch(later_batch, sku, qty=10, eta='2011-01-02')
     response = api_client.post_to_allocate(orderid, sku, 10)  #<2>
     assert response.json()['batchref'] == earlier_batch
 
@@ -548,7 +548,7 @@ HANDLERS = {
 Publishing the event((("Redis pub/sub channel, using for microservices integration", "testing pub/sub model", "publishing outgoing event"))) uses our helper function from the Redis wrapper:
 
 [[publish_event_handler]]
-.Publish to Tedis (src/allocation/service_layer/handlers.py)
+.Publish to Redis (src/allocation/service_layer/handlers.py)
 ====
 [source,python]
 ----
@@ -611,9 +611,6 @@ and modify.
 ++++
 
 <<chapter_11_external_events_tradeoffs>> shows some trade-offs to think about.
-More generally, if you're moving from a model of synchronous messaging to an
-async one, you also open up a whole host of problems having to do with message
-reliability and eventual consistency.((("microservices", "event-based integration", "trade-offs"))) Read on to <<footguns>>.
 
 
 [[chapter_11_external_events_tradeoffs]]
@@ -633,4 +630,10 @@ a|
   need thinking through.((("external events", startref="ix_extevnt")))((("event-driven architecture", "using events to integrate microservices", startref="ix_evntarch")))((("microservices", "event-based integration", startref="ix_mcroevnt")))
 
 |===
+
+More generally, if you're moving from a model of synchronous messaging to an
+async one, you also open up a whole host of problems having to do with message
+reliability and eventual consistency.((("microservices", "event-based integration", "trade-offs"))) Read on to <<footguns>>.
+
+
 

@@ -219,7 +219,7 @@ def send_out_of_stock_notification(
 
 But if we do change to declaring all these dependencies explicitly, who will
 inject them, and how? So far, we've really been dealing with only passing the
-UoW around: our tests use `FakeUnitOfWork`, while Flask and Redis event-consumer
+UoW around: our tests use `FakeUnitOfWork`, while Flask and Redis eventconsumer
 entrypoints use the real UoW, and the message bus passes them onto our command
 handlers. If we add real and fake email classes, who will create them and
 pass them on?
@@ -282,7 +282,7 @@ def allocate(
 def bootstrap(..):
     uow = unit_of_work.SqlAlchemyUnitOfWork()
 
-    # then prepares a version of the allocate fn with UoW dependency captured in a closure
+    # prepare a version of the allocate fn with UoW dependency captured in a closure
     allocate_composed = lambda cmd: allocate(cmd, uow)
 
     # or, equivalently (this gets you a nicer stack trace)
@@ -372,7 +372,7 @@ allocate(cmd)
 ====
 
 <1> The class is designed to produce a callable function, so it has a
-    +++<code>call</code>+++ method.
+    +__call__+ method.
 
 <2> But we use the +++<code>init</code>+++ to declare the dependencies it
     requires. This sort of thing will feel familiar if you've ever made

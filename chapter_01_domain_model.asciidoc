@@ -175,34 +175,32 @@ We make sure to express those rules in the business jargon (the _ubiquitous
 language_ in DDD terminology). We choose memorable identifiers for our objects
 so that the examples are easier to talk about.
 
-<<allocation_notes>> shows some notes we might have taken while having a
+pass:[<a data-type="xref" href="#allocation_notes" data-xrefstyle="select:nopage">#allocation_notes</a>] shows some notes we might have taken while having a
 conversation with our domain experts about allocation.
 
 [[allocation_notes]]
-.Some notes on allocation
-|===
-
-a| A _product_ is identified by a _SKU_, pronounced "skew," which is short for
+.Some Notes on Allocation
+****
+A _product_ is identified by a _SKU_, pronounced "skew," which is short for
   _stock-keeping unit_.
 
-a| _Customers_ place _orders_. An order is identified by an _order reference_
+_Customers_ place _orders_. An order is identified by an _order reference_
   and comprises multiple _order lines_, where each line has a _SKU_ and a
   _quantity_. For example:
-
 
 ----
 - 10 units of RED-CHAIR
 - 1 unit of TASTELESS-LAMP
 ----
 
-a| The purchasing department orders small _batches_ of stock. A _batch_ of stock
+The purchasing department orders small _batches_ of stock. A _batch_ of stock
   has a unique ID called a _reference_, a _SKU_, and a _quantity_.
 
-a| We need to _allocate_ _order lines_ to _batches_. When we've allocated an
+We need to _allocate_ _order lines_ to _batches_. When we've allocated an
   order line to a batch, we will send stock from that specific batch to the
   customer's delivery address.
 
-a| When we allocate _x_ units of stock to a batch, the _available quantity_ is
+When we allocate _x_ units of stock to a batch, the _available quantity_ is
   reduced by _x_. For example:
 
 ----
@@ -210,7 +208,7 @@ a| When we allocate _x_ units of stock to a batch, the _available quantity_ is
 - The batch should have 18 SMALL-TABLE remaining.
 ----
 
-a| We can't allocate to a batch if the available quantity is less than the
+We can't allocate to a batch if the available quantity is less than the
   quantity of the order line. For example:
 
 ----
@@ -218,7 +216,7 @@ a| We can't allocate to a batch if the available quantity is less than the
 - We should not be able to allocate the line to the batch.
 ----
 
-a| We can't allocate the same line twice. For example:
+We can't allocate the same line twice. For example:
 
 ----
 - We have a batch of 10 BLUE-VASE, and we allocate an order line for 2 BLUE-VASE.
@@ -226,13 +224,12 @@ a| We can't allocate the same line twice. For example:
   have an available quantity of 8.
 ----
 
-a| Batches have an _ETA_ if they are currently shipping, or they may be in
+Batches have an _ETA_ if they are currently shipping, or they may be in
   _warehouse stock_.
 
-a| We allocate to warehouse stock in preference to shipment batches.
-
-a| We allocate to shipment batches in order of which has the earliest ETA.
-|===
+We allocate to warehouse stock in preference to shipment batches.
+We allocate to shipment batches in order of which has the earliest ETA.
+****
 
 [role="pagebreak-before less_space"]
 .Exercise for the Reader
@@ -411,7 +408,7 @@ implementation:
 
 
 [[domain_model_complete]]
-. The domain model now tracks allocations (model.py)
+.The domain model now tracks allocations (model.py)
 ====
 [source,python]
 [role="non-head"]
@@ -794,7 +791,7 @@ also try to somehow make _that_ attribute read-only.
 
 WARNING: This is tricky territory; you shouldn't modify +++<code>__hash__</code>+++ without
     also modifying +++<code>__eq__</code>+++.  If you're not sure what you're doing,
-    further reading is suggested. https://hynek.me/articles/hashes-and-equality[
+    further reading is suggested. https://oreil.ly/vxkgX[
     "Python Hashes and Equality"] by our tech reviewer Hynek Schlawack is a good place to start.((("unit testing domain models", startref="ix_UTDM")))((("domain modeling", "unit testing domain models", startref="ix_dommodUT")))
 
 

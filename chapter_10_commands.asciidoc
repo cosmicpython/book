@@ -230,9 +230,7 @@ COMMAND_HANDLERS = {
 
 Many developers get uncomfortable at this point and ask, "What happens when an
 event fails to process? ((("events", "events, commands, and error handling", id="ix_evntcmderr")))((("error handling", "events, commands, and", id="ix_errhnd")))((("commands", "events, commands, and error handling", id="ix_cmndeverr")))How am I supposed to make sure the system is in a
-consistent state?"
-
-If we manage to process half of the events during `messagebus.handle` before an
+consistent state?" If we manage to process half of the events during `messagebus.handle` before an
 out-of-memory error kills our process, how do we mitigate problems caused by the
 lost messages?
 
@@ -533,5 +531,5 @@ a|
   This can make the system harder to reason about and requires better monitoring.((("commands", startref="ix_cmnd")))
 |===
 
-
+In <<chapter_11_external_events>> we'll talk about using events as an integration pattern.
 // IDEA: discussion, can events raise commands?

@@ -8,29 +8,10 @@ If the Repository pattern is our abstraction over the idea of persistent storage
 the Unit of Work (UoW) pattern is our abstraction over the idea of _atomic operations_.((("atomic operations"))) It
 will allow us to finally and fully decouple our service layer from the data layer.((("UoW", see="Unit of Work pattern")))
 
-
 <<before_uow_diagram>> shows that, currently, a lot of communication occurs
 across the layers of our infrastructure: the API talks directly to the database
 layer to start a session, it talks to the repository layer to initialize
 `SQLAlchemyRepository`, and it talks to the service layer to ask it to allocate.((("APIs", "without Unit of Work pattern, talking directly to three layers")))((("Unit of Work pattern", "without, API talking directly to three layers")))
-
-[[before_uow_diagram]]
-.Without UoW: API talks directly to three layers
-image::images/apwp_0601.png[]
-
-<<after_uow_diagram>> shows our target state: the Flask API now does only two
-things: it initializes a unit of work, and it invokes a service. The service
-collaborates with the UoW (we like to think of the UoW as being part of the
-service layer), but neither the service function itself nor Flask now needs
-to talk directly to the database.((("Unit of Work pattern", "managing database state")))((("databases", "Unit of Work pattern managing state for")))
-
-
-[[after_uow_diagram]]
-.With UoW: UoW now manages database state
-image::images/apwp_0602.png[]
-
-And we'll do it all using a lovely piece((("context manager"))) of Python syntax, a context manager.
-
 
 [TIP]
 ====
@@ -45,6 +26,23 @@ git checkout chapter_06_uow
 git checkout chapter_04_service_layer
 ----
 ====
+
+[[before_uow_diagram]]
+.Without UoW: API talks directly to three layers
+image::images/apwp_0601.png[]
+
+<<after_uow_diagram>> shows our target state: the Flask API now does only two
+things: it initializes a unit of work, and it invokes a service. The service
+collaborates with the UoW (we like to think of the UoW as being part of the
+service layer), but neither the service function itself nor Flask now needs
+to talk directly to the database.((("Unit of Work pattern", "managing database state")))((("databases", "Unit of Work pattern managing state for")))
+
+[[after_uow_diagram]]
+.With UoW: UoW now manages database state
+image::images/apwp_0602.png[]
+
+And we'll do it all using a lovely piece((("context manager"))) of Python syntax, a context manager.
+
 
 === The Unit of Work Collaborates with the Repository
 
@@ -306,14 +304,14 @@ def test_allocate_returns_allocation():
 ====
 
 <1> `FakeUnitOfWork` and `FakeRepository` are tightly coupled,
-    just like the real `UnitofWork` and Repository classes.
+    just like the real `UnitofWork` and `Repository` classes.
     That's fine because we recognize that the objects are collaborators.
 
 <2> Notice the similarity with the fake `commit()` function
     from `FakeSession` (which we can now get rid of). But it's
     a substantial improvement because we're now faking out
     code that we wrote rather than third-party code. Some
-    people say, https://github.com/testdouble/contributing-tests/wiki/Don%27t-mock-what-you-don%27t-own["Don't mock what you don't own"].
+    people say, https://oreil.ly/0LVj3["Don't mock what you don't own"].
 
 <3> In our tests, we can instantiate a UoW and pass it to
     our service layer, rather than passing a repository and a session.
@@ -616,58 +614,6 @@ Every time you load a new entity from the database, the session begins to _track
 changes to the entity, and when the session is _flushed_, all your changes are
 persisted together. Why do we go to the effort of abstracting away the SQLAlchemy session if it already implements the pattern we want?
 
-For one thing, the Session API is rich and supports operations that we don't
-want or need in our domain. Our `UnitOfWork` simplifies the session to its
-essential core: it can be started, committed, or thrown away.
-
-For another, we're using the `UnitOfWork` to access our `Repository` objects.
-This is a neat bit of developer usability that we couldn't do with a plain
-SQLAlchemy `Session`.
-
-Lastly, we're motivated again by the dependency inversion principle: our
-service layer depends on a thin abstraction, and we attach a concrete
-implementation at the outside edge of the system.((("dependency inversion principle"))) This lines up nicely with
-SQLAlchemy's own
-https://oreil.ly/tS0E0[recommendations]:
-
-[quote, SQLALchemy "Session Basics" Documentation]
-____
-Keep the life cycle of the session (and usually the transaction) separate and
-external. The most comprehensive approach, recommended for more substantial
-applications, will try to keep the details of session, transaction, and
-exception management as far as possible from the details of the program doing
-its work.
-____
-
-
-//IDEA:  not sure where, but we should maybe talk about the option of separating
-// the uow into a uow plus a uowm.
-
-[role="nobreakinside less_space"]
-.Unit of Work Pattern Recap
-*****************************************************************
-The Unit of Work pattern is an abstraction around data integrity::
-    It helps to enforce ((("Unit of Work pattern", "recap of important points")))the consistency of our domain model, and improves
-    performance, by letting us perform a single _flush_ operation at the
-    end of an operation.
-
-It works closely with the Repository and Service Layer patterns::
-    The Unit of Work pattern completes our abstractions over data access by
-    representing atomic updates. Each of our service-layer use cases runs in a
-    single unit of work that succeeds or fails as a block.
-
-This is a lovely case for a context manager::
-    Context managers are an idiomatic way of defining scope in Python. We can use a
-    context manager to automatically roll back our work at the end of a request,
-    which means the system is safe by default.
-
-SQLAlchemy already implements this pattern::
-    We introduce an even simpler abstraction over the SQLAlchemy `Session` object
-    in order to "narrow" the interface between the ORM and our code. This helps
-    to keep us loosely coupled.
-
-*****************************************************************
-
 <<chapter_06_uow_tradeoffs>> discusses ((("Unit of Work pattern", "pros and cons or trade-offs")))some of the trade-offs.
 
 [[chapter_06_uow_tradeoffs]]
@@ -699,3 +645,55 @@ a|
   sticking to what Django or Flask-SQLAlchemy gives you will keep your life
   simpler.((("Unit of Work pattern", startref="ix_UoW")))
 |===
+
+For one thing, the Session API is rich and supports operations that we don't
+want or need in our domain. Our `UnitOfWork` simplifies the session to its
+essential core: it can be started, committed, or thrown away.
+
+For another, we're using the `UnitOfWork` to access our `Repository` objects.
+This is a neat bit of developer usability that we couldn't do with a plain
+SQLAlchemy `Session`.
+
+[role="nobreakinside less_space"]
+.Unit of Work Pattern Recap
+*****************************************************************
+The Unit of Work pattern is an abstraction around data integrity::
+    It helps to enforce ((("Unit of Work pattern", "recap of important points")))the consistency of our domain model, and improves
+    performance, by letting us perform a single _flush_ operation at the
+    end of an operation.
+
+It works closely with the Repository and Service Layer patterns::
+    The Unit of Work pattern completes our abstractions over data access by
+    representing atomic updates. Each of our service-layer use cases runs in a
+    single unit of work that succeeds or fails as a block.
+
+This is a lovely case for a context manager::
+    Context managers are an idiomatic way of defining scope in Python. We can use a
+    context manager to automatically roll back our work at the end of a request,
+    which means the system is safe by default.
+
+SQLAlchemy already implements this pattern::
+    We introduce an even simpler abstraction over the SQLAlchemy `Session` object
+    in order to "narrow" the interface between the ORM and our code. This helps
+    to keep us loosely coupled.
+
+*****************************************************************
+
+Lastly, we're motivated again by the dependency inversion principle: our
+service layer depends on a thin abstraction, and we attach a concrete
+implementation at the outside edge of the system.((("dependency inversion principle"))) This lines up nicely with
+SQLAlchemy's own
+https://oreil.ly/tS0E0[recommendations]:
+
+[quote, SQLALchemy "Session Basics" Documentation]
+____
+Keep the life cycle of the session (and usually the transaction) separate and
+external. The most comprehensive approach, recommended for more substantial
+applications, will try to keep the details of session, transaction, and
+exception management as far as possible from the details of the program doing
+its work.
+____
+
+
+//IDEA:  not sure where, but we should maybe talk about the option of separating
+// the uow into a uow plus a uowm.

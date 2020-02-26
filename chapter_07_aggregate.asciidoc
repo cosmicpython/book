@@ -553,7 +553,7 @@ We have our new aggregate, so we've solved the conceptual problem of choosing
 an object to be in charge of consistency boundaries.((("aggregates", "optimistic concurrency with version numbers", id="ix_aggopticon")))((("optimistic concurrency with version numbers", id="ix_opticonc")))((("concurrency", "optimistic concurrency with version numbers", id="ix_concopt")))  Let's now spend a little
 time talking about how to enforce data integrity at the database level.
 
-NOTE: This section has a lot of implementation details: for example, some of it is Postgres-specific.  But more generally, we're showing one way of managing concurrency issues, but it is just one approach.  Real requirements in this area vary a lot from project to project. You
+NOTE: This section has a lot of implementation details; for example, some of it is Postgres-specific. But more generally, we're showing one way of managing concurrency issues, but it is just one approach. Real requirements in this area vary a lot from project to project. You
     shouldn't expect to be able to copy and paste code from here into production.
 
 We don't want to hold a lock over the entire `batches` table, but how will we
