@@ -358,6 +358,7 @@ In _unit_of_work.py_, `publish_events()` becomes a less active method,
 // (EJ2) at this point _commit() doesn't serve any purpose, so it could be deleted.
 //       unsure if deleting it would be confusing at this point.
 
+[role="pagebreak-before less_space"]
 ==== Our Tests Are All Written in Terms of Events Too
 
 Our tests now operate by creating events ((("events and the message bus", "transforming our app into message processor", "tests writtern to in terms of events")))((("testing", "tests written in terms of events")))and putting them on the
