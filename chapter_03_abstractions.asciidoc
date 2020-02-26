@@ -10,7 +10,7 @@ abstraction?  What do we want from abstractions?  And how do they relate to test
 [TIP]
 ====
 The code for this chapter is in the
-https://oreil.ly/k6MmV[chapter_03_abstractions] branch on GitHub:
+chapter_03_abstractions branch https://oreil.ly/k6MmV[on GitHub]:
 
 ----
 git clone https://github.com/cosmicpython/code.git
@@ -347,7 +347,7 @@ thoroughly without needing to set up a real filesystem.((("testing", "after impl
 of code that has no dependencies on external state and then see how it responds
 when we give it input from the outside world (this kind of approach was characterized
 by Gary Bernhardt as
-https://www.destroyallsoftware.com/screencasts/catalog/functional-core-imperative-shell[Functional
+https://oreil.ly/wnad4[Functional
 Core, Imperative Shell], or FCIS).
 
 Let's start off by splitting the code ((("business logic", "separating from state in code")))((("state", "splitting off from logic in the program")))to separate the stateful parts from
