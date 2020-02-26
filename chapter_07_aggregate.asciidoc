@@ -567,12 +567,6 @@ the `allocations` tables, we force both to also try to update the
 `version_number` in the `products` table, in such a way that only one of them
 can win and the world stays consistent.
 
-TIP: Version numbers are just one way to implement optimistic locking. You
-    could achieve the same thing by setting the Postgres transaction isolation
-    level to `SERIALIZABLE`, but that often comes at a severe performance cost.
-    Version numbers also make implicit concepts explicit.
-
-
 <<version_numbers_sequence_diagram>> illustrates two concurrent
 transactions doing their read operations at the same time, so they see
 a `Product` with, for example, `version=3`.((("Product object", "two transactions attempting concurrent update on")))  They both call `Product.allocate()`
@@ -609,6 +603,12 @@ Database -[#red]>x Transaction2: Error! version is already 4
 
 @enduml
 ----
+
+TIP: Version numbers are just one way to implement optimistic locking. You
+    could achieve the same thing by setting the Postgres transaction isolation
+    level to `SERIALIZABLE`, but that often comes at a severe performance cost.
+    Version numbers also make implicit concepts explicit.
+
 
 [role="nobreakinside less_space"]
 .Optimistic Concurrency Control and Retries

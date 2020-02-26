@@ -791,7 +791,7 @@ test: instead of checking all the side effects, we just check that
 `BatchQuantityChanged` leads to `AllocationRequired` if the quantity drops
 below the total already ((("reallocation", "testing in isolation using fake message bus")))allocated:
 
-
+[role="pagebreak-before less_space"]
 [[test_handler_in_isolation]]
 .Testing reallocation in isolation (tests/unit/test_handlers.py)
 ====
@@ -880,15 +880,15 @@ We use a class-based message bus in <<chapter_13_dependency_injection>>,
 if you need more inspiration.
 *******************************************************************************
 
-
+[role="pagebreak-before less_space"]
 === What Have We Achieved?
 
-* Events are simple dataclasses that define the data structures for inputs,
+Events are simple dataclasses that define the data structures for inputs,
   and internal messages within our system. This is quite powerful from a DDD
   standpoint, since events often translate really well into business language
   (look up __event storming__ if you haven't already).
 
-* Handlers are the way we react to events. They can call down to our
+Handlers are the way we react to events. They can call down to our
   model or call out to external services.  We can define multiple
   handlers for a single event if we want to. Handlers can also raise other
   events. This allows us to be very granular about what a handler does

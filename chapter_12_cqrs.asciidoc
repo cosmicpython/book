@@ -23,11 +23,11 @@ git checkout chapter_11_external_events
 ----
 ====
 
+First, though, why bother?
+
 [[maps_chapter_11]]
 .Separating reads from writes
 image::images/apwp_1201.png[]
-
-First, though, why bother?
 
 === Domain Models Are for Writing
 
@@ -142,6 +142,11 @@ read side, because stale data is essentially unavoidable.
 We can think of these requirements as forming two halves of a system:
 the read side and the((("command-query responsibility segregation (CQRS)", "read side and write side"))) write side, shown in <<read_and_write_table>>.
 
+For the write side, our fancy domain architectural patterns help us to evolve
+our system over time, but the complexity we've built so far doesn't buy
+anything for reading data. The service layer, the unit of work,  and the clever
+domain model are just bloat.
+
 [[read_and_write_table]]
 .Read versus write
 [options="header"]
@@ -151,12 +156,6 @@ the read side and the((("command-query responsibility segregation (CQRS)", "read
 | Cacheability | Highly cacheable | Uncacheable
 | Consistency | Can be stale | Must be transactionally consistent
 |===
-
-
-For the write side, our fancy domain architectural patterns help us to evolve
-our system over time, but the complexity we've built so far doesn't buy
-anything for reading data. The service layer, the unit of work,  and the clever
-domain model are just bloat.
 
 
 === Post/Redirect/Get and CQS
@@ -680,9 +679,7 @@ def remove_allocation_from_read_model(
 ====
 
 
-<<read_model_sequence_diagram>> shows the flow across the two requests: two
-transactions in the POST/write operation, one to update the write model and one
-to update the read model, which the GET/read operation can use.
+<<read_model_sequence_diagram>> shows the flow across the two requests.
 
 [[read_model_sequence_diagram]]
 .Sequence diagram for read model
@@ -722,6 +719,10 @@ Flask -> User: some allocations
 
 @enduml
 ----
+
+In <<read_model_sequence_diagram>>, you can see two
+transactions in the POST/write operation, one to update the write model and one
+to update the read model, which the GET/read operation can use.
 
 [role="nobreakinside less_space"]
 .Rebuilding from Scratch
@@ -833,6 +834,16 @@ to Redis), and see which you prefer.
 
 <<view_model_tradeoffs>> proposes some((("command-query responsibility segregation (CQRS)", "trade-offs for view model options")))((("views", "trade-offs for view model options"))) pros and cons for each of our options.
 
+As it happens, the((("command-query responsibility segregation (CQRS)", "full-blown CQRS versus simpler options"))) allocation service at MADE.com does use "full-blown" CQRS,
+with a read model stored in Redis, and even a second layer of cache provided
+by Varnish. But its use cases are quite a bit different from what
+we've shown here. For the kind of allocation service we're building, it seems
+unlikely that you'd need to use a separate read model and event handlers for
+updating it.
+
+But as your domain model becomes richer and more complex, a simplified read
+model become ever more compelling.
+
 [[view_model_tradeoffs]]
 [options="header"]
 .Trade-offs of various view model options
@@ -867,17 +878,6 @@ to Redis), and see which you prefer.
 //      In my experience, many people react to CQRS with the response that
 //      it's insane/too complex/too-hard and want to fall back to a CRUD hammer.
 //
-
-As it happens, the((("command-query responsibility segregation (CQRS)", "full-blown CQRS versus simpler options"))) allocation service at MADE.com does use "full-blown" CQRS,
-with a read model stored in Redis, and even a second layer of cache provided
-by Varnish. But its use cases are quite a bit different from what
-we've shown here. For the kind of allocation service we're building, it seems
-unlikely that you'd need to use a separate read model and event handlers for
-updating it.
-
-
-But as your domain model becomes richer and more complex, a simplified read
-model become ever more compelling.
 
 Often, your read operations will be acting on the same conceptual objects as your
 write model, so using the ORM, adding some read methods to your repositories,

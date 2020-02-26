@@ -59,10 +59,6 @@ bottom-up development and start to think about storage and databases.
 When we build our first API endpoint, we know we're going to have
 some code that looks more or less like the following.
 
-NOTE: We've used Flask because it's lightweight, but you don't need
-to be a Flask user to understand this book.((("Flask framework"))) In fact, we'll show you how
-to make your choice of framework a minor detail.
-
 [role="pagebreak-before less_space"]
 [[api_endpoint_pseudocode]]
 .What our first API endpoint will look like
@@ -82,6 +78,10 @@ def allocate_endpoint():
     return 201
 ----
 ====
+
+NOTE: We've used Flask because it's lightweight, but you don't need
+to be a Flask user to understand this book.((("Flask framework"))) In fact, we'll show you how
+to make your choice of framework a minor detail.
 
 We'll need a way to retrieve batch info from the database and instantiate our domain
 model objects from it, and we'll also need a way of saving them back to the
@@ -138,9 +138,9 @@ image::images/apwp_0203.png[]
                              +---------------------+
 ----
 
-[role="nobreakinside"]
+[role="nobreakinside less_space"]
 .Is This Ports and Adapters?
-*******************************************************************************
+****
 If you've been reading about architectural patterns, you may be asking
 yourself questions like this:
 
@@ -158,7 +158,7 @@ on the topic.]
 We'll get into some of the nitty-gritty around "depending on abstractions,"
 and whether there is a Pythonic equivalent of interfaces,
 <<depend_on_abstractions,later in the book>>. See also <<what_is_a_port_and_what_is_an_adapter>>.
-*******************************************************************************
+****
 
 
 === Reminder: Our Model
@@ -231,7 +231,7 @@ to database columns?
 
 [role="nobreakinside less_space"]
 .Django's ORM Is Essentially the Same, but More Restrictive
-*******************************************************************************
+****
 
 If you're more((("Django", "ORM example")))((("object-relational mappers (ORMs)", "Django ORM example"))) used to Django, the preceding "declarative" SQLAlchemy snippet
 translates to something like this:
@@ -263,7 +263,7 @@ Django doesn't provide an equivalent for SQLAlchemy's classical mapper,
 but see <<appendix_django>> for examples of how to apply dependency
 inversion and the Repository pattern to Django.
 
-*******************************************************************************
+****
 
 
 

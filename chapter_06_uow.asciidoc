@@ -27,21 +27,21 @@ git checkout chapter_04_service_layer
 ----
 ====
 
-[[before_uow_diagram]]
-.Without UoW: API talks directly to three layers
-image::images/apwp_0601.png[]
-
 <<after_uow_diagram>> shows our target state: the Flask API now does only two
 things: it initializes a unit of work, and it invokes a service. The service
 collaborates with the UoW (we like to think of the UoW as being part of the
 service layer), but neither the service function itself nor Flask now needs
 to talk directly to the database.((("Unit of Work pattern", "managing database state")))((("databases", "Unit of Work pattern managing state for")))
 
+And we'll do it all using a lovely piece((("context manager"))) of Python syntax, a context manager.
+
+[[before_uow_diagram]]
+.Without UoW: API talks directly to three layers
+image::images/apwp_0601.png[]
+
 [[after_uow_diagram]]
 .With UoW: UoW now manages database state
 image::images/apwp_0602.png[]
-
-And we'll do it all using a lovely piece((("context manager"))) of Python syntax, a context manager.
 
 
 === The Unit of Work Collaborates with the Repository

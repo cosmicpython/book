@@ -650,12 +650,6 @@ class FakeUnitOfWork(unit_of_work.AbstractUnitOfWork):
 ----
 ====
 
-You may be starting to worry that maintaining these fakes is going to be a
-maintenance burden. There's no doubt that it is work, but in our experience
-it's not a lot of work. Once your project is up and running, the interface for
-your repository and UoW abstractions really don't change much. And if you're
-using ABCs, they'll help remind you when things get out of sync.
-
 [role="nobreakinside less_space"]
 [[get_rid_of_commit]]
 .Exercise for the Reader
@@ -703,6 +697,12 @@ order to get rid of those Java-y `_commit()` methods too.((("Unit of Work patter
 
 Switching all ((("abstract base classes (ABCs)", "switching to typing.Protocol")))the ABCs to `typing.Protocol` is a good way to force yourself to avoid using inheritance. Let us know if you come up with something nice!
 ******************************************************************************
+
+You might be starting to worry that maintaining these fakes is going to be a
+maintenance burden. There's no doubt that it is work, but in our experience
+it's not a lot of work. Once your project is up and running, the interface for
+your repository and UoW abstractions really don't change much. And if you're
+using ABCs, they'll help remind you when things get out of sync.
 
 === Wrap-Up
 
