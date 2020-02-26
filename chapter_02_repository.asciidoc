@@ -19,7 +19,7 @@ image::images/apwp_0201.png[]
 [TIP]
 ====
 The code for this chapter is in the
-https://oreil.ly/6STDu[chapter_02_repository] branch on GitHub.
+chapter_02_repository branch https://oreil.ly/6STDu[on GitHub].
 
 ----
 git clone https://github.com/cosmicpython/code.git
@@ -523,7 +523,7 @@ unmaintained and, at worst, misleading.((("duck typing"))) In practice we often 
 Python's duck typing to enable abstractions. To a Pythonista, a repository is
 _any_ object that has pass:[<code>add(<em>thing</em>)</code>] and pass:[<code>get(<em>id</em>)</code>] methods.
 
-An alternative to look into is https://www.python.org/dev/peps/pep-0544/[PEP
+An alternative to look into is https://oreil.ly/q9EPC[PEP
 544 protocols]. ((("protocols", "PEP 544")))((("PEP 544 protocols")))These give you typing without the possibility of inheritance,
 which "prefer composition over inheritance" fans will particularly like.
 
