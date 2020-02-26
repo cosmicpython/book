@@ -97,19 +97,19 @@ The following shows a first cut:
 @pytest.mark.usefixtures('restart_api')
 def test_api_returns_allocation(add_stock):
     sku, othersku = random_sku(), random_sku('other')  #<1>
-    batch1 = random_batchref(1)
-    batch2 = random_batchref(2)
-    batch3 = random_batchref(3)
+    earlybatch = random_batchref(1)
+    laterbatch = random_batchref(2)
+    otherbatch = random_batchref(3)
     add_stock([  #<2>
-        (batch1, sku, 100, '2011-01-02'),
-        (batch2, sku, 100, '2011-01-01'),
-        (batch3, othersku, 100, None),
+        (laterbatch, sku, 100, '2011-01-02'),
+        (earlybatch, sku, 100, '2011-01-01'),
+        (otherbatch, othersku, 100, None),
     ])
     data = {'orderid': random_orderid(), 'sku': sku, 'qty': 3}
     url = config.get_api_url()  #<3>
     r = requests.post(f'{url}/allocate', json=data)
     assert r.status_code == 201
-    assert r.json()['batchref'] == batch2
+    assert r.json()['batchref'] == earlybatch
 ----
 ====
 
@@ -544,19 +544,19 @@ the happy path and one((("testing", "end-to-end test of allocate API", "testing 
 @pytest.mark.usefixtures('restart_api')
 def test_happy_path_returns_201_and_allocated_batch(add_stock):
     sku, othersku = random_sku(), random_sku('other')
-    batch1 = random_batchref(1)
-    batch2 = random_batchref(2)
-    batch3 = random_batchref(3)
+    earlybatch = random_batchref(1)
+    laterbatch = random_batchref(2)
+    otherbatch = random_batchref(3)
     add_stock([
-        (batch1, sku, 100, '2011-01-02'),
-        (batch2, sku, 100, '2011-01-01'),
-        (batch3, othersku, 100, None),
+        earlybatch = random_batchref(1)
+        laterbatch = random_batchref(2)
+        otherbatch = random_batchref(3)
     ])
     data = {'orderid': random_orderid(), 'sku': sku, 'qty': 3}
     url = config.get_api_url()
     r = requests.post(f'{url}/allocate', json=data)
     assert r.status_code == 201
-    assert r.json()['batchref'] == batch2
+    assert r.json()['batchref'] == earlybatch
 
 
 @pytest.mark.usefixtures('restart_api')
