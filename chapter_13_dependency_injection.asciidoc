@@ -529,7 +529,7 @@ DRY-Python crew's https://github.com/dry-python/dependencies[dependencies].
 === Message Bus Is Given Handlers at Runtime
 
 Our message bus will no longer be static; it needs to have the already-injected
-handlers given to it.((("message bus", "claass given handlers at runtime"))) So we turn it from being a module into a configurable
+handlers given to it.((("message bus", "class given handlers at runtime"))) So we turn it from being a module into a configurable
 class:
 
 
