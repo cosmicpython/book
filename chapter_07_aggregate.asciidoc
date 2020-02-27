@@ -6,7 +6,7 @@ and constraints, and see how our domain objects can maintain their own
 internal consistency, both conceptually and in persistent storage.((("consistency boundaries")))  We'll
 discuss the concept of a _consistency boundary_ and show how making it
 explicit can help us to build high-performance software without compromising
-maintainability.((("aggregates", "Product aggregate")))((("Product object")))
+maintainability.((("performance", "consistency boundaries and")))((("aggregates", "Product aggregate")))((("Product object")))
 
 <<maps_chapter_06>> shows a preview of where we're headed: we'll introduce
 a new model object called `Product` to wrap multiple batches, and we'll make
@@ -553,7 +553,7 @@ We have our new aggregate, so we've solved the conceptual problem of choosing
 an object to be in charge of consistency boundaries.((("aggregates", "optimistic concurrency with version numbers", id="ix_aggopticon")))((("optimistic concurrency with version numbers", id="ix_opticonc")))((("concurrency", "optimistic concurrency with version numbers", id="ix_concopt")))  Let's now spend a little
 time talking about how to enforce data integrity at the database level.
 
-NOTE: This section has a lot of implementation details; for example, some of it is Postgres-specific. But more generally, we're showing one way of managing concurrency issues, but it is just one approach. Real requirements in this area vary a lot from project to project. You
+NOTE: This section has a lot of implementation details; for example, some of it is Postgres-specific.((("PostgreSQL", "managing concurrency issues"))) But more generally, we're showing one way of managing concurrency issues, but it is just one approach. Real requirements in this area vary a lot from project to project. You
     shouldn't expect to be able to copy and paste code from here into production.
 
 We don't want to hold a lock over the entire `batches` table, but how will we
@@ -605,7 +605,7 @@ Database -[#red]>x Transaction2: Error! version is already 4
 ----
 
 TIP: Version numbers are just one way to implement optimistic locking. You
-    could achieve the same thing by setting the Postgres transaction isolation
+    could achieve the same thing ((("PostgreSQL", "SERIALIZABLE transaction isolation level")))by setting the Postgres transaction isolation
     level to `SERIALIZABLE`, but that often comes at a severe performance cost.
     Version numbers also make implicit concepts explicit.
 
@@ -815,7 +815,7 @@ DEFAULT_SESSION_FACTORY = sessionmaker(bind=create_engine(
 ----
 ====
 
-TIP: Transaction ((("isolation levels (transaction)")))((("Postgres", "documentation for transaction isolation levels")))isolation levels are tricky stuff, so it's worth spending time
+TIP: Transaction ((("isolation levels (transaction)")))((("PostgreSQL", "documentation for transaction isolation levels")))isolation levels are tricky stuff, so it's worth spending time
 understanding https://oreil.ly/5vxJA[the Postgres documentation].footnote:[If you're not using Postgres, you'll need to read different documentation. Annoyingly, different databases all have quite different definitions. Oracle's `SERIALIZABLE` is equivalent to Postgres's `REPEATABLE READ`, for pass:[<span class="keep-together">example</span>].]
 
 ==== Pessimistic Concurrency Control Example: SELECT FOR UPDATE
