@@ -309,7 +309,7 @@ class Product:
 
 
 
-NOTE: We're actually addressing a ((("exceptions", "using for control flow")))((("control flow", "using exceptions for")))code smell we had until now, which is that we were
+NOTE: We're actually addressing a ((("exceptions", "using for control flow")))((("control flow, using exceptions for")))code smell we had until now, which is that we were
     https://oreil.ly/IQB51[using
     exceptions for control flow]. In general, if you're implementing domain
     events, don't raise exceptions to describe the same domain concept.
