@@ -473,7 +473,7 @@ Notice one more thing about our service-layer function:
 def allocate(line: OrderLine, repo: AbstractRepository, session) -> str:
 ----
 
-It depends on a repository.((("abstractions", "AbstractRepository. service function depending on")))((("repositories", "service layer function depending on abstract repository")))  We've chosen to make the dependency explicit,
+It depends on a repository.((("abstractions", "AbstractRepository, service function depending on")))((("repositories", "service layer function depending on abstract repository")))  We've chosen to make the dependency explicit,
 and we've used the type hint to say that we depend on `AbstractRepository`.
 This means it'll work both when the tests give it a `FakeRepository` and
 when the Flask app gives it a `SqlAlchemyRepository`.((("dependencies", "depending on abstractions")))
