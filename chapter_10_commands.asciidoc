@@ -107,7 +107,7 @@ class ChangeBatchQuantity(Command):  #<3>
 
 
 Just changing ((("events", "commands versus", startref="ix_evntcmd")))the names and verbs is all very well, but that won't
-change the behavior of our system. ((("exception handling", "differences for events and commands"))) We want to treat events and commands similarly,
+change the behavior of our system. ((("exception handling, differences for events and commands"))) We want to treat events and commands similarly,
 but not exactly the same.((("message bus", "dispatching events and commands differently")))  Let's see how our message bus changes:
 
 [[messagebus_dispatches_differently]]
