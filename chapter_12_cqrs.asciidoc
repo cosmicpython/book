@@ -751,7 +751,7 @@ data.
 === Changing Our Read Model Implementation Is Easy
 
 Let's see the flexibility that our event-driven model buys us in action,
-by seeing what happens if we ever decide ((("Redis", "changing read model implementation to use")))((("command-query responsibility segregation (CQRS)", "changing read model implementation to use Redis")))we want to implement a read model by
+by seeing what happens if we ever decide ((("Redis, changing read model implementation to use")))((("command-query responsibility segregation (CQRS)", "changing read model implementation to use Redis")))we want to implement a read model by
 using a totally separate storage engine, Redis.
 
 Just watch:
