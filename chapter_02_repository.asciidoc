@@ -5,7 +5,7 @@ It's time to make good on our promise to use the dependency inversion principle 
 a way of decoupling our core logic from infrastructural concerns.
 
 We'll introduce the _Repository_ pattern, a simplifying abstraction over data storage,
-allowing us to decouple our model layer from the data layer.((("data storage", "Repository pattern and")))((("Repository pattern"))) We'll present a
+allowing us to decouple our model layer from the data layer.((("data storage, Repository pattern and")))((("Repository pattern"))) We'll present a
 concrete example of how this simplifying abstraction makes our system more
 testable by hiding the complexities of the database.
 
