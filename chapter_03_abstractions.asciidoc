@@ -242,7 +242,7 @@ def test_when_a_file_has_been_renamed_in_the_source():
 
 Wowsers, that's a lot of setup for two simple cases! The problem is that
 our domain logic, "figure out the difference between two directories," is tightly
-coupled to the I/O code.((("coupling", "domain logic coupled with I/O"))) We can't run our difference algorithm without calling
+coupled to the I/O code.((("I/O", "domain logic tightly coupled to")))((("coupling", "domain logic coupled with I/O"))) We can't run our difference algorithm without calling
 the `pathlib`, `shutil`, and `hashlib` modules.
 
 And the trouble is, even with our current requirements, we haven't written
@@ -343,14 +343,14 @@ That's all very well, but how do we _actually_ write those new((("filesystems", 
 tests, and how do we change our implementation to make it all work?((("abstractions", "implementing chosen abstraction", id="ix_absimpl")))((("filesystems", "writing code to synchronize source and target directories", "implementing chosen abstraction", id="ix_filesyncimp")))
 
 Our goal is to isolate the clever part of our system, and to be able to test it
-thoroughly without needing to set up a real filesystem.((("testing", "after implementing chosen abstraction", id="ix_tstaftabs"))) We'll create a "core"
+thoroughly without needing to set up a real filesystem.((("testing", "after implementing chosen abstraction", id="ix_tstaftabs")))((("Functional Core, Imperative Shell (FCIS)")))((("Bernhardt, Gary"))) We'll create a "core"
 of code that has no dependencies on external state and then see how it responds
 when we give it input from the outside world (this kind of approach was characterized
 by Gary Bernhardt as
 https://oreil.ly/wnad4[Functional
 Core, Imperative Shell], or FCIS).
 
-Let's start off by splitting the code ((("business logic", "separating from state in code")))((("state", "splitting off from logic in the program")))to separate the stateful parts from
+Let's start off by splitting the code ((("business logic", "separating from state in code")))((("state", "splitting off from logic in the program")))((("I/O", "disentangling details from program logic")))to separate the stateful parts from
 the logic:
 
 
