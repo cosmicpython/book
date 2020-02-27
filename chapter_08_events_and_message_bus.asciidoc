@@ -53,7 +53,7 @@ git checkout chapter_07_aggregate
 
 === Avoiding Making a Mess
 
-So. Email alerts when we run out of stock. ((("email", "sending email alerts when out of stock", id="ix_email")))((("events and the message bus", "sending email alerts when out of stock", id="ix_evntMBeml")))When we have new requirements like ones that _really_ have nothing to do with the core domain, it's all too easy to
+So. Email alerts when we run out of stock. ((("email alerts, sending when out of stock", id="ix_email")))((("events and the message bus", "sending email alerts when out of stock", id="ix_evntMBeml")))When we have new requirements like ones that _really_ have nothing to do with the core domain, it's all too easy to
 start dumping these things into our web controllers.((("web controllers", "sending email alters via, avoiding")))
 
 
@@ -167,7 +167,7 @@ def allocate(
 
 Catching an exception and reraising it? It could be worse, but it's
 definitely making us unhappy. Why is it so hard to find a suitable home for
-this code?((("events and the message bus", "sending email alerts when out of stock", startref="ix_evntMBeml")))((("email", "sending email alerts when out of stock", startref="ix_email")))
+this code?((("events and the message bus", "sending email alerts when out of stock", startref="ix_evntMBeml")))((("email alerts, sending when out of stock", startref="ix_email")))
 
 === Single Responsibility Principle
 
