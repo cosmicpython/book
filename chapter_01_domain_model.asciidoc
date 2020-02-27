@@ -542,7 +542,7 @@ Whether you think this is wonderful or appalling is a matter of debate.footnote:
 ==== Dataclasses Are Great for Value Objects
 
 We've used `line` liberally in the previous code listings, but what is a
-line?((("data modeling", "unit testing domain models", "dataclasses for value objects")))((("dataclasses", "use for value objects")))((("value objects", "using dataclasses for"))) In our business language, an _order_ has multiple _line_ items, where
+line?((("data modeling, unit testing domain models", "dataclasses for value objects")))((("dataclasses", "use for value objects")))((("value objects", "using dataclasses for"))) In our business language, an _order_ has multiple _line_ items, where
 each line has a SKU and a quantity. We can imagine that a simple YAML file
 containing order information might look like this:
 
@@ -667,7 +667,7 @@ def multiplying_two_money_values_is_an_error():
 ==== Value Objects and Entities
 
 An order line is uniquely identified by its order ID, SKU, and quantity; if we
-change one of those values, we now have a new line.((("data modeling", "unit testing domain models", "value objects and entities")))((("value objects", "and entities", secondary-sortas="entities"))) That's the definition of a
+change one of those values, we now have a new line.((("data modeling, unit testing domain models", "value objects and entities")))((("value objects", "and entities", secondary-sortas="entities"))) That's the definition of a
 value object: any object that is identified only by its data and doesn't have a
 long-lived identity. What about a batch, though? That _is_ identified by a
 reference.
