@@ -31,7 +31,7 @@ When we're unable to change component A for fear of breaking component B, we say
 that the components ((("coupling")))have become _coupled_. Locally, coupling is a good thing: it's
 a sign that our code is working together, each component supporting the others, all of them
 fitting in place like the gears of a watch. In jargon, we say this works when
-there is high _cohesion_ between the coupled elements.((("cohesion", "high, between coupled elements")))
+there is high _cohesion_ between the coupled elements.((("cohesion, high, between coupled elements")))
 
 Globally, coupling is a nuisance: it increases((("coupling", "disadvantages of"))) the risk and the cost of changing
 our code, sometimes to the point where we feel unable to make any changes at
