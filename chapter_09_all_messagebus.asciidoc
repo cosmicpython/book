@@ -403,7 +403,7 @@ class TestAddBatch:
 [[temporary_ugly_hack]]
 ==== A Temporary Ugly Hack: The Message Bus Has to Return Results
 
-Our API and our service layer currently((("events and the message bus", "transforming our app into message processor", "temporary hack, message bus returning results")))((("messaege bus", "returning results in temporary hack"))) want to know the allocated batch reference
+Our API and our service layer currently((("events and the message bus", "transforming our app into message processor", "temporary hack, message bus returning results")))((("message bus", "returning results in temporary hack"))) want to know the allocated batch reference
 when they invoke our `allocate()` handler. This means we need to put in
 a temporary hack on our message bus to let it return events:
 
