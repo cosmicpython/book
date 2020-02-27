@@ -390,7 +390,7 @@ complex.((("events", "events, commands, and error handling", startref="ix_evntcm
 === Recovering from Errors Synchronously
 
 Hopefully we've convinced you that it's OK for events to fail independently
-from the commands that raised them.((("errors", "recovering from synchronously")))((("commands", "events, commands, and error handling", "recovering from errors synchronously"))) What should we do, then, to make sure we
+from the commands that raised them.((("errors, recovering from synchronously")))((("commands", "events, commands, and error handling", "recovering from errors synchronously"))) What should we do, then, to make sure we
 can recover from errors when they inevitably occur?
 
 The first thing we need is to know _when_ an error has occurred, and for that we
