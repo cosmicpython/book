@@ -257,7 +257,7 @@ do, rather than actually do it.  Or what if we wanted to sync to a remote server
 or to cloud storage?
 
 Our high-level code is coupled to low-level details, and it's making life hard.
-As the scenarios we consider get more complex, our tests will get more unwieldy.
+As the scenarios we consider get more complex, our tests will get more unwieldy.((("pytest", "fixtures")))
 We can definitely refactor these tests (some of the cleanup could go into pytest
 fixtures, for example) but as long as we're doing filesystem operations, they're
 going to stay slow and be hard to read and write.((("filesystems", "writing code to synchronize source and target directories", startref="ix_filesync")))((("state", "abstracting to aid testability", startref="ix_stateabs")))((("testing", "abstracting state to aid testability", startref="ix_tstabs")))((("abstractions", "abstracting state to aid testability", startref="ix_absstate")))
