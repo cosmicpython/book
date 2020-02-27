@@ -707,7 +707,7 @@ using ABCs, they'll help remind you when things get out of sync.
 
 === Wrap-Up
 
-Domain events give us a way to handle workflows in our system.((("events and the message bus", "domain events and message bus wrapup"))) We often find,
+Domain events give us a way to handle workflows in our system. We often find,
 listening to our domain experts, that they express requirements in a causal or
 temporal way—for example, "When we try to allocate stock but there's none
 available, then we should send an email to the buying team."
