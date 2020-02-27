@@ -223,7 +223,7 @@ domain language back in <<chapter_01_domain_model>>.
 
 So the plan is this: when we want to allocate an order line, instead of
 <<before_aggregates_diagram>>, where we look up all the `Batch` objects in
-the world and pass((("batches", "allocate against all batches using domain service")))((("allocate service", "allocating against all batches with"))) them to the `allocate()` domain service...
+the world and pass((("batches", "allocating against all batches using domain service")))((("allocate service", "allocating against all batches with"))) them to the `allocate()` domain service...
 
 
 [[before_aggregates_diagram]]
