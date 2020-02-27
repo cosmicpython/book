@@ -275,7 +275,7 @@ model works, we'll have to change a bunch of tests.
 ==== Mitigation: Keep All Domain Dependencies in Fixture Functions
 
 We could at least abstract that out to a helper function or a fixture
-in our tests.((("dependencies", "keeping all domain dependencies in fixture functions")))((("test-driven development (TDD)", "fully decoupling service layer from the domain", "keeping all domain dependencies in fixture functions")))((("fixture functions", "keeping all domain dependencies in")))  Here's one way you could do that, adding a factory
+in our tests.((("dependencies", "keeping all domain dependencies in fixture functions")))((("test-driven development (TDD)", "fully decoupling service layer from the domain", "keeping all domain dependencies in fixture functions")))((("fixture functions, keeping all domain dependencies in")))  Here's one way you could do that, adding a factory
 function((("faking", "FakeRepository", "adding fixture function on"))) on `FakeRepository`:
 
 
