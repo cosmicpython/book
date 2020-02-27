@@ -78,7 +78,7 @@ plan:
 
 No one is interested in getting into a long terminology debate about what
 counts as an end-to-end (E2E) test versus a functional test versus an acceptance test versus
-an integration test versus a unit test.((("Flask framework", "Flask API and service layer", "first API end-to-end test", id="ix_Flskappe2e")))((("testing", "end-to-end test of allocate API", "first draft")))((("end-to-end tests", "of allocate API")))((("APIs", "end-to-end test of allocate API"))) Different projects need different
+an integration test versus a unit test.((("Flask framework", "Flask API and service layer", "first API end-to-end test", id="ix_Flskappe2e")))((("end-to-end tests", "of allocate API")))((("APIs", "end-to-end test of allocate API"))) Different projects need different
 combinations of tests, and we've seen perfectly successful projects just split
 things into "fast tests" and "slow tests."
 
@@ -176,7 +176,7 @@ def allocate_endpoint():
 So far, so good. No need for too much more of your "architecture astronaut"
 nonsense, Bob and Harry, you may be thinking.
 
-But hang on a minute--there's no commit.((("databases", "testing allocations persisted to database")))((("testing", "end-to-end test of allocate API", "testing allocations are persisted"))) We're not actually saving our
+But hang on a minute--there's no commit.((("databases", "testing allocations persisted to database"))) We're not actually saving our
 allocation to the database. Now we need a second test, either one that will
 inspect the database state after (not very black-boxy), or maybe one that
 checks that we can't allocate a second line if a first should have already
@@ -225,7 +225,7 @@ Suppose we want to add a bit of error handling. What if the domain raises an
 error, for a SKU that's out of stock?  Or what about a SKU that doesn't even
 exist? That's not something the domain even knows about, nor should it. It's
 more of a sanity check that we should implement at the database layer, before
-we even invoke the domain service.((("testing", "end-to-end test of allocate API", "testing error cases")))
+we even invoke the domain service.
 
 Now we're looking at two more end-to-end tests:
 
@@ -530,7 +530,7 @@ codes, and JSON. All the orchestration logic is in the use case/service layer,
 and the domain logic stays in the domain.
 
 Finally, we can confidently strip down our E2E tests to just two, one for
-the happy path and one((("testing", "end-to-end test of allocate API", "testing happy and unhappy paths")))((("service layer", "end-to-end test of allocate API", "testing happy and unhappy paths")))((("Flask framework", "Flask API and service layer", "end-to-end tests for happy and unhappy paths"))) for the unhappy path:
+the happy path and one((("service layer", "end-to-end test of allocate API, testing happy and unhappy paths")))((("Flask framework", "Flask API and service layer", "end-to-end tests for happy and unhappy paths"))) for the unhappy path:
 
 
 [[fewer_e2e_tests]]
