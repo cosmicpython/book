@@ -927,7 +927,7 @@ a|
   are the public ones, and which aren't.
 
 * Modeling our operations around explicit consistency boundaries helps us avoid
-  performance problems with our ORM.
+  performance problems with our ORM.((("performance", "consistency boundaries and")))
 
 * Putting the aggregate in sole charge of state changes to its subsidiary models
   makes the system easier to reason about, and makes it easier to control invariants.
