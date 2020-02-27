@@ -660,7 +660,7 @@ Are you finding all those `._add()` and `._commit()` methods "super-gross," in
 the words of our beloved tech reviewer Hynek? ((("underscorey methods", "avoiding by implementing TrackingRepository wrapper class")))Does it "make you want to beat
 Harry around the head with a plushie snake"? Hey, our code listings are
 only meant to be examples, not the perfect solution! Why not go see if you
-can do better?((("repositories", "TrackerRepository wrapper class")))((("composition over inheritance", "TrackingRepository wrapper class")))((("inheritance", "avoiding use of with wrapper class")))
+can do better?((("repositories", "TrackerRepository wrapper class")))((("composition over inheritance in TrackingRepository wrapper class")))((("inheritance", "avoiding use of with wrapper class")))
 
 One _composition over inheritance_ way to go would be to implement a
 wrapper class:
