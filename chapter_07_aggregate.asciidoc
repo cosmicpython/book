@@ -636,7 +636,7 @@ The usual way to handle a failure is to retry the failed operation from the
 beginning. Imagine we have two customers, Harry and Bob, and each submits an order
 for `SHINY-TABLE`. Both threads load the product at version 1 and allocate
 stock. The database prevents the concurrent update, and Bob's order fails with
-an error.((("retries, optimistic concurrency control and"))) When we _retry_ the operation, Bob's order loads the product at
+an error.((("retries", "optimistic concurrency control and"))) When we _retry_ the operation, Bob's order loads the product at
 version 2 and tries to allocate again. If there is enough stock left, all is
 well; otherwise, he'll receive `OutOfStock`. Most operations can be retried this
 way in the case of a concurrency problem.
