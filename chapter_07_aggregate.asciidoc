@@ -196,7 +196,7 @@ TIP: Just as we sometimes use pass:[<code><em>_leading_underscores</em></code>] 
 What aggregate should we use for our system?((("aggregates", "choosing an aggregrate", id="ix_aggch"))) The choice is somewhat arbitrary,
 but it's important. The aggregate will be the boundary where we make sure
 every operation ends in a consistent state. This helps us to reason about our
-software and prevent weird race issues. We want to draw a boundary around a
+software and prevent weird race issues.((("performance", "impact of using aggregates"))) We want to draw a boundary around a
 small number of objects—the smaller, the better, for performance—that have to
 be consistent with one another, and we need to give this boundary a good name.
 
@@ -493,7 +493,7 @@ def allocate(
 
 We've mentioned a few times that we're modeling with aggregates because we want
 to have high-performance software, but here we are loading _all_ the batches when
-we only need one.((("aggregates", "performance and")))((("performance", "impact of use of aggregates"))) You might expect that to be inefficient, but there are a few
+we only need one.((("aggregates", "performance and")))((("performance", "impact of using aggregates"))) You might expect that to be inefficient, but there are a few
 reasons why we're comfortable here.
 
 First, we're purposefully modeling our data so that we can make a single
