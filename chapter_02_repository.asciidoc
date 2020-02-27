@@ -514,7 +514,7 @@ may be), you'll want to be running some helpers like `pylint` and `mypy`.]
 *******************************************************************************
 
 We're using abstract base classes in this book for didactic reasons: we hope
-they help explain what the interface of the repository abstraction is.((("abstract base classes (ABCs)", "using duck typing and protocols instead of")))
+they help explain what the interface of the repository abstraction is.((("protocols, abstract base classes, duck typing, and")))((("abstract base classes (ABCs)", "using duck typing and protocols instead of")))
 
 In real life, we've sometimes found ourselves deleting ABCs from our production
 code, because Python makes it too easy to ignore them, and they end up
@@ -523,7 +523,7 @@ Python's duck typing to enable abstractions. To a Pythonista, a repository is
 _any_ object that has pass:[<code>add(<em>thing</em>)</code>] and pass:[<code>get(<em>id</em>)</code>] methods.
 
 An alternative to look into is https://oreil.ly/q9EPC[PEP
-544 protocols]. ((("protocols", "PEP 544")))((("PEP 544 protocols")))These give you typing without the possibility of inheritance,
+544 protocols]. ((("PEP 544 protocols")))These give you typing without the possibility of inheritance,
 which "prefer composition over inheritance" fans will particularly like.
 
 *******************************************************************************
