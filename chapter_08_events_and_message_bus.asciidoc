@@ -390,7 +390,7 @@ and Python-only.
 === Option 1: The Service Layer Takes Events from the Model and Puts Them on the Message Bus
 
 Our domain model raises events, and our message bus will call the right
-handlers whenever an event happens.((("data model", "events from, passing to message bus in service layer")))((("message bus", "service layer with explicit message bus")))((("events and the message bus", "service layer with explicit message bus")))((("service layer", "taking events from model and putting them on message bus"))) Now all we need is to connect the two. We
+handlers whenever an event happens.((("domain model", "events from, passing to message bus in service layer")))((("message bus", "service layer with explicit message bus")))((("events and the message bus", "service layer with explicit message bus")))((("service layer", "taking events from model and putting them on message bus"))) Now all we need is to connect the two. We
 need something to catch events from the model and pass them to the message
 bus--the _publishing_ step.((("publish-subscribe system, message bus as", "publishing step")))
 
