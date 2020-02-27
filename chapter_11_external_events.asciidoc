@@ -305,7 +305,7 @@ we can do that locally.
 
 === Using a Redis Pub/Sub Channel for Integration
 
-Let's see how it will all work concretely.((("microservices", "event-based integration", "using Redis pub/sub channel for ntegration")))((("Redis pub/sub channel, using for microservices integration")))((("messaging", "using Redis pub/sub channel for microservices integration")))((("publish-subscribe systems", "using Redis pub/sub channel for microservices integration"))) We'll need some way of getting
+Let's see how it will all work concretely.((("microservices", "event-based integration", "using Redis pub/sub channel for ntegration")))((("Redis pub/sub channel, using for microservices integration")))((("messaging", "using Redis pub/sub channel for microservices integration")))((("publish-subscribe system", "using Redis pub/sub channel for microservices integration"))) We'll need some way of getting
 events out of one system and into another, like our message bus, but for
 services. This piece of infrastructure is often called a _message broker_. The
 role of a message broker is to take messages from publishers and deliver them
