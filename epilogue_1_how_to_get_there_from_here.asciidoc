@@ -581,7 +581,7 @@ real customers.((("Strangler pattern, going to microservices via", startref="ix_
 
 If you're thinking about carving a new system out of a big ball of mud, you're
 probably suffering problems with reliability, performance, maintainability, or
-all three simultaneously.((("stakeholders, convinging to try something new", id="ix_stkhld"))) Deep, intractable problems call for drastic measures!
+all three simultaneously.((("stakeholders, convincing to try something new", id="ix_stkhld"))) Deep, intractable problems call for drastic measures!
 
 We recommend _domain modeling_ as a first step. In many overgrown systems, the
 engineers, product owners, and customers no longer speak the same language.
@@ -692,7 +692,7 @@ right—and others will too._
 
 Here are some questions we heard during drafting that we couldn't find a good place to address elsewhere in the book:
 
-Do I need to do all of this at once?((("stakeholders, convinging to try something new", startref="ix_stkhld")))((("questions from tech reviewers", id="ix_qstTR"))) Can I just do a bit at a time?::
+Do I need to do all of this at once?((("stakeholders, convincing to try something new", startref="ix_stkhld")))((("questions from tech reviewers", id="ix_qstTR"))) Can I just do a bit at a time?::
 No, you can absolutely adopt these techniques bit by bit. If you have an existing system, we recommend building a service layer to try to keep orchestration in one place. Once you have that, it's much easier to push logic into the model and push edge concerns like validation or error handling to the entrypoints.
 +
 It's worth having a service layer even if you still have a big, messy Django ORM because it's a way to start understanding the boundaries of operations.
