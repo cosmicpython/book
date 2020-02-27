@@ -579,7 +579,7 @@ class SqlAlchemyRepository(AbstractRepository):
 
 <1> For the UoW to be able to publish new events, it needs to be able to ask
     the repository for which `Product` objects have been used during this session.
-    We use a `set` called `.seen` to store them. That means our implementations
+    We use a `set` called `.seen` to store them.((("super function"))) That means our implementations
     need to call +++<code>super().__init__()</code>+++.
 
 <2> The parent `add()` method adds things to `.seen`, and now requires subclasses
