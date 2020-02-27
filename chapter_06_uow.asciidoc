@@ -198,7 +198,7 @@ class AbstractUnitOfWork(abc.ABC):
 
 <3> We'll call this method to explicitly commit our work when we're ready.
 
-<4> If we don't commit, or if we exit the context manager by raising an error,
+<4> If we don't((("rollbacks"))) commit, or if we exit the context manager by raising an error,
     we do a `rollback`. (The rollback has no effect if `commit()` has been
     called. Read on for more discussion of this.)
 
@@ -252,7 +252,7 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 <3> We close the session on exit.
 
 <4> Finally, we provide concrete `commit()` and `rollback()` methods that
-    use our database session.((("commit method")))((("rollback method")))
+    use our database session.((("rollbacks", "rollback method")))((("commits", "commit method")))
 
 //IDEA: why not swap out db using os.environ?
 // (EJ2) Could be a good idea to point out that this couples the unit of work to postgres.
