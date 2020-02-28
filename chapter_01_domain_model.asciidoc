@@ -4,7 +4,7 @@
 This chapter looks into how we can model business processes with code, in a way
 that's highly compatible with TDD. ((("domain modeling", id="ix_dommod"))) We'll discuss _why_ domain modeling
 matters, and we'll look at a few key patterns for modeling domains: Entity,
-Value Object, and Domain Service.
+Value Object, and Domain Service.((("domain driven design (DDD)", seealso="domain model; domain modeling")))
 
 <<maps_chapter_01_notext>> is a simple visual placeholder for our Domain
 Model pattern. We'll fill in some details in this chapter, and as we move on to
@@ -15,17 +15,17 @@ always be able to find these little shapes at the core.
 .A placeholder illustration of our domain model
 image::images/apwp_0101.png[]
 
-
+[role="pagebreak-before less_space"]
 === What Is a Domain Model?
 
-In the <<introduction>>, we used the term _business logic layer_ to describe the
+In the <<introduction, introduction>>, we used the term _business logic layer_ to describe the
 central layer of a three-layered architecture.((("business logic layer"))) For the rest of the book, we're
 going to use the term _domain model_ instead. This is a term from the DDD
 community that does a better job of capturing our intended meaning (see the
 next sidebar for more on DDD).
 
 The _domain_ is a fancy way of saying _the problem you're trying to solve._ Your
-authors currently work for an online retailer of furniture.((("domain"))) Depending on which system
+authors currently work for an online retailer of furniture.((("domain driven design (DDD)", "domain, defined"))) Depending on which system
 you're talking about, the domain might be purchasing and procurement, or product
 design, or logistics and delivery. Most programmers spend their days trying to
 improve or automate business processes; the domain is the set of activities
@@ -40,14 +40,37 @@ about how objects behave at near-light speeds or in a vacuum because our model
 was never designed to cover those cases. That doesn't mean the model is wrong,
 but it does mean that some predictions fall outside of its domain.
 
+The domain model is the mental map that business owners have of their
+businesses. All business people have these mental maps--they're how humans think
+about complex processes.
 
+You can tell when they're navigating these maps because they use business speak.
+Jargon arises naturally among people who are collaborating on complex systems.
+
+Imagine that you, our unfortunate reader, were suddenly transported light years
+away from Earth aboard an alien spaceship with your friends and family and had
+to figure out, from first principles, how to navigate home.
+
+In your first few days, you might just push buttons randomly, but soon you'd
+learn which buttons did what, so that you could give one another instructions.
+"Press the red button near the flashing doohickey and then throw that big
+lever over by the radar gizmo," you might say.
+
+Within a couple of weeks, you'd become more precise as you adopted words to
+describe the ship's functions: "Increase oxygen levels in cargo bay three"
+or "turn on the little thrusters." After a few months, you'd have adopted
+language for entire complex processes: "Start landing sequence" or "prepare
+for warp." This process would happen quite naturally, without any formal effort
+to build a shared glossary.
+
+[role="nobreakinside less_space"]
 .This Is Not a DDD Book. You Should Read a DDD Book.
 *****************************************************************
 
 Domain-driven design, or DDD, popularized the concept of domain modeling,footnote:[
-DDD did not originate domain modeling. Eric Evans refers to _Object Design_
+DDD did not originate domain modeling. Eric Evans refers to the 2002 book _Object Design_
 by Rebecca Wirfs-Brock and Alan McKean  (Addison-Wesley Professional), which introduced responsibility-driven
-design of which DDD is a special case dealing with the domain.((("domain-driven design (DDD)"))) But even that is
+design, of which DDD is a special case dealing with the domain.((("domain driven design (DDD)"))) But even that is
 too late, and OO enthusiasts will tell you to look further back to Ivar
 Jacobson and Grady Booch; the term has been around since the mid-1980s.]
 and it's been a hugely successful movement in transforming the way people
@@ -74,29 +97,6 @@ and cannot encourage you enough to go on and read a proper DDD book:
 
 *****************************************************************
 
-The domain model is the mental map that business owners have of their
-businesses. All business people have these mental maps--they're how humans think
-about complex processes.
-
-You can tell when they're navigating these maps because they use business speak.
-Jargon arises naturally between people who are collaborating on complex systems.
-
-Imagine that you, our unfortunate reader, were suddenly transported light years
-away from Earth aboard an alien spaceship with your friends and family and had
-to figure out, from first principles, how to navigate home.
-
-In your first few days, you might just push buttons randomly, but soon you'd
-learn which buttons did what, so that you could give one another instructions.
-"Press the red button near the flashing doohickey and then throw that big
-lever over by the radar gizmo," you might say.
-
-Within a couple of weeks, you'd become more precise as you adopted words to
-describe the ship's functions: "Increase oxygen levels in cargo bay three"
-or "turn on the little thrusters." After a few months, you'd have adopted
-language for entire complex processes: "Start landing sequence" or "prepare
-for warp." This process would happen quite naturally, without any formal effort
-to build a shared glossary.
-
 So it is in the mundane world of business. The terminology used by business
 stakeholders represents a distilled understanding of the domain model, where
 complex ideas and processes are boiled down to a single word or phrase.
@@ -111,7 +111,7 @@ retailer. We source our furniture from manufacturers all over the world and
 sell it across Europe.
 
 When you buy a sofa or a coffee table, we have to figure out how best
-to get your goods from Poland or China or Vietnam, and into your living room.
+to get your goods from Poland or China or Vietnam and into your living room.
 
 At a high level, we have separate systems that are responsible for buying
 stock, selling stock to customers, and shipping goods to customers. A
@@ -175,65 +175,43 @@ We make sure to express those rules in the business jargon (the _ubiquitous
 language_ in DDD terminology). We choose memorable identifiers for our objects
 so that the examples are easier to talk about.
 
-<<allocation_notes>> shows some notes we might have taken while having a
+pass:[<a data-type="xref" href="#allocation_notes" data-xrefstyle="select:nopage">#allocation_notes</a>] shows some notes we might have taken while having a
 conversation with our domain experts about allocation.
 
+[role="small"]
 [[allocation_notes]]
-.Some notes on allocation
-|===
+.Some Notes on Allocation
+****
+A _product_ is identified by a _SKU_, pronounced "skew," which is short for _stock-keeping unit_. _Customers_ place _orders_. An order is identified by an _order reference_
+and comprises multiple _order lines_, where each line has a _SKU_ and a _quantity_. For example:
 
-a| A _product_ is identified by a _SKU_, pronounced "skew," which is short for
-  _stock keeping unit_.
-
-a| _Customers_ place _orders_. An order is identified by an _order reference_,
-  and comprises multiple _order lines_, where each line has a _SKU_ and a
-  _quantity_. For example:
-
-----
 - 10 units of RED-CHAIR
 - 1 unit of TASTELESS-LAMP
-----
 
-a| The purchasing department orders small _batches_ of stock. A _batch_ of stock
-  has a unique ID called a _reference_, a _SKU_ and a _quantity_.
+The purchasing department orders small _batches_ of stock. A _batch_ of stock has a unique ID called a _reference_, a _SKU_, and a _quantity_.
 
-a| We need to _allocate_ _order lines_ to _batches_. When we've allocated an
-  order line to a batch, we will send stock from that specific batch to the
-  customer's delivery address.
+We need to _allocate_ _order lines_ to _batches_. When we've allocated an
+order line to a batch, we will send stock from that specific batch to the
+customer's delivery address. When we allocate _x_ units of stock to a batch, the _available quantity_ is reduced by _x_. For example:
 
-a| When we allocate _x_ units of stock to a batch, the _available quantity_ is
-  reduced by _x_. For example:
-
-----
 - We have a batch of 20 SMALL-TABLE, and we allocate an order line for 2 SMALL-TABLE.
 - The batch should have 18 SMALL-TABLE remaining.
-----
 
-a| We can't allocate to a batch if the available quantity is less than the
-  quantity of the order line. For example:
+We can't allocate to a batch if the available quantity is less than the quantity of the order line. For example:
 
-----
 - We have a batch of 1 BLUE-CUSHION, and an order line for 2 BLUE-CUSHION.
 - We should not be able to allocate the line to the batch.
-----
 
-a| We can't allocate the same line twice. For example:
+We can't allocate the same line twice. For example:
 
-----
 - We have a batch of 10 BLUE-VASE, and we allocate an order line for 2 BLUE-VASE.
 - If we allocate the order line again to the same batch, the batch should still
   have an available quantity of 8.
-----
 
-a| Batches have an _ETA_ if they are currently shipping, or they may be in
-  _warehouse stock_.
+Batches have an _ETA_ if they are currently shipping, or they may be in _warehouse stock_. We allocate to warehouse stock in preference to shipment batches. We allocate to shipment batches in order of which has the earliest ETA.
+****
 
-a| We allocate to warehouse stock in preference to shipment batches.
-
-a| We allocate to shipment batches in order of which has the earliest ETA.
-|===
-
-[role="pagebreak-before less_space"]
+[role="nobreakinside less_space"]
 .Exercise for the Reader
 ******************************************************************************
 Why not have a go at solving this problem yourself? Write a few unit tests to
@@ -241,7 +219,7 @@ see if you can capture the essence of these business rules in nice, clean
 code.
 
 You'll find some https://github.com/cosmicpython/code/tree/chapter_01_domain_model_exercise[placeholder unit tests on GitHub], but you could just start from
-scratch, or combine/rewrite them however you like.((("GitHub", "placeholder unit tests on")))
+scratch, or combine/rewrite them however you like.
 
 //TODO: add test_cannot_allocate_same_line_twice ?
 //(EJ3): nice to have for completeness, but not necessary
@@ -252,7 +230,7 @@ scratch, or combine/rewrite them however you like.((("GitHub", "placeholder unit
 === Unit Testing Domain Models
 
 We're not going to show you how TDD works in this book, but we want to show you
-how we would construct a model from this business conversation.((("unit testing domain models", id="ix_UTDM")))((("domain modeling", "unit testing domain models", id="ix_dommodUT")))
+how we would construct a model from this business conversation.((("unit testing", "of domain models", id="ix_UTDM")))((("domain modeling", "unit testing domain models", id="ix_dommodUT")))
 
 Here's what one of our first tests might look like:
 
@@ -307,14 +285,14 @@ class Batch:
 
 <1> `OrderLine` is an immutable dataclass
     with no behavior.footnote:[In previous Python versions, we
-    might have used a named tuple. You could also check out Hynek Schlawack's
+    might have used a namedtuple. You could also check out Hynek Schlawack's
     excellent https://pypi.org/project/attrs[attrs].]
 
 <2> We're not showing imports in most code listings, in an attempt to keep them
     clean. We're hoping you can guess
     that this came via `from dataclasses import dataclass`; likewise,
     `typing.Optional` and `datetime.date`. If you want to double-check
-    anything, you can see the full, working code for each chapter in
+    anything, you can see the full working code for each chapter in
     its branch (e.g.,
     https://github.com/python-leap/code/tree/chapter_01_domain_model[chapter_01_domain_model]).
 
@@ -410,7 +388,7 @@ implementation:
 
 
 [[domain_model_complete]]
-.A decent first cut of the domain model (model.py)
+.The domain model now tracks allocations (model.py)
 ====
 [source,python]
 [role="non-head"]
@@ -519,7 +497,7 @@ warehouse in a different region if we're out of stock in the home region. And
 so on.  A real business in the real world knows how to pile on complexity faster
 than we can show on the page!
 
-But taking this simple domain model as a placeholder for something more complex, we're going to extend our simple domain model in the rest of the book, and
+But taking this simple domain model as a placeholder for something more complex, we're going to extend our simple domain model in the rest of the book and
 plug it into the real world of APIs and databases and spreadsheets. We'll
 see how sticking rigidly to our principles of encapsulation and careful
 layering will help us to avoid a ball of mud.((("type hints")))
@@ -558,15 +536,15 @@ class Batch:
 That would allow our type checker to make sure that we don't pass a `Sku` where a
 `Reference` is expected, for example.
 
-Whether you think this is wonderful or appalling is a matter of debate.footnote:[It is appalling. Please, please don't do this. —Harry.]
+Whether you think this is wonderful or appalling is a matter of debate.footnote:[It is appalling. Please, please don't do this. —Harry]
 
 *******************************************************************************
 
 ==== Dataclasses Are Great for Value Objects
 
 We've used `line` liberally in the previous code listings, but what is a
-line?((("data modeling", "unit testing domain models", "dataclasses for value objects")))((("dataclasses", "use for value objects")))((("value objects", "using dataclasses for"))) In our business language, an _order_ has multiple _line_ items, where
-each line has a SKU, and a quantity. We can imagine that a simple YAML file
+line?((("domain modeling", "unit testing domain models", "dataclasses for value objects")))((("dataclasses", "use for value objects")))((("value objects", "using dataclasses for"))) In our business language, an _order_ has multiple _line_ items, where
+each line has a SKU and a quantity. We can imagine that a simple YAML file
 containing order information might look like this:
 
 
@@ -596,7 +574,7 @@ it's not something that uniquely identifies the line itself.)
 Whenever we have a business concept that has data but no identity, we
 often choose to represent it using the _Value Object_ pattern. A _value object_ is any
 domain object that is uniquely identified by the data it holds; we usually
-make them immutable.((("value objects", "defined")))
+make them immutable:((("value objects", "defined")))
 
 // [SG] seems a bit odd to hear about value objects before any mention of entities.
 
@@ -614,8 +592,8 @@ class OrderLine:
 ----
 ====
 
-One of the nice things ((("named tuples", seealso="dataclasses")))that dataclasses (or named tuples) give us is _value
-equality_ which is the fancy way of saying, "Two lines with the same `orderid`,
+One of the nice things ((("named tuples", seealso="dataclasses")))that dataclasses (or namedtuples) give us is _value
+equality_, which is the fancy way of saying, "Two lines with the same `orderid`,
 `sku`, and `qty` are equal."
 
 
@@ -690,8 +668,8 @@ def multiplying_two_money_values_is_an_error():
 ==== Value Objects and Entities
 
 An order line is uniquely identified by its order ID, SKU, and quantity; if we
-change one of those values, we now have a new line.((("data modeling", "unit testing domain models", "value objects and entities")))((("value objects", "and entities", secondary-sortas="entities"))) That's the definition of a
-value object: any object that is identified by only its data, and doesn't have a
+change one of those values, we now have a new line.((("domain modeling", "unit testing domain models", "value objects and entities")))((("value objects", "and entities", secondary-sortas="entities"))) That's the definition of a
+value object: any object that is identified only by its data and doesn't have a
 long-lived identity. What about a batch, though? That _is_ identified by a
 reference.
 
@@ -750,7 +728,7 @@ and they are still recognizably the same thing. Batches, in our example, are
 entities. We can allocate lines to a batch, or change the date that we expect
 it to arrive, and it will still be the same entity.
 
-We usually make this explicit in code ((("equality operators", "implementing on entities")))by implementing equality operators on
+We usually make this explicit in code ((("equality operators, implementing on entities")))by implementing equality operators on
 entities:
 
 
@@ -788,14 +766,14 @@ free by specifying `@frozen=True` on the dataclass.
 For entities, the simplest option is to say that the hash is ++None++, meaning
 that the object is not hashable and cannot, for example, be used in a set.
 If for some reason you decide you really do want to use set or dict operations
-with entities, the hash should be based on the attribute(s), like
-`.reference`, that define the entity's unique identity over time. You should
+with entities, the hash should be based on the attribute(s), such as
+`.reference`, that defines the entity's unique identity over time. You should
 also try to somehow make _that_ attribute read-only.
 
 WARNING: This is tricky territory; you shouldn't modify +++<code>__hash__</code>+++ without
     also modifying +++<code>__eq__</code>+++.  If you're not sure what you're doing,
-    further reading is suggested. https://hynek.me/articles/hashes-and-equality[
-    "Python Hashes and Equality"] by our tech reviewer Hynek Schlawack is a good place to start.((("unit testing domain models", startref="ix_UTDM")))((("domain modeling", "unit testing domain models", startref="ix_dommodUT")))
+    further reading is suggested. https://oreil.ly/vxkgX[
+    "Python Hashes and Equality"] by our tech reviewer Hynek Schlawack is a good place to start.((("unit testing", "of domain models", startref="ix_UTDM")))((("domain modeling", "unit testing domain models", startref="ix_dommodUT")))
 
 
 
@@ -807,7 +785,7 @@ represent all our stock.((("domain modeling", "functions for domain services", i
 
 [quote, Eric Evans, Domain-Driven Design]
 ____
-Sometimes, it just isn't a Thing.
+Sometimes, it just isn't a thing.
 ____
 
 Evans discusses the idea of Domain Service
@@ -935,7 +913,7 @@ def test_raises_out_of_stock_exception_if_cannot_allocate():
 
 We won't bore you too much with the implementation, but the main thing
 to note is that we take care in naming our exceptions in the ubiquitous
-language, just as we do our entities, value objects, and services.
+language, just as we do our entities, value objects, and services:
 
 
 [[out_of_stock]]
@@ -978,13 +956,13 @@ Distinguish entities from value objects::
     A value object is defined by its attributes.((("value objects", "entities versus")))((("entities", "value objects versus"))) It's usually best
     implemented as an immutable type. If you change an attribute on
     a Value Object, it represents a different object. In contrast,
-    an entity has attributes that may vary over time, and still be the
+    an entity has attributes that may vary over time and it will still be the
     same entity. It's important to define what _does_ uniquely identify
     an entity (usually some sort of name or reference field).
 
 Not everything has to be an object::
     Python is a multiparadigm language, so let the "verbs" in your
-    code be functions. For every `FooManager`, `BarBUilder`, or `BazFactory`,
+    code be functions. For every `FooManager`, `BarBuilder`, or `BazFactory`,
     there's often a more expressive and readable `manage_foo()`, `build_bar()`,
     or `get_baz()` waiting to happen.((("functions")))
 

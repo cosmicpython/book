@@ -20,7 +20,7 @@ image::images/apwp_aa01.png["diagram showing all components: flask+eventconsumer
 __Defines the business logic.__
 
 
-| Entity | A domain object whose attributes may change, but that has a recognizable identity over time.
+| Entity | A domain object whose attributes may change but that has a recognizable identity over time.
 
 | Value object | An immutable domain object whose attributes entirely define it. It is fungible with other identical objects.
 
@@ -34,7 +34,7 @@ __Defines the business logic.__
 
 __Defines the jobs the system should perform and orchestrates different components.__
 
-| Handler | Receives a command or event and performs what needs to happen.
+| Handler | Receives a command or an event and performs what needs to happen.
 | Unit of work | Abstraction around data integrity. Each unit of work represents an atomic update. Makes repositories available. Tracks new events on retrieved aggregates.
 | Message bus (internal) | Handles commands and events by routing them to the appropriate handler.
 
@@ -50,7 +50,7 @@ to the outside world (I/O).__
 
 __Translate external inputs into calls into the service layer.__
 
-| Web | Receives web requests and translates them into Commands, passing them to the Internal Message Bus.
+| Web | Receives web requests and translates them into commands, passing them to the internal message bus.
 | Event consumer | Reads events from the external message bus and translates them into commands, passing them to the internal message bus.
 
 | N/A | External message bus (message broker) | A piece of infrastructure that different services use to intercommunicate, via events.((("architecture, summary diagram and table", startref="ix_archsumm")))

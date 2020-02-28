@@ -4,12 +4,11 @@
 /* Globally preventing code blocks from breaking across pages
 pre { page-break-inside: avoid; } */
 
-/* handling for elements to keep them from breaking across pages
-.nobreakinside {
- page-break-inside: avoid; 
- page-break-before: auto;
- 
-} */
+/* Reduce font size (STYL-1219) */
+aside.small { font-size: 0.7em !important; }
+
+/* handling for elements to keep them from breaking across pages */
+.nobreakinside { page-break-inside: avoid; } 
 
 /* Epilogue figure label */
 section[data-type="afterword"] figcaption:before {

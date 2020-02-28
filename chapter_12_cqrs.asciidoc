@@ -1,35 +1,33 @@
 [[chapter_12_cqrs]]
 == Command-Query Responsibility Segregation (CQRS)
 
-In this chapter we're going to start with a fairly uncontroversial insight:
+In this chapter, we're going to start with a fairly uncontroversial insight:
 reads (queries) and writes (commands) are different, so they
-should be treated differently (or have their responsibilities segregated, if you will).((("queries", seealso="command-query responsibility segregation")))((("command-query responsibility segregation (CQRS)", id="ix_CQRS")))
-Then we're going to push that insight as far as we can. If you're anything like
-Harry, this will all seem extreme at first, but, hopefully, we can make the
-argument that it's not _totally_ unreasonable.
+should be treated differently (or have their responsibilities segregated, if you will).((("queries", seealso="command-query responsibility segregation")))((("command-query responsibility segregation (CQRS)", id="ix_CQRS"))) Then we're going to push that insight as far
+as we can. If you're anything like Harry, this will all seem extreme at first,
+but hopefully we can make the argument that it's not _totally_ unreasonable.((("CQRS", see="command-query responsibility segregation")))
 
 <<maps_chapter_11>> shows where we might end up.
 
 [TIP]
 ====
-You can find the code for this chapter is in the
-https://github.com/cosmicpython/code/tree/chapter_12_cqrs[chapter_12_cqrs] branch on GitHub.
-
-First though, why bother?
-
-[[maps_chapter_11]]
-.Separating reads from writes
-image::images/apwp_1201.png[]
+The code for this chapter is in the
+chapter_12_cqrs branch https://oreil.ly/YbWGT[on GitHub].
 
 ----
 git clone https://github.com/cosmicpython/code.git
 cd code
 git checkout chapter_12_cqrs
-# or to code along, check out the previous chapter:
+# or to code along, checkout the previous chapter:
 git checkout chapter_11_external_events
 ----
 ====
 
+First, though, why bother?
+
+[[maps_chapter_11]]
+.Separating reads from writes
+image::images/apwp_1201.png[]
 
 === Domain Models Are for Writing
 
@@ -41,7 +39,7 @@ In this book, we've set explicit constraints like "You can't allocate more stock
 than is available," as well as implicit constraints like "Each order line is
 allocated to a single batch."
 
-We wrote down these rules as unit tests at the beginning of the book.
+We wrote down these rules as unit tests at the beginning of the book:
 
 
 [[domain_tests]]
@@ -101,13 +99,13 @@ making our reads _eventually consistent_ in order to make them perform better.
 *******************************************************************************
 
 This idea of trading consistency against performance makes a lot of developers
-nervous at first, so let's talk quickly about that.((("consistency", "attainment of read consistency")))((("command-query responsibility segregation (CQRS)", "reads", "consistency of")))
+pass:[<span class="keep-together">nervous</span>] at first, so let's talk quickly about that.((("consistency", "attainment of read consistency")))((("command-query responsibility segregation (CQRS)", "reads", "consistency of")))
 
 Let's imagine that our "Get Available Stock" query is 30 seconds out of date
 when Bob visits the page for `ASYMMETRICAL-DRESSER`.
 Meanwhile, though, Harry has already bought the last item. When we try to
-allocate Bob's order, we'll get a failure and we'll need to either cancel his
-order, or buy more stock and delay his delivery.
+allocate Bob's order, we'll get a failure, and we'll need to either cancel his
+order or buy more stock and delay his delivery.
 
 People who've worked only with relational data stores get _really_ nervous
 about this problem, but it's worth considering two other scenarios to gain some
@@ -116,7 +114,7 @@ perspective.
 First, let's imagine that Bob and Harry both visit the page at _the same
 time_. Harry goes off to make coffee, and by the time he returns, Bob has
 already bought the last dresser. When Harry places his order, we send it to
-the allocation service and, because there's not enough stock, we have to refund
+the allocation service, and because there's not enough stock, we have to refund
 his payment or buy more stock and delay his delivery.
 
 As soon as we render the product page, the data is already stale. This insight
@@ -129,20 +127,25 @@ OK, let's assume we solve that problem somehow: we magically build a totally
 consistent web application where nobody ever sees stale data. This time Harry
 gets to the page first and buys his dresser.
 
-Unfortunately for him, when the warehouse staff try to dispatch his furniture,
+Unfortunately for him, when the warehouse staff tries to dispatch his furniture,
 it falls off the forklift and smashes into a zillion pieces. Now what?
 
-The only thing to do is call Harry and either refund his order, or buy more
+The only options are to either call Harry and refund his order or buy more
 stock and delay delivery.
 
 No matter what we do, we're always going to find that our software systems are
-inconsistent with reality and so we'll always need business processes to cope
+inconsistent with reality, and so we'll always need business processes to cope
 with these edge cases. It's OK to trade performance for consistency on the
 read side, because stale data is essentially unavoidable.
 *******************************************************************************
 
 We can think of these requirements as forming two halves of a system:
-the read side, and the((("command-query responsibility segregation (CQRS)", "read side and write side"))) write side, shown in <<read_and_write_table>>.
+the read side and the((("command-query responsibility segregation (CQRS)", "read side and write side"))) write side, shown in <<read_and_write_table>>.
+
+For the write side, our fancy domain architectural patterns help us to evolve
+our system over time, but the complexity we've built so far doesn't buy
+anything for reading data. The service layer, the unit of work,  and the clever
+domain model are just bloat.
 
 [[read_and_write_table]]
 .Read versus write
@@ -155,23 +158,17 @@ the read side, and the((("command-query responsibility segregation (CQRS)", "rea
 |===
 
 
-For the write side, our fancy domain architectural patterns help us to evolve
-our system over time, but the complexity we've built so far doesn't buy
-anything for reading data. The service layer, the unit of work,  and the clever
-domain model are just bloat.
-
-
 === Post/Redirect/Get and CQS
 
 If you do web development, you're probably familiar with the
 Post/Redirect/Get pattern. ((("Post/Redirect/Get pattern")))((("command-query responsibility segregation (CQRS)", "Post/Redirect/Get pattern and CQS")))In this technique, a web endpoint accepts an
-HTTP POST, and responds with a redirect to see the result. For example, we might
-accept a POST to _/batches_ to create a new batch, and redirect the user to
+HTTP POST and responds with a redirect to see the result. For example, we might
+accept a POST to _/batches_ to create a new batch and redirect the user to
 _/batches/123_ to see their newly created batch.
 
 This approach fixes the problems that arise when users refresh the results page
 in their browser or try to bookmark a results page. In the case of a refresh,
-it can lead to our users double-submitting data, buying two sofas when they
+it can lead to our users double-submitting data and thus buying two sofas when they
 needed only one. In the case of a bookmark, our hapless customers will end up
 with a broken page when they try to GET a POST endpoint.
 
@@ -180,21 +177,20 @@ operation. Post/Redirect/Get sidesteps the issue by separating the read and
 write phases of our operation.((("Post/Redirect/Get pattern", "command-query separation (CQS)")))
 
 This technique is a simple ((("CQS (command-query separation)")))example of command-query separation (CQS). In CQS we
-follow one simple rule: functions should either modify state, or answer
+follow one simple rule: functions should either modify state or answer
 questions, but never both. This makes software easier to reason about: we should
 always be able to ask, "Are the lights on?" without flicking the light switch.
 
 NOTE: When building APIs, we can apply the same design technique by returning a
     201 Created, or a 202 Accepted, with a Location header containing the URI
-    of our new resources. What's important here isn't the status code we use,
+    of our new resources. What's important here isn't the status code we use
     but the logical separation of work into a write phase and a query phase.
 
 As you'll see, we can use the CQS principle to make our systems faster and more
-scalable, but first, let's fix the CQS violation in our existing code. A few
-chapters ago, we introduced an `allocate` endpoint that takes an order and
+scalable, but first, let's fix the CQS violation in our existing code. Ages ago, we introduced an `allocate` endpoint that takes an order and
 calls our service layer to allocate some stock. At the end of the call, we
 return a 200 OK and the batch ID. That's led to some ugly design flaws so that
-we can get the data we need. Let's change it to return a simple OK message, and
+we can get the data we need. Let's change it to return a simple OK message and
 instead provide a new read-only endpoint to retrieve allocation state:
 
 
@@ -336,11 +332,11 @@ at least one integration test.  Something like this:
 def test_allocations_view(sqlite_session_factory):
     uow = unit_of_work.SqlAlchemyUnitOfWork(sqlite_session_factory)
     messagebus.handle(commands.CreateBatch('sku1batch', 'sku1', 50, None), uow)  #<1>
-    messagebus.handle(commands.CreateBatch('sku2batch', 'sku2', 50, date.today()), uow)
+    messagebus.handle(commands.CreateBatch('sku2batch', 'sku2', 50, today()), uow)
     messagebus.handle(commands.Allocate('order1', 'sku1', 20), uow)
     messagebus.handle(commands.Allocate('order1', 'sku2', 20), uow)
     # add a spurious batch and order to make sure we're getting the right ones
-    messagebus.handle(commands.CreateBatch('sku1batch-later', 'sku1', 50, date.today()), uow)
+    messagebus.handle(commands.CreateBatch('sku1batch-later', 'sku1', 50, today()), uow)
     messagebus.handle(commands.Allocate('otherorder', 'sku1', 30), uow)
     messagebus.handle(commands.Allocate('otherorder', 'sku2', 10), uow)
 
@@ -417,7 +413,7 @@ def allocations(orderid: str, uow: unit_of_work.AbstractUnitOfWork):
 ----
 ====
 
-<1> Our repository returns product objects, and we need to find all the
+<1> Our repository returns `Product` objects, and we need to find all the
     products for the SKUs in a given order, so we'll build a new helper method
     called `.for_order()` on the repository.
 
@@ -425,7 +421,7 @@ def allocations(orderid: str, uow: unit_of_work.AbstractUnitOfWork):
     get all the possible batches with a list comprehension.
 
 <3> We filter _again_ to get just the batches for our specific
-    order. That, in turn, relies on our batch objects being able to tell us
+    order. That, in turn, relies on our `Batch` objects being able to tell us
     which order IDs it has allocated to it.
 
 We implement that last using a `.orderid` property:
@@ -449,9 +445,9 @@ class Batch:
 You can start to see that reusing our existing repository and domain model classes
 is not as straightforward as you might have assumed.  We've had to add new helper
 methods to both, and we're doing a bunch of looping and filtering in Python, which
-is work that would be much more efficiently done by the database.
+is work that would be done much more efficiently by the database.
 
-So, yes, on the plus side we're reusing our existing abstractions, but on the
+So yes, on the plus side we're reusing our existing abstractions, but on the
 downside, it all feels quite clunky.
 
 
@@ -467,7 +463,7 @@ business works: workflow, rules around state changes, messages exchanged;
 concerns about how the system reacts to external events and user input.
 _Most of this stuff is totally irrelevant for read-only operations_.
 
-Making a facile point, your domain classes will have multiple methods for
+To make a facile point, your domain classes will have multiple methods for
 modifying state, and you won't need any of them for read-only operations.
 
 As the complexity of your domain model grows, you will find yourself making
@@ -534,13 +530,13 @@ objects, your ORM will often perform an initial query to, say, get all the IDs
 of the objects it needs, and then issue individual queries for each object to
 retrieve their attributes. ((("command-query responsibility segregation (CQRS)", "SELECT N+1 and other performance problems")))((("SELECT N+1")))((("object-relational mappers (ORMs)", "SELECT N+1 performance problem")))This is especially likely if there are any foreign-key relationships on your objects.
 
-NOTE: In all fairness we should say that SQLAlchemy is quite good at avoiding
+NOTE: In all fairness, we should say that SQLAlchemy is quite good at avoiding
     the `SELECT N+1` problem.((("SQLAlchemy", "SELECT N+1 problem and")))((("eager loading"))) It doesn't display it in the preceding example, and
     you can request
     https://oreil.ly/XKDDm[eager loading]
     explicitly to avoid it when dealing with joined objects.
 
-Beyond `SELECT N+1`, you may have other reasons that you want to decouple the
+Beyond `SELECT N+1`, you may have other reasons for wanting to decouple the
 way you persist state changes from the way that you retrieve current state.
 A set of fully normalized relational tables is a good way to make sure that
 write operations never cause data corruption. But retrieving data using lots
@@ -553,7 +549,7 @@ build read replicas, or even add caching layers.
 On that note: have we convinced you that our raw SQL version isn't so weird as
 it first seemed?((("command-query responsibility segregation (CQRS)", "denormalized copy of your data optimized for read operations")))((("views", "keeping totally separate, denormalized datastore for view model"))) Perhaps we were exaggerating for effect? Just you wait.
 
-So. Reasonable or not, that hardcoded SQL query is pretty ugly, right? What if
+So, reasonable or not, that hardcoded SQL query is pretty ugly, right? What if
 we made it nicer...
 
 [[much_nicer_query]]
@@ -571,7 +567,7 @@ def allocations(orderid: str, uow: unit_of_work.SqlAlchemyUnitOfWork):
 ----
 ====
 
-...by _keeping a totally separate, denormalized datastore for our view model?_
+...by _keeping a totally separate, denormalized data store for our view model_?
 
 [[new_table]]
 .Hee hee hee, no foreign keys, just strings, YOLO (src/allocation/adapters/orm.py)
@@ -683,9 +679,7 @@ def remove_allocation_from_read_model(
 ====
 
 
-<<read_model_sequence_diagram>> shows the flow across the two requests: two
-transactions in the POST/write operation, one to update the write model and one
-to update the read model, which the GET/read operation can use.
+<<read_model_sequence_diagram>> shows the flow across the two requests.
 
 [[read_model_sequence_diagram]]
 .Sequence diagram for read model
@@ -727,6 +721,10 @@ DB -> View: some allocations
 @enduml
 ----
 
+In <<read_model_sequence_diagram>>, you can see two
+transactions in the POST/write operation, one to update the write model and one
+to update the read model, which the GET/read operation can use.
+
 [role="nobreakinside less_space"]
 .Rebuilding from Scratch
 *******************************************************************************
@@ -754,7 +752,7 @@ data.
 === Changing Our Read Model Implementation Is Easy
 
 Let's see the flexibility that our event-driven model buys us in action,
-by seeing what happens if we ever decide ((("Redis", "changing read model implementation to use")))((("command-query responsibility segregation (CQRS)", "changing read model implementation to use Redis")))we want to implement a read model by
+by seeing what happens if we ever decide ((("Redis, changing read model implementation to use")))((("command-query responsibility segregation (CQRS)", "changing read model implementation to use Redis")))we want to implement a read model by
 using a totally separate storage engine, Redis.
 
 Just watch:
@@ -827,7 +825,7 @@ TIP: Event handlers are a great way to manage updates to a read model,
 Implement another view, this time to show the allocation for a single
 order line.
 
-Here the tradeoffs between using hardcoded SQL vs going via a repository
+Here the trade-offs between using hardcoded SQL versus going via a repository
 should be much more blurry.  Try a few versions (maybe including going
 to Redis), and see which you prefer.
 **********************************************************************
@@ -836,6 +834,16 @@ to Redis), and see which you prefer.
 === Wrap-Up: But Would You Really?
 
 <<view_model_tradeoffs>> proposes some((("command-query responsibility segregation (CQRS)", "trade-offs for view model options")))((("views", "trade-offs for view model options"))) pros and cons for each of our options.
+
+As it happens, the((("command-query responsibility segregation (CQRS)", "full-blown CQRS versus simpler options"))) allocation service at MADE.com does use "full-blown" CQRS,
+with a read model stored in Redis, and even a second layer of cache provided
+by Varnish. But its use cases are quite a bit different from what
+we've shown here. For the kind of allocation service we're building, it seems
+unlikely that you'd need to use a separate read model and event handlers for
+updating it.
+
+But as your domain model becomes richer and more complex, a simplified read
+model become ever more compelling.
 
 [[view_model_tradeoffs]]
 [options="header"]
@@ -852,8 +860,8 @@ to Redis), and see which you prefer.
 | Adds another query language with its own quirks and syntax.
 
 | Use hand-rolled SQL
-| Offers fine control over performance with a standard query syntax
-| Changes to KU schema have to be made to your hand-rolled queries _and_ your
+| Offers fine control over performance with a standard query syntax.
+| Changes to DB schema have to be made to your hand-rolled queries _and_ your
   ORM definitions. Highly normalized schemas may still have performance
   limitations.
 
@@ -871,17 +879,6 @@ to Redis), and see which you prefer.
 //      In my experience, many people react to CQRS with the response that
 //      it's insane/too complex/too-hard and want to fall back to a CRUD hammer.
 //
-
-As it happens, the((("command-query responsibility segregation (CQRS)", "full-blown CQRS versus simpler options"))) allocation service at MADE.com does use "full-blown" CQRS,
-with a read model stored in Redis, and even a second layer of cache provided
-by Varnish. But its use cases are quite a bit different from what
-we've shown here. For the kind of allocation service we're building, it seems
-unlikely that you'd need to use a separate read model and event handlers for
-updating it.
-
-
-But as your domain model becomes richer and more complex, a simplified read
-model become ever more compelling.
 
 Often, your read operations will be acting on the same conceptual objects as your
 write model, so using the ORM, adding some read methods to your repositories,

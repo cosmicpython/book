@@ -3,13 +3,13 @@
 == Swapping Out the Infrastructure: pass:[<span class="keep-together">Do Everything with CSVs</span>]
 
 This appendix is intended as a little illustration of the benefits of the
-Repository, Unit of Work, and Service Layer patterns.((("CSVs, doing everyting with", id="ix_CSV"))) It's intended to
+Repository, Unit of Work, and Service Layer patterns.((("CSVs, doing everything with", id="ix_CSV"))) It's intended to
 follow from <<chapter_06_uow>>.
 
 Just as we finish building out our Flask API and getting it ready for release,
 the business comes to us apologetically, saying they're not ready to use our API
-and could we build a thing that reads just batches and orders from a couple of
-CSVs and outputs a third with allocations.
+and asking if we could build a thing that reads just batches and orders from a couple of
+CSVs and outputs a third CSV with allocations.
 
 Ordinarily this is the kind of thing that might have a team cursing and spitting
 and making notes for their memoirs.  But not us!  Oh no, we've ensured that
@@ -169,7 +169,7 @@ def test_cli_app_also_reads_existing_allocations_and_can_append_to_them(
 
 
 And we could keep hacking about and adding extra lines to that `load_batches` function,
-and some sort of way of tracking and saving new allocations—but we already have a model for doing that! It's called our Repository and our Unit of Work patterns.
+and some sort of way of tracking and saving new allocations—but we already have a model for doing that! It's called our Repository and Unit of Work patterns.
 
 All we need to do ("all we need to do") is reimplement those same abstractions, but
 with CSVs underlying them instead of a database. And as you'll see, it really is relatively straightforward.
@@ -180,8 +180,8 @@ with CSVs underlying them instead of a database. And as you'll see, it really is
 
 Here's what a CSV-based repository could look like.((("repositories", "CSV-based repository")))  It abstracts away all the
 logic for reading CSVs from disk, including the fact that it has to read _two
-different CSVs_, one for batches and one for allocations, and it just gives us
-the familiar `.list()` API, which gives us the illusion of an in-memory
+different CSVs_ (one for batches and one for allocations), and it gives us just
+the familiar `.list()` API, which provides the illusion of an in-memory
 collection of domain objects:
 
 [[csv_repository]]
@@ -266,11 +266,11 @@ class CsvUnitOfWork(unit_of_work.AbstractUnitOfWork):
 
 
 And once we have that, our CLI app for reading and writing batches
-and allocations to CSV is pared down to what it should be:  a bit
+and allocations to CSV is pared down to what it should be—a bit
 of code for reading order lines, and a bit of code that invokes our
 _existing_ service layer:
 
-
+[role="nobreakinside less_space"]
 [[final_cli]]
 .Allocation with CSVs in nine lines (src/bin/allocate-from-csv)
 ====
@@ -289,7 +289,7 @@ def main(folder):
 ====
 
 
-Ta-da! _Now are y'all impressed or what_?((("CSVs, doing everyting with", startref="ix_CSV")))
+Ta-da! _Now are y'all impressed or what_?((("CSVs, doing everything with", startref="ix_CSV")))
 
 Much love,
 
