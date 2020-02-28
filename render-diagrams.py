@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import re
 import sys
 import tempfile
 import subprocess
@@ -55,6 +56,7 @@ def _add_dots(source, image_id):
     assert image_id in lines[0]
     plantuml_cfg = str(Path('plantuml.cfg').absolute())
     lines[0] = lines[0].replace('config=plantuml.cfg', f'config={plantuml_cfg}')
+    lines[0] = re.sub(r'\[ditaa, (\w+)\]', r'[ditaa, \1, scale=4]', lines[0])
     for ix, l in enumerate(lines):
         if include := next((i for i in INCLUDES if i in l), None):
             lines[ix] = l.replace(include, str(Path(include).absolute()))
