@@ -480,14 +480,16 @@ image::images/apwp_ep04.png[]
 @startuml Ecommerce Context
 !include images/C4_Context.puml
 
+LAYOUT_LEFT_RIGHT
+
 Person_Ext(customer, "Customer", "Wants to buy furniture")
 
-System(fulfilment, "Fulfilment System", "Manages order fulfilment and logistics")
+System(fulfillment, "Fulfillment System", "Manages order fulfillment and logistics")
 System(ecom, "Ecommerce website", "Allows customers to buy furniture")
 
 Rel(customer, ecom, "Uses")
-Rel(fulfilment, ecom, "Updates stock and orders", "xml-rpc")
-Rel(ecom, fulfilment, "Sends orders", "xml-rpc")
+Rel(fulfillment, ecom, "Updates stock and orders", "xml-rpc")
+Rel(ecom, fulfillment, "Sends orders", "xml-rpc")
 
 @enduml
 ----
@@ -503,17 +505,19 @@ image::images/apwp_ep05.png[]
 @startuml Ecommerce Context
 !include images/C4_Context.puml
 
+LAYOUT_LEFT_RIGHT
+
 Person_Ext(customer, "Customer", "Wants to buy furniture")
 
 System(av, "Availability Service", "Calculates stock availability")
-System(fulfilment, "Fulfilment System", "Manages order fulfilment and logistics")
+System(fulfillment, "Fulfillment System", "Manages order fulfillment and logistics")
 System(ecom, "Ecommerce website", "Allows customers to buy furniture")
 
 Rel(customer, ecom, "Uses")
 Rel(customer, av, "Uses")
-Rel(fulfilment, av, "Publishes batch_created", "events")
+Rel(fulfillment, av, "Publishes batch_created", "events")
 Rel(av, ecom, "Publishes out_of_stock", "events")
-Rel(ecom, fulfilment, "Sends orders", "xml-rpc")
+Rel(ecom, fulfillment, "Sends orders", "xml-rpc")
 
 @enduml
 ----
