@@ -734,16 +734,14 @@ image::images/apwp_ep06.png[]
 @startuml View Fetcher Component Diagram
 !include images/C4_Component.puml
 
-LAYOUT_LEFT_RIGHT
-
 ComponentDb(db, "Database", "RDBMS")
 Component(fetch, "View Fetcher", "Reads data from db, returning list of tuples or dicts")
 Component(build, "View Builder", "Filters and maps tuples")
 Component(api, "API", "Handles HTTP and serialization concerns")
 
-Rel(fetch, db, "Read data from")
-Rel(build, fetch, "Invokes")
 Rel(api, build, "Invokes")
+Rel_R(build, fetch, "Invokes")
+Rel_D(fetch, db, "Reads data from")
 
 @enduml
 ----
