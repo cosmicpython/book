@@ -17,6 +17,7 @@ def all_chapter_names():
         yield chapter_name
 
 def main(paths):
+    print(paths)
     if paths:
         chapter_names = [p.replace('.html', '').replace('.asciidoc', '') for p in paths]
     else:

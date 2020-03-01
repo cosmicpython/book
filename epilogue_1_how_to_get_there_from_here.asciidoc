@@ -268,32 +268,41 @@ image::images/apwp_ep02.png[]
 @startuml
 hide empty members
 
-class Document {
+together {
+    class Document {
+      add_version ()
+      workspace: Workspace
+      parent: Folder
+      versions: List[DocumentVersion]
 
-  add_version ()
+    }
 
-  workspace: Workspace
-  parent: Folder
+    class DocumentVersion {
+      title : str
+      version_number: int
+      document: Document
 
-  versions: List[DocumentVersion]
-
+    }
+    class Folder {
+      parent: Workspace
+      children: List[Folder]
+      copy_to(target: Folder)
+      add_document(document: Document)
+    }
 }
 
-class DocumentVersion {
+together {
+    class User {
+      account: Account
+    }
 
-  title : str
-  version_number: int
 
-  document: Document
-
-}
-
-class Account {
-  add_package ()
-
-  owner : User
-  packages : List[BillingPackage]
-  workspaces: List[Workspace]
+    class Account {
+      add_package ()
+      owner : User
+      packages : List[BillingPackage]
+      workspaces: List[Workspace]
+    }
 }
 
 
@@ -301,30 +310,17 @@ class BillingPackage {
 }
 
 class Workspace {
-
   add_member(member: User)
-
   account: Account
   owner: User
   members: List[User]
-
 }
 
-class Folder {
-  parent: Workspace
-  children: List[Folder]
 
-  copy_to(target: Folder)
-  add_document(document: Document)
-}
-
-class User {
-  account: Account
-}
 
 Account --> Workspace
-Account --> BillingPackage
-Account --> User
+Account -left-> BillingPackage
+Account -right-> User
 Workspace --> User
 Workspace --> Folder
 Workspace --> Account
@@ -332,12 +328,12 @@ Folder --> Folder
 Folder --> Document
 Folder --> Workspace
 Folder --> User
-Document --> DocumentVersion
+Document -right-> DocumentVersion
 Document --> Folder
 Document --> User
-DocumentVersion --> Document
+DocumentVersion -right-> Document
 DocumentVersion --> User
-User --> Account
+User -left-> Account
 
 @enduml
 
