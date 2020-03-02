@@ -65,7 +65,9 @@ image::images/apwp_ep01.png[]
 ----
 [plantuml, apwp_ep01, config=plantuml.cfg]
 @startuml
+scale 4
 hide empty members
+
 Workspace *- Folder : contains
 Account *- Workspace : owns
 Account *-- Package : has
@@ -266,6 +268,7 @@ image::images/apwp_ep02.png[]
 ----
 [plantuml, apwp_ep02, config=plantuml.cfg]
 @startuml
+scale 4
 hide empty members
 
 together {
@@ -347,6 +350,7 @@ image::images/apwp_ep03.png[]
 ----
 [plantuml, apwp_ep03, config=plantuml.cfg]
 @startuml
+scale 4
 hide empty members
 
 frame Document {

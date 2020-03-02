@@ -87,6 +87,7 @@ image::images/apwp_1103.png[]
 ----
 [plantuml, apwp_1103, config=plantuml.cfg]
 @startuml
+scale 4
 
 actor Customer
 entity Orders
@@ -163,6 +164,7 @@ image::images/apwp_1104.png[]
 ----
 [plantuml, apwp_1104, config=plantuml.cfg]
 @startuml
+scale 4
 
 actor w as "Warehouse worker"
 entity Warehouse
@@ -215,6 +217,7 @@ image::images/apwp_1105.png[]
 ----
 [plantuml, apwp_1105, config=plantuml.cfg]
 @startuml
+scale 4
 
 actor Customer
 entity Orders
@@ -335,6 +338,7 @@ image::images/apwp_1106.png[]
 [plantuml, apwp_1106, config=plantuml.cfg]
 
 @startuml
+scale 4
 
 Redis -> MessageBus : BatchQuantityChanged event
 
