@@ -3,6 +3,7 @@
 
 Back to our allocations project! <<maps_service_layer_before>> shows the point we reached at the end of <<chapter_02_repository>>, which covered the Repository pattern.((("Flask framework", "Flask API and service layer", id="ix_Flskapp")))((("service layer", id="ix_serlay")))
 
+[role="width-75"]
 [[maps_service_layer_before]]
 .Before: we drive our app by talking to repositories and the domain model
 image::images/apwp_0401.png[]
@@ -720,6 +721,7 @@ Adding the service layer((("service layer", "benefits of")))((("Flask framework"
 dependencies of our service ((("Flask framework", "Flask API and service layer", "service layer dependencies")))((("service layer", "dependencies of")))((("dependencies", "abstract dependencies of service layer")))layer: the domain model
 and `AbstractRepository` (the port, in ports and adapters terminology).
 
+[role="width-75"]
 [[service_layer_diagram_abstract_dependencies]]
 .Abstract dependencies of the service layer
 image::images/apwp_0403.png[]
@@ -743,6 +745,7 @@ When we run the tests, <<service_layer_diagram_test_dependencies>> shows
 how we implement the abstract dependencies by using `FakeRepository` (the
 adapter).((("service layer", "dependencies of", "testing")))((("dependencies", "abstract dependencies of service layer", "testing")))
 
+[role="width-75"]
 [[service_layer_diagram_test_dependencies]]
 .Tests provide an implementation of the abstract dependency
 image::images/apwp_0404.png[]

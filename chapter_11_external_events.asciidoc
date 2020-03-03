@@ -327,6 +327,7 @@ Our new flow will look like <<reallocation_sequence_diagram_with_redis>>:
 Redis provides the `BatchQuantityChanged` event that kicks off the whole process, and our `Allocated` event is published back out to Redis again at the
 end.
 
+[role="width-90"]
 [[reallocation_sequence_diagram_with_redis]]
 .Sequence diagram for reallocation flow
 image::images/apwp_1106.png[]

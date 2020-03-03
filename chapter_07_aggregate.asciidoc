@@ -225,7 +225,7 @@ So the plan is this: when we want to allocate an order line, instead of
 <<before_aggregates_diagram>>, where we look up all the `Batch` objects in
 the world and pass((("batches", "allocating against all batches using domain service")))((("allocate service", "allocating against all batches with"))) them to the `allocate()` domain service...
 
-
+[role="width-75"]
 [[before_aggregates_diagram]]
 .Before: allocate against all batches using the domain service
 image::images/apwp_0702.png[]
@@ -276,6 +276,7 @@ allocate --> allocate_domain_service: allocate(orderline, batches)
 of all the batches _for that SKU_, and we can call a `.allocate()` method on that
 instead.((("Product object", "asking Product to allocate against its batches")))((("batches", "asking Product to allocate against")))
 
+[role="width-90"]
 [[after_aggregates_diagram]]
 .After: ask Product to allocate against its batches
 image::images/apwp_0703.png[]
@@ -950,6 +951,7 @@ a|
 Do you remember <<recap_components_diagram>>, the diagram we showed at the
 beginning of <<part1>> to preview where we were heading?((("component diagram at end of Part One")))
 
+[role="width-75"]
 [[recap_components_diagram]]
 .A component diagram for our app at the end of Part I
 image::images/apwp_0705.png[]

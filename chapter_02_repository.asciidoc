@@ -95,7 +95,7 @@ As mentioned in the <<introduction, introduction>>, a layered architecture is ((
  approach to structuring a system that has a UI, some logic, and a database (see
 <<layered_architecture2>>).
 
-
+[role="width-75"]
 [[layered_architecture2]]
 .Layered architecture
 image::images/apwp_0202.png[]
@@ -116,6 +116,7 @@ Instead, as discussed in the introduction, we'll ((("onion architecture")))think
 "inside," and dependencies flowing inward to it; this is what people sometimes call
 _onion architecture_ (see <<onion_architecture>>).
 
+[role="width-75"]
 [[onion_architecture]]
 .Onion architecture
 image::images/apwp_0203.png[]
@@ -563,6 +564,7 @@ In addition, the ((("domain driven design (DDD)", "Repository pattern and")))Rep
 do collaborate with programmers who have come to Python from the Java and C#
 worlds, they're likely to recognize it. <<repository_pattern_diagram>> illustrates the pattern.
 
+[role="width-75"]
 [[repository_pattern_diagram]]
 .Repository pattern
 image::images/apwp_0205.png[]
