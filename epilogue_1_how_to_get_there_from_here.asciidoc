@@ -65,7 +65,9 @@ image::images/apwp_ep01.png[]
 ----
 [plantuml, apwp_ep01, config=plantuml.cfg]
 @startuml
+scale 4
 hide empty members
+
 Workspace *- Folder : contains
 Account *- Workspace : owns
 Account *-- Package : has
@@ -264,34 +266,44 @@ image::images/apwp_ep02.png[]
 ----
 [plantuml, apwp_ep02, config=plantuml.cfg]
 @startuml
+scale 4
 hide empty members
 
-class Document {
+together {
+    class Document {
+      add_version()
+      workspace: Workspace
+      parent: Folder
+      versions: List[DocumentVersion]
 
-  add_version ()
+    }
 
-  workspace: Workspace
-  parent: Folder
+    class DocumentVersion {
+      title : str
+      version_number: int
+      document: Document
 
-  versions: List[DocumentVersion]
-
+    }
+    class Folder {
+      parent: Workspace
+      children: List[Folder]
+      copy_to(target: Folder)
+      add_document(document: Document)
+    }
 }
 
-class DocumentVersion {
+together {
+    class User {
+      account: Account
+    }
 
-  title : str
-  version_number: int
 
-  document: Document
-
-}
-
-class Account {
-  add_package ()
-
-  owner : User
-  packages : List[BillingPackage]
-  workspaces: List[Workspace]
+    class Account {
+      add_package()
+      owner : User
+      packages : List[BillingPackage]
+      workspaces: List[Workspace]
+    }
 }
 
 
@@ -299,30 +311,17 @@ class BillingPackage {
 }
 
 class Workspace {
-
   add_member(member: User)
-
   account: Account
   owner: User
   members: List[User]
-
 }
 
-class Folder {
-  parent: Workspace
-  children: List[Folder]
 
-  copy_to(target: Folder)
-  add_document(document: Document)
-}
-
-class User {
-  account: Account
-}
 
 Account --> Workspace
-Account --> BillingPackage
-Account --> User
+Account -left-> BillingPackage
+Account -right-> User
 Workspace --> User
 Workspace --> Folder
 Workspace --> Account
@@ -330,12 +329,12 @@ Folder --> Folder
 Folder --> Document
 Folder --> Workspace
 Folder --> User
-Document --> DocumentVersion
+Document -right-> DocumentVersion
 Document --> Folder
 Document --> User
-DocumentVersion --> Document
+DocumentVersion -right-> Document
 DocumentVersion --> User
-User --> Account
+User -left-> Account
 
 @enduml
 
@@ -348,13 +347,14 @@ image::images/apwp_ep03.png[]
 ----
 [plantuml, apwp_ep03, config=plantuml.cfg]
 @startuml
+scale 4
 hide empty members
 
 frame Document {
 
   class Document {
 
-    add_version ()
+    add_version()
 
     workspace_id: int
     parent_folder: int
@@ -374,7 +374,7 @@ frame Document {
 frame Account {
 
   class Account {
-    add_package ()
+    add_package()
 
     owner : int
     packages : List[BillingPackage]
@@ -481,14 +481,17 @@ image::images/apwp_ep04.png[]
 @startuml Ecommerce Context
 !include images/C4_Context.puml
 
+LAYOUT_LEFT_RIGHT
+scale 2
+
 Person_Ext(customer, "Customer", "Wants to buy furniture")
 
-System(fulfilment, "Fulfilment System", "Manages order fulfilment and logistics")
+System(fulfillment, "Fulfillment System", "Manages order fulfillment and logistics")
 System(ecom, "Ecommerce website", "Allows customers to buy furniture")
 
 Rel(customer, ecom, "Uses")
-Rel(fulfilment, ecom, "Updates stock and orders", "xml-rpc")
-Rel(ecom, fulfilment, "Sends orders", "xml-rpc")
+Rel(fulfillment, ecom, "Updates stock and orders", "xml-rpc")
+Rel(ecom, fulfillment, "Sends orders", "xml-rpc")
 
 @enduml
 ----
@@ -504,17 +507,20 @@ image::images/apwp_ep05.png[]
 @startuml Ecommerce Context
 !include images/C4_Context.puml
 
+LAYOUT_LEFT_RIGHT
+scale 2
+
 Person_Ext(customer, "Customer", "Wants to buy furniture")
 
 System(av, "Availability Service", "Calculates stock availability")
-System(fulfilment, "Fulfilment System", "Manages order fulfilment and logistics")
+System(fulfillment, "Fulfillment System", "Manages order fulfillment and logistics")
 System(ecom, "Ecommerce website", "Allows customers to buy furniture")
 
 Rel(customer, ecom, "Uses")
 Rel(customer, av, "Uses")
-Rel(fulfilment, av, "Publishes batch_created", "events")
+Rel(fulfillment, av, "Publishes batch_created", "events")
 Rel(av, ecom, "Publishes out_of_stock", "events")
-Rel(ecom, fulfilment, "Sends orders", "xml-rpc")
+Rel(ecom, fulfillment, "Sends orders", "xml-rpc")
 
 @enduml
 ----
@@ -733,16 +739,14 @@ image::images/apwp_ep06.png[]
 @startuml View Fetcher Component Diagram
 !include images/C4_Component.puml
 
-LAYOUT_LEFT_RIGHT
-
 ComponentDb(db, "Database", "RDBMS")
 Component(fetch, "View Fetcher", "Reads data from db, returning list of tuples or dicts")
 Component(build, "View Builder", "Filters and maps tuples")
 Component(api, "API", "Handles HTTP and serialization concerns")
 
-Rel(fetch, db, "Read data from")
-Rel(build, fetch, "Invokes")
 Rel(api, build, "Invokes")
+Rel_R(build, fetch, "Invokes")
+Rel_D(fetch, db, "Reads data from")
 
 @enduml
 ----

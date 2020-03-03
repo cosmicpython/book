@@ -688,7 +688,9 @@ image::images/apwp_1202.png[]
 ----
 [plantuml, apwp_1202, config=plantuml.cfg]
 @startuml
+scale 4
 !pragma teoz true
+
 actor User order 1
 boundary Flask order 2
 participant MessageBus order 3
