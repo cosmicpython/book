@@ -461,7 +461,7 @@ We'll come ((("events and the message bus", "transforming our app into message p
 
 <2> We instantiate an event.
 
-<3> Next, we pass it to the message bus.
+<3> Then we pass it to the message bus.
 
 And we should be back to a fully functional application, but one that's now
 fully event-driven:
@@ -486,7 +486,7 @@ We're done with our refactoring phase. ((("events and the message bus", "transfo
 change easy."  Let's implement our new requirement, shown in <<reallocation_sequence_diagram>>: we'll receive as our
 inputs some new `BatchQuantityChanged` events and pass them to a handler, which in
 turn might emit some `AllocationRequired` events, and those in turn will go
-back to our existing handler for allocation, to be reallocated.((("reallocation", "sequence diagram for flow")))
+back to our existing handler for reallocation.((("reallocation", "sequence diagram for flow")))
 
 [[reallocation_sequence_diagram]]
 .Sequence diagram for reallocation flow
@@ -839,7 +839,7 @@ violates the SRP.((("message bus", "abstract message bus and its real and fake v
 
 If we change the message bus to being a class,footnote:[The "simple"
 implementation ((("Singleton pattern, messagebus.py implementing")))in this chapter essentially uses the _messagebus.py_ module
-itself to implement Singleton Pattern.]
+itself to implement the Singleton Pattern.]
 then building a `FakeMessageBus` is more straightforward:
 
 [[abc_for_fake_messagebus]]
@@ -882,9 +882,13 @@ if you need more inspiration.
 *******************************************************************************
 
 [role="pagebreak-before less_space"]
-=== What Have We Achieved?
+=== Wrap-Up
 
-Events are simple dataclasses that define the data structures for inputs,
+Let's look back at what we've achieved, and think about why we did it.
+
+==== What Have We Achieved?
+
+Events are simple dataclasses that define the data structures for inputs
   and internal messages within our system. This is quite powerful from a DDD
   standpoint, since events often translate really well into business language
   (look up __event storming__ if you haven't already).
@@ -896,11 +900,11 @@ Handlers are the way we react to events. They can call down to our
   and really stick to the SRP.
 
 
-=== Why Have We Achieved?
+==== Why Have We Achieved?
 
 Our ongoing objective with these architectural patterns is to try to have
 the complexity of our application grow more slowly than its size.((("message bus", "whole app as, trade-offs")))((("events and the message bus", "transforming our app into message processor", "whole app as message bus, trade-offs")))  When we
-go all in on the MessageBus, as always we pay a price in terms of architectural
+go all in on the message bus, as always we pay a price in terms of architectural
 complexity (see <<chapter_09_all_messagebus_tradeoffs>>), but we buy ourselves a
 pattern that can handle almost arbitrarily complex requirements without needing
 any further conceptual or architectural change to the way we do things.
@@ -926,8 +930,7 @@ a|
 a|
 * A message bus is still a slightly unpredictable way of doing things from
   a web point of view. You don't know in advance when things are going to end.
-* The duplication/maintenance cost of having model objects _and_ events
-  now. Adding a field to one usually means adding a field to at least
+* There will be duplication of fields and structure between model objects and events, which will have a maintenance cost. Adding a field to one usually means adding a field to at least
   one of the others.
 |===
 

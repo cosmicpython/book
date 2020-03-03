@@ -13,14 +13,14 @@ business logic, and interfacing code, and we introduce the _Service Layer_
 pattern to take care of orchestrating our workflows and defining the use
 cases of our system.
 
-We'll also discuss testing: by combining the Service Layer with our Repository
+We'll also discuss testing: by combining the Service Layer with our repository
 abstraction over the database, we're able to write fast tests, not just of
 our domain model but of the entire workflow for a use case.
 
 <<maps_service_layer_after>> shows what we're aiming for: we're going to
 add a Flask API that will talk to the service layer, which will serve as the
 entrypoint to our domain model. Because our service layer depends on the
-`AbstractRepository`, we can unit test it by using `FakeRepository` but run it our production code using `SqlAlchemyRepository`.
+`AbstractRepository`, we can unit test it by using `FakeRepository` but run our production code using `SqlAlchemyRepository`.
 
 NOTE: In our diagrams, we are using the convention that new components
     are highlighted with bold text/lines (and yellow/orange color, if you're
@@ -42,7 +42,7 @@ chapter_04_service_layer branch https://oreil.ly/TBRuy[on GitHub]:
 git clone https://github.com/cosmicpython/code.git
 cd code
 git checkout chapter_04_service_layer
-# or to code along, checkout the previous chapter:
+# or to code along, checkout Chapter 2:
 git checkout chapter_02_repository
 ----
 ====
@@ -669,7 +669,7 @@ Here's one way we could organize things:
 <1> Let's have a folder for our domain model.((("domain model", "folder for")))  Currently that's just one file,
     but for a more complex application, you might have one file per class; you
     might have helper parent classes for `Entity`, `ValueObject`, and
-    `Aggregate`, you might add an __exceptions.py__ for domain-layer exceptions
+    `Aggregate`, and you might add an __exceptions.py__ for domain-layer exceptions
     and, as you'll see in <<part2>>, pass:[<span class="keep-together"><em>commands.py</em></span>] and __events.py__.
 
 <2> We'll distinguish the service layer. Currently that's just one file

@@ -86,7 +86,7 @@ We'll need a way to retrieve batch info from the database and instantiate our do
 model objects from it, and we'll also need a way of saving them back to the
 database.
 
-_(What? Oh, "gubbins" is a British word for "stuff." You can just ignore that. It's pseudocode, OK?)_
+_What? Oh, "gubbins" is a British word for "stuff." You can just ignore that. It's pseudocode, OK?_
 
 
 === Applying the DIP to Data Access
@@ -269,7 +269,7 @@ inversion and the Repository pattern to Django.
 ==== Inverting the Dependency: ORM Depends on Model
 
 Well, thankfully, that's not the only way to use SQLAlchemy.((("object-relational mappers (ORMs)", "ORM depends on the data model")))((("domain model", "translating to relational database", "ORM depends on the model")))((("dependency inversion principle", "ORM depends on the data model")))((("SQLAlchemy", "explicit ORM mapping with SQLAlchemy Table objects")))((("classical mapping")))((("mappers")))  The alternative is
-to define your schema separately, and an explicit _mapper_ for how to convert
+to define your schema separately, and to define an explicit _mapper_ for how to convert
 between the schema and our domain model, what SQLAlchemy calls a
 https://oreil.ly/ZucTG[classical mapping]:
 
@@ -663,9 +663,9 @@ def test_repository_can_retrieve_a_batch_with_allocations(session):
     assert retrieved == expected  # Batch.__eq__ only compares reference  #<3>
     assert retrieved.sku == expected.sku  #<4>
     assert retrieved._purchased_quantity == expected._purchased_quantity
-    assert retrieved._allocations == {
+    assert retrieved._allocations == {  #<4>
         model.OrderLine("order1", "GENERIC-SOFA", 12),
-    }  #<4>
+    }
 ----
 ====
 

@@ -230,7 +230,7 @@ bear in mind that invalid data wandering through your system is a time bomb;
 the deeper it gets, the more damage it can do, and the fewer tools
 you have to respond to it.
 
-Back in <<chapter_06_uow>>, we said that the message bus was a great place to put
+Back in <<chapter_08_events_and_message_bus>>, we said that the message bus was a great place to put
 cross-cutting concerns, and validation is a perfect example of that. Here's how
 we might change our bus to perform validation for us:
 
