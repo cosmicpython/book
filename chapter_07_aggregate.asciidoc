@@ -225,7 +225,7 @@ So the plan is this: when we want to allocate an order line, instead of
 <<before_aggregates_diagram>>, where we look up all the `Batch` objects in
 the world and pass((("batches", "allocating against all batches using domain service")))((("allocate service", "allocating against all batches with"))) them to the `allocate()` domain service...
 
-[role="width-75"]
+[role="width-60"]
 [[before_aggregates_diagram]]
 .Before: allocate against all batches using the domain service
 image::images/apwp_0702.png[]
@@ -276,7 +276,7 @@ allocate --> allocate_domain_service: allocate(orderline, batches)
 of all the batches _for that SKU_, and we can call a `.allocate()` method on that
 instead.((("Product object", "asking Product to allocate against its batches")))((("batches", "asking Product to allocate against")))
 
-[role="width-90"]
+[role="width-75"]
 [[after_aggregates_diagram]]
 .After: ask Product to allocate against its batches
 image::images/apwp_0703.png[]
@@ -364,6 +364,15 @@ class Product:
 //      are never supposed to have a collection of aggregates, they could return
 //      an error for __hash__. or sumfink.
 
+NOTE: This `Product` might not look like what you'd expect a `Product`
+    model to look like.  No price, no description, no dimensions.
+    Our allocation service doesn't care about any of those things.
+    This is the((("bounded contexts", "product concept and"))) power of bounded contexts; the concept
+    of a product in one app can be very different from another.
+    See the following sidebar for more
+    discussion.
+
+
 [role="nobreakinside less_space"]
 [[bounded_contexts_sidebar]]
 .Aggregates, Bounded Contexts, and Microservices
@@ -402,17 +411,6 @@ elsewhere. The Fowler link at the start of this sidebar is a good starting point
 (or indeed, any) DDD book will have a chapter or more on bounded contexts.((("aggregates", "choosing an aggregrate", startref="ix_aggch")))
 
 *******************************************************************************
-
-
-NOTE: This `Product` might not look like what you'd expect a `Product`
-    model to look like.  No price, no description, no dimensions.
-    Our allocation service doesn't care about any of those things.
-    This is the((("bounded contexts", "product concept and"))) power of bounded contexts; the concept
-    of a product in one app can be very different from another.
-    See the following sidebar for more
-    discussion.
-
-
 
 === One Aggregate = One Repository
 
@@ -891,28 +889,6 @@ We also recommend these three online papers on
 https://dddcommunity.org/library/vernon_2011[effective aggregate design]
 by Vaughn Vernon (the "red book" author).
 
-[role="nobreakinside less_space"]
-.Aggregates and Consistency Boundaries Recap
-*****************************************************************
-Aggregates are your entrypoints into the domain model::
-    By restricting the number of ways that things can be changed,
-    we make the system easier to reason about.
-
-Aggregates are in charge of a consistency boundary::
-    An aggregate's((("consistency boundaries", "recap"))) job is to be able to manage our business rules
-    about invariants as they apply to a group of related objects.
-    It's the aggregate's job to check that the objects within its
-    remit are consistent with each other and with our rules, and
-    to reject changes that would break the rules.
-
-Aggregates and concurrency issues go together::
-    When thinking about implementing these consistency checks, we
-    end up thinking about transactions and locks.((("concurrency", "aggregates and concurrency issues")))  Choosing the
-    right aggregate is about performance as well as conceptual
-    organization of your domain.
-
-*****************************************************************
-
 <<chapter_07_aggregate_tradoffs>> has some thoughts on the trade-offs of implementing the Aggregate pattern.((("aggregates", "pros and cons or trade-offs")))
 
 [[chapter_07_aggregate_tradoffs]]
@@ -944,6 +920,28 @@ a|
 * Dealing with eventual consistency between aggregates can be complex.
 |===
 
+
+[role="nobreakinside less_space"]
+.Aggregates and Consistency Boundaries Recap
+*****************************************************************
+Aggregates are your entrypoints into the domain model::
+    By restricting the number of ways that things can be changed,
+    we make the system easier to reason about.
+
+Aggregates are in charge of a consistency boundary::
+    An aggregate's((("consistency boundaries", "recap"))) job is to be able to manage our business rules
+    about invariants as they apply to a group of related objects.
+    It's the aggregate's job to check that the objects within its
+    remit are consistent with each other and with our rules, and
+    to reject changes that would break the rules.
+
+Aggregates and concurrency issues go together::
+    When thinking about implementing these consistency checks, we
+    end up thinking about transactions and locks.((("concurrency", "aggregates and concurrency issues")))  Choosing the
+    right aggregate is about performance as well as conceptual
+    organization of your domain.
+
+*****************************************************************
 
 
 === Part I Recap
