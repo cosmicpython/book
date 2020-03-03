@@ -18,14 +18,45 @@ section[data-type="afterword"] figcaption:before {
 /*less space for pagebreaks */
 .less_space {margin-top: 0 !important;}
 
-/* Custom widths */
-.width-40 { width: 40% !important; }
-.width-50 { width: 50% !important; }
-.width-60 { width: 60% !important; }
-.width-70 { width: 70% !important; }
-.width-75 { width: 75% !important; }
-.width-80 { width: 80% !important; }
-.width-90 { width: 90% !important; }
+/* Variable widths */
+.width-10,
+figure.width-10 img { width: 10% !important; }
+.width-20,
+figure.width-20 img { width: 20% !important; }
+.width-25,
+figure.width-25 img { width: 25% !important; }
+.width-30,
+figure.width-30 img { width: 30% !important; }
+.width-40,
+figure.width-40 img { width: 40% !important; }
+.width-50,
+figure.width-50 img { width: 50% !important; }
+.width-60,
+figure.width-60 img { width: 60% !important; }
+.width-70,
+figure.width-70 img { width: 70% !important; }
+.width-75,
+figure.width-75 img { width: 75% !important; }
+.width-80,
+figure.width-80 img { width: 80% !important; }
+.width-90,
+figure.width-90 img { width: 90% !important; }
+.width-100,
+figure.width-100 img { width: 100% !important; }
+
+/* Figure width reset */
+figure.width-10,
+figure.width-20,
+figure.width-25,
+figure.width-30,
+figure.width-40,
+figure.width-50,
+figure.width-60,
+figure.width-70,
+figure.width-75,
+figure.width-80,
+figure.width-90,
+figure.width-100 { width: auto !important; }
 
 /* Allow Examples to have less space at top of page (STYL-1266)
 section.less_space > h1:first-child { 
