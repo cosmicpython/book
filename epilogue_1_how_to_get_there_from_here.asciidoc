@@ -65,7 +65,9 @@ image::images/apwp_ep01.png[]
 ----
 [plantuml, apwp_ep01, config=plantuml.cfg]
 @startuml
+scale 4
 hide empty members
+
 Workspace *- Folder : contains
 Account *- Workspace : owns
 Account *-- Package : has
@@ -266,11 +268,12 @@ image::images/apwp_ep02.png[]
 ----
 [plantuml, apwp_ep02, config=plantuml.cfg]
 @startuml
+scale 4
 hide empty members
 
 together {
     class Document {
-      add_version ()
+      add_version()
       workspace: Workspace
       parent: Folder
       versions: List[DocumentVersion]
@@ -298,7 +301,7 @@ together {
 
 
     class Account {
-      add_package ()
+      add_package()
       owner : User
       packages : List[BillingPackage]
       workspaces: List[Workspace]
@@ -347,13 +350,14 @@ image::images/apwp_ep03.png[]
 ----
 [plantuml, apwp_ep03, config=plantuml.cfg]
 @startuml
+scale 4
 hide empty members
 
 frame Document {
 
   class Document {
 
-    add_version ()
+    add_version()
 
     workspace_id: int
     parent_folder: int
@@ -373,7 +377,7 @@ frame Document {
 frame Account {
 
   class Account {
-    add_package ()
+    add_package()
 
     owner : int
     packages : List[BillingPackage]
@@ -481,6 +485,7 @@ image::images/apwp_ep04.png[]
 !include images/C4_Context.puml
 
 LAYOUT_LEFT_RIGHT
+scale 2
 
 Person_Ext(customer, "Customer", "Wants to buy furniture")
 
@@ -506,6 +511,7 @@ image::images/apwp_ep05.png[]
 !include images/C4_Context.puml
 
 LAYOUT_LEFT_RIGHT
+scale 2
 
 Person_Ext(customer, "Customer", "Wants to buy furniture")
 

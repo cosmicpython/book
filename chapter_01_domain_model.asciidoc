@@ -126,6 +126,7 @@ image::images/apwp_0102.png[]
 [plantuml, apwp_0102]
 @startuml Allocation Context Diagram
 !include images/C4_Context.puml
+scale 2
 
 System(systema, "Allocation", "Allocates stock to customer orders")
 
@@ -459,6 +460,8 @@ image::images/apwp_0103.png[]
 [role="image-source"]
 ----
 [plantuml, apwp_0103, config=plantuml.cfg]
+@startuml
+scale 4
 
 left to right direction
 hide empty members
