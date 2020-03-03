@@ -18,9 +18,7 @@ but they have no idea how to fix it.
 We've found that many developers, when asked to design a new system, will
 immediately start to build a database schema, with the object model treated
 as an afterthought. This is where it all starts to go wrong. Instead, _behavior
-should come first and drive our storage requirements._
-
-After all, our customers don't care about the data model. They care about what
+should come first and drive our storage requirements._ After all, our customers don't care about the data model. They care about what
 the system _does_; otherwise they'd just use a spreadsheet.
 
 The first part of the book looks at how to build a rich object model
@@ -29,7 +27,6 @@ to keep that model decoupled from technical concerns. We show how to build
 persistence-ignorant code and how to create stable APIs around our domain so
 that we can refactor aggressively.
 
-[role="pagebreak-before less_space"]
 To do that, we present four key design patterns:
 
 * The <<chapter_02_repository,Repository pattern>>, an abstraction over the
