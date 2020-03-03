@@ -491,7 +491,7 @@ the resilience of our software. Again, the Unit of Work and Command Handler
 patterns mean that each attempt starts from a consistent state and won't leave
 things half-finished.
 
-WARNING: At some point, regardless of tenacity, we'll have to give up trying to
+WARNING: At some point, regardless of `tenacity`, we'll have to give up trying to
     process the message. Building reliable systems with distributed messages is
     hard, and we have to skim over some tricky bits. There are pointers to more
     reference materials in the <<epilogue_1_how_to_get_there_from_here, epilogue>>.

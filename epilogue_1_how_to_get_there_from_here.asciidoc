@@ -252,7 +252,7 @@ These operations _killed_ performance, but fixing them meant giving up our singl
 object graph. Instead, we began to identify aggregates and to break the direct
 links between objects.
 
-NOTE: We talked about the infamous `SELECT N+1` problem in <<chapter_11_external_events>>, and how
+NOTE: We talked about the infamous `SELECT N+1` problem in <<chapter_12_cqrs>>, and how
 we might choose to use different techniques when reading data for queries versus
 reading data for commands.
 
@@ -721,9 +721,9 @@ Generally, your system will have a single message bus implementation and a bunch
 Is it a code smell for a use case to use multiple repositories/aggregates, and if so, why?::
 An aggregate is a consistency boundary, so if your use case needs to update two aggregates atomically (within the same transaction), then your consistency boundary is wrong, strictly speaking. Ideally you should think about moving to a new aggregate that wraps up all the things you want to change at the same time.
 +
-If you're actually updating only one aggregate and using the other(s) for read-only access, then that's _fine_, although you could consider building a read-model/view to get you that data instead--it makes things cleaner if each use case has only one aggregate.
+If you're actually updating only one aggregate and using the other(s) for read-only access, then that's _fine_, although you could consider building a read/view model to get you that data instead--it makes things cleaner if each use case has only one aggregate.
 +
-If you do need to modify two aggregates, but the two operations don't have to be in the same transaction/UoW, then consider splitting the work out into two different handlers and using a domain event to carry information between the two. You can read more in https://oreil.ly/uZ4yt[these papers on aggregate design] by Vaughn Vernon.
+If you do need to modify two aggregates, but the two operations don't have to be in the same transaction/UoW, then consider splitting the work out into two different handlers and using a domain event to carry information between the two. You can read more in https://oreil.ly/sufKE[these papers on aggregate design] by Vaughn Vernon.
 
 What if I have a read-only but business-logic-heavy system?::
 View models can have complex logic in them. In this book, we've encouraged you to separate your read and write models because they have different consistency and throughput requirements. Mostly, we can use simpler logic for reads, but that's not always true. In particular, permissions and authorization models can add a lot of complexity to our read side.

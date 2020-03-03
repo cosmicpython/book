@@ -428,7 +428,7 @@ NOTE: Are you thinking to yourself, POST to _/add_batch_? That's not
     very RESTful!  You're quite right.  We're being happily sloppy, but
     if you'd like to make it all more RESTy, maybe a POST to _/batches_,
     then knock yourself out!  Because Flask is a thin adapter, it'll be
-    easy.  See the next sidebar.
+    easy. See <<types_of_test_rules_of_thumb, the next sidebar>>.
 
 And our hardcoded SQL queries from _conftest.py_ get replaced with some
 API calls, meaning the API tests have no dependencies other than the API,
@@ -515,3 +515,5 @@ Error handling counts as a feature::
     unit tests, of course).((("test-driven development (TDD)", startref="ix_TDD")))
 
 ******************************************************************************
+
+Onto the next chapter!

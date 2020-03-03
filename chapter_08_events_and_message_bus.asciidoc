@@ -141,7 +141,7 @@ We've written a service layer to manage orchestration for us, but even here
 the feature feels out of place:
 
 [[email_in_services]]
-.And in the services layer, it's out of place (src/allocation/service_layer/services.py)
+.And in the service layer, it's out of place (src/allocation/service_layer/services.py)
 ====
 [source,python]
 [role="non-head"]
@@ -691,7 +691,7 @@ class TrackingRepository:
 ====
 
 <1> By wrapping the repository, we can call the actual `.add()`
-    and `.get()` methods, avoiding weird underscore methods.
+    and `.get()` methods, avoiding weird underscorey methods.
 
 See if you can apply a similar pattern to our UoW class in
 order to get rid of those Java-y `_commit()` methods too.((("Unit of Work pattern", "getting rid of underscorey methods in UoW class"))) You can find the code on https://github.com/cosmicpython/code/tree/chapter_08_events_and_message_bus_exercise[GitHub].
@@ -757,7 +757,7 @@ a|
 a|
 |===
 
-Events are useful for more than just sending email, though. In <<chapter_05_high_gear_low_gear>> we
+Events are useful for more than just sending email, though. In <<chapter_07_aggregate>> we
 spent a lot of time convincing you that you should define aggregates, or
 boundaries where we guarantee consistency. People often ask, "What
 should I do if I need to change multiple aggregates as part of a request?" Now

@@ -291,10 +291,7 @@ def allocations(orderid: str, uow: unit_of_work.SqlAlchemyUnitOfWork):
 ====
 
 
-[quote, Our readers]
-____
-Excuse me?  Raw SQL?
-____
+_Excuse me?  Raw SQL?_
 
 If you're anything like Harry encountering this pattern for the first time,
 you'll be wondering what on earth Bob has been smoking. We're hand-rolling our
@@ -332,11 +329,11 @@ at least one integration test.  Something like this:
 def test_allocations_view(sqlite_session_factory):
     uow = unit_of_work.SqlAlchemyUnitOfWork(sqlite_session_factory)
     messagebus.handle(commands.CreateBatch('sku1batch', 'sku1', 50, None), uow)  #<1>
-    messagebus.handle(commands.CreateBatch('sku2batch', 'sku2', 50, today()), uow)
+    messagebus.handle(commands.CreateBatch('sku2batch', 'sku2', 50, today), uow)
     messagebus.handle(commands.Allocate('order1', 'sku1', 20), uow)
     messagebus.handle(commands.Allocate('order1', 'sku2', 20), uow)
     # add a spurious batch and order to make sure we're getting the right ones
-    messagebus.handle(commands.CreateBatch('sku1batch-later', 'sku1', 50, today()), uow)
+    messagebus.handle(commands.CreateBatch('sku1batch-later', 'sku1', 50, today), uow)
     messagebus.handle(commands.Allocate('otherorder', 'sku1', 30), uow)
     messagebus.handle(commands.Allocate('otherorder', 'sku2', 10), uow)
 
@@ -422,7 +419,7 @@ def allocations(orderid: str, uow: unit_of_work.AbstractUnitOfWork):
 
 <3> We filter _again_ to get just the batches for our specific
     order. That, in turn, relies on our `Batch` objects being able to tell us
-    which order IDs it has allocated to it.
+    which order IDs it has allocated.
 
 We implement that last using a `.orderid` property:
 
@@ -833,7 +830,7 @@ to Redis), and see which you prefer.
 **********************************************************************
 
 
-=== Wrap-Up: But Would You Really?
+=== Wrap-Up
 
 <<view_model_tradeoffs>> proposes some((("command-query responsibility segregation (CQRS)", "trade-offs for view model options")))((("views", "trade-offs for view model options"))) pros and cons for each of our options.
 

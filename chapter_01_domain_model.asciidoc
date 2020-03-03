@@ -75,7 +75,7 @@ too late, and OO enthusiasts will tell you to look further back to Ivar
 Jacobson and Grady Booch; the term has been around since the mid-1980s.]
 and it's been a hugely successful movement in transforming the way people
 design software by focusing on the core business domain. Many of the
-architecture patterns that we cover in this book—including Entity, Aggregate, Value Object (see <<chapter_06_uow>>), and Repository (in
+architecture patterns that we cover in this book—including Entity, Aggregate, Value Object (see <<chapter_07_aggregate>>), and Repository (in
 <<chapter_02_repository,the next chapter>>)—come from the DDD tradition.
 
 In a nutshell, DDD says that the most important thing about software is that it
@@ -212,6 +212,11 @@ We can't allocate the same line twice. For example:
 Batches have an _ETA_ if they are currently shipping, or they may be in _warehouse stock_. We allocate to warehouse stock in preference to shipment batches. We allocate to shipment batches in order of which has the earliest ETA.
 ****
 
+=== Unit Testing Domain Models
+
+We're not going to show you how TDD works in this book, but we want to show you
+how we would construct a model from this business conversation.((("unit testing", "of domain models", id="ix_UTDM")))((("domain modeling", "unit testing domain models", id="ix_dommodUT")))
+
 [role="nobreakinside less_space"]
 .Exercise for the Reader
 ******************************************************************************
@@ -226,12 +231,6 @@ scratch, or combine/rewrite them however you like.
 //(EJ3): nice to have for completeness, but not necessary
 
 ******************************************************************************
-
-
-=== Unit Testing Domain Models
-
-We're not going to show you how TDD works in this book, but we want to show you
-how we would construct a model from this business conversation.((("unit testing", "of domain models", id="ix_UTDM")))((("domain modeling", "unit testing domain models", id="ix_dommodUT")))
 
 Here's what one of our first tests might look like:
 
@@ -970,7 +969,7 @@ Not everything has to be an object::
     or `get_baz()` waiting to happen.((("functions")))
 
 This is the time to apply your best OO design principles::
-    Revisit the ((("object-oriented design principles")))SOLID principles and all the other good heuristics like "a versus is-a,"
+    Revisit the ((("object-oriented design principles")))SOLID principles and all the other good heuristics like "has a versus is-a,"
     "prefer composition over inheritance," and so on.
 
 You'll((("domain modeling", startref="ix_dommod"))) also want to think about consistency boundaries and aggregates::
