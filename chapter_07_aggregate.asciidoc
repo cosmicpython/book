@@ -324,7 +324,7 @@ Product o- Batch: has
 
 Let's see how that looks ((("Product object", "code for")))in code form:
 
-
+[role="pagebreak-before"]
 [[product_aggregate]]
 .Our chosen aggregate, Product (src/allocation/domain/model.py)
 ====
@@ -516,13 +516,6 @@ background, SQLAlchemy would page through data for us. This would lead to more
 requests, each fetching a smaller number of rows. Because we need to find only a
 single batch with enough capacity for our order, this might work pretty well.
 
-If all else failed, we'd just look for a different aggregate. Maybe we could
-split up batches by region or by warehouse. Maybe we could redesign our data
-access strategy around the shipment concept. The Aggregate pattern is designed
-to help manage some technical constraints around consistency and performance.
-There isn't _one_ correct aggregate, and we should feel comfortable changing our
-minds if we find our boundaries are causing performance woes.
-
 [role="nobreakinside less_space"]
 .Exercise for the Reader
 ******************************************************************************
@@ -544,6 +537,13 @@ at implementing version numbers. Bonus points if you can get SQLAlchemy to
 do them for you by magic!
 
 ******************************************************************************
+
+If all else failed, we'd just look for a different aggregate. Maybe we could
+split up batches by region or by warehouse. Maybe we could redesign our data
+access strategy around the shipment concept. The Aggregate pattern is designed
+to help manage some technical constraints around consistency and performance.
+There isn't _one_ correct aggregate, and we should feel comfortable changing our
+minds if we find our boundaries are causing performance woes.
 
 
 === Optimistic Concurrency with Version Numbers
@@ -572,6 +572,11 @@ a `Product` with, for example, `version=3`.((("Product object", "two transaction
 in order to modify a state. But we set up our database integrity
 rules such that only one of them is allowed to `commit` the new `Product`
 with `version=4`, and the other update is rejected.((("transactions", "concurrent, attempting update on Product")))
+
+TIP: Version numbers are just one way to implement optimistic locking. You
+    could achieve the same thing ((("PostgreSQL", "SERIALIZABLE transaction isolation level")))by setting the Postgres transaction isolation
+    level to `SERIALIZABLE`, but that often comes at a severe performance cost.
+    Version numbers also make implicit concepts explicit.
 
 [[version_numbers_sequence_diagram]]
 .Sequence diagram: two transactions attempting a concurrent update on pass:[<code><span class="keep-together">Product</span></code>]
@@ -602,11 +607,6 @@ Database -[#red]>x Transaction2: Error! version is already 4
 
 @enduml
 ----
-
-TIP: Version numbers are just one way to implement optimistic locking. You
-    could achieve the same thing ((("PostgreSQL", "SERIALIZABLE transaction isolation level")))by setting the Postgres transaction isolation
-    level to `SERIALIZABLE`, but that often comes at a severe performance cost.
-    Version numbers also make implicit concepts explicit.
 
 
 [role="nobreakinside less_space"]
