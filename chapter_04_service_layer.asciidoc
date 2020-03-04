@@ -23,16 +23,15 @@ add a Flask API that will talk to the service layer, which will serve as the
 entrypoint to our domain model. Because our service layer depends on the
 `AbstractRepository`, we can unit test it by using `FakeRepository` but run our production code using `SqlAlchemyRepository`.
 
-NOTE: In our diagrams, we are using the convention that new components
-    are highlighted with bold text/lines (and yellow/orange color, if you're
-    reading a digital version).
-
 [[maps_service_layer_after]]
 .The service layer will become the main way into our app
 image::images/apwp_0402.png[]
 
 // IDEA more detailed legend
 
+In our diagrams, we are using the convention that new components
+    are highlighted with bold text/lines (and yellow/orange color, if you're
+    reading a digital version).
 
 [TIP]
 ====
