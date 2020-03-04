@@ -4,7 +4,9 @@
 In this chapter, we're going to start with a fairly uncontroversial insight:
 reads (queries) and writes (commands) are different, so they
 should be treated differently (or have their responsibilities segregated, if you will).((("queries", seealso="command-query responsibility segregation")))((("command-query responsibility segregation (CQRS)", id="ix_CQRS"))) Then we're going to push that insight as far
-as we can. If you're anything like Harry, this will all seem extreme at first,
+as we can. 
+
+If you're anything like Harry, this will all seem extreme at first,
 but hopefully we can make the argument that it's not _totally_ unreasonable.((("CQRS", see="command-query responsibility segregation")))
 
 <<maps_chapter_11>> shows where we might end up.
@@ -41,7 +43,7 @@ allocated to a single batch."
 
 We wrote down these rules as unit tests at the beginning of the book:
 
-
+[role="pagebreak-before"]
 [[domain_tests]]
 .Our basic domain tests (tests/unit/test_batches.py)
 ====
@@ -460,18 +462,17 @@ business works: workflow, rules around state changes, messages exchanged;
 concerns about how the system reacts to external events and user input.
 _Most of this stuff is totally irrelevant for read-only operations_.
 
+TIP: This justification for CQRS is related to the justification for the Domain
+    Model pattern. If you're building a simple CRUD app, reads and writes are
+    going to be closely related, so you don't need a domain model or CQRS. But
+    the more complex your domain, the more likely you are to need both.
+
 To make a facile point, your domain classes will have multiple methods for
 modifying state, and you won't need any of them for read-only operations.
 
 As the complexity of your domain model grows, you will find yourself making
 more and more choices about how to structure that model, which make it more and
 more awkward to use for read operations.
-
-
-TIP: This justification for CQRS is related to the justification for the Domain
-    Model pattern. If you're building a simple CRUD app, reads and writes are
-    going to be closely related, so you don't need a domain model or CQRS. But
-    the more complex your domain, the more likely you are to need both.
 
 
 ===  "Obvious" Alternative 2: Using the ORM
