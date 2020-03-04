@@ -978,6 +978,17 @@ You could do two things ((("adapters", "exercise for the reader")))for practice 
 
 ******************************************************************************
 
+=== Wrap-Up
+
+In summary:
+
+1. Define your API using an ABC.
+2. Implement the real thing.
+3. Build a fake and use it for unit/service-layer/handler tests.
+4. Find a less fake version you can put into your Docker environment.
+5. Test the less fake "real" thing.
+6. Profit!((("adapters", "defining adapter and doing dependency injection for it", startref="ix_adapDI")))
+
 [role="less_space nobreakinside"]
 .DI and Bootstrap Recap
 ****
@@ -1002,15 +1013,6 @@ You could do two things ((("adapters", "exercise for the reader")))for practice 
   dependency into a "proper" adapter, factoring out an ABC, defining its real
   and fake implementations, and thinking through integration testing.
 ****
-
-In summary:
-
-1. Define your API using an ABC.
-2. Implement the real thing.
-3. Build a fake and use it for unit/service-layer/handler tests.
-4. Find a less fake version you can put into your Docker environment.
-5. Test the less fake "real" thing.
-6. Profit!((("adapters", "defining adapter and doing dependency injection for it", startref="ix_adapDI")))
 
 // TODO this isn't really in the right TDD order is it?
 
