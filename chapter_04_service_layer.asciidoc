@@ -721,6 +721,13 @@ Adding the service layer((("service layer", "benefits of")))((("Flask framework"
 dependencies of our service ((("Flask framework", "Flask API and service layer", "service layer dependencies")))((("service layer", "dependencies of")))((("dependencies", "abstract dependencies of service layer")))layer: the domain model
 and `AbstractRepository` (the port, in ports and adapters terminology).
 
+When we run the tests, <<service_layer_diagram_test_dependencies>> shows
+how we implement the abstract dependencies by using `FakeRepository` (the
+adapter).((("service layer", "dependencies of", "testing")))((("dependencies", "abstract dependencies of service layer", "testing")))
+
+And when we actually run our app, we swap in the "real" dependency((("service layer", "dependencies of", "real dependencies at runtime")))((("dependencies", "real service layer dependencies at runtime"))) shown in
+<<service_layer_diagram_runtime_dependencies>>.
+
 [role="width-75"]
 [[service_layer_diagram_abstract_dependencies]]
 .Abstract dependencies of the service layer
@@ -740,10 +747,6 @@ image::images/apwp_0403.png[]
 +------------------+     +--------------------+
 ----
 
-
-When we run the tests, <<service_layer_diagram_test_dependencies>> shows
-how we implement the abstract dependencies by using `FakeRepository` (the
-adapter).((("service layer", "dependencies of", "testing")))((("dependencies", "abstract dependencies of service layer", "testing")))
 
 [role="width-75"]
 [[service_layer_diagram_test_dependencies]]
@@ -773,9 +776,6 @@ image::images/apwp_0404.png[]
                          |      (in-memory)     |
                          +----------------------+
 ----
-
-And when we actually run our app, we swap in the "real" dependency((("service layer", "dependencies of", "real dependencies at runtime")))((("dependencies", "real service layer dependencies at runtime"))) shown in
-<<service_layer_diagram_runtime_dependencies>>.
 
 [role="width-75"]
 [[service_layer_diagram_runtime_dependencies]]
