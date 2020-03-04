@@ -440,6 +440,7 @@ term and if you want to migrate to some of our patterns later.((("Django", "appl
 * A business-logic layer might start out working with Django model objects and only later become fully decoupled from the framework and work on
   plain Python data structures.
 
+[role="pagebreak-before"]
 * For the read side, you can get some of the benefits of CQRS by putting reads
   into one place, avoiding ORM calls sprinkled all over the place.
 

@@ -504,10 +504,9 @@ class AbstractRepository(abc.ABC):
     ABCs actually "work" in Python.((("abstract methods")))((("@abc.abstractmethod"))) Python will refuse to let you instantiate
     a class that does not implement all the `abstractmethods` defined in its
     parent class.footnote:[To really reap the benefits of ABCs (such as they
-may be), you'll want to be running some helpers like `pylint` and `mypy`.]
+may be), be running helpers like `pylint` and `mypy`.]
 
-<2> `raise NotImplementedError` is nice, but it's neither necessary nor sufficient.
-    In fact, your abstract methods can have real behavior that subclasses
+<2> `raise NotImplementedError` is nice, but it's neither necessary nor sufficient. Your abstract methods can have real behavior that subclasses
     can call out to, if you really want.
 
 [role="pagebreak-before less_space"]
@@ -564,7 +563,7 @@ In addition, the ((("domain driven design (DDD)", "Repository pattern and")))Rep
 do collaborate with programmers who have come to Python from the Java and C#
 worlds, they're likely to recognize it. <<repository_pattern_diagram>> illustrates the pattern.
 
-[role="width-75"]
+[role="width-60"]
 [[repository_pattern_diagram]]
 .Repository pattern
 image::images/apwp_0205.png[]
