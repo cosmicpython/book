@@ -34,7 +34,8 @@ To do that, we present four key design patterns:
 
 * The <<chapter_04_service_layer,Service Layer>> pattern to clearly define where our
   use cases begin and end
-
+  
+[role="pagebreak-before"]
 * The <<chapter_06_uow,Unit of Work pattern>> to provide atomic operations
 
 * The <<chapter_07_aggregate,Aggregate pattern>> to enforce the integrity
@@ -44,7 +45,7 @@ If you'd like a picture of where we're going, take a look at
 <<part1_components_diagram>>, but don't worry if none of it makes sense
 yet!  We introduce each box in the figure, one by one, throughout this part of the book.
 
-[role="width-75"]
+[role="width-90"]
 [[part1_components_diagram]]
 .A component diagram for our app at the end of <<part1>>
 image::images/apwp_p101.png[]
