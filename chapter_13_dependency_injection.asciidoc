@@ -30,6 +30,20 @@ If you haven't already, it's worth reading <<chapter_03_abstractions>>
 .Without bootstrap: entrypoints do a lot
 image::images/apwp_1301.png[]
 
+[TIP]
+====
+The code for this chapter is in the
+chapter_13_dependency_injection branch https://oreil.ly/-B7e6[on GitHub]:
+
+----
+git clone https://github.com/cosmicpython/code.git
+cd code
+git checkout chapter_13_dependency_injection
+# or to code along, checkout the previous chapter:
+git checkout chapter_12_cqrs
+----
+====
+
 <<bootstrap_chapter_after_diagram>> shows our bootstrapper taking over those
 responsibilities.
 
@@ -44,20 +58,6 @@ Depending on your particular brain type, you may have a slight
 feeling of unease at the back of your mind at this point.((("dependency injection", "implicit versus explicit dependencies")))  Let's bring it out
 into the open. We've shown you two ways of managing
 dependencies and testing them.
-
-[TIP]
-====
-The code for this chapter is in the
-chapter_13_dependency_injection branch https://oreil.ly/-B7e6[on GitHub]:
-
-----
-git clone https://github.com/cosmicpython/code.git
-cd code
-git checkout chapter_13_dependency_injection
-# or to code along, checkout the previous chapter:
-git checkout chapter_12_cqrs
-----
-====
 
 
 For our database dependency, we've built a careful framework of explicit
