@@ -27,6 +27,7 @@ git checkout chapter_04_service_layer
 ----
 ====
 
+[role="width-90"]
 [[before_uow_diagram]]
 .Without UoW: API talks directly to three layers
 image::images/apwp_0601.png[]
@@ -43,7 +44,7 @@ And we'll do it all using a lovely piece((("context manager"))) of Python syntax
 .With UoW: UoW now manages database state
 image::images/apwp_0602.png[]
 
-
+[role="pagebreak-before less_space"]
 === The Unit of Work Collaborates with the Repository
 
 //TODO (DS) do you talk anywhere about multiple repositories?
