@@ -368,7 +368,7 @@ So far, we can manage the implementation by just incrementing and decrementing
 `Batch.available_quantity`, but as we get into `deallocate()` tests, we'll be
 forced into a more intelligent solution:
 
-
+[role="pagebreak-before]
 [[test_deallocate_unallocated]]
 .This test is going to require a smarter model (test_batches.py)
 ====
