@@ -309,7 +309,7 @@ def test_allocate_returns_allocation():
 
 <2> Notice the similarity with the fake `commit()` function
     from `FakeSession` (which we can now get rid of). But it's
-    a substantial improvement because we're now faking out
+    a substantial improvement because we're now pass:[<span class="keep-together">faking</span>] out
     code that we wrote rather than third-party code. Some
     people say, https://oreil.ly/0LVj3["Don't mock what you don't own"].
 
