@@ -499,7 +499,7 @@ Rel(ecom, fulfilment, "Sends orders", "xml-rpc")
 to <<strangler_after>>.
 
 [[strangler_after]]
-.After: loose coupling with asynchronous events
+.After: loose coupling with asynchronous events (you can find a high-resolution version of this diagram at cosmicpython.com)
 image::images/apwp_ep05.png[]
 [role="image-source"]
 ----
@@ -728,7 +728,7 @@ View models can have complex logic in them. In this book, we've encouraged you t
 We've written systems in which the view models needed extensive unit tests. In those systems, we split a _view builder_ from a _view fetcher_, as in <<view_builder_diagram>>.
 
 [[view_builder_diagram]]
-.A view builder and view fetcher
+.A view builder and view fetcher (you can find a high-resolution version of this diagram at cosmicpython.com)
 image::images/apwp_ep06.png[]
 [role="image-source"]
 ----
