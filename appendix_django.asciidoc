@@ -107,7 +107,7 @@ def test_repository_can_retrieve_a_batch_with_allocations():
     d_b1 = django_models.Batch.objects.create(
     reference="batch1", sku=sku, qty=100, eta=None
 )
-d_b2 = django_models.Batch.objects.create(
+    d_b2 = django_models.Batch.objects.create(
     reference="batch2", sku=sku, qty=100, eta=None
 )
     django_models.Allocation.objects.create(line=d_line, batch=d_batch1)
