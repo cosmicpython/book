@@ -181,7 +181,7 @@ understand how the system works and how the core concepts interrelate.
 We often "sketch" new behaviors by writing tests at this level to see how the
 code might look. When we want to improve the design of the code, though, we will need to replace
 or delete these tests, because they are tightly coupled to a particular
-implementation.
+pass:[<span class="keep-together">implementation</span>].
 
 // IDEA: (EJ3) an example that is overmocked would be good here if you decide to
 // add one. Ch12 already has one that could be expanded.
@@ -392,7 +392,7 @@ This is a really nice place to be in.  Our service-layer tests depend on only
 the service layer itself, leaving us completely free to refactor the model as
 we see fit.((("test-driven development (TDD)", "fully decoupling service layer from the domain", startref="ix_TDDdecser")))((("domain layer", "fully decoupling service layer from", startref="ix_domlaydec")))((("service layer", "fully decoupling from the domain", startref="ix_serlaydec")))
 
-
+[role="pagebreak-before less_space"]
 === Carrying the Improvement Through to the E2E Tests
 
 In the same way that adding `add_batch` helped decouple our service-layer
@@ -470,15 +470,7 @@ def test_happy_path_returns_201_and_allocated_batch():
 === Wrap-Up
 
 Once you have a service layer in place, you really can move the majority
-of your test coverage to unit tests and develop a healthy test pyramid.((("test-driven development (TDD)", "benefits of service layer to")))((("service layer", "benefits to test-driven development")))  A few
-things will help along the way:
-
-* Express your service layer in terms of primitives rather than domain objects.
-
-* In an ideal world, you'll have all the services you need to be able to test
-  entirely against the service layer, rather than hacking state via
-  repositories or the database.((("test-driven development (TDD)", "types of tests, rules of thumb for"))) This pays off in your end-to-end tests as well.
-
+of your test coverage to unit tests and develop a healthy test pyramid.((("test-driven development (TDD)", "benefits of service layer to")))((("service layer", "benefits to test-driven development")))
 
 [role="nobreakinside less_space"]
 [[types_of_test_rules_of_thumb]]
@@ -514,5 +506,14 @@ Error handling counts as a feature::
     unit tests, of course).((("test-driven development (TDD)", startref="ix_TDD")))
 
 ******************************************************************************
+
+A few
+things will help along the way:
+
+* Express your service layer in terms of primitives rather than domain objects.
+
+* In an ideal world, you'll have all the services you need to be able to test
+  entirely against the service layer, rather than hacking state via
+  repositories or the database.((("test-driven development (TDD)", "types of tests, rules of thumb for"))) This pays off in your end-to-end tests as well.
 
 Onto the next chapter!
