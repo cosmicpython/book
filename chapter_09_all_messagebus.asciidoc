@@ -488,6 +488,7 @@ inputs some new `BatchQuantityChanged` events and pass them to a handler, which 
 turn might emit some `AllocationRequired` events, and those in turn will go
 back to our existing handler for reallocation.((("reallocation", "sequence diagram for flow")))
 
+[role="width-75"]
 [[reallocation_sequence_diagram]]
 .Sequence diagram for reallocation flow
 image::images/apwp_0904.png[]
@@ -883,7 +884,6 @@ We use a class-based message bus in <<chapter_13_dependency_injection>>,
 if you need more inspiration.
 *******************************************************************************
 
-[role="pagebreak-before less_space"]
 === Wrap-Up
 
 Let's look back at what we've achieved, and think about why we did it.

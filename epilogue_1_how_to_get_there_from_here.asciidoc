@@ -58,6 +58,7 @@ we'll need to start separating out responsibilities and introducing clear
 boundaries. One of the first things we can do is to start building a service
 layer (<<collaboration_app_model>>).
 
+[role="width-60"]
 [[collaboration_app_model]]
 .Domain of a collaboration system
 image::images/apwp_ep01.png[]
@@ -258,6 +259,7 @@ reading data for commands.
 
 Mostly we did this by replacing direct references with identifiers.
 
+[role="pagebreak-before"]
 Before aggregates:
 
 [[aggregates_before]]

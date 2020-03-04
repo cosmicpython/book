@@ -44,7 +44,7 @@ We can reduce the degree of coupling within((("coupling", "reducing by abstracti
 (<<coupling_illustration1>>) by abstracting away the details
 (<<coupling_illustration2>>).
 
-
+[role="width-40"]
 [[coupling_illustration1]]
 .Lots of coupling
 image::images/apwp_0301.png[]
@@ -60,7 +60,7 @@ image::images/apwp_0301.png[]
 +--------+      +--------+
 ----
 
-
+[role="width-75"]
 [[coupling_illustration2]]
 .Less coupling
 image::images/apwp_0302.png[]
@@ -351,9 +351,9 @@ https://oreil.ly/wnad4[Functional
 Core, Imperative Shell], or FCIS).
 
 Let's start off by splitting the code ((("business logic", "separating from state in code")))((("state", "splitting off from logic in the program")))((("I/O", "disentangling details from program logic")))to separate the stateful parts from
-the logic:
+the logic.
 
-And our top-level function will contains almost no logic at all; it's just an
+And our top-level function will contain almost no logic at all; it's just an
 imperative series of steps: gather inputs, call our logic, apply outputs:
 
 [[three_parts]]
@@ -379,11 +379,10 @@ def sync(source, dest):
             os.remove(paths[0])
 ----
 ====
-
 <1> Here's the first function we factor out, `read_paths_and_hashes()`, which
-    isolates the I/O part of our application
+    isolates the I/O part of our application.
 
-<2> And here is where carve out the functional core, the business logic.
+<2> Here is where carve out the functional core, the business logic.
 
 
 The code to build up the dictionary of paths and hashes is now trivially easy
@@ -714,7 +713,4 @@ a few heuristics and questions to ask yourself:
 
 * What are the dependencies, and what is the core business logic?
 
-
-Practice makes less imperfect!((("abstractions", startref="ix_abs")))
-
-And now back to our regular programming...
+Practice makes less imperfect!((("abstractions", startref="ix_abs"))) And now back to our regular programming...
