@@ -16,7 +16,7 @@ layer to start a session, it talks to the repository layer to initialize
 [TIP]
 ====
 The code for this chapter is in the
-chapter_06_uow branch https://oreil.ly/MoWdZ[on GitHub]:
+chapter_06_uow branch https://oreil.ly/MoWdZ[on pass:[<span class="keep-together">GitHub</span>]]:
 
 ----
 git clone https://github.com/cosmicpython/code.git
@@ -578,10 +578,6 @@ it's doing are covered in _test_repository.py_. That last test, you might keep a
 but we could certainly see an argument for just keeping everything at the highest
 possible level of abstraction (just as we did for the unit tests).
 
-TIP: This is another example of the lesson from <<chapter_05_high_gear_low_gear>>:
-    as we build better abstractions, we can move our tests to run against them,
-    which leaves us free to change the underlying details.
-
 [role="nobreakinside less_space"]
 .Exercise for the Reader
 ******************************************************************************
@@ -598,6 +594,10 @@ We've stripped out both the actual UoW and the fakes, as well as paring back
 the abstract UoW. Why not send us a link to your repo if you come up with
 something you're particularly proud of?
 ******************************************************************************
+
+TIP: This is another example of the lesson from <<chapter_05_high_gear_low_gear>>:
+    as we build better abstractions, we can move our tests to run against them,
+    which leaves us free to change the underlying details.
 
 
 === Wrap-Up
