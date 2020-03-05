@@ -3,25 +3,46 @@
 
 Dependency injection (DI) is regarded with suspicion in the Python world.  And
 we've managed _just fine_ without it so far in the example code for this
-book!
+book!((("dependency injection", id="ix_DI")))
 
 In this chapter, we'll explore some of the pain points in our code
 that lead us to consider using DI, and we'll present some options
 for how to do it, leaving it to you to pick which you think is most Pythonic.
 
-We'll also add a new component to our architecture called __bootstrap.py__;
-it will be in charge of dependency injection, and some other initialization
+We'll also add a new ((("bootstrapping")))component to our architecture called __bootstrap.py__;
+it will be in charge of dependency injection, as well as some other initialization
 stuff that we often need.  We'll explain why this sort of thing is called
 a _composition root_ in OO languages, and why _bootstrap script_ is just fine
-for our purposes.
+for our purposes.((("composition root")))
 
 <<bootstrap_chapter_before_diagram>> shows what our app looks like without
 a bootstrapper: the entrypoints do a lot of initialization and passing around
 of our main dependency, the UoW.
 
+[TIP]
+====
+If you haven't already, it's worth reading <<chapter_03_abstractions>>
+    before continuing with this chapter, particularly the discussion of
+    functional versus object-oriented dependency management.
+====
+
 [[bootstrap_chapter_before_diagram]]
 .Without bootstrap: entrypoints do a lot
 image::images/apwp_1301.png[]
+
+[TIP]
+====
+The code for this chapter is in the
+chapter_13_dependency_injection branch https://oreil.ly/-B7e6[on GitHub]:
+
+----
+git clone https://github.com/cosmicpython/code.git
+cd code
+git checkout chapter_13_dependency_injection
+# or to code along, checkout the previous chapter:
+git checkout chapter_12_cqrs
+----
+====
 
 <<bootstrap_chapter_after_diagram>> shows our bootstrapper taking over those
 responsibilities.
@@ -33,32 +54,11 @@ image::images/apwp_1302.png[]
 
 === Implicit Versus Explicit Dependencies
 
-Depending on your particular brain type, you may have already had a slight
-feeling of unease at the back of your mind at this point.  Let's bring it out
-into the open. We've currently shown two ways of managing
+Depending on your particular brain type, you may have a slight
+feeling of unease at the back of your mind at this point.((("dependency injection", "implicit versus explicit dependencies")))  Let's bring it out
+into the open. We've shown you two ways of managing
 dependencies and testing them.
 
-[TIP]
-====
-The code for this chapter is in the
-https://github.com/cosmicpython/code/tree/chapter_13_dependency_injection[chapter_13_dependency_injection] branch on GitHub.
-
-----
-git clone https://github.com/cosmicpython/code.git
-cd code
-git checkout chapter_13_dependency_injection
-# or to code along, check out the previous chapter:
-git checkout chapter_12_cqrs
-----
-====
-
-
-[TIP]
-====
-If you haven't already, it's worth reading <<chapter_03_abstractions>>
-    before continuing with this chapter, particularly the discussion of
-    functional versus object-oriented dependency management.
-====
 
 For our database dependency, we've built a careful framework of explicit
 dependencies and easy options for overriding them in tests. Our main handler
@@ -80,7 +80,7 @@ And that makes it easy to swap in a fake UoW in our
 service-layer tests:
 
 [[existing_services_test]]
-.Service layer tests against a fake UoW: (tests/unit/test_services.py)
+.Service-layer tests against a fake UoW: (tests/unit/test_services.py)
 ====
 [source,python]
 [role="skip"]
@@ -108,8 +108,8 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 ----
 ====
 
-We take advantage of it in our integration tests to be able to use SQLite
-instead of Postgres, sometimes:
+We take advantage of it in our integration tests to be able to sometimes use SQLite
+instead of Postgres:
 
 [[existing_integration_test]]
 .Integration tests against a different DB (tests/integration/test_uow.py)
@@ -130,7 +130,7 @@ def test_rolls_back_uncommitted_work_by_default(sqlite_session_factory):
 === Aren't Explicit Dependencies Totally Weird and Java-y?
 
 If you're used to the way things normally happen in Python, you'll be thinking
-all this is a bit weird.  The standard way to do things is to declare our
+all this is a bit weird.((("dependency injection", "explicit dependencies are better than implicit dependencies")))((("importing dependenies")))  The standard way to do things is to declare our
 dependency implicitly by simply importing it, and then if we ever need to
 change it for tests, we can monkeypatch, as is Right and True in dynamic
 languages:
@@ -160,7 +160,7 @@ def send_out_of_stock_notification(
 
 
 Why pollute our application code with unnecessary arguments just for the
-sake of our tests? `mock.patch` makes monkeypatching nice and easy:
+sake of our ((("mock.patch method")))tests? `mock.patch` makes monkeypatching nice and easy:
 
 
 [[mocking_is_easy]]
@@ -181,7 +181,7 @@ cause an out-of-stock notification. If you've worked on codebases with lots of
 mocks used to prevent unwanted side effects, you'll know how annoying that
 mocky boilerplate gets.
 
-And, you'll know that mocks tightly couple us to the implementation. By
+And you'll know that mocks tightly couple us to the implementation. By
 choosing to monkeypatch `email.send_mail`, we are tied to doing `import email`,
 and if we ever want to do `from email import send_mail`, a trivial refactor,
 we'd have to change all our mocks.
@@ -191,13 +191,13 @@ strictly speaking, and using them would make our application code marginally
 more complex. But in return, we'd get tests that are easier to write and
 manage.
 
-On top of that, declaring an explicit dependency is an example of the
+On top of that, declaring((("dependency inversion principle", "declaring explicit dependency as example of")))((("abstractions", "explicit dependencies are more abstract"))) an explicit dependency is an example of the
 dependency inversion principle—rather than having an (implicit) dependency on
 a _specific_ detail, we have an (explicit) dependency on an _abstraction_:
 
 [quote, The Zen of Python]
 ____
-Explicit is better than implicit
+Explicit is better than implicit.
 ____
 
 
@@ -218,8 +218,8 @@ def send_out_of_stock_notification(
 ====
 
 But if we do change to declaring all these dependencies explicitly, who will
-inject them and how? So far, we've really been dealing with only passing the
-UoW around: our tests use `FakeUnitOfWork`, while Flask and Redis event-consumer
+inject them, and how? So far, we've really been dealing with only passing the
+UoW around: our tests use `FakeUnitOfWork`, while Flask and Redis eventconsumer
 entrypoints use the real UoW, and the message bus passes them onto our command
 handlers. If we add real and fake email classes, who will create them and
 pass them on?
@@ -228,14 +228,12 @@ That's extra (duplicated) cruft for Flask, Redis, and our tests. Moreover,
 putting all the responsibility for passing dependencies to the right handler
 onto the message bus feels like a violation of the SRP.
 
-Instead, we'll reach for a pattern called _Composition Root_ (a bootstrap
-script to you and me)footnote:[Because Python is not a "pure" OO language, Python developers aren't necessarily used to the concept of needing to _compose_ a set of objects into a working application. We just pick our entrypoint and run code from top to bottom.],
-and we'll do a bit of "manual DI" (dependency injection without a
-frameworkfootnote:[Mark Seeman calls this https://blog.ploeh.dk/2012/11/06/WhentouseaDIContainer/[Pure DI], or sometimes "Vanilla DI".]),
-and it will all turn out something like <<bootstrap_diagram>>.
+Instead, we'll((("composition root")))((("bootstrapping", "dependency injection with"))) reach for a pattern called _Composition Root_ (a bootstrap
+script to you and me),footnote:[Because Python is not a "pure" OO language, Python developers aren't necessarily used to the concept of needing to _compose_ a set of objects into a working application. We just pick our entrypoint and run code from top to bottom.]
+ and we'll do a bit of "manual DI" (dependency injection without a
+framework). See <<bootstrap_new_image>>.footnote:[Mark Seemann calls this https://oreil.ly/iGpDL[_Pure DI_] or sometimes _Vanilla DI_.]
 
-
-[bootstrap_diagram]]
+[[bootstrap_new_image]]
 .Bootstrapper between entrypoints and message bus
 image::images/apwp_1303.png[]
 [role="image-source"]
@@ -269,9 +267,9 @@ image::images/apwp_1303.png[]
 
 === Preparing Handlers: Manual DI with Closures and Partials
 
-One way to turn a function with dependencies into one that's ready to be
-called later with those dependencies _already injected_, is to use closures or
-partial functions to compose the function with its dependencies:
+One way to turn((("dependency injection", "manual DI with closures or partial functions"))) a function with dependencies into one that's ready to be
+called later with those dependencies _already injected_ is to use closures or
+partial functions((("closures", "dependency injection using")))((("partial functions", "dependency injection with"))) to compose the function with its dependencies:
 
 
 [[di_with_partial_functions_examples]]
@@ -293,7 +291,7 @@ def allocate(
 def bootstrap(..):
     uow = unit_of_work.SqlAlchemyUnitOfWork()
 
-    # then prepares a version of the allocate fn with UoW dependency captured in a closure
+    # prepare a version of the allocate fn with UoW dependency captured in a closure
     allocate_composed = lambda cmd: allocate(cmd, uow)
 
     # or, equivalently (this gets you a nicer stack trace)
@@ -310,7 +308,7 @@ allocate_composed(cmd)
 ----
 ====
 
-<1> The difference between closures (lambdas or named functions) and
+<1> The difference((("closures", "difference from partial functions")))((("partial functions", "difference from closures"))) between closures (lambdas or named functions) and
     `functools.partial` is that the former use
     https://docs.python-guide.org/writing/gotchas/#late-binding-closures[late
     binding of variables], which can be a source of confusion if
@@ -346,7 +344,7 @@ sosn_composed(event)  # will have email.send_mail already injected in
 === An Alternative Using Classes
 
 Closures and partial functions will feel familiar to people who've done a bit
-of functional programming. Here's an alternative using classes, which may
+of functional programming.((("dependency injection", "using classes")))((("classes, dependency injection using"))) Here's an alternative using classes, which may
 appeal to others. It requires rewriting all our handler functions as
 classes, though:
 
@@ -383,7 +381,7 @@ allocate(cmd)
 ====
 
 <1> The class is designed to produce a callable function, so it has a
-    +++<code>call</code>+++ method.
+    +__call__+ method.
 
 <2> But we use the +++<code>init</code>+++ to declare the dependencies it
     requires. This sort of thing will feel familiar if you've ever made
@@ -391,13 +389,13 @@ allocate(cmd)
     arguments.
 
 
-Use whichever you and your team feel more comfortable with.
+Use whichever you and your team feel more comfortable with.((("dependency injection", startref="ix_DI")))
 
-
+[role="pagebreak-before less_space"]
 === A Bootstrap Script
 
 
-We want our bootstrap script to do the following:
+We want our bootstrap((("bootstrapping", "bootstrapping script, capabilities of"))) script to do the following:
 
 1. Declare default dependencies but allow us to override them
 2. Do the "init" stuff that we need to get our app started
@@ -446,23 +444,23 @@ def bootstrap(
 
 <1> `orm.start_mappers()` is our example of initialization work that needs
     to be done once at the beginning of an app. We also see things like
-    setting up the `logging` module.
+    setting up the `logging` module.((("object-relational mappers (ORMs)", "orm.start_mappers function")))
 
 <2> We can use the argument defaults to define what the normal/production
     defaults are. It's nice to have them in a single place, but
-    sometimes dependencies have some side-effects at construction-time,
+    sometimes dependencies have some side effects at construction time,
     in which case you might prefer to default them to `None` instead.
 
 <3> We build up our injected versions of the handler mappings by using
-    a function called `inject_dependencies()` which we'll show next.
+    a function called `inject_dependencies()`, which we'll show next.
 
-<4> We return a configured message bus ready to use.
+<4> We return a configured message bus ready for use.
 
 // TODO more examples of init stuff
 
 // IDEA: show option of bootstrapper as class instead?
 
-Here's how we inject dependencies into a handler function by inspecting
+Here's how we ((("dependency injection", "by inspecting function signatures")))inject dependencies into a handler function by inspecting
 it:
 
 [[di_by_inspection]]
@@ -483,17 +481,17 @@ def inject_dependencies(handler, dependencies):
 
 <1> We inspect our command/event handler's arguments.
 <2> We match them by name to our dependencies.
-<3> We inject them in as kwargs to produce a partial.
+<3> We inject them as kwargs to produce a partial.
 
 
 .Even-More-Manual DI with Less Magic
 *******************************************************************************
 If you're finding the preceding `inspect` code a little harder to grok, this
-even-simpler version may appeal to you.
+even simpler version may appeal to you.((("dependency injection", "manual creation of partial functions inline")))
 
 Harry wrote the code for `inject_dependencies()` as a first cut of how to do
 "manual" dependency injection, and when he saw it, Bob accused him of
-overengineering and writing his own DI framework.
+overengineering and writing his own DI framework.((("partial functions", "manually creating inline")))
 
 It honestly didn't even occur to Harry that you could do it any more plainly,
 but you can, like this:
@@ -532,7 +530,7 @@ but you can, like this:
 Harry says he couldn't even imagine writing out that many lines of code
 and having to look up that many function arguments manually.
 This is a perfectly viable solution, though, since it's only one
-line of code or so per handler you add, so not a massive maintenance burden
+line of code or so per handler you add, and thus not a massive maintenance burden
 even if you have dozens of handlers.
 
 Our app is structured in such a way that we always want to do dependency
@@ -540,14 +538,14 @@ injection in only one place, the handler functions, so this super-manual solutio
 and Harry's `inspect()`-based one will both work fine.
 
 If you find yourself wanting to do DI in more things and at different times,
-or if you ever get into _dependency chains_ (where your dependencies have their
+or if ((("dependency chains")))((("dependency injection", "using DI framework")))you ever get into _dependency chains_ (in which your dependencies have their
 own dependencies, and so on), you may get some mileage out of a "real" DI
 framework.
 
 // IDEA: discuss/define what a DI container is
 
 At MADE, we've used https://pypi.org/project/Inject[Inject] in a few places,
-and it's fine although it makes Pylint unhappy.  You might also check out
+and it's fine, although it makes Pylint unhappy.  You might also check out
 https://pypi.org/project/punq[Punq], as written by Bob himself, or the
 DRY-Python crew's https://github.com/dry-python/dependencies[dependencies].
 
@@ -557,7 +555,7 @@ DRY-Python crew's https://github.com/dry-python/dependencies[dependencies].
 === Message Bus Is Given Handlers at Runtime
 
 Our message bus will no longer be static; it needs to have the already-injected
-handlers given to it. So we turn it from being a module into a configurable
+handlers given to it.((("message bus", "class given handlers at runtime"))) So we turn it from being a module into a configurable
 class:
 
 
@@ -594,14 +592,13 @@ class MessageBus:  #<1>
 
 <1> The message bus becomes a class...
 <2> ...which is given its already-dependency-injected handlers.
-<3> The main `handle()` function is substantially the same, just
-    moving a few attributes and methods onto `self`.
+<3> The main `handle()` function is substantially the same, with just a few attributes and methods moved onto `self`.
 <4> Using `self.queue` like this is not thread-safe, which might
     be a problem if you're using threads, because the bus instance is global
-    in the Flask app context, as we've written it. Just something to watch out for.
+    in the Flask app context as we've written it. Just something to watch out for.
 
 
-What else changes in the bus?
+What else changes ((("handlers", "event and command handlers in message bus")))((("message bus", "event and command handler logic staying the same")))((("commands", "command handler logic in message bus")))((("event handlers", "in message bus")))in the bus?
 
 [[messagebus_handlers_change]]
 .Event and command handler logic stays the same (src/allocation/service_layer/messagebus.py)
@@ -642,7 +639,7 @@ What else changes in the bus?
 
 === Using Bootstrap in Our Entrypoints
 
-In our application's entrypoints, we now just call `bootstrap.bootstrap()`
+In our application's entrypoints, we now((("bootstrapping", "using in entrypoints")))((("Flask framework", "calling bootstrap in entrypoints"))) just call `bootstrap.bootstrap()`
 and get a message bus that's ready to go, rather than configuring a UoW and the
 rest of it:
 
@@ -672,7 +669,7 @@ rest of it:
 ----
 ====
 
-<1> We no longer need to call `start_orm()`: the bootstrap script's initialization
+<1> We no longer need to call `start_orm()`; the bootstrap script's initialization
     stages will do that.
 
 <2> We no longer need to explicitly build a particular type of UoW; the bootstrap
@@ -689,7 +686,7 @@ rest of it:
 === Initializing DI in Our Tests
 
 In tests, we can use `bootstrap.bootstrap()` with overridden defaults to get a
-custom message bus. Here's an example in an integration test:
+custom message bus.((("message bus", "getting custom with overridden bootstrap defaults")))((("bootstrapping", "initializing dependency injection in tests")))((("testing", "integration test for overriding bootstrap defaults"))) Here's an example in an integration test:
 
 
 [[bootstrap_view_tests]]
@@ -725,7 +722,7 @@ def test_allocations_view(sqlite_bus):
 <3> But we don't need to send email or publish, so we make those noops.
 
 
-In our unit tests, in contrast, we can reuse our `FakeUnitOfWork`:
+In our unit tests, in ((("testing", "unit test for bootstrap")))contrast, we can reuse our `FakeUnitOfWork`:
 
 [[bootstrap_tests]]
 .Bootstrap in unit test (tests/unit/test_handlers.py)
@@ -751,20 +748,20 @@ def bootstrap_test_app():
 So that gets rid of a little duplication, and we've moved a bunch
 of setup and sensible defaults into a single place.
 
-
+[role="nobreakinside less_space"]
 .Exercise for the Reader 1
 **********************************************************************
-Change all the handlers to being classes as per <<di_with_classes>>,
+Change all the handlers to being classes as per the <<di_with_classes, DI using classes>> example,
 and amend the bootstrapper's DI code as appropriate.  This will let you
-know if you prefer the functional or the class-based approach, when
+know whether you prefer the functional approach or the class-based approach when
 it comes to your own projects.
 **********************************************************************
 
 
 === Building an Adapter "Properly": A Worked Example
 
-To really get a feel for how it all works, let's work through an example of how
-you might build an adapter, and do dependency injection for it, "properly."
+To really get a feel((("adapters", "building adapter and doing dependency injection for it", id="ix_adapDI"))) for how it all works, let's work through an example of how
+you might "properly" build an adapter and do dependency injection for it.
 
 At the moment, we have two types of dependencies:
 
@@ -794,7 +791,7 @@ Here are some of the things we find ourselves injecting at work:
 * A `requests` session object
 
 Most of these will have more-complex APIs that you can't capture
-as a single function. Read and write, GET and POST, and so on.
+as a single function: read and write, GET and POST, and so on.
 
 Even though it's simple, let's use `send_mail` as an example to talk
 through how you might define a more complex dependency.
@@ -802,8 +799,8 @@ through how you might define a more complex dependency.
 
 ==== Define the Abstract and Concrete Implementations
 
-We'll imagine a more generic notifications API. Could be
-email, could be SMS, could be slack posts one day.
+We'll imagine a more generic notifications API.((("adapters", "building adapter and doing dependency injection for it", "defining abstract and concrete implementations")))((("abstract base classes (ABCs)", "defining for notifications"))) Could be
+email, could be SMS, could be Slack posts one day.
 
 
 [[notifications_dot_py]]
@@ -836,7 +833,7 @@ class EmailNotifications(AbstractNotifications):
 ====
 
 
-We change the dependency in the bootstrap script:
+We change the dependency((("bootstrapping", "changing notifications dependency in bootstrap script"))) in the bootstrap script:
 
 [[notifications_in_bus]]
 .Notifications in message bus (src/allocation/bootstrap.py)
@@ -857,7 +854,7 @@ We change the dependency in the bootstrap script:
 
 ==== Make a Fake Version for Your Tests
 
-We work through and define a fake version for unit testing:
+We work through and define((("faking", "FakeNotifications for unit testing"))) a fake version for unit testing:
 
 
 [[fake_notifications]]
@@ -904,7 +901,7 @@ And we use it in our tests:
 
 Now we test the real thing, usually with an end-to-end or integration
 test.  We've used https://github.com/mailhog/MailHog[MailHog] as a
-real-ish email server for our Docker dev environment:
+real-ish email((("Docker dev environment with real fake email server"))) server for our Docker dev environment:
 
 
 [[docker_compose_with_mailhog]]
@@ -944,7 +941,7 @@ services:
 ====
 
 
-In our integration tests, we use the real `EmailNotifications` class,
+In our integration((("bootstrapping", "using to build message bus that talks to real notification class"))) tests, we use the real `EmailNotifications` class,
 talking to the MailHog server in the Docker cluster:
 
 
@@ -992,52 +989,14 @@ def test_out_of_stock_email(bus):
 And that's it really.
 
 
-===  Wrap-up
-
-[role="less_space nobreakinside"]
-.DI and Bootstrap Recap
-****
-* Once you have more than one adapter, you'll start to feel a lot of pain
-  from passing dependencies around manually, unless you do some kind of
-  _dependency injection._
-
-* Setting up dependency injection is just one of many typical
-  setup/initialization activities that you need to do just once when starting
-  your app.  Putting this all together into a _bootstrap script_ is often a
-  good idea.
-
-* The bootstrap script is also a good place to provide sensible default
-  configuration for your adapters, and as a single place to override those
-  adapters with fakes, for your tests.
-
-* A dependency injection framework can be useful if you find yourself
-  needing to do DI at multiple levels: if you have chained dependencies
-  of components that all need DI, for example.
-
-* This chapter also presented a worked example of changing an implicit/simple
-  dependency into a "proper" adapter, factoring out an ABC, defining its real
-  and fake implementations, and thinking through integration testing.
-****
-
-In summary:
-
-1. Define your API using an ABC.
-2. Implement the real thing.
-3. Build a fake and use it for unit/service-layer/handler tests.
-4. Find a less-fake version you can put into your Docker environment.
-5. Test the less-fake "real" thing.
-6. Profit!
-
-// TODO this isn't really in the right TDD order is it?
-
 [role="less_space nobreakinside"]
 .Exercise for the Reader 2
 ******************************************************************************
 
-You could do two things for practice regarding adapters:
+You could do two things ((("adapters", "exercise for the reader")))for practice regarding adapters:
 
-1. Try swapping out our notifications from email to, for example, SMS
-    notifications using Twilio, or Slack notifications.  Can you find
+1. Try swapping out our notifications from email to SMS
+    notifications using Twilio, for example, or Slack notifications.  Can you find
     a good equivalent to MailHog for integration testing?
 
 2. In a similar way to what we did moving from `send_mail` to a `Notifications`
@@ -1045,5 +1004,45 @@ You could do two things for practice regarding adapters:
     a `Callable` to some sort of more formal adapter/base class/protocol.
 
 ******************************************************************************
+
+=== Wrap-Up
+
+* Once you have more than one adapter, you'll start to feel a lot of pain
+  from passing dependencies around((("bootstrapping", "dependency injection and bootstrap recap")))((("dependency injection", "recap of DI and bootstrap"))) manually, unless you do some kind of
+  _dependency injection._
+
+* Setting up dependency injection is just one of many typical
+  setup/initialization activities that you need to do just once when starting
+  your app.  Putting this all together into a _bootstrap script_ is often a
+  good idea.
+
+* The bootstrap script is also good as a place to provide sensible default
+  configuration for your adapters, and as a single place to override those
+  adapters with fakes for your tests.
+
+* A dependency injection framework can be useful if you find yourself
+  needing to do DI at multiple levels—if you have chained dependencies
+  of components that all need DI, for example.
+
+* This chapter also presented a worked example of changing an implicit/simple
+  dependency into a "proper" adapter, factoring out an ABC, defining its real
+  and fake implementations, and thinking through integration testing.
+
+[role="less_space nobreakinside"]
+.DI and Bootstrap Recap
+****
+In summary:
+
+1. Define your API using an ABC.
+2. Implement the real thing.
+3. Build a fake and use it for unit/service-layer/handler tests.
+4. Find a less fake version you can put into your Docker environment.
+5. Test the less fake "real" thing.
+6. Profit!((("adapters", "defining adapter and doing dependency injection for it", startref="ix_adapDI")))
+
+// TODO this isn't really in the right TDD order is it?
+****
+
+These were the last patterns we wanted to cover, which brings us to the end of <<part2>>. In <<epilogue_1_how_to_get_there_from_here, the epilogue>>, we'll try to give you some pointers for applying these techniques in the Real World^TM^.
 
 // TODO: tradeoffs?

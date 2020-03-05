@@ -5,7 +5,7 @@
 You may be wondering who we are and why we wrote this book.
 
 At the end of Harry's last book,
-http://www.obeythetestinggoat.com/pages/book.html[_Test-Driven Development with Python_] (O'Reilly),
+http://obeythetestinggoat.com[_Test-Driven Development with Python_] (O'Reilly),
 he found himself asking a bunch of questions about architecture, such as,
 What's the best way of structuring your application so that it's easy to test?
 More specifically, so that your core business logic is covered by unit tests,
@@ -35,8 +35,8 @@ warehouses so that we don't have unsold goods lying around the place.
 
 Ideally, the sofa that you want to buy will arrive in port on the very day
 that you decide to buy it, and we'll ship it straight to your house without
-ever storing it. Getting the timing right is a tricky balancing act when goods take
-three months to arrive by container ship. Along the way, things get broken, or water
+ever storing it. pass:[<span class="keep-together">Getting</span>] the timing right is a tricky balancing act when goods take
+three months to arrive by container ship. Along the way, things get broken or water
 damaged, storms cause unexpected delays, logistics partners mishandle goods,
 paperwork goes missing, customers change their minds and amend their orders,
 and so on.
@@ -49,14 +49,12 @@ much of the business as possible.
 
 If you're reading this book, we probably don't need to convince you that Python
 is great, so the real question is "Why does the _Python_ community need a book
-like this?"
-
-The answer is about Python's popularity and maturity: although Python is
-probably the world's fastest-growing programming language, and nearing the top
+like this?" The answer is about Python's popularity and maturity: although Python is
+probably the world's fastest-growing programming language and is nearing the top
 of the absolute popularity tables, it's only just starting to take on the kinds
-of problems that the C# and Java world have been working on for years.
+of problems that the C# and Java world has been working on for years.
 Startups become real businesses; web apps and scripted automations are becoming
-(whisper it) _enterprise software_.
+(whisper it) _enterprise_ pass:[<span class="keep-together"><em>software</em></span>].
 
 In the Python world, we often quote the Zen of Python:
 "There should be one--and preferably only one--obvious way to do it."footnote:[`python -c "import this"`]
@@ -66,43 +64,44 @@ requirements.
 
 None of the techniques and patterns we discuss in this book are
 new, but they are mostly new to the Python world. And this book isn't
-a replacement for the classics in the field like Eric Evans's
-https://domainlanguage.com/ddd[_Domain-Driven Design_]
-or Martin Fowler's
-https://www.martinfowler.com/books/eaa.html[_Patterns of
-Enterprise Application Architecture_]  (both published by Addison-Wesley Professional)—which we often refer to and
+a replacement for the classics in the field such as Eric Evans's
+_Domain-Driven Design_
+or Martin Fowler's _Patterns of
+Enterprise Application Architecture_ (both published by Addison-Wesley pass:[<span class="keep-together">Professional</span>])—which we often refer to and
 encourage you to go and read.
 
 But all the classic code examples in the literature do tend to be written in
 Java or pass:[<span class="keep-together">C++/#</span>], and if you're a Python person and haven't used either of
 those languages in a long time (or indeed ever), those code listings can be
 quite...trying. There's a reason the latest edition of that other classic text, Fowler's
-https://martinfowler.com/books/refactoring.html[_Refactoring_] (Addison-Wesley Professional), is in JavaScript.
+_Refactoring_ (Addison-Wesley Professional), is in JavaScript.
 
 [role="pagebreak-before less_space"]
 === TDD, DDD, and Event-Driven Architecture
 
 In order of notoriety, we know of three tools for managing complexity:
 
-1. _Test-driven development_ (TDD) helps us to build code that is correct,
+1. _Test-driven development_ (TDD) helps us to build code that is correct
    and enables us to refactor or add new features, without fear of regression.
    But it can be hard to get the best out of our tests: How do we make sure
    that they run as fast as possible? That we get as much coverage and feedback
-   from fast, dependency-free unit tests, and have the minimum number of slower,
+   from fast, dependency-free unit tests and have the minimum number of slower,
    flaky end-to-end tests?
 
 2. _Domain-driven design_ (DDD) asks us to focus our efforts on building a good
    model of the business domain, but how do we make sure that our models aren't
-   encumbered with infrastructure concerns and become hard to change?
+   encumbered with infrastructure concerns and don't become hard to change?
 
-3. Loosely coupled (micro)-services integrated via messages (sometimes called
+3. Loosely coupled (micro)services integrated via messages (sometimes called
    _reactive microservices_) are a well-established answer to managing complexity
    across multiple applications or business domains. But it's not always
    obvious how to make them fit with the established tools of
    the Python world--Flask, Django, Celery, and so on.
 
-Our aim with this book is to introduce several classic architectural patterns,
-and show how they support TDD, DDD, and event-driven microservices.  We hope
+NOTE: Don't be put off if you're not working with (or interested in) microservices.  The vast majority of the patterns we discuss, including much of the event-driven architecture material, is absolutely applicable in a monolithic architecture.
+
+Our aim with this book is to introduce several classic architectural patterns
+and show how they support TDD, DDD, and event-driven services.  We hope
 it will serve as a reference for implementing them in a Pythonic way, and that
 people can use it as a first step toward further research  in this field.
 
@@ -116,7 +115,7 @@ Here are a few things we assume about you, dear reader:
 * You've seen some of the pain that comes with trying to manage
   that complexity.
 
-* You don't necessarily know anything about DDD, or any of the
+* You don't necessarily know anything about DDD or any of the
   classic application architecture patterns.
 
 We structure our explorations of architectural patterns around an example app,
@@ -142,9 +141,9 @@ and the chapters they live in.
 Domain modeling and DDD (Chapters pass:[<a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_01_domain_model">#chapter_01_domain_model</a> and <a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_07_aggregate">#chapter_07_aggregate</a>])::
     At some level, everyone has learned the lesson that complex business
     problems need to be reflected in code, in the form of a model of the domain.
-    But why does it always seem to be so hard to do, without getting tangled
-    up with infrastructure concerns, with our web frameworks, or whatever else?
-    In the first chapter we give a broad overview of _domain modeling_ and DDD, and
+    But why does it always seem to be so hard to do without getting tangled
+    up with infrastructure concerns, our web frameworks, or whatever else?
+    In the first chapter we give a broad overview of _domain modeling_ and DDD, and we
     show how to get started with a model that has no external dependencies, and
     fast unit tests. Later we return to DDD patterns to discuss how to choose
     the right aggregate, and how this choice relates to questions of data
@@ -173,30 +172,30 @@ Some thoughts on testing and abstractions (Chapters pass:[<a data-type="xref" da
 
 ==== pass:[<a data-type="xref" data-xrefstyle="chap-num-title" href="#part2">#part2</a>]
 
-Event-driven architecture (Chapters pass:[<a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_08_events_and_message_bus">#chapter_08_events_and_message_bus</a>-<a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_11_external_events">#chapter_11_external_events</a>])::
+Event-driven architecture (Chapters pass:[<a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_08_events_and_message_bus">#chapter_08_events_and_message_bus</a>–<a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_11_external_events">#chapter_11_external_events</a>])::
     We introduce three more mutually reinforcing patterns: the Domain Events, Message Bus, and Handler patterns. _Domain events_ are a vehicle for capturing the idea that some
     interactions with a system are triggers for others. We use  a _message
-    bus_ to allow actions to trigger events, and call appropriate _handlers_.
+    bus_ to allow actions to trigger events and call appropriate _handlers_.
     We move on to discuss how events can be used as a pattern for integration
-    between services, in a microservices architecture. Finally we distinguish between _commands_ and _events_. Our application is now
+    between services in a microservices architecture. Finally, we distinguish between _commands_ and _events_. Our application is now
     fundamentally a message-processing system.
 
 Command-query responsibility segregation (<<chapter_12_cqrs>>)::
-    An example of _command-query responsibility segregation_, with and without
+    We present an example of _command-query responsibility segregation_, with and without
     events.
 
 Dependency injection (<<chapter_13_dependency_injection>>)::
-    We tidy up our explicit and implicit dependencies, and implement a
+    We tidy up our explicit and implicit dependencies and implement a
     simple dependency injection framework.
 
 
 ==== Addtional Content
 
-How do i get there from here? (<<epilogue_1_how_to_get_there_from_here>>)::
+How do I get there from here? (<<epilogue_1_how_to_get_there_from_here>>)::
     Implementing architectural patterns always looks easy when you show a simple
     example, starting from scratch, but many of you will probably be wondering how
     to apply these principles to existing software. We'll provide a
-    few pointers in this epilogue and some links to further reading.
+    few pointers in the epilogue and some links to further reading.
 
 
 
@@ -208,13 +207,14 @@ from pairing with people, writing code with them, and learning by doing, and
 we'd like to re-create that experience as much as possible for you in this book.
 
 As a result, we've structured the book around a single example project
-(although we do sometimes throw in other examples). We'll build up this project as the chapters progress, as if you've paired with us, and
+(although we do sometimes throw in other examples). We'll build up this project as the chapters progress, as if you've paired with us and
 we're explaining what we're doing and why at each step.
 
 But to really get to grips with these patterns, you need to mess about with the
 code and get a feel for how it works. You'll find all the code on
 GitHub; each chapter has its own branch. You can find https://github.com/cosmicpython/code/branches/all[a list] of the branches on GitHub as well.
 
+[role="pagebreak-before"]
 Here are three ways you might code along with the book:
 
 * Start your own repo and try to build up the app as we do, following the
@@ -247,7 +247,7 @@ TIP: At the very least, do a `git checkout` of the code from our repo as you
 === License
 
 The code (and the online version of the book) is licensed under a Creative
-Commons CC-By-ND license, which means you are free to copy and share it with
+Commons CC BY-NC-ND license, which means you are free to copy and share it with
 anyone you like, for non-commercial purposes, as long as you give attribution.
 If you want to re-use any of the content from this book and you have any
 worries about the license, contact O'Reilly at pass:[<a class="email"
@@ -340,11 +340,10 @@ Ben Judson, James Gregory, Łukasz Lechowicz, Clinton Roy, Vitorino Araújo,
 Susan Goodbody, Josh Harwood, Daniel Butler, Liu Haibin, Jimmy Davies, Ignacio
 Vergara Kausel, Gaia Canestrani, Renne Rocha, pedroabi, Ashia Zawaduk, Jostein
 Leira, Brandon Rhodes,
-and many more; our apologies if we've missed your name on this list.
+and many more; our apologies if we missed you on this list.
 
-Super-mega-thanks to our editor Corbin Collins, for his gentle chivvying, and
-for being a tireless advocate of the reader; this book is immeasurably improved
-thanks to you.
+Super-mega-thanks to our editor Corbin Collins for his gentle chivvying, and
+for being a tireless advocate of the reader. Similarly-superlative thanks to the production staff, Katherine Tozer, Sharon Wilkey, Ellen Troutman-Zaig, and Rebecca Demarest, for your dedication, professionalism, and attention to detail. This book is immeasurably improved thanks to you.
 
 // TODO thanks to rest of OR team.
 

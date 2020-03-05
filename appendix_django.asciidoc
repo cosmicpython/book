@@ -3,9 +3,7 @@
 == Repository and Unit of Work pass:[<span class="keep-together">Patterns with Django</span>]
 
 Suppose you wanted to use Django instead of SQLAlchemy and Flask. How
-might things look?
-
-The first thing is to choose where to install it. We put it in a separate
+might things look?((("Django", id="ix_Django"))) The first thing is to choose where to install it.((("Django", "installing"))) We put it in a separate
 package next to our main allocation code:
 
 
@@ -49,8 +47,8 @@ package next to our main allocation code:
 
 [TIP]
 ====
-You can find the code for this chapter is in the
-https://github.com/cosmicpython/code/tree/appendix_django[appendix_django] branch on GitHub.
+The code for this appendix is in the
+appendix_django branch https://oreil.ly/A-I76[on GitHub]:
 
 ----
 git clone https://github.com/cosmicpython/code.git
@@ -62,11 +60,11 @@ git checkout appendix_django
 
 === Repository Pattern with Django
 
-We used a plug in called
+We used a plug-in called
 https://github.com/pytest-dev/pytest-django[`pytest-django`] to help with test
-database management.
+database management.((("pytest", "pytest-django plug-in")))((("Repository pattern", "with Django", id="ix_RepoDjango")))((("Django", "Repository pattern with", id="ix_DjangoRepo")))
 
-Rewriting the first repository test was a minimal change, just rewriting
+Rewriting the first repository test was a minimal change—just rewriting
 some raw SQL with a call to the Django ORM/QuerySet language:
 
 
@@ -106,8 +104,12 @@ but it is still made up of familiar-looking Django code:
 def test_repository_can_retrieve_a_batch_with_allocations():
     sku = "PONY-STATUE"
     d_line = django_models.OrderLine.objects.create(orderid="order1", sku=sku, qty=12)
-    d_batch1 = django_models.Batch.objects.create(reference="batch1", sku=sku, qty=100, eta=None)
-    d_batch2 = django_models.Batch.objects.create(reference="batch2", sku=sku, qty=100, eta=None)
+    d_b1 = django_models.Batch.objects.create(
+    reference="batch1", sku=sku, qty=100, eta=None
+)
+    d_b2 = django_models.Batch.objects.create(
+    reference="batch2", sku=sku, qty=100, eta=None
+)
     django_models.Allocation.objects.create(line=d_line, batch=d_batch1)
 
     repo = repository.DjangoRepository()
@@ -160,7 +162,7 @@ help minimize boilerplate for this sort of thing.]
 
 ==== Custom Methods on Django ORM Classes to Translate to/from Our Domain Model
 
-Those custom methods look something like this:
+Those custom methods ((("object-relational mappers (ORMs)", "Django, custom methods to translate to/from domain model")))((("domain model", "Django custom ORM methods for conversion")))look something like this:
 
 [[django_models]]
 .Django ORM with custom methods for domain model conversion (src/djangoproject/alloc/models.py)
@@ -209,7 +211,7 @@ class OrderLine(models.Model):
 
 <1> For value objects, `objects.get_or_create` can work, but for entities,
     you probably need an explicit try-get/except to handle the upsert.footnote:[
-    `@mr-bo-jangles` suggested you might be able to use https://oreil.ly/HTq1r[`update_or_create`]
+    `@mr-bo-jangles` suggested you might be able to use https://oreil.ly/HTq1r[`update_or_create`],
     but that's beyond our Django-fu.]
 
 <2> We've shown the most complex example here. If you do decide to do this,
@@ -220,14 +222,14 @@ class OrderLine(models.Model):
 
 
 NOTE: As in <<chapter_02_repository>>, we use dependency inversion.
-    The ORM (Django) depends on the model, and not the other way around.
+    The ORM (Django) depends on the model and not the other way around.((("Repository pattern", "with Django", startref="ix_RepoDjango")))((("Django", "Repository pattern with", startref="ix_DjangoRepo")))
 
 
 
 === Unit of Work Pattern with Django
 
 
-The tests don't change too much:
+The tests((("Unit of Work pattern", "with Django", id="ix_UoWDjango")))((("Django", "Unit of Work pattern with", id="ix_DjangoUoW"))) don't change too much:
 
 [[test_uow_django]]
 .Adapted UoW tests (tests/integration/test_uow.py)
@@ -309,7 +311,7 @@ class DjangoUnitOfWork(AbstractUnitOfWork):
 ====
 
 <1> `set_autocommit(False)` was the best way to tell Django to stop
-    automatically committing each ORM operation immediately, and
+    automatically committing each ORM operation immediately, and to
     begin a transaction.
 
 <2> Then we use the explicit rollback and commits.
@@ -318,13 +320,13 @@ class DjangoUnitOfWork(AbstractUnitOfWork):
     instrumenting the domain model instances themselves, the
     `commit()` command needs to explicitly go through all the
     objects that have been touched by every repository and manually
-    update them back to the ORM.
+    update them back to the ORM.((("Unit of Work pattern", "with Django", startref="ix_UoWDjango")))((("Django", "Unit of Work pattern with", startref="ix_DjangoUoW")))
 
 
 
 === API: Django Views Are Adapters
 
-The Django _views.py_ file ends up being almost identical to the
+The Django _views.py_ file ends ((("views", "Django views as adapters")))((("adapters", "Django views")))((("Django", "views are adapters")))((("APIs", "Django views as adapters")))up being almost identical to the
 old _flask_app.py_, because our architecture means it's a very
 thin wrapper around our service layer (which didn't change at all, by the way):
 
@@ -370,7 +372,7 @@ def allocate(request):
 === Why Was This All So Hard?
 
 OK, it works, but it does feel like more effort than Flask/SQLAlchemy. Why is
-that?
+that?((("Django", "using, difficulty of")))
 
 The main reason at a low level is because Django's ORM doesn't work in the same
 way.  We don't have an equivalent of the SQLAlchemy classical mapper, so our
@@ -382,7 +384,7 @@ high).
 Because Django is so tightly coupled to the database, you have to use helpers
 like `pytest-django` and think carefully about test databases, right from
 the very first line of code, in a way that we didn't have to when we started
-out with our pure domain model.
+out with our pure domain model.((("pytest", "pytest-django plug-in")))
 
 But at a higher level, the entire reason that Django is so great
 is that it's designed around the sweet spot of making it easy to build CRUD
@@ -397,17 +399,16 @@ around the workflow of state changes.  The Django admin bypasses all of that.
 === What to Do If You Already Have Django
 
 So what should you do if you want to apply some of the patterns in this book
-to a Django app? We'd say the following:
+to a Django app?((("Django", "applying patterns to Django app"))) We'd say the following:
 
 * The Repository and Unit of Work patterns are going to be quite a lot of work. The
   main thing they will buy you in the short term is faster unit tests, so
-  evaluate whether that feels worth it in your case. In the longer term, they
+  evaluate whether that benefit feels worth it in your case. In the longer term, they
   decouple your app from Django and the database, so if you anticipate wanting
   to migrate away from either of those, Repository and UoW are a good idea.
 
 * The Service Layer pattern might be of interest if you're seeing a lot of duplication in
-  your _views.py_. It can be a good way of thinking about your use cases,
-  separately from your web endpoints.
+  your _views.py_. It can be a good way of thinking about your use cases separately from your web endpoints.
 
 * You can still theoretically do DDD and domain modeling with Django models,
   tightly coupled as they are to the database; you may be slowed by
@@ -422,7 +423,7 @@ https://oreil.ly/Nbpjj[word
 in the Django community] is that people find that the fat models approach runs into
 scalability problems of its own, particularly around managing interdependencies
 between apps. In those cases, there's a lot to be said for extracting out a
-business logic or domain layer to sit between your views and forms, and
+business logic or domain layer to sit between your views and forms and
 your _models.py_, which you can then keep as minimal as possible.
 
 === Steps Along the Way
@@ -430,17 +431,16 @@ your _models.py_, which you can then keep as minimal as possible.
 Suppose you're working on a Django project that you're not sure is going
 to get complex enough to warrant the patterns we recommend, but you still
 want to put a few steps in place to make your life easier, both in the medium
-term, and if you want to migrate to some of our patterns later. Consider the following:
+term and if you want to migrate to some of our patterns later.((("Django", "applying patterns to Django app", "steps along the way"))) Consider the following:
 
-* One piece of advice we've heard is to put a __logic.py__ into every Django app,
-  from day one. This gives you a place to put business logic, and to keep your
+* One piece of advice we've heard is to put a __logic.py__ into every Django app from day one. This gives you a place to put business logic, and to keep your
   forms, views, and models free of business logic. It can become a stepping-stone
   for moving to a fully decoupled domain model and/or service layer later.
 
-* A business-logic layer might start out working with Django model objects,
-  and only later become fully decoupled from the framework and work on
+* A business-logic layer might start out working with Django model objects and only later become fully decoupled from the framework and work on
   plain Python data structures.
 
+[role="pagebreak-before"]
 * For the read side, you can get some of the benefits of CQRS by putting reads
   into one place, avoiding ORM calls sprinkled all over the place.
 
@@ -449,10 +449,10 @@ term, and if you want to migrate to some of our patterns later. Consider the fol
   concerns will cut across them.
 
 
-NOTE: We'd like to give a shout out to David Seddon and Ashia Zawaduk for
-    talking through some of the ideas in this chapter. They did their best to
+NOTE: We'd like to give a shout-out to David Seddon and Ashia Zawaduk for
+    talking through some of the ideas in this appendix. They did their best to
     stop us from saying anything really stupid about a topic we don't really
     have enough personal experience of, but they may have failed.
 
-For more thoughts and actual lived experience dealing with existing
-applications, refer to the <<epilogue_1_how_to_get_there_from_here>>.
+For more ((("Django", startref="ix_Django")))thoughts and actual lived experience dealing with existing
+applications, refer to the <<epilogue_1_how_to_get_there_from_here, epilogue>>.

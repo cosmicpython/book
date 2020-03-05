@@ -23,16 +23,16 @@ For example, a well-tended garden is a highly ordered system. Gardeners define
 boundaries with paths and fences, and they mark out flower beds or vegetable
 patches. Over time, the garden evolves, growing richer and thicker; but without
 deliberate effort, the garden will run wild. Weeds and grasses will choke out
-other plants, covering over the paths until, eventually, every part looks the
+other plants, covering over the paths, until eventually every part looks the
 same again--wild and unmanaged.
 
 Software systems, too, tend toward chaos. When we first start building a new
-system, we have grand ideas that our code will be clean and well-ordered, but
-over time we find that it gathers cruft and edge cases, and ends up a confusing
+system, we have grand ideas that our code will be clean and well ordered, but
+over time we find that it gathers cruft and edge cases and ends up a confusing
 morass of manager classes and util modules. We find that our sensibly layered
-architecture has collapsed into itself like an over-soggy trifle. Chaotic
+architecture has collapsed into itself like an oversoggy trifle. Chaotic
 software systems are characterized by a sameness of function: API handlers that
-have domain knowledge, and send email and perform logging; "business logic"
+have domain knowledge and send email and perform logging; "business logic"
 classes that perform no calculations but do perform I/O; and everything coupled
 to everything else so that changing any part of the system becomes fraught with
 danger. This is so common that software engineers have their own term for
@@ -59,7 +59,7 @@ on them for a moment, since they are a recurring background theme of the book.
 
 The term _encapsulation_ covers two closely related ideas: simplifying
 behavior and hiding data. In this discussion, we're using the first sense. We
-encapsulate behavior by identifying a task that needs to be done in our code,
+encapsulate behavior by identifying a task that needs to be done in our code
 and giving that task to a well-defined object or function. We call that object or function an
 _abstraction_.
 
@@ -111,7 +111,7 @@ to a URL in order to use a search engine API. But the second is simpler to read
 and understand because it operates at a higher level of abstraction.
 
 We can take this one step further still by identifying and naming the task we
-want the code to perform for us, and use an even higher-level abstraction to make
+want the code to perform for us and using an even higher-level abstraction to make
 it explicit:
 
 [[ddg_example]]
@@ -143,7 +143,7 @@ In a traditional OO language like Java or C#, you might use an abstract base
 class (ABC) or an interface to define an abstraction. In Python you can (and we
 sometimes do) use ABCs, but you can also happily rely on duck typing.
 
-The abstraction can just mean, "the public API of the thing you're using"—a
+The abstraction can just mean "the public API of the thing you're using"—a
 function name plus some arguments, for example.
 *******************************************************************************
 
@@ -171,6 +171,7 @@ about which categories of code can call each other.
 One of the most common examples is the _three-layered architecture_ shown in
 <<layered_architecture1>>.
 
+[role="width-75"]
 [[layered_architecture1]]
 .Layered architecture
 image::images/apwp_0002.png[]
@@ -197,7 +198,7 @@ Layered architecture is perhaps the most common pattern for building business
 software. In this model we have user-interface components, which could be a web
 page, an API, or a command line; these user-interface components communicate
 with a business logic layer that contains our business rules and our workflows;
-and finally, we have a data layer that's responsible for storing and retrieving
+and finally, we have a database layer that's responsible for storing and retrieving
 data.
 
 For the rest of this book, we're going to be systematically turning this
@@ -208,12 +209,12 @@ model inside out by obeying one simple principle.
 === The Dependency Inversion Principle
 
 You might be familiar with the _dependency inversion principle_ (DIP) already, because
-it's the _D_ in the SOLID.footnote:[SOLID is an acronym for Robert C. Martin's five principles of object-oriented
+it's the _D_ in SOLID.footnote:[SOLID is an acronym for Robert C. Martin's five principles of object-oriented
 design: single responsibility, open for extension but
-closed for modification, liskov substitution, interface segregation, and
-dependency inversion. See https://oreil.ly/UFM7U["SOLID: The First Five Principles of Object-Oriented Design"] by Samuel Oloruntuba.]
+closed for modification, Liskov substitution, interface segregation, and
+dependency inversion. See https://oreil.ly/UFM7U["S.O.L.I.D: The First 5 Principles of Object-Oriented Design"] by Samuel Oloruntoba.]
 
-Unfortunately we can't illustrate the DIP by using three tiny code listings as
+Unfortunately, we can't illustrate the DIP by using three tiny code listings as
 we did for encapsulation. However, the whole of <<part1>> is essentially a worked
 example of implementing the DIP throughout an application, so you'll get
 your fill of concrete examples.
@@ -238,14 +239,14 @@ system are the functions, classes, and packages that deal with our real-world
 concepts.
 
 By contrast, _low-level modules_ are the code that your organization doesn't
-care about. It's unlikely that your HR department gets excited about filesystems, or network sockets. It's not often that you discuss SMTP, or HTTP,
+care about. It's unlikely that your HR department gets excited about filesystems or network sockets. It's not often that you discuss SMTP, HTTP,
 or AMQP with your finance team. For our nontechnical stakeholders, these
 low-level concepts aren't interesting or relevant. All they care about is
 whether the high-level concepts work correctly. If payroll runs on time, your
 business is unlikely to care whether that's a cron job or a transient function
 running on Kubernetes.
 
-_Depends on_ doesn't mean _imports_ or _calls_, necessarily, but more a more
+_Depends on_ doesn't mean _imports_ or _calls_, necessarily, but rather a more
 general idea that one module _knows about_ or _needs_ another module.
 
 And we've mentioned _abstractions_ already: they're simplified interfaces that
@@ -291,5 +292,5 @@ making it hard to identify, understand, and change.
 
 <<chapter_01_domain_model>> shows how to build a business
 layer with a _Domain Model_ pattern. The rest of the patterns in <<part1>> show
-how we can keep the domain model easy to change and free of low-level concerns,
+how we can keep the domain model easy to change and free of low-level concerns
 by choosing the right abstractions and continuously applying the DIP.

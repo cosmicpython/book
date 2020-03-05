@@ -1,8 +1,9 @@
 [[chapter_04_service_layer]]
-== Our First Use Case: Flask API and pass:[<span class="keep-together">Service Layer</span>]
+== Our First Use Case: pass:[<span class="keep-together">Flask API and Service Layer</span>]
 
-Back to our allocations project! <<maps_service_layer_before>> shows the point we reached at the end of <<chapter_02_repository>>, which covered the Repository pattern.
+Back to our allocations project! <<maps_service_layer_before>> shows the point we reached at the end of <<chapter_02_repository>>, which covered the Repository pattern.((("Flask framework", "Flask API and service layer", id="ix_Flskapp")))((("service layer", id="ix_serlay")))
 
+[role="width-75"]
 [[maps_service_layer_before]]
 .Before: we drive our app by talking to repositories and the domain model
 image::images/apwp_0401.png[]
@@ -13,18 +14,14 @@ business logic, and interfacing code, and we introduce the _Service Layer_
 pattern to take care of orchestrating our workflows and defining the use
 cases of our system.
 
-We'll also discuss testing: by combining the Service Layer with our Repository
+We'll also discuss testing: by combining the Service Layer with our repository
 abstraction over the database, we're able to write fast tests, not just of
-our domain model, but the entire workflow for a use case.
+our domain model but of the entire workflow for a use case.
 
 <<maps_service_layer_after>> shows what we're aiming for: we're going to
 add a Flask API that will talk to the service layer, which will serve as the
 entrypoint to our domain model. Because our service layer depends on the
-`AbstractRepository`, we can unit test it by using `FakeRepository`, but run it our production code using `SqlAlchemyRepository`.
-
-NOTE: In our diagrams, we are using the convention that new components
-    are highlighted with bold text/lines (and yellow/orange color, if you're
-    reading a digital version).
+`AbstractRepository`, we can unit test it by using `FakeRepository` but run our production code using `SqlAlchemyRepository`.
 
 [[maps_service_layer_after]]
 .The service layer will become the main way into our app
@@ -32,17 +29,20 @@ image::images/apwp_0402.png[]
 
 // IDEA more detailed legend
 
+In our diagrams, we are using the convention that new components
+    are highlighted with bold text/lines (and yellow/orange color, if you're
+    reading a digital version).
 
 [TIP]
 ====
 The code for this chapter is in the
-https://github.com/cosmicpython/code/tree/chapter_04_service_layer[chapter_04_service_layer] branch on GitHub.
+chapter_04_service_layer branch https://oreil.ly/TBRuy[on GitHub]:
 
 ----
 git clone https://github.com/cosmicpython/code.git
 cd code
 git checkout chapter_04_service_layer
-# or to code along, check out the previous chapter:
+# or to code along, checkout Chapter 2:
 git checkout chapter_02_repository
 ----
 ====
@@ -51,38 +51,38 @@ git checkout chapter_02_repository
 === Connecting Our Application to the Real World
 
 Like any good agile team, we're hustling to try to get an MVP out and
-in front of the users to start gathering feedback. We have the core
+in front of the users to start gathering feedback.((("Flask framework", "Flask API and service layer", "connecting the app to real world")))((("service layer", "connecting our application to real world"))) We have the core
 of our domain model and the domain service we need to allocate orders,
 and we have the repository interface for permanent storage.
 
 Let's plug all the moving parts together as quickly as we
-can, and then refactor toward a cleaner architecture. Here's our
+can and then refactor toward a cleaner architecture. Here's our
 plan:
 
 1. Use Flask to put an API endpoint in front of our `allocate` domain service.
    Wire up the database session and our repository. Test it with
    an end-to-end test and some quick-and-dirty SQL to prepare test
-   data.
+   data.((("Flask framework", "putting API endpoint in front of allocate domain service")))
 
-2. Refactor out a service layer to serve as an abstraction to
-   capture the use case, and sit between Flask and our domain model.
+2. Refactor out a service layer that can serve as an abstraction to
+   capture the use case and that will sit between Flask and our domain model.
    Build some service-layer tests and show how they can use
    `FakeRepository`.
 
 3. Experiment with different types of parameters for our service layer
-   functions; show that using primitive data types allows the service-layer's
+   functions; show that using primitive data types allows the service layer's
    clients (our tests and our Flask API) to be decoupled from the model layer.
 
 
-=== A First End-To-End Test
+=== A First End-to-End Test
 
 No one is interested in getting into a long terminology debate about what
 counts as an end-to-end (E2E) test versus a functional test versus an acceptance test versus
-an integration test versus a unit test. Different projects need different
+an integration test versus a unit test.((("Flask framework", "Flask API and service layer", "first API end-to-end test", id="ix_Flskappe2e")))((("end-to-end tests", "of allocate API")))((("APIs", "end-to-end test of allocate API"))) Different projects need different
 combinations of tests, and we've seen perfectly successful projects just split
 things into "fast tests" and "slow tests."
 
-For now, we want to write one, or maybe two, tests that are going to exercise
+For now, we want to write one or maybe two tests that are going to exercise
 a "real" API endpoint (using HTTP) and talk to a real database. Let's call
 them _end-to-end tests_ because it's one of the most self-explanatory names.
 
@@ -113,7 +113,7 @@ def test_api_returns_allocation(add_stock):
 ----
 ====
 
-<1> `random_sku()`, `random_batchref()`, etc., are little helper functions that
+<1> `random_sku()`, `random_batchref()`, and so on are little helper functions that
     generate randomized characters by using the `uuid` module. Because
     we're running against an actual database now, this is one way to prevent
     various tests and runs from interfering with each other.
@@ -122,17 +122,17 @@ def test_api_returns_allocation(add_stock):
     manually inserting rows into the database using SQL. We'll show a nicer
     way of doing this later in the chapter.
 
-<3> _config.py_ is a module where we keep configuration information.
+<3> _config.py_ is a module in which we keep configuration information.
 
 Everyone solves these problems in different ways, but you're going to need some
-way of spinning up Flask, possibly in a container, and also talking to a
-Postgres database. If you want to see how we did it, check out
+way of spinning up Flask, possibly in a container, and of talking to a
+Postgres database.((("Flask framework", "Flask API and service layer", "first API end-to-end test", startref="ix_Flskappe2e"))) If you want to see how we did it, check out
 <<appendix_project_structure>>.
 
 
 === The Straightforward Implementation
 
-Implementing things in the most obvious way, you might get something like this:
+Implementing things in the most obvious way, you ((("service layer", "first cut of Flask app", id="ix_serlay1Flapp")))((("Flask framework", "Flask API and service layer", "first cut of the app", id="ix_Flskapp1st")))might get something like this:
 
 
 [[first_cut_flask_app]]
@@ -176,7 +176,7 @@ def allocate_endpoint():
 So far, so good. No need for too much more of your "architecture astronaut"
 nonsense, Bob and Harry, you may be thinking.
 
-But hang on a minute--there's no commit. We're not actually saving our
+But hang on a minute--there's no commit.((("databases", "testing allocations persisted to database"))) We're not actually saving our
 allocation to the database. Now we need a second test, either one that will
 inspect the database state after (not very black-boxy), or maybe one that
 checks that we can't allocate a second line if a first should have already
@@ -213,13 +213,13 @@ def test_allocations_are_persisted(add_stock):
 ----
 ====
 
-Not quite so lovely, but that will force us to add the commit.
+Not quite so lovely, but that will force us to add the commit.((("service layer", "first cut of Flask app", startref="ix_serlay1Flapp")))((("Flask framework", "Flask API and service layer", "first cut of the app", startref="ix_Flskapp1st")))
 
 
 
 === Error Conditions That Require Database Checks
 
-If we keep going like this, though, things are going to get uglier and uglier.
+If we keep going like this, though, things ((("Flask framework", "Flask API and service layer", "error conditions requiring database checks")))((("service layer", "error conditions requiring database checks in Flask app")))are going to get uglier and uglier.
 
 Suppose we want to add a bit of error handling. What if the domain raises an
 error, for a SKU that's out of stock?  Or what about a SKU that doesn't even
@@ -266,7 +266,7 @@ def test_400_message_for_invalid_sku():  #<2>
     so it's invalid as far as our app is concerned.
 
 
-And, sure we could implement it in the Flask app too:
+And sure, we could implement it in the Flask app too:
 
 [[flask_error_handling]]
 .Flask app starting to get crufty (flask_app.py)
@@ -302,7 +302,7 @@ def allocate_endpoint():
 
 But our Flask app is starting to look a bit unwieldy.  And our number of
 E2E tests is starting to get out of control, and soon we'll end up with an
-inverted test pyramid (or "ice-cream cone model" as Bob likes to call it).
+inverted test pyramid (or "ice-cream cone model," as Bob likes to call it).
 
 
 === Introducing a Service Layer, and Using FakeRepository to Unit Test It
@@ -310,15 +310,15 @@ inverted test pyramid (or "ice-cream cone model" as Bob likes to call it).
 If we look at what our Flask app is doing, there's quite a lot of what we
 might call __orchestration__—fetching stuff out of our repository, validating
 our input against database state, handling errors, and committing in the
-happy path. Most of these things don't have anything to do with having a
-web API endpoint (you'd need them if you were building a CLI, for example, see
+happy path. ((("Flask framework", "Flask API and service layer", "introducing service layer and fake repo to unit test it", id="ix_Flskappserly")))((("orchestration")))((("service layer", "introducing and using FakeRepository to unit test it", id="ix_serlayintr")))Most of these things don't have anything to do with having a
+web API endpoint (you'd need them if you were building a CLI, for example; see
 <<appendix_csvs>>), and they're not really things that need to be tested by
 end-to-end tests.
 
-It often makes sense to split out a service layer, sometimes called
-_orchestration layer_ or _use-case layer_.
+It often makes sense to split out a service layer, sometimes called an
+_orchestration layer_ or a _use-case layer_.((("use-case layer", see="service layer")))((("orchestration layer", see="service layer")))
 
-Do you remember the `FakeRepository` that we prepared in <<chapter_03_abstractions>>?
+Do you remember the `FakeRepository` that((("faking", "FakeRepository"))) we prepared in <<chapter_03_abstractions>>?
 
 [[fake_repo]]
 .Our fake repository, an in-memory collection of batches (test_services.py)
@@ -342,7 +342,7 @@ class FakeRepository(repository.AbstractRepository):
 ====
 
 Here's where it will come in useful; it lets us test our service layer with
-nice, fast unit tests:
+nice, fast((("faking", "FakeRepository", "using to unit test the service layer")))((("unit testing", seealso="test-driven development; testing")))((("testing", "unit testing with fakes at service layer"))) unit tests:
 
 
 [[first_services_tests]]
@@ -380,7 +380,7 @@ def test_error_for_invalid_sku():
     confusingly similar names. We tackle this topic later in
     <<why_is_everything_a_service>>.]
 
-<3> We also need a `FakeSession` to fake out the database session, as shown in the following code snippet.
+<3> We also need a `FakeSession` to fake out the database session, as shown in the following code snippet.((("faking", "FakeSession, using to unit test the service layer")))((("testing", "fake database session at service layer")))
 
 
 [[fake_session]]
@@ -421,7 +421,7 @@ def test_commits():
 
 ==== A Typical Service Function
 
-We'll write a service function that looks something like this:
+We'll write a service ((("Flask framework", "Flask API and service layer", "introducing service layer and fake repo to unit test it", startref="ix_Flskappserly")))((("service layer", "typical service function")))((("functions", "service layer")))((("Flask framework", "Flask API and service layer", "typical service layer function")))function that looks something like this:
 
 [[service_function]]
 .Basic allocation service (services.py)
@@ -473,28 +473,26 @@ Notice one more thing about our service-layer function:
 def allocate(line: OrderLine, repo: AbstractRepository, session) -> str:
 ----
 
-It depends on a repository.  We've chosen to make the dependency explicit,
+It depends on a repository.((("abstractions", "AbstractRepository, service function depending on")))((("repositories", "service layer function depending on abstract repository")))  We've chosen to make the dependency explicit,
 and we've used the type hint to say that we depend on `AbstractRepository`.
-This means it'll work both when the tests give it a `FakeRepository`, and
-when the Flask app gives it a `SqlAlchemyRepository`.
+This means it'll work both when the tests give it a `FakeRepository` and
+when the Flask app gives it a `SqlAlchemyRepository`.((("dependencies", "depending on abstractions")))
 
 If you remember <<dip>>,
 this is what we mean when we say we should "depend on abstractions." Our
 _high-level module_, the service layer, depends on the repository abstraction.
 And the _details_ of the implementation for our specific choice of persistent
-storage also depend on that same abstraction.
-
-See Figures pass:[<a href="#service_layer_diagram_abstract_dependencies" data-xrefstyle="select:labelnumber">#service_layer_diagram_abstract_dependencies</a> and <a href="#service_layer_diagram_test_dependencies" data-xrefstyle="select:labelnumber">#service_layer_diagram_test_dependencies</a>].
+storage also depend on that same abstraction. See Figures pass:[<a data-type="xref" href="#service_layer_diagram_abstract_dependencies" data-xrefstyle="select:labelnumber">#service_layer_diagram_abstract_dependencies</a> and <a data-type="xref" href="#service_layer_diagram_test_dependencies" data-xrefstyle="select:labelnumber">#service_layer_diagram_test_dependencies</a>].
 
 See also in <<appendix_csvs>> a worked example of swapping out the
-_details_ of which persistent storage system to use, while leaving the
+_details_ of which persistent storage system to use while leaving the
 abstractions intact.
 
 *******************************************************************************
 
 
 But the essentials of the service layer are there, and our Flask
-app now looks a lot cleaner:
+app now looks ((("Flask framework", "Flask API and service layer", "app delegating to service layer")))((("service layer", "Flask app delegating to")))a lot cleaner:
 
 
 [[flask_app_using_service_layer]]
@@ -532,7 +530,7 @@ codes, and JSON. All the orchestration logic is in the use case/service layer,
 and the domain logic stays in the domain.
 
 Finally, we can confidently strip down our E2E tests to just two, one for
-the happy path and one for the unhappy path:
+the happy path and one((("service layer", "end-to-end test of allocate API, testing happy and unhappy paths")))((("Flask framework", "Flask API and service layer", "end-to-end tests for happy and unhappy paths"))) for the unhappy path:
 
 
 [[fewer_e2e_tests]]
@@ -577,8 +575,8 @@ we can test against the service layer in memory.
 [role="nobreakinside less_space"]
 .Exercise for the Reader
 ******************************************************************************
-Now that we have an allocate service, so why not build out a service for
-`deallocate`? We've added https://github.com/cosmicpython/code/tree/chapter_04_service_layer_exercise[an E2E test and a few stub service-layer tests] for
+Now that we have an allocate service, why not build out a service for
+`deallocate`?((("deallocate service, building (exerise)"))) We've added https://github.com/cosmicpython/code/tree/chapter_04_service_layer_exercise[an E2E test and a few stub service-layer tests] for
 you to get started on GitHub.
 
 If that's not enough, continue into the E2E tests and _flask_app.py_, and
@@ -586,7 +584,7 @@ refactor the Flask adapter to be more RESTful. Notice how doing so doesn't
 require any change to our service layer or domain layer!
 
 TIP: If you decide you want to build a read-only endpoint for retrieving allocation
-    info, just do the simplest thing that can possibly work, which is
+    info, just do "the simplest thing that can possibly work," which is
     `repo.get()` right in the Flask handler. We'll talk more about reads versus
     writes in <<chapter_12_cqrs>>.
 
@@ -596,15 +594,15 @@ TIP: If you decide you want to build a read-only endpoint for retrieving allocat
 === Why Is Everything Called a Service?
 
 Some of you are probably scratching your heads at this point trying to figure
-out exactly what the difference is between a domain service and a service layer.
+out exactly what the difference((("service layer", "introducing and using FakeRepository to unit test it", startref="ix_serlayintr"))) is between a domain service and a service layer.((("service layer", "difference between domain service and")))((("services", "application service and domain service")))((("Flask framework", "Flask API and service layer", "different types of services")))
 
 We're sorry—we didn't choose the names, or we'd have much cooler and friendlier
-ways to talk about this stuff.
+ways to talk about this stuff.((("application services")))
 
 We're using two things called a _service_ in this chapter. The first is an
 _application service_ (our service layer). Its job is to handle requests from the
-outside world, and to _orchestrate_ an operation. What we mean is that the
-service layer _drives_ the application, by following a bunch of simple steps:
+outside world and to _orchestrate_ an operation. ((("orchestration", "using application service")))What we mean is that the
+service layer _drives_ the application by following a bunch of simple steps:
 
 * Get some data from the database
 * Update the domain model
@@ -613,20 +611,20 @@ service layer _drives_ the application, by following a bunch of simple steps:
 This is the kind of boring work that has to happen for every operation in your
 system, and keeping it separate from business logic helps to keep things tidy.
 
-The second type of service is a _domain service_. This is the name for a piece of
+The second type of service is a _domain service_.((("domain services"))) This is the name for a piece of
 logic that belongs in the domain model but doesn't sit naturally inside a
 stateful entity or value object. For example, if you were building a shopping
 cart application, you might choose to build taxation rules as a domain service.
 Calculating tax is a separate job from updating the cart, and it's an important
 part of the model, but it doesn't seem right to have a persisted entity for
-the job. Instead a stateless TaxCalculator class, or a `calculate_tax` function
+the job. Instead a stateless TaxCalculator class or a `calculate_tax` function
 can do the job.
 
 
 === Putting Things in Folders to See Where It All Belongs
 
 As our application gets bigger, we'll need to keep tidying our directory
-structure. The layout of our project gives us useful hints about what kinds of
+structure.((("Flask framework", "Flask API and service layer", "putting project into folders")))((("service layer", "putting project in folders")))((("projects", "organizing into folders")))((("directory structure, putting project into folders"))) The layout of our project gives us useful hints about what kinds of
 object we'll find in each file.
 
 Here's one way we could organize things:
@@ -668,26 +666,26 @@ Here's one way we could organize things:
 ----
 ====
 
-<1> Let's have a folder for our domain model.  Currently that's just one file,
-    but for a more complex application, you might have one file per class, you
+<1> Let's have a folder for our domain model.((("domain model", "folder for")))  Currently that's just one file,
+    but for a more complex application, you might have one file per class; you
     might have helper parent classes for `Entity`, `ValueObject`, and
-    `Aggregate`, you might add an __exceptions.py__ for domain-layer exceptions,
-    and as you'll see in <<part2>>, __commands.py__ and __events.py__.
+    `Aggregate`, and you might add an __exceptions.py__ for domain-layer exceptions
+    and, as you'll see in <<part2>>, pass:[<span class="keep-together"><em>commands.py</em></span>] and __events.py__.
 
 <2> We'll distinguish the service layer. Currently that's just one file
     called _services.py_ for our service-layer functions.  You could
-    add service-layer exceptions here, and as you'll see in the <<chapter_05_high_gear_low_gear>>, we'll add __unit_of_work.py__.
+    add service-layer exceptions here, and as you'll see in <<chapter_05_high_gear_low_gear>>, we'll add __unit_of_work.py__.
 
-<3> _Adapters_ is a nod to the ports and adapters terminology. This will fill
+<3> _Adapters_ is a nod to the ports and adapters terminology.((("adapters", "putting into folder"))) This will fill
     up with any other abstractions around external I/O (e.g., a __redis_client.py__).
     Strictly speaking, you would call these _secondary_ adapters or _driven_
-    adapters, or sometimes _inward-facing_ adapters.
+    adapters, or sometimes _inward-facing_ adapters.((("inward-facing adapters")))((("secondary adapters")))((("driven adapters")))
 
-<4> Entrypoints are the places we drive our application from. In the
+<4> Entrypoints are the places we drive our application from.((("entrypoints"))) In the
     official ports and adapters terminology, these are adapters too, and are
     referred to as _primary_, _driving_, or _outward-facing_ adapters.
 
-What about ports?  As you may remember, they are the abstract interfaces that the
+What about ports?((("ports", "putting in folder with adapters")))  As you may remember, they are the abstract interfaces that the
 adapters implement. We tend to keep them in the same file as the adapters that
 implement them.
 
@@ -695,10 +693,10 @@ implement them.
 === Wrap-Up
 
 
-Adding the service layer has really bought us quite a lot:
+Adding the service layer((("service layer", "benefits of")))((("Flask framework", "Flask API and service layer", "service layer benefits"))) has really bought us quite a lot:
 
 * Our Flask API endpoints become very thin and easy to write: their
-  only responsibility is doing "web stuff," things like parsing JSON
+  only responsibility is doing "web stuff," such as parsing JSON
   and producing the right HTTP codes for happy or unhappy cases.
 
 * We've defined a clear API for our domain, a set of use cases or
@@ -719,9 +717,17 @@ Adding the service layer has really bought us quite a lot:
 ==== The DIP in Action
 
 <<service_layer_diagram_abstract_dependencies>> shows the
-dependencies of our service layer: the domain model,
+dependencies of our service ((("Flask framework", "Flask API and service layer", "service layer dependencies")))((("service layer", "dependencies of")))((("dependencies", "abstract dependencies of service layer")))layer: the domain model
 and `AbstractRepository` (the port, in ports and adapters terminology).
 
+When we run the tests, <<service_layer_diagram_test_dependencies>> shows
+how we implement the abstract dependencies by using `FakeRepository` (the
+adapter).((("service layer", "dependencies of", "testing")))((("dependencies", "abstract dependencies of service layer", "testing")))
+
+And when we actually run our app, we swap in the "real" dependency((("service layer", "dependencies of", "real dependencies at runtime")))((("dependencies", "real service layer dependencies at runtime"))) shown in
+<<service_layer_diagram_runtime_dependencies>>.
+
+[role="width-75"]
 [[service_layer_diagram_abstract_dependencies]]
 .Abstract dependencies of the service layer
 image::images/apwp_0403.png[]
@@ -741,10 +747,7 @@ image::images/apwp_0403.png[]
 ----
 
 
-When we run the tests, <<service_layer_diagram_test_dependencies>> shows
-how we implement the abstract dependencies by using `FakeRepository` (the
-adapter).
-
+[role="width-75"]
 [[service_layer_diagram_test_dependencies]]
 .Tests provide an implementation of the abstract dependency
 image::images/apwp_0404.png[]
@@ -773,9 +776,7 @@ image::images/apwp_0404.png[]
                          +----------------------+
 ----
 
-And when we actually run our app, we swap in the "real" dependency shown in
-<<service_layer_diagram_runtime_dependencies>>.
-
+[role="width-75"]
 [[service_layer_diagram_runtime_dependencies]]
 .Dependencies at runtime
 image::images/apwp_0405.png[]
@@ -815,21 +816,10 @@ image::images/apwp_0405.png[]
 ----
 
 
-Wonderful.  But there are still some bits of awkwardness to tidy up:
+Wonderful.
 
-* The service layer is still tightly coupled to the domain, because
-  its API is expressed in terms of `OrderLine` objects. In
-  <<chapter_05_high_gear_low_gear>>, we'll fix that and talk about
-  the way that the service layer enables more productive TDD.
-
-* The service layer is tightly coupled to a `session` object. In <<chapter_06_uow>>,
-  we'll introduce one more pattern that works closely with the Repository and
-  Service Layer patterns, the Unit of Work pattern, and everything will be absolutely lovely.
-  You'll see!
-
-But first, as is customary, a pause for <<chapter_04_service_layer_tradeoffs>>,
-in which we consider the pros and cons of having a service layer at all.
-
+Let's pause for <<chapter_04_service_layer_tradeoffs>>,
+in which we consider((("Flask framework", "Flask API and service layer", "service layer pros and cons")))((("service layer", "pros and cons or trade-offs"))) the pros and cons of having a service layer at all.
 
 [[chapter_04_service_layer_tradeoffs]]
 [options="header"]
@@ -857,11 +847,24 @@ a|
 * It's yet another layer of abstraction.
 
 * Putting too much logic into the service layer can lead to the _Anemic Domain_
-  anti-pattern. It's better to introduce this layer after you spot orchestration
-  logic creeping into your controllers.
+  anti-pattern.((("Anemic Domain anti-pattern"))) It's better to introduce this layer after you spot orchestration
+  logic creeping into your controllers.((("domain model", "getting benefits of rich model")))
 
 * You can get a lot of the benefits that come from having rich domain models
   by simply pushing logic out of your controllers and down to the model layer,
   without needing to add an extra layer in between (aka "fat models, thin
-  controllers").
+  controllers").((("Flask framework", "Flask API and service layer", startref="ix_Flskapp")))((("service layer", startref="ix_serlay")))
 |===
+
+But there are still some bits of awkwardness to tidy up:
+
+* The service layer is still tightly coupled to the domain, because
+  its API is expressed in terms of `OrderLine` objects. In
+  <<chapter_05_high_gear_low_gear>>, we'll fix that and talk about
+  the way that the service layer enables more productive TDD.
+
+* The service layer is tightly coupled to a `session` object. In <<chapter_06_uow>>,
+  we'll introduce one more pattern that works closely with the Repository and
+  Service Layer patterns, the Unit of Work pattern, and everything will be absolutely lovely.
+  You'll see!
+
