@@ -38,7 +38,7 @@ bugs?
 
 Having a clear goal in mind will help you to prioritize the work that needs to
 be done and, importantly, communicate the reasons for doing it to the rest of
-the team. Businesses tend to have pragmatic approaches to technical debt
+the team. pass:[<span class="keep-together">Businesses</span>] tend to have pragmatic approaches to technical debt
 and refactoring, so long as engineers can make a reasoned argument for fixing
 things.
 
@@ -165,16 +165,16 @@ The resulting command handlers were _long_ and messy, but we'd made a start at
 introducing order to the chaos.
 ********************************************************************************
 
+TIP: It's fine if you have duplication in the use-case functions. We're not
+    trying to write perfect code; we're just trying to extract some meaningful
+    layers. It's better to duplicate some code in a few places than to have
+    use-case functions calling one another in a long chain.
+
 This is a good opportunity to pull any data-access or orchestration code out of
 the domain model and into the use cases. We should also try to pull I/O
 concerns (e.g., sending email, writing files) out of the domain model and up into
 the use-case functions. We apply the techniques from <<chapter_03_abstractions>> on abstractions
 to keep our handlers unit testable even when they're performing I/O.
-
-TIP: It's fine if you have duplication in the use-case functions. We're not
-    trying to write perfect code; we're just trying to extract some meaningful
-    layers. It's better to duplicate some code in a few places than to have
-    use-case functions calling one another in a long chain.
 
 These use-case functions will mostly be about logging, data access, and error
 handling. Once you've done this step, you'll have a grasp of what your program
@@ -215,6 +215,7 @@ Building a system this way with Django ORM or SQLAlchemy is easy but is
 to be pass:[<span class="keep-together">avoided</span>]. Although it's _convenient_, it makes it very hard to reason about
 performance because each property might trigger a lookup to the database.
 
+[role="pagebreak-before"]
 TIP: Aggregates are a _consistency boundary_. In general, each use case should
     update a single aggregate at a time. One handler fetches one aggregate from
     a repository, modifies its state, and raises any events that happen as a
@@ -501,7 +502,7 @@ Rel(ecom, fulfillment, "Sends orders", "xml-rpc")
 to <<strangler_after>>.
 
 [[strangler_after]]
-.After: loose coupling with asynchronous events
+.After: loose coupling with asynchronous events (you can find a high-resolution version of this diagram at cosmicpython.com)
 image::images/apwp_ep05.png[]
 [role="image-source"]
 ----
@@ -733,7 +734,7 @@ View models can have complex logic in them. In this book, we've encouraged you t
 We've written systems in which the view models needed extensive unit tests. In those systems, we split a _view builder_ from a _view fetcher_, as in <<view_builder_diagram>>.
 
 [[view_builder_diagram]]
-.A view builder and view fetcher
+.A view builder and view fetcher (you can find a high-resolution version of this diagram at cosmicpython.com)
 image::images/apwp_ep06.png[]
 [role="image-source"]
 ----
@@ -766,7 +767,7 @@ Do I need to build microservices to do this stuff?::
 I'm using Django. Can I still do this?::
     We have an entire appendix just for you: <<appendix_django>>!
 
-
+[role="pagebreak-before less_space"]
 [[footguns]]
 === Footguns
 
