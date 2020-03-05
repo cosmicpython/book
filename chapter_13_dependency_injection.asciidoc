@@ -708,7 +708,7 @@ def sqlite_bus(sqlite_session_factory):
 
 def test_allocations_view(sqlite_bus):
     sqlite_bus.handle(commands.CreateBatch('sku1batch', 'sku1', 50, None))
-    sqlite_bus.handle(commands.CreateBatch('sku2batch', 'sku2', 50, date.today()))
+    sqlite_bus.handle(commands.CreateBatch('sku2batch', 'sku2', 50, today))
     ...
     assert views.allocations('order1', sqlite_bus.uow) == [
         {'sku': 'sku1', 'batchref': 'sku1batch'},
