@@ -989,8 +989,6 @@ def test_out_of_stock_email(bus):
 And that's it really.
 
 
-===  Wrap-up
-
 [role="less_space nobreakinside"]
 .Exercise for the Reader 2
 ******************************************************************************
@@ -1009,24 +1007,24 @@ You could do two things ((("adapters", "exercise for the reader")))for practice 
 
 === Wrap-Up
 
-Once you have more than one adapter, you'll start to feel a lot of pain
+* Once you have more than one adapter, you'll start to feel a lot of pain
   from passing dependencies around((("bootstrapping", "dependency injection and bootstrap recap")))((("dependency injection", "recap of DI and bootstrap"))) manually, unless you do some kind of
   _dependency injection._
 
-Setting up dependency injection is just one of many typical
+* Setting up dependency injection is just one of many typical
   setup/initialization activities that you need to do just once when starting
   your app.  Putting this all together into a _bootstrap script_ is often a
   good idea.
 
-The bootstrap script is also good as a place to provide sensible default
+* The bootstrap script is also good as a place to provide sensible default
   configuration for your adapters, and as a single place to override those
   adapters with fakes for your tests.
 
-A dependency injection framework can be useful if you find yourself
+* A dependency injection framework can be useful if you find yourself
   needing to do DI at multiple levels—if you have chained dependencies
   of components that all need DI, for example.
 
-This chapter also presented a worked example of changing an implicit/simple
+* This chapter also presented a worked example of changing an implicit/simple
   dependency into a "proper" adapter, factoring out an ABC, defining its real
   and fake implementations, and thinking through integration testing.
 
@@ -1041,9 +1039,10 @@ In summary:
 4. Find a less fake version you can put into your Docker environment.
 5. Test the less fake "real" thing.
 6. Profit!((("adapters", "defining adapter and doing dependency injection for it", startref="ix_adapDI")))
+
+// TODO this isn't really in the right TDD order is it?
 ****
 
 These were the last patterns we wanted to cover, which brings us to the end of <<part2>>. In <<epilogue_1_how_to_get_there_from_here, the epilogue>>, we'll try to give you some pointers for applying these techniques in the Real World^TM^.
-// TODO this isn't really in the right TDD order is it?
 
 // TODO: tradeoffs?
