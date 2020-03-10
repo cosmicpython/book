@@ -14,7 +14,7 @@ but hopefully we can make the argument that it's not _totally_ unreasonable.((("
 [TIP]
 ====
 The code for this chapter is in the
-chapter_12_cqrs branch https://oreil.ly/YbWGT[on pass:[<span class="keep-together">GitHub</span>]].
+chapter_12_cqrs branch https://oreil.ly/YbWGT[on [.keep-together]#GitHub#].
 
 ----
 git clone https://github.com/cosmicpython/code.git
@@ -101,7 +101,7 @@ making our reads _eventually consistent_ in order to make them perform better.
 *******************************************************************************
 
 This idea of trading consistency against performance makes a lot of developers
-pass:[<span class="keep-together">nervous</span>] at first, so let's talk quickly about that.((("consistency", "attainment of read consistency")))((("command-query responsibility segregation (CQRS)", "reads", "consistency of")))
+[.keep-together]#nervous# at first, so let's talk quickly about that.((("consistency", "attainment of read consistency")))((("command-query responsibility segregation (CQRS)", "reads", "consistency of")))
 
 Let's imagine that our "Get Available Stock" query is 30 seconds out of date
 when Bob visits the page for `ASYMMETRICAL-DRESSER`.

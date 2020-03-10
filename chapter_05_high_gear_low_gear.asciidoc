@@ -181,7 +181,7 @@ understand how the system works and how the core concepts interrelate.
 We often "sketch" new behaviors by writing tests at this level to see how the
 code might look. When we want to improve the design of the code, though, we will need to replace
 or delete these tests, because they are tightly coupled to a particular
-pass:[<span class="keep-together">implementation</span>].
+[.keep-together]#implementation#.
 
 // IDEA: (EJ3) an example that is overmocked would be good here if you decide to
 // add one. Ch12 already has one that could be expanded.
@@ -359,7 +359,7 @@ def allocate(
 
 NOTE: Should you write a new service just because it would help remove
     dependencies from your tests?  Probably not.  But in this case, we
-    almost definitely would need an `add_batch` service one day pass:[<span class="keep-together">anyway</span>].
+    almost definitely would need an `add_batch` service one day [.keep-together]#anyway#.
 
 That now allows us to rewrite _all_ of our service-layer tests purely
 in terms of the services themselves, using only primitives, and without

@@ -91,7 +91,7 @@ service, in separate transactions. Once again, our message bus helps us to
 enforce the single responsibility principle, and it allows us to make choices about
 transactions and data integrity.
 
-==== Imagining an Architecture Change: Everything Will Be an pass:[<span class="keep-together">Event Handler</span>]
+==== Imagining an Architecture Change: Everything Will Be an [.keep-together]#Event Handler#
 
 But before we jump in, think about where we're headed. ((("events and the message bus", "transforming our app into message processor", "imagined architecture, everything will be an event handler")))((("event handlers", "imagined architecture in which everything is an event handler"))) There are two
 kinds of flows through our system:
@@ -253,7 +253,7 @@ Along the way, we've made our service-layer's API more structured and more consi
 primitives, and now it uses well-defined objects (see the following sidebar).
 
 [role="nobreakinside less_space"]
-.From Domain Objects, via Primitive Obsession, to pass:[<span class="keep-together">Events as an Interface</span>]
+.From Domain Objects, via Primitive Obsession, to [.keep-together]#Events as an Interface#
 *******************************************************************************
 Some of you may remember <<primitive_obsession>>, in which we changed our service-layer API
 from being in terms of domain objects to primitives. And now we're moving
@@ -310,7 +310,7 @@ def handle(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):  #<1>
 <1> The message bus now gets passed the UoW each time it starts up.
 <2> When we begin handling our first event, we start a queue.
 <3> We pop events from the front of the queue and invoke their handlers (the
-    pass:[<span class="keep-together"><code>HANDLERS</code></span>] dict hasn't changed; it still maps event types to handler functions).
+    [.keep-together]`HANDLERS` dict hasn't changed; it still maps event types to handler functions).
 <4> The message bus passes the UoW down to each handler.
 <5> After each handler finishes, we collect any new events that have been
     generated and add them to the queue.

@@ -137,7 +137,7 @@ the different symbols.
 
 
 We can think of each of these steps as a command in our system: `ReserveStock`,
-pass:[<span class="keep-together"><code>ConfirmReservation</code></span>], `DispatchGoods`, `MakeCustomerVIP`, and so forth.
+[.keep-together]`ConfirmReservation`, `DispatchGoods`, `MakeCustomerVIP`, and so forth.
 
 This style of architecture, where we create a microservice per database table
 and treat our HTTP APIs as CRUD interfaces to anemic models, is the most common
@@ -572,7 +572,7 @@ https://oreil.ly/FXVil[event sourcing]
 
 
 TIP: Outbound events are one of the places it's important to apply validation.
-    See <<appendix_validation>> for some validation philosophy and pass:[<span class="keep-together">examples</span>].
+    See <<appendix_validation>> for some validation philosophy and [.keep-together]#examples#.
 
 [role="nobreakinside less_space"]
 .Exercise for the Reader
@@ -583,7 +583,7 @@ case can also be invoked by an event on a Redis channel, as well as (or instead 
 via the API.
 
 You will likely want to add a new E2E test and feed through some changes into
-pass:[<span class="keep-together"><code>redis_eventconsumer.py</code></span>].
+[.keep-together]`redis_eventconsumer.py`.
 
 *******************************************************************************
 
