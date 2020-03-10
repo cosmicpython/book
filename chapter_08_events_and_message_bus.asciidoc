@@ -174,7 +174,7 @@ this code?((("events and the message bus", "sending email alerts when out of sto
 Really, this is a violation ((("events and the message bus", "sending email alerts when out of stock", "violating the single responsibility principle")))((("single responsibility principle (SRP)")))of the __single responsibility principle__ (SRP).footnote:[
 This principle is the _S_ in https://oreil.ly/AIdSD[SOLID].]
 Our use case is allocation. Our endpoint, service function, and domain methods
-are all called [.keep-together]#allocate#, not `allocate_and_send_mail_if_out_of_stock`.
+are all called [.keep-together]`allocate`, not `allocate_and_send_mail_if_out_of_stock`.
 
 TIP: Rule of thumb: if you can't describe what your function does without using
     words like "then" or "and," you might be violating the SRP.
