@@ -594,7 +594,7 @@ class OrderLine:
 ----
 ====
 
-One of the nice things ((("named tuples", seealso="dataclasses")))that dataclasses (or namedtuples) give us is _value
+One of the nice things ((("namedtuples", seealso="dataclasses")))that dataclasses (or namedtuples) give us is _value
 equality_, which is the fancy way of saying, "Two lines with the same `orderid`,
 `sku`, and `qty` are equal."
 
