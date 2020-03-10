@@ -354,7 +354,7 @@ class Product:
 <2> Our `Product` class holds a reference to a collection of `batches` for that SKU.((("allocate service", "moving to be a method on Product aggregate")))
 
 <3> Finally, we can move the `allocate()` domain service to
-    be a method on the [.keep-together]`Product` aggregate.
+    be a method on the [.keep-together]#`Product`# aggregate.
 
 // IDEA (hynek): random nitpick: exceptions denoting errors should be
 // named *Error.  Are you doing this to save space in the listing?
@@ -579,7 +579,7 @@ TIP: Version numbers are just one way to implement optimistic locking. You
     Version numbers also make implicit concepts explicit.
 
 [[version_numbers_sequence_diagram]]
-.Sequence diagram: two transactions attempting a concurrent update on [.keep-together]`Product`
+.Sequence diagram: two transactions attempting a concurrent update on [.keep-together]#`Product`#
 image::images/apwp_0704.png[]
 [role="image-source"]
 ----

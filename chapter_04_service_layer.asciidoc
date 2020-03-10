@@ -670,7 +670,7 @@ Here's one way we could organize things:
     but for a more complex application, you might have one file per class; you
     might have helper parent classes for `Entity`, `ValueObject`, and
     `Aggregate`, and you might add an __exceptions.py__ for domain-layer exceptions
-    and, as you'll see in <<part2>>, [.keep-together]__commands.py__ and __events.py__.
+    and, as you'll see in <<part2>>, [.keep-together]#__commands.py__# and __events.py__.
 
 <2> We'll distinguish the service layer. Currently that's just one file
     called _services.py_ for our service-layer functions.  You could
