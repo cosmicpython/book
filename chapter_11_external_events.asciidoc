@@ -40,7 +40,7 @@ git checkout chapter_10_commands
 
 === Distributed Ball of Mud, and Thinking in Nouns
 
-Before we get into that, let's talk about the alternatives.((("Ball of Mud pattern", "distributed ball of mud and thinking in nouns", id="ix_BoMdist")))((("microservices", "event-based integration", "distributed Ball of Mud and thinking in nouns", id="ix_mcroevntBoM")))((("Distributed Ball of Mud anti-pattern", "and thinking in nouns", id="ix_DBoM"))) We regularly talk to
+Before we get into that, let's talk about the alternatives.((("Ball of Mud pattern", "distributed ball of mud and thinking in nouns", id="ix_BoMdist")))((("microservices", "event-based integration", "distributed Ball of Mud and thinking in nouns", id="ix_mcroevntBoM")))((("Distributed Ball of Mud antipattern", "and thinking in nouns", id="ix_DBoM"))) We regularly talk to
 engineers who are trying to build out a microservices architecture. Often they
 are migrating from an existing application, and their first instinct is to
 split their system into _nouns_.((("nouns, splitting system into", id="ix_noun")))
@@ -191,7 +191,7 @@ Warehouse; but in order to handle problems at the warehouse, our Warehouse
 system drives Batches, which drives Orders.
 
 Multiply this by all the other workflows we need to provide, and you can see
-how services quickly get tangled up.((("Distributed Ball of Mud anti-pattern", "and thinking in nouns", startref="ix_DBoM")))((("Ball of Mud pattern", "distributed ball of mud and thinking in nouns", startref="ix_BoMdist")))((("nouns, splitting system into", startref="ix_noun")))((("microservices", "event-based integration", "distributed Ball of Mud and thinking in nouns", startref="ix_mcroevntBoM")))
+how services quickly get tangled up.((("Distributed Ball of Mud antipattern", "and thinking in nouns", startref="ix_DBoM")))((("Ball of Mud pattern", "distributed ball of mud and thinking in nouns", startref="ix_BoMdist")))((("nouns, splitting system into", startref="ix_noun")))((("microservices", "event-based integration", "distributed Ball of Mud and thinking in nouns", startref="ix_mcroevntBoM")))
 
 === Error Handling in Distributed Systems ===
 
@@ -287,9 +287,9 @@ Like aggregates, microservices ((("consistency boundaries", "microservices as"))
 services, we can accept eventual consistency, and that means we don't need to
 rely on synchronous calls. Each service accepts commands from the outside world
 and raises events to record the result. Other services can listen to those
-events to trigger the next steps in the workflow.((("Distributed Ball of Mud anti-pattern", "avoiding")))
+events to trigger the next steps in the workflow.((("Distributed Ball of Mud antipattern", "avoiding")))
 
-To avoid the Distributed Ball of Mud anti-pattern, instead of temporally coupled HTTP
+To avoid the Distributed Ball of Mud antipattern, instead of temporally coupled HTTP
 API calls, we want to use asynchronous messaging to integrate our systems. We
 want our `BatchQuantityChanged` messages to come in as external messages from
 upstream systems, and we want our system to publish `Allocated` events for
