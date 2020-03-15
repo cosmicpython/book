@@ -1,5 +1,5 @@
 html:
-	asciidoctor -a stylesheet=theme/asciidoctor.local.css -a source-highlighter=pygments -a '!example-caption' *.asciidoc
+	asciidoctor -a stylesheet=theme/asciidoctor-clean.custom.css -a source-highlighter=pygments -a pygments-style=friendly -a '!example-caption' *.asciidoc
 
 test: html
 	pytest tests.py --tb=short -vv
