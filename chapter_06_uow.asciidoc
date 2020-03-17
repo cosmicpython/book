@@ -16,7 +16,7 @@ layer to start a session, it talks to the repository layer to initialize
 [TIP]
 ====
 The code for this chapter is in the
-chapter_06_uow branch https://oreil.ly/MoWdZ[on pass:[<span class="keep-together">GitHub</span>]]:
+chapter_06_uow branch https://oreil.ly/MoWdZ[on [.keep-together]#GitHub#]:
 
 ----
 git clone https://github.com/cosmicpython/code.git
@@ -311,7 +311,7 @@ def test_allocate_returns_allocation():
 
 <2> Notice the similarity with the fake `commit()` function
     from `FakeSession` (which we can now get rid of). But it's
-    a substantial improvement because we're now pass:[<span class="keep-together">faking</span>] out
+    a substantial improvement because we're now [.keep-together]#faking# out
     code that we wrote rather than third-party code. Some
     people say, https://oreil.ly/0LVj3["Don't mock what you don't own"].
 

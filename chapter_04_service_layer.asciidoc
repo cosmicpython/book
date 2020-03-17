@@ -1,5 +1,5 @@
 [[chapter_04_service_layer]]
-== Our First Use Case: pass:[<span class="keep-together">Flask API and Service Layer</span>]
+== Our First Use Case: [.keep-together]#Flask API and Service Layer#
 
 Back to our allocations project! <<maps_service_layer_before>> shows the point we reached at the end of <<chapter_02_repository>>, which covered the Repository pattern.((("Flask framework", "Flask API and service layer", id="ix_Flskapp")))((("service layer", id="ix_serlay")))
 
@@ -672,7 +672,7 @@ Here's one way we could organize things:
     but for a more complex application, you might have one file per class; you
     might have helper parent classes for `Entity`, `ValueObject`, and
     `Aggregate`, and you might add an __exceptions.py__ for domain-layer exceptions
-    and, as you'll see in <<part2>>, pass:[<span class="keep-together"><em>commands.py</em></span>] and __events.py__.
+    and, as you'll see in <<part2>>, [.keep-together]#__commands.py__# and __events.py__.
 
 <2> We'll distinguish the service layer. Currently that's just one file
     called _services.py_ for our service-layer functions.  You could

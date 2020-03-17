@@ -23,7 +23,7 @@ Why? Let's find out.
 [TIP]
 ====
 The code for this chapter is in the appendix_csvs branch
-https://oreil.ly/vlnGg[on pass:[<span class="keep-together">GitHub</span>]]:
+https://oreil.ly/vlnGg[on [.keep-together]#GitHub#]:
 
 ----
 git clone https://github.com/cosmicpython/code.git
@@ -41,7 +41,7 @@ What's the point of a domain model, anyway? What's the fundamental problem
 we're trying to address?((("domain model", "using spreadsheets instead of")))
 
 Couldn't we just run everything in a spreadsheet? Many of our users would be
-pass:[<span class="keep-together">delighted</span>] by that.((("spreadsheets, using instead of domain model"))) Business users _like_ spreadsheets because they're simple,
+[.keep-together]#delighted# by that.((("spreadsheets, using instead of domain model"))) Business users _like_ spreadsheets because they're simple,
 familiar, and yet enormously powerful.
 
 In fact, an enormous number of business processes do operate by manually sending
@@ -115,7 +115,7 @@ raise an error if there's no stock available.
 This gets much harder when we introduce the idea of _concurrency_.((("concurrency"))) Suddenly we
 might be allocating stock for multiple order lines simultaneously. We might
 even be allocating order lines at the same time as processing changes to the
-batches pass:[<span class="keep-together">themselves</span>].
+batches [.keep-together]#themselves#.
 
 We usually solve this problem by applying _locks_ to our database tables. This
 prevents two operations from happening simultaneously on the same row or same
@@ -356,7 +356,7 @@ class Product:
 <2> Our `Product` class holds a reference to a collection of `batches` for that SKU.((("allocate service", "moving to be a method on Product aggregate")))
 
 <3> Finally, we can move the `allocate()` domain service to
-    be a method on the pass:[<code><span class="keep-together">Product</span></code>] aggregate.
+    be a method on the [.keep-together]#`Product`# aggregate.
 
 // IDEA (hynek): random nitpick: exceptions denoting errors should be
 // named *Error.  Are you doing this to save space in the listing?
@@ -581,7 +581,7 @@ TIP: Version numbers are just one way to implement optimistic locking. You
     Version numbers also make implicit concepts explicit.
 
 [[version_numbers_sequence_diagram]]
-.Sequence diagram: two transactions attempting a concurrent update on pass:[<code><span class="keep-together">Product</span></code>]
+.Sequence diagram: two transactions attempting a concurrent update on [.keep-together]#`Product`#
 image::images/apwp_0704.png[]
 [role="image-source"]
 ----
@@ -620,7 +620,7 @@ What we've implemented here is called _optimistic_ concurrency control because
 our default assumption is that everything will be fine when two users want to
 make changes to the database. We think it's unlikely that they will conflict
 with each other, so we let them go ahead and just make sure we have a way to
-notice if there is a pass:[<span class="keep-together">problem</span>].
+notice if there is a [.keep-together]#problem#.
 
 _Pessimistic_ concurrency control((("pessimistic concurrency"))) works under the assumption that two users
 are going to cause conflicts, and we want to prevent conflicts in all cases, so
@@ -800,7 +800,7 @@ def test_concurrent_updates_to_version_are_not_allowed(postgres_session_factory)
 
 
 
-==== Enforcing Concurrency Rules by Using Database Transaction pass:[<span class="keep-together">Isolation Levels</span>]
+==== Enforcing Concurrency Rules by Using Database Transaction [.keep-together]#Isolation Levels#
 
 To get the test to pass ((("concurrency", "enforcing rules using database transactions")))((("transactions", "using to enforce concurrency rules")))as it is, we can set the transaction isolation level
 on our session:
@@ -818,7 +818,7 @@ DEFAULT_SESSION_FACTORY = sessionmaker(bind=create_engine(
 ====
 
 TIP: Transaction ((("isolation levels (transaction)")))((("PostgreSQL", "documentation for transaction isolation levels")))isolation levels are tricky stuff, so it's worth spending time
-understanding https://oreil.ly/5vxJA[the Postgres documentation].footnote:[If you're not using Postgres, you'll need to read different documentation. Annoyingly, different databases all have quite different definitions. Oracle's `SERIALIZABLE` is equivalent to Postgres's `REPEATABLE READ`, for pass:[<span class="keep-together">example</span>].]
+understanding https://oreil.ly/5vxJA[the Postgres documentation].footnote:[If you're not using Postgres, you'll need to read different documentation. Annoyingly, different databases all have quite different definitions. Oracle's `SERIALIZABLE` is equivalent to Postgres's `REPEATABLE READ`, for [.keep-together]#example#.]
 
 ==== Pessimistic Concurrency Control Example: SELECT FOR UPDATE
 
@@ -865,7 +865,7 @@ read1, write1, read2, write2(succeed)
 ----
 
 Some people refer to ((("read-modify-write failure mode")))this as the "read-modify-write" failure mode.((("PostgreSQL", "Anti-Patterns: Read-Modify-Write Cycles")))
-Read https://oreil.ly/uXeZI["PostgreSQL Anti-Patterns: Read-Modify-Write Cycles"] for a good pass:[<span class="keep-together">overview</span>].
+Read https://oreil.ly/uXeZI["PostgreSQL Anti-Patterns: Read-Modify-Write Cycles"] for a good [.keep-together]#overview#.
 
 //TODO maybe better diagrams here?
 

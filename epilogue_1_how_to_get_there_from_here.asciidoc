@@ -12,7 +12,7 @@ just enough code for you to go ahead and write something from scratch.
 
 The code we've shown in this book isn't battle-hardened production code: it's a
 set of Lego blocks that you can play with to make your first house, spaceship,
-and pass:[<span class="keep-together">skyscraper</span>].
+and [.keep-together]#skyscraper#.
 
 That leaves us with two big tasks. We want to talk
 about how to start applying these ideas for real in an existing system, and we
@@ -38,7 +38,7 @@ bugs?
 
 Having a clear goal in mind will help you to prioritize the work that needs to
 be done and, importantly, communicate the reasons for doing it to the rest of
-the team. pass:[<span class="keep-together">Businesses</span>] tend to have pragmatic approaches to technical debt
+the team. [.keep-together]#Businesses# tend to have pragmatic approaches to technical debt
 and refactoring, so long as engineers can make a reasoned argument for fixing
 things.
 
@@ -212,7 +212,7 @@ user.account.workspaces[0].documents.versions[1].owner.account.settings[0];
 ----
 
 Building a system this way with Django ORM or SQLAlchemy is easy but is
-to be pass:[<span class="keep-together">avoided</span>]. Although it's _convenient_, it makes it very hard to reason about
+to be [.keep-together]#avoided#. Although it's _convenient_, it makes it very hard to reason about
 performance because each property might trigger a lookup to the database.
 
 [role="pagebreak-before"]
@@ -531,11 +531,11 @@ Rel(ecom, fulfillment, "Sends orders", "xml-rpc")
 Practically, this was a several month-long project. Our first step was to write a
 domain model that could represent batches, shipments, and products. We used TDD
 to build a toy system that could answer a single question: "If I want N units of
-pass:[<span class="keep-together">HAZARDOUS_RUG</span>], how long will they take to be delivered?"
+[.keep-together]#HAZARDOUS_RUG#, how long will they take to be delivered?"
 
 TIP: When deploying an event-driven system, start with a "walking skeleton."
     Deploying a system that just logs its input forces us to tackle all the
-    infrastructural questions and start working in pass:[<span class="keep-together">production</span>].
+    infrastructural questions and start working in [.keep-together]#production#.
 
 [role="nobreakinside less_space"]
 .Case Study: Carving Out a Microservice to Replace a Domain
@@ -795,7 +795,7 @@ In <<chapter_08_events_and_message_bus>>, we update our process so that _dealloc
 _reallocating_ the line happen in two separate units of work.
 You will need monitoring to know when these transactions fail, and tooling to
 replay events. Some of this is made easier by using a transaction log as your
-message broker (e.g., Kafka or pass:[<span class="keep-together">EventStore</span>]). ((("Outbox pattern")))You might also look at the
+message broker (e.g., Kafka or [.keep-together]#EventStore#). ((("Outbox pattern")))You might also look at the
 https://oreil.ly/sLfnp[Outbox pattern].
 
 We don't discuss idempotency::
@@ -828,7 +828,7 @@ A few more books we'd like to((("resources, additional required reading"))) reco
   _Building Microservices_ (O'Reilly). The Strangler Fig pattern is mentioned as a
   favorite, along with many others. These are good to check out if you're thinking of moving to
   microservices, and they're also good on integration patterns and the considerations
-  of async messaging-based pass:[<span class="keep-together">integration</span>].
+  of async messaging-based [.keep-together]#integration#.
 
 
 === Wrap-Up

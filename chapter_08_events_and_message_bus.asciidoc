@@ -135,7 +135,7 @@ needing to change the rules of our domain model.
 
 The requirement "Try to allocate some stock, and send an email if it fails" is
 an example of workflow orchestration: it's a set of steps that the system has
-to follow to pass:[<span class="keep-together">achieve</span>] a goal.((("events and the message bus", "sending email alerts when out of stock", "out of place in the service layer")))((("service layer", "sending email alerts when out of stock, avoiding")))
+to follow to [.keep-together]#achieve# a goal.((("events and the message bus", "sending email alerts when out of stock", "out of place in the service layer")))((("service layer", "sending email alerts when out of stock, avoiding")))
 
 We've written a service layer to manage orchestration for us, but even here
 the feature feels out of place:
@@ -174,7 +174,7 @@ this code?((("events and the message bus", "sending email alerts when out of sto
 Really, this is a violation ((("events and the message bus", "sending email alerts when out of stock", "violating the single responsibility principle")))((("single responsibility principle (SRP)")))of the __single responsibility principle__ (SRP).footnote:[
 This principle is the _S_ in https://oreil.ly/AIdSD[SOLID].]
 Our use case is allocation. Our endpoint, service function, and domain methods
-are all called pass:[<code><span class="keep-together">allocate</span></code>], not `allocate_and_send_mail_if_out_of_stock`.
+are all called [.keep-together]#`allocate`#, not `allocate_and_send_mail_if_out_of_stock`.
 
 TIP: Rule of thumb: if you can't describe what your function does without using
     words like "then" or "and," you might be violating the SRP.
@@ -378,7 +378,7 @@ multiple processes--which may be different containers within the same
 service, or totally different microservices.
 
 If you follow us in this approach, your API for distributing tasks
-is your event pass:[<span class="keep-together">classes—</span>]or a JSON representation of them. This allows
+is your event [.keep-together]##classes—##or a JSON representation of them. This allows
 you a lot of flexibility in who you distribute tasks to; they need not
 necessarily be Python services. Celery's API for distributing tasks is
 essentially "function name plus arguments," which is more restrictive,
@@ -764,9 +764,9 @@ should I do if I need to change multiple aggregates as part of a request?" Now
 we have the tools we need to answer that question.((("aggregates", "changing multiple aggregates in a request")))
 
 If we have two things that can be transactionally isolated (e.g., an order and a
-pass:[<span class="keep-together">product</span>]), then we can make them _eventually consistent_ by using events. When an
+[.keep-together]#product#), then we can make them _eventually consistent_ by using events. When an
 order is canceled, we should find the products that were allocated to it
-and remove the pass:[<span class="keep-together">allocations</span>].
+and remove the [.keep-together]#allocations#.
 
 [role="nobreakinside less_space"]
 .Domain Events and the Message Bus Recap
