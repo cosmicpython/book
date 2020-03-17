@@ -482,7 +482,9 @@ If you remember <<dip>>,
 this is what we mean when we say we should "depend on abstractions." Our
 _high-level module_, the service layer, depends on the repository abstraction.
 And the _details_ of the implementation for our specific choice of persistent
-storage also depend on that same abstraction. See Figures pass:[<a data-type="xref" href="#service_layer_diagram_abstract_dependencies" data-xrefstyle="select:labelnumber">#service_layer_diagram_abstract_dependencies</a> and <a data-type="xref" href="#service_layer_diagram_test_dependencies" data-xrefstyle="select:labelnumber">#service_layer_diagram_test_dependencies</a>].
+storage also depend on that same abstraction. See
+<<service_layer_diagram_abstract_dependencies>> and
+<<service_layer_diagram_test_dependencies>>.
 
 See also in <<appendix_csvs>> a worked example of swapping out the
 _details_ of which persistent storage system to use while leaving the

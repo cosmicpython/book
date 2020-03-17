@@ -138,7 +138,7 @@ and the chapters they live in.
 
 ==== pass:[<a data-type="xref" data-xrefstyle="chap-num-title" href="#part1">#part1</a>]
 
-Domain modeling and DDD (Chapters pass:[<a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_01_domain_model">#chapter_01_domain_model</a> and <a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_07_aggregate">#chapter_07_aggregate</a>])::
+Domain modeling and DDD (Chapters <<chapter_01_domain_model,1>>, <<chapter_02_repository,2>> and <<chapter_07_aggregate,7>>)::
     At some level, everyone has learned the lesson that complex business
     problems need to be reflected in code, in the form of a model of the domain.
     But why does it always seem to be so hard to do without getting tangled
@@ -149,7 +149,7 @@ Domain modeling and DDD (Chapters pass:[<a data-type="xref" data-xrefstyle="sele
     the right aggregate, and how this choice relates to questions of data
     integrity.
 
-Repository, Service Layer, and Unit of Work patterns (Chapters pass:[<a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_02_repository">#chapter_02_repository</a>, <a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_04_service_layer">#chapter_04_service_layer</a>, and <a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_05_high_gear_low_gear">#chapter_05_high_gear_low_gear</a>])::
+Repository, Service Layer, and Unit of Work patterns (Chapters <<chapter_02_repository,2>>, <<chapter_04_service_layer,4>>, and <<chapter_05_high_gear_low_gear,5>>)::
     In these three chapters we present three closely related and
     mutually reinforcing patterns that support our ambition to keep
     the model free of extraneous dependencies.  We build a layer of
@@ -161,7 +161,7 @@ Repository, Service Layer, and Unit of Work patterns (Chapters pass:[<a data-typ
 // [SG] Bit of pedantry - this is the first time you have used CLI acronym,
 // should be spelled out?
 
-Some thoughts on testing and abstractions (Chapters pass:[<a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_03_abstractions">#chapter_03_abstractions</a> and <a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_06_uow">#chapter_06_uow</a>])::
+Some thoughts on testing and abstractions (Chapter <<chapter_03_abstractions,3>> and <<chapter_05_high_gear_low_gear,5>>)::
     After presenting the first abstraction (the Repository pattern), we take the
     opportunity for a general discussion of how to choose abstractions, and
     what their role is in choosing how our software is coupled together. After
@@ -172,7 +172,7 @@ Some thoughts on testing and abstractions (Chapters pass:[<a data-type="xref" da
 
 ==== pass:[<a data-type="xref" data-xrefstyle="chap-num-title" href="#part2">#part2</a>]
 
-Event-driven architecture (Chapters pass:[<a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_08_events_and_message_bus">#chapter_08_events_and_message_bus</a>–<a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_11_external_events">#chapter_11_external_events</a>])::
+Event-driven architecture (Chapters <<chapter_08_events_and_message_bus,8>>-<<chapter_11_external_events,11>>)::
     We introduce three more mutually reinforcing patterns: the Domain Events, Message Bus, and Handler patterns. _Domain events_ are a vehicle for capturing the idea that some
     interactions with a system are triggers for others. We use  a _message
     bus_ to allow actions to trigger events and call appropriate _handlers_.
