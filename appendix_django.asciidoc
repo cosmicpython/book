@@ -60,9 +60,9 @@ git checkout appendix_django
 
 === Repository Pattern with Django
 
-We used a plug-in called
+We used a plugin called
 https://github.com/pytest-dev/pytest-django[`pytest-django`] to help with test
-database management.((("pytest", "pytest-django plug-in")))((("Repository pattern", "with Django", id="ix_RepoDjango")))((("Django", "Repository pattern with", id="ix_DjangoRepo")))
+database management.((("pytest", "pytest-django plugin")))((("Repository pattern", "with Django", id="ix_RepoDjango")))((("Django", "Repository pattern with", id="ix_DjangoRepo")))
 
 Rewriting the first repository test was a minimal change—just rewriting
 some raw SQL with a call to the Django ORM/QuerySet language:
@@ -384,7 +384,7 @@ high).
 Because Django is so tightly coupled to the database, you have to use helpers
 like `pytest-django` and think carefully about test databases, right from
 the very first line of code, in a way that we didn't have to when we started
-out with our pure domain model.((("pytest", "pytest-django plug-in")))
+out with our pure domain model.((("pytest", "pytest-django plugin")))
 
 But at a higher level, the entire reason that Django is so great
 is that it's designed around the sweet spot of making it easy to build CRUD

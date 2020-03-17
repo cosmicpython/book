@@ -259,7 +259,7 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 //IDEA: why not swap out db using os.environ?
 // (EJ2) Could be a good idea to point out that this couples the unit of work to postgres.
 //         This does get dealt with in in bootstrap, so you could make a forward-reference.
-// (EJ3) IIRC using a factory like this is considered an anti-pattern ("Control-Freak" from M.Seeman's book)
+// (EJ3) IIRC using a factory like this is considered an antipattern ("Control-Freak" from M.Seeman's book)
 //         Is there a reason to inject a factory instead of a session?
 // (HP) yes because each unit of work needs to start a new session every time
 // we call __enter__ and close it on __exit__

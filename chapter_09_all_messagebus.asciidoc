@@ -259,7 +259,7 @@ Some of you may remember <<primitive_obsession>>, in which we changed our servic
 from being in terms of domain objects to primitives. And now we're moving
 back, but to different objects? ((("service layer", "from domain objects to primitives to events as interface"))) What gives?
 
-In OO circles, people ((("primitives", "primitive obsession")))talk about _primitive obsession_ as an anti-pattern: avoid
+In OO circles, people ((("primitives", "primitive obsession")))talk about _primitive obsession_ as an antipattern: avoid
 primitives in public APIs, and instead wrap them with custom value classes, they
 would say. In the Python world, a lot of people would be quite skeptical of
 that as a rule of thumb. When mindlessly applied, it's certainly a recipe for
