@@ -16,12 +16,33 @@
     border: 0;
     margin-bottom: 2em;
 }
-
 .exampleblock .title {
     text-align: right;
 }
 
+/* prev/next chapter links at bottom of page */
+.prev_and_next_chapter_links {
+    margin: 10px;
+}
+.prev_chapter_link {
+    float: left;
+}
+.next_chapter_link {
+    float: right;
+}
+
+
+/* a few tweaks to existing styles */
+#toc li {
+    margin-top: 0.5em;
+}
+
+#footnotes hr {
+    width: 100%;
+}
+
 /* end customisations by harry */
+
 
 /* CUSTOMISATIONS */
 
