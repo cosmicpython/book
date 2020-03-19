@@ -1,8 +1,9 @@
 [[chapter_03_abstractions]]
 == A Brief Interlude: On Coupling pass:[<span class="keep-together">and Abstractions</span>]
 
+((("abstractions", id="ix_abs")))
 Allow us a brief digression on the subject of abstractions, dear reader.
-We've talked about _abstractions_ quite a lot.((("abstractions", id="ix_abs"))) The Repository pattern is an
+We've talked about _abstractions_ quite a lot. The Repository pattern is an
 abstraction over permanent storage, for example. But what makes a good
 abstraction?  What do we want from abstractions?  And how do they relate to testing?
 
@@ -19,28 +20,35 @@ git checkout chapter_03_abstractions
 ====
 
 
+((("katas")))
 A key theme in this book, hidden among the fancy patterns, is that we can use
-simple abstractions to hide messy details.((("katas"))) When we're writing code for fun, or
+simple abstractions to hide messy details. When we're writing code for fun, or
 in a kata,footnote:[A code kata is a small, contained programming challenge often
 used to practice TDD. See https://oreil.ly/vhjju["Kata—The Only Way to Learn TDD"] by Peter Provost.]
 we get to play with ideas freely, hammering things out and refactoring
 aggressively. In a large-scale system, though, we become constrained by the
 decisions made elsewhere in the system.
 
+((("coupling")))
+((("cohesion, high, between coupled elements")))
 When we're unable to change component A for fear of breaking component B, we say
-that the components ((("coupling")))have become _coupled_. Locally, coupling is a good thing: it's
+that the components have become _coupled_. Locally, coupling is a good thing: it's
 a sign that our code is working together, each component supporting the others, all of them
 fitting in place like the gears of a watch. In jargon, we say this works when
-there is high _cohesion_ between the coupled elements.((("cohesion, high, between coupled elements")))
+there is high _cohesion_ between the coupled elements.
 
-Globally, coupling is a nuisance: it increases((("coupling", "disadvantages of"))) the risk and the cost of changing
+((("Ball of Mud pattern")))
+((("coupling", "disadvantages of")))
+Globally, coupling is a nuisance: it increases the risk and the cost of changing
 our code, sometimes to the point where we feel unable to make any changes at
-all. ((("Ball of Mud pattern")))This is the problem with the Ball of Mud pattern: as the application grows,
+all. This is the problem with the Ball of Mud pattern: as the application grows,
 if we're unable to prevent coupling between elements that have no cohesion, that
 coupling increases superlinearly until we are no longer able to effectively
 change our systems.
 
-We can reduce the degree of coupling within((("coupling", "reducing by abstracting away details")))((("abstractions", "using to reduce coupling"))) a system
+((("abstractions", "using to reduce coupling")))
+((("coupling", "reducing by abstracting away details")))
+We can reduce the degree of coupling within a system
 (<<coupling_illustration1>>) by abstracting away the details
 (<<coupling_illustration2>>).
 
@@ -93,7 +101,11 @@ does—we can change the arrows on the right without changing the ones on the le
 [role="pagebreak-before less_space"]
 === Abstracting State Aids Testability
 
-Let's see an example.((("testing", "abstracting state to aid testability", id="ix_tstabs")))((("abstractions", "abstracting state to aid testability", id="ix_absstate")))((("state", "abstracting to aid testability", id="ix_stateabs")))((("filesystems", "writing code to synchronize source and target directories", id="ix_filesync"))) Imagine we want to write code for synchronizing two
+((("abstractions", "abstracting state to aid testability", id="ix_absstate")))
+((("testing", "abstracting state to aid testability", id="ix_tstabs")))
+((("state", "abstracting to aid testability", id="ix_stateabs")))
+((("filesystems", "writing code to synchronize source and target directories", id="ix_filesync")))
+Let's see an example. Imagine we want to write code for synchronizing two
 file directories, which we'll call the _source_ and the _destination_:
 
 * If a file exists in the source but not in the destination, copy the file over.
@@ -101,9 +113,10 @@ file directories, which we'll call the _source_ and the _destination_:
   rename the destination file to match.
 * If a file exists in the destination but not in the source, remove it.
 
+((("hashing a file")))
 Our first and third requirements are simple enough: we can just compare two
 lists of paths. Our second is trickier, though. To detect renames,
-we'll have to inspect the content of files.((("hashing a file"))) For this, we can use a hashing
+we'll have to inspect the content of files. For this, we can use a hashing
 function like MD5 or SHA-1. The code to generate a SHA-1 hash from a file is simple
 enough:
 
@@ -240,9 +253,11 @@ def test_when_a_file_has_been_renamed_in_the_source():
 ----
 ====
 
+((("coupling", "domain logic coupled with I/O")))
+((("I/O", "domain logic tightly coupled to")))
 Wowsers, that's a lot of setup for two simple cases! The problem is that
 our domain logic, "figure out the difference between two directories," is tightly
-coupled to the I/O code.((("I/O", "domain logic tightly coupled to")))((("coupling", "domain logic coupled with I/O"))) We can't run our difference algorithm without calling
+coupled to the I/O code. We can't run our difference algorithm without calling
 the `pathlib`, `shutil`, and `hashlib` modules.
 
 And the trouble is, even with our current requirements, we haven't written
@@ -256,20 +271,28 @@ a `--dry-run` flag that gets our code to just print out what it's going to
 do, rather than actually do it.  Or what if we wanted to sync to a remote server,
 or to cloud storage?
 
+((("abstractions", "abstracting state to aid testability", startref="ix_absstate")))
+((("testing", "abstracting state to aid testability", startref="ix_tstabs")))
+((("state", "abstracting to aid testability", startref="ix_stateabs")))
+((("filesystems", "writing code to synchronize source and target directories", startref="ix_filesync")))
+((("pytest", "fixtures")))
 Our high-level code is coupled to low-level details, and it's making life hard.
-As the scenarios we consider get more complex, our tests will get more unwieldy.((("pytest", "fixtures")))
+As the scenarios we consider get more complex, our tests will get more unwieldy.
 We can definitely refactor these tests (some of the cleanup could go into pytest
 fixtures, for example) but as long as we're doing filesystem operations, they're
-going to stay slow and be hard to read and write.((("filesystems", "writing code to synchronize source and target directories", startref="ix_filesync")))((("state", "abstracting to aid testability", startref="ix_stateabs")))((("testing", "abstracting state to aid testability", startref="ix_tstabs")))((("abstractions", "abstracting state to aid testability", startref="ix_absstate")))
+going to stay slow and be hard to read and write.
 
 [role="pagebreak-before less_space"]
 === Choosing the Right Abstraction(s)
 
-What could we do to rewrite our code to make it more testable?((("filesystems", "writing code to synchronize source and target directories", "choosing right abstraction", id="ix_filesyncabs")))((("abstractions", "choosing right abstraction", id="ix_abscho")))
+((("abstractions", "choosing right abstraction", id="ix_abscho")))
+((("filesystems", "writing code to synchronize source and target directories", "choosing right abstraction", id="ix_filesyncabs")))
+What could we do to rewrite our code to make it more testable?
 
+((("responsibilities of code")))
 First, we need to think about what our code needs from the filesystem.
 Reading through the code, we can see that three distinct things are happening.
-We can think ((("responsibilities of code")))of these as three distinct _responsibilities_ that the code has:
+We can think of these as three distinct _responsibilities_ that the code has:
 
 1. We interrogate the filesystem by using `os.walk` and determine hashes for a
    series of paths. This is similar in both the source and the
@@ -280,8 +303,9 @@ We can think ((("responsibilities of code")))of these as three distinct _respons
 3. We copy, move, or delete files to match the source.
 
 
+((("simplifying abstractions")))
 Remember that we want to find _simplifying abstractions_ for each of these
-responsibilities.((("simplifying abstractions"))) That will let us hide the messy details so we can
+responsibilities. That will let us hide the messy details so we can
 focus on the interesting logic.footnote:[If you're used to thinking in terms of
 interfaces, that's what we're trying to define here.]
 
@@ -290,10 +314,13 @@ NOTE: In this chapter, we're refactoring some gnarly code into a more testable
     each task to a clearly defined actor, along similar lines to <<ddg_example, the `duckduckgo`
     example>>.
 
+((("dictionaries", "for filesystem operations")))
+((("hashing a file", "dictionary of hashes to paths")))
 For steps 1 and 2, we've already intuitively started using an abstraction, a
-dictionary of hashes to paths.((("hashing a file", "dictionary of hashes to paths")))((("dictionaries", "for filesystem operations"))) You may already have been thinking, "Why not build up a dictionary for the destination folder as well as the source, and
-then we just compare two dicts?" That seems like a nice way to abstract
-the current state of the filesystem:
+dictionary of hashes to paths. You may already have been thinking, "Why not
+build up a dictionary for the destination folder as well as the source, and
+then we just compare two dicts?" That seems like a nice way to abstract the
+current state of the filesystem:
 
     source_files = {'hash1': 'path1', 'hash2': 'path2'}
     dest_files = {'hash1': 'path1', 'hash2': 'pathX'}
@@ -301,15 +328,17 @@ the current state of the filesystem:
 What about moving from step 2 to step 3?  How can we abstract out the
 actual move/copy/delete filesystem interaction?
 
+((("coupling", "separating what you want to do from how to do it")))
 We'll apply a trick here that we'll employ on a grand scale later in
-the book.((("coupling", "separating what you want to do from how to do it"))) We're going to separate _what_ we want to do from _how_ to do it.
+the book. We're going to separate _what_ we want to do from _how_ to do it.
 We're going to make our program output a list of commands that look like this:
 
     ("COPY", "sourcepath", "destpath"),
     ("MOVE", "old", "new"),
 
+((("commands", "program output as list of commands")))
 Now we could write tests that just use two filesystem dicts as inputs, and we would
-expect lists of tuples of strings representing actions as outputs.((("commands", "program output as list of commands")))
+expect lists of tuples of strings representing actions as outputs.
 
 Instead of saying, "Given this actual filesystem, when I run my function,
 check what actions have happened," we say, "Given this _abstraction_ of a filesystem,
@@ -339,18 +368,28 @@ what _abstraction_ of filesystem actions will happen?"
 
 === Implementing Our Chosen Abstractions
 
-That's all very well, but how do we _actually_ write those new((("filesystems", "writing code to synchronize source and target directories", "choosing right abstraction", startref="ix_filesyncabs")))((("abstractions", "choosing right abstraction", startref="ix_abscho")))
-tests, and how do we change our implementation to make it all work?((("abstractions", "implementing chosen abstraction", id="ix_absimpl")))((("filesystems", "writing code to synchronize source and target directories", "implementing chosen abstraction", id="ix_filesyncimp")))
+((("abstractions", "implementing chosen abstraction", id="ix_absimpl")))
+((("abstractions", "choosing right abstraction", startref="ix_abscho")))
+((("filesystems", "writing code to synchronize source and target directories", "choosing right abstraction", startref="ix_filesyncabs")))
+((("filesystems", "writing code to synchronize source and target directories", "implementing chosen abstraction", id="ix_filesyncimp")))
+That's all very well, but how do we _actually_ write those new
+tests, and how do we change our implementation to make it all work?
 
+((("Functional Core, Imperative Shell (FCIS)")))
+((("Bernhardt, Gary")))
+((("testing", "after implementing chosen abstraction", id="ix_tstaftabs")))
 Our goal is to isolate the clever part of our system, and to be able to test it
-thoroughly without needing to set up a real filesystem.((("testing", "after implementing chosen abstraction", id="ix_tstaftabs")))((("Functional Core, Imperative Shell (FCIS)")))((("Bernhardt, Gary"))) We'll create a "core"
+thoroughly without needing to set up a real filesystem. We'll create a "core"
 of code that has no dependencies on external state and then see how it responds
 when we give it input from the outside world (this kind of approach was characterized
 by Gary Bernhardt as
 https://oreil.ly/wnad4[Functional
 Core, Imperative Shell], or FCIS).
 
-Let's start off by splitting the code ((("business logic", "separating from state in code")))((("state", "splitting off from logic in the program")))((("I/O", "disentangling details from program logic")))to separate the stateful parts from
+((("I/O", "disentangling details from program logic")))
+((("state", "splitting off from logic in the program")))
+((("business logic", "separating from state in code")))
+Let's start off by splitting the code to separate the stateful parts from
 the logic.
 
 And our top-level function will contain almost no logic at all; it's just an
@@ -386,8 +425,9 @@ def sync(source, dest):
 <2> Here is where carve out the functional core, the business logic.
 
 
+((("dictionaries", "dictionary of hashes to paths")))
 The code to build up the dictionary of paths and hashes is now trivially easy
-to write:((("dictionaries", "dictionary of hashes to paths")))
+to write:
 
 [[read_paths_and_hashes]]
 .A function that just does I/O (sync.py)
@@ -460,23 +500,28 @@ def test_when_a_file_has_been_renamed_in_the_source():
 Because we've disentangled the logic of our program--the code for identifying
 changes--from the low-level details of I/O, we can easily test the core of our code.
 
+((("edge-to-edge testing", id="ix_edgetst")))
 With this approach, we've switched from testing our main entrypoint function,
 `sync()`, to testing a lower-level function, `determine_actions()`. You might
 decide that's fine because `sync()` is now so simple. Or you might decide to
 keep some integration/acceptance tests to test that `sync()`. But there's
 another option, which is to modify the `sync()` function so it can
 be unit tested _and_ end-to-end tested; it's an approach Bob calls
-_edge-to-edge testing_.((("edge-to-edge testing", id="ix_edgetst")))
+_edge-to-edge testing_.
 
 
 ==== Testing Edge to Edge with Fakes and Dependency Injection
 
+((("dependencies", "edge-to-edge testing with dependency injection", id="ix_depinj")))
+((("testing", "after implementing chosen abstraction", "edge-to-edge testing with fakes and dependency injection", id="ix_tstaftabsedge")))
+((("abstractions", "implementing chosen abstraction", "edge-to-edge testing with fakes and dependency injection", id="ix_absimpltstfdi")))
 When we start writing a new system, we often focus on the core logic first,
-driving it with direct unit tests.((("abstractions", "implementing chosen abstraction", "edge-to-edge testing with fakes and dependency injection", id="ix_absimpltstfdi")))((("testing", "after implementing chosen abstraction", "edge-to-edge testing with fakes and dependency injection", id="ix_tstaftabsedge"))) At some point, though, we want to test bigger
-chunks of the system together.((("dependencies", "edge-to-edge testing with dependency injection", id="ix_depinj")))
+driving it with direct unit tests. At some point, though, we want to test bigger
+chunks of the system together.
 
+((("faking", "faking I/O in edge-to-edge test")))
 We _could_ return to our end-to-end tests, but those are still as tricky to
-write and maintain as before. ((("faking", "faking I/O in edge-to-edge test")))Instead, we often write tests that invoke a whole
+write and maintain as before. Instead, we often write tests that invoke a whole
 system together but fake the I/O, sort of _edge to edge_:
 
 
@@ -565,11 +610,13 @@ def test_when_a_file_has_been_renamed_in_the_source():
 ====
 
 <1> Bob _loves_ using lists to build simple test doubles, even though his
-    coworkers get mad.((("test doubles", "using lists to build"))) It means we can write tests like
+    coworkers get mad. It means we can write tests like
     ++assert 'foo' not in database++.
+    ((("test doubles", "using lists to build")))
 
 <2> Each method in our `FakeFileSystem` just appends something to the list so we
-    can inspect it later. This is an example of a spy object.((("spy objects")))
+    can inspect it later. This is an example of a spy object.
+    ((("spy objects")))
 
 
 The advantage of this approach is that our tests act on the exact same function
@@ -578,16 +625,24 @@ our stateful components explicit and pass them around.
 David Heinemeier Hansson, the creator of Ruby on Rails, famously described this
 as "test-induced design damage."
 
+((("edge-to-edge testing", startref="ix_edgetst")))
+((("testing", "after implementing chosen abstraction", "edge-to-edge testing with fakes and dependency injection", startref="ix_tstaftabsedge")))
+((("dependencies", "edge-to-edge testing with dependency injection", startref="ix_depinj")))
+((("abstractions", "after implementing chosen abstraction", "edge-to-edge testing with fakes and dependency injection", startref="ix_absimpltstfdi")))
 In either case, we can now work on fixing all the bugs in our implementation;
-enumerating tests for all the edge cases is now much easier.((("abstractions", "after implementing chosen abstraction", "edge-to-edge testing with fakes and dependency injection", startref="ix_absimpltstfdi")))((("dependencies", "edge-to-edge testing with dependency injection", startref="ix_depinj")))((("testing", "after implementing chosen abstraction", "edge-to-edge testing with fakes and dependency injection", startref="ix_tstaftabsedge")))((("edge-to-edge testing", startref="ix_edgetst")))
+enumerating tests for all the edge cases is now much easier.
 
 
 ==== Why Not Just Patch It Out?
 
+((("mock.patch method")))
+((("mocking", "avoiding use of mock.patch")))
+((("abstractions", "implementing chosen abstraction", "not using mock.patch for testing")))
+((("testing", "after implementing chosen abstraction", "avoiding use of mock.patch", id="ix_tstaftabsmck")))
 At this point you may be scratching your head and thinking,
-"Why don't you just use `mock.patch` and((("abstractions", "implementing chosen abstraction", "not using mock.patch for testing")))((("testing", "after implementing chosen abstraction", "avoiding use of mock.patch", id="ix_tstaftabsmck")))((("mock.patch method"))) save yourself the effort?""
+"Why don't you just use `mock.patch` and save yourself the effort?""
 
-We avoid using mocks in this book and in our production code too.((("mocking", "avoiding use of mock.patch"))) We're not
+We avoid using mocks in this book and in our production code too. We're not
 going to enter into a Holy War, but our instinct is that mocking frameworks,
 particularly monkeypatching, are a code smell.
 
@@ -603,17 +658,18 @@ NOTE: You can see an example in <<chapter_08_events_and_message_bus>>,
 We have three closely related reasons for our preference:
 
 * Patching out the dependency you're using makes it possible to unit test the
-code, but it does nothing to improve the design. Using `mock.patch` won't let your
-code work with a `--dry-run` flag, nor will it help you run against an FTP
-server. For that, you'll need to introduce abstractions.
+  code, but it does nothing to improve the design. Using `mock.patch` won't let your
+  code work with a `--dry-run` flag, nor will it help you run against an FTP
+  server. For that, you'll need to introduce abstractions.
 
-*  Tests that use mocks _tend_ to be more coupled to the implementation details
-of the codebase. ((("coupling", "in tests that use mocks")))That's because mock tests verify the interactions between
-things: did we call `shutil.copy` with the right arguments? This coupling between
-code and test _tends_ to make tests more brittle, in our experience.
+* Tests that use mocks _tend_ to be more coupled to the implementation details
+  of the codebase. That's because mock tests verify the interactions between
+  things: did we call `shutil.copy` with the right arguments? This coupling between
+  code and test _tends_ to make tests more brittle, in our experience.
+  ((("coupling", "in tests that use mocks")))
 
-*  Overuse of mocks leads to complicated test suites that fail to explain the
-code.
+* Overuse of mocks leads to complicated test suites that fail to explain the
+  code.
 
 NOTE: Designing for testability really means designing for
     extensibility. We trade off a little more complexity for a cleaner design
@@ -623,7 +679,10 @@ NOTE: Designing for testability really means designing for
 .Mocks Versus Fakes; Classic-Style Versus London-School TDD
 *******************************************************************************
 
-Here's a short and somewhat((("test doubles", "mocks versus fakes")))((("mocking", "mocks versus fakes")))((("faking", "fakes versus mocks"))) simplistic definition of the difference between
+((("test doubles", "mocks versus fakes")))
+((("mocking", "mocks versus fakes")))
+((("faking", "fakes versus mocks")))
+Here's a short and somewhat simplistic definition of the difference between
 mocks and fakes:
 
 * Mocks are used to verify _how_ something gets used;  they have methods
@@ -636,26 +695,36 @@ our in-memory repository is a good example. But you can use them to make asserti
   the end state of a system rather than the behaviors along the way, so
   they're associated with classic-style TDD.
 
-We're slightly conflating mocks with ((("Fowler, Martin")))((("stubbing, mocks and stubs")))((("&quot;Mocks Aren&#x27;t Stubs&quot; (Fowler)", primary-sortas="Mocks")))spies and fakes with stubs here, and you
+((("Fowler, Martin")))
+((("stubbing, mocks and stubs")))
+((("&quot;Mocks Aren&#x27;t Stubs&quot; (Fowler)", primary-sortas="Mocks")))
+We're slightly conflating mocks with spies and fakes with stubs here, and you
 can read the long, correct answer in Martin Fowler's classic essay on the subject
 called https://oreil.ly/yYjBN["Mocks Aren't Stubs"].
 
+((("MagicMock objects")))
+((("unittest.mock function")))
+((("test doubles", "mocks versus stubs")))
 It also probably doesn't help that the `MagicMock` objects provided by
 `unittest.mock` aren't, strictly speaking, mocks; they're spies, if anything.
-But they're also often used as stubs or dummies.((("MagicMock objects")))((("unittest.mock function")))((("test doubles", "mocks versus stubs"))) There, we promise we're done with
+But they're also often used as stubs or dummies. There, we promise we're done with
 the test double terminology nitpicks now.
 
 //IDEA (hynek) you could mention Alex Gaynor's `pretend` which gives you
 // stubs without mocks error-prone magic.
 
-What about London-school versus classic-style TDD?((("London-school versus classic-style TDD")))((("test-driven development (TDD)", "classic versus London-school"))) You can read more about those
+((("London-school versus classic-style TDD")))
+((("test-driven development (TDD)", "classic versus London-school")))
+((("Software Engineering Stack Exchange site")))
+What about London-school versus classic-style TDD? You can read more about those
 two in Martin Fowler's article that we just cited, as well as on the
 https://oreil.ly/H2im_[Software Engineering Stack Exchange site],
-but in this book we're pretty firmly in the classicist camp.((("Software Engineering Stack Exchange site")))  We like to
+but in this book we're pretty firmly in the classicist camp.  We like to
 build our tests around state both in setup and in assertions, and we like
 to work at the highest level of abstraction possible rather than doing
-checks on the behavior of intermediary collaborators.footnote:[
-Which is not to say that we think the London school people are wrong. Some insanely smart people work that way. It's just not what we're used to.]
+checks on the behavior of intermediary collaborators.footnote:[Which is not to
+say that we think the London school people are wrong. Some insanely smart
+people work that way. It's just not what we're used to.]
 
 Read more on this in <<kinds_of_tests>>.
 *******************************************************************************
@@ -664,30 +733,40 @@ We view TDD as a design practice first and a testing practice second. The tests
 act as a record of our design choices and serve to explain the system to us
 when we return to the code after a long absence.
 
+((("mocking", "overmocked tests, pitfalls of")))
 Tests that use too many mocks get overwhelmed with setup code that hides the
-story we care about.((("mocking", "overmocked tests, pitfalls of")))
+story we care about.
 
+((("&quot;Test-Driven Development: That&#x27;s Not What We Meant&quot;", primary-sortas="Test-Driven Development")))
+((("Freeman, Steve")))
+((("PyCon talk on Mocking Pitfalls")))
+((("Jung, Ed")))
 Steve Freeman has a great example of overmocked tests in his talk
 https://oreil.ly/jAmtr["Test-Driven Development"].
 You should also check out this PyCon talk, https://oreil.ly/s3e05["Mocking and Patching Pitfalls"],
 by our esteemed tech reviewer, Ed Jung, which also addresses mocking and its
-alternatives.((("&quot;Test-Driven Development: That&#x27;s Not What We Meant&quot;", primary-sortas="Test-Driven Development")))((("Freeman, Steve")))((("PyCon talk on Mocking Pitfalls")))((("Jung, Ed"))) And while we're recommending talks, don't miss Brandon Rhodes talking about
+alternatives. And while we're recommending talks, don't miss Brandon Rhodes talking about
 https://oreil.ly/oiXJM["Hoisting Your I/O"],
-which really nicely covers the issues we're talking about, using another simple example.((("hoisting I/O")))((("Rhodes, Brandon")))
+which really nicely covers the issues we're talking about, using another simple example.
+((("hoisting I/O")))
+((("Rhodes, Brandon")))
 
 
 TIP: In this chapter, we've spent a lot of time replacing end-to-end tests with
-    unit tests.((("end-to-end tests", "replacement with unit tests")))((("unit testing", "unit tests replacing end-to-end tests"))) That doesn't mean we think you should never use E2E tests!
+    unit tests. That doesn't mean we think you should never use E2E tests!
     In this book we're showing techniques to get you to a decent test
     pyramid with as many unit tests as possible, and with the minimum number of E2E
     tests you need to feel confident. Read on to <<types_of_test_rules_of_thumb>>
     for more details.
+    ((("unit testing", "unit tests replacing end-to-end tests")))
+    ((("end-to-end tests", "replacement with unit tests")))
 
 
 .So Which Do We Use In This Book? Functional or Object-Oriented Composition?
 ******************************************************************************
+((("object-oriented composition")))
 Both. Our domain model is entirely free of dependencies and side effects,
-so that's our functional core.((("object-oriented composition"))) The service layer that we build around it
+so that's our functional core. The service layer that we build around it
 (in <<chapter_04_service_layer>>) allows us to drive the system edge to edge,
 and we use dependency injection to provide those services with stateful
 components, so we can still unit test them.
@@ -698,9 +777,16 @@ dependency injection more explicit and centralized.
 
 === Wrap-Up
 
-We'll see this idea come up again and ((("testing", "after implementing chosen abstraction", "avoiding use of mock.patch", startref="ix_tstaftabsmck")))((("abstractions", "implementing chosen abstraction", startref="ix_absimpl")))((("testing", "after implementing chosen abstraction", startref="ix_tstaftabs")))((("filesystems", "writing code to synchronize source and target directories", "implementing chosen abstraction", startref="ix_filesyncimp")))again in the book: we can make our
+((("abstractions", "implementing chosen abstraction", startref="ix_absimpl")))
+((("abstractions", "simplifying interface between business logic and I/O")))
+((("business logic", "abstractions simplifying interface with messy I/O")))
+((("testing", "after implementing chosen abstraction", startref="ix_tstaftabs")))
+((("testing", "after implementing chosen abstraction", "avoiding use of mock.patch", startref="ix_tstaftabsmck")))
+((("filesystems", "writing code to synchronize source and target directories", "implementing chosen abstraction", startref="ix_filesyncimp")))
+((("I/O", "simplifying interface with business logic using abstractions")))
+We'll see this idea come up again and again in the book: we can make our
 systems easier to test and maintain by simplifying the interface between our
-business logic and messy I/O.((("abstractions", "simplifying interface between business logic and I/O")))((("business logic", "abstractions simplifying interface with messy I/O")))((("I/O", "simplifying interface with business logic using abstractions"))) Finding the right abstraction is tricky, but here are
+business logic and messy I/O. Finding the right abstraction is tricky, but here are
 a few heuristics and questions to ask yourself:
 
 
@@ -709,12 +795,13 @@ a few heuristics and questions to ask yourself:
   state?
 
 * Where can I draw a line between my systems, where can I carve out a
-  https://oreil.ly/zNUGG[seam]
-  to stick that abstraction in?((("seams")))
+  https://oreil.ly/zNUGG[seam] to stick that abstraction in?
+  ((("seams")))
 
 * What is a sensible way of dividing things into components with different
   responsibilities?  What implicit concepts can I make explicit?
 
 * What are the dependencies, and what is the core business logic?
 
-Practice makes less imperfect!((("abstractions", startref="ix_abs"))) And now back to our regular programming...
+((("abstractions", startref="ix_abs")))
+Practice makes less imperfect! And now back to our regular programming...
