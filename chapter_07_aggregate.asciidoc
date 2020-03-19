@@ -596,12 +596,12 @@ We have our new aggregate, so we've solved the conceptual problem of choosing
 an object to be in charge of consistency boundaries.  Let's now spend a little
 time talking about how to enforce data integrity at the database level.
 
-((("PostgreSQL", "managing concurrency issues")))
 NOTE: This section has a lot of implementation details; for example, some of it
     is Postgres-specific. But more generally, we're showing one way of managing
     concurrency issues, but it is just one approach. Real requirements in this
     area vary a lot from project to project. You shouldn't expect to be able to
     copy and paste code from here into production.
+    ((("PostgreSQL", "managing concurrency issues")))
 
 ((("locks on database tables", "optimistic locking")))
 We don't want to hold a lock over the entire `batches` table, but how will we
@@ -888,14 +888,14 @@ DEFAULT_SESSION_FACTORY = sessionmaker(bind=create_engine(
 ----
 ====
 
-((("PostgreSQL", "documentation for transaction isolation levels")))
-((("isolation levels (transaction)")))
 TIP: Transaction isolation levels are tricky stuff, so it's worth spending time
     understanding https://oreil.ly/5vxJA[the Postgres documentation].footnote:[If
     you're not using Postgres, you'll need to read different documentation.
     Annoyingly, different databases all have quite different definitions.
     Oracle's `SERIALIZABLE` is equivalent to Postgres's `REPEATABLE READ`, for
     pass:[<span class="keep-together">example</span>].]
+    ((("PostgreSQL", "documentation for transaction isolation levels")))
+    ((("isolation levels (transaction)")))
 
 ==== Pessimistic Concurrency Control Example: SELECT FOR UPDATE
 
@@ -1019,6 +1019,7 @@ a|
 .Aggregates and Consistency Boundaries Recap
 *****************************************************************
 ((("consistency boundaries", "recap")))
+
 Aggregates are your entrypoints into the domain model::
     By restricting the number of ways that things can be changed,
     we make the system easier to reason about.

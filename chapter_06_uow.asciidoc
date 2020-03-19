@@ -725,6 +725,7 @@ SQLAlchemy `Session`.
 .Unit of Work Pattern Recap
 *****************************************************************
 ((("Unit of Work pattern", "recap of important points")))
+
 The Unit of Work pattern is an abstraction around data integrity::
     It helps to enforce the consistency of our domain model, and improves
     performance, by letting us perform a single _flush_ operation at the
