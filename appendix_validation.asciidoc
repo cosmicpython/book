@@ -2,7 +2,8 @@
 [appendix]
 == Validation
 
-Whenever we're ((("validation", id="ix_valid")))teaching and talking about these techniques, one question that
+((("validation", id="ix_valid")))
+Whenever we're teaching and talking about these techniques, one question that
 comes up over and over is "Where should I do validation? Does that belong with
 my business logic in the domain model, or is that an infrastructural concern?"
 
@@ -508,7 +509,7 @@ Locate each of the three types of validation in the right place::
 TIP: Once you've validated the syntax and semantics of your commands
     at the edges of your system, the domain is the place for the rest
     of your validation.  Validation of pragmatics is often a core part
-    of your business rules.((("validation", startref="ix_valid")))
+    of your business rules.
 
 
 In software terms, the pragmatics of an operation are usually managed by the
@@ -516,3 +517,4 @@ domain model. When we receive a message like "allocate three million units of
 `SCARCE-CLOCK` to order 76543," the message is _syntactically_ valid and
 _semantically_ valid, but we're unable to comply because we don't have the stock
 available.
+((("validation", startref="ix_valid")))

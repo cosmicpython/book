@@ -2,9 +2,10 @@
 [appendix]
 == A Template Project Structure
 
+((("projects", "template project structure", id="ix_prjstrct")))
 Around <<chapter_04_service_layer>>, we moved from just having
 everything in one folder to a more structured tree, and we thought it might
-be of interest to outline the moving parts.((("projects", "template project structure", id="ix_prjstrct")))
+be of interest to outline the moving parts.
 
 [TIP]
 ====
@@ -353,7 +354,8 @@ TIP: One thing to note is that we install things in the order of how frequently 
 
 === Tests
 
-Our tests ((("testing", "tests folder tree")))are kept alongside everything else, as shown here:
+((("testing", "tests folder tree")))
+Our tests are kept alongside everything else, as shown here:
 
 [[tests_folder]]
 .Tests folder tree
@@ -394,5 +396,6 @@ These are our basic building blocks:
 * Configuration via environment variables, centralized in a Python file called _config.py_, with defaults allowing things to run _outside_ containers
 * A Makefile for useful command-line, um, commands
 
+((("projects", "template project structure", startref="ix_prjstrct")))
 We doubt that anyone will end up with _exactly_ the same solutions we did, but we hope you
-find some inspiration here.((("projects", "template project structure", startref="ix_prjstrct")))
+find some inspiration here.
