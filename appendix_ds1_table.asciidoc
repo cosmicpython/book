@@ -2,7 +2,8 @@
 [appendix]
 == Summary Diagram and Table
 
-Here's what our architecture looks((("architecture, summary diagram and table", id="ix_archsumm"))) like by the end of the book:
+((("architecture, summary diagram and table", id="ix_archsumm")))
+Here's what our architecture looks like by the end of the book:
 
 [[recap_diagram]]
 image::images/apwp_aa01.png["diagram showing all components: flask+eventconsumer, service layer, adapters, domain etc"]
@@ -53,6 +54,6 @@ __Translate external inputs into calls into the service layer.__
 | Web | Receives web requests and translates them into commands, passing them to the internal message bus.
 | Event consumer | Reads events from the external message bus and translates them into commands, passing them to the internal message bus.
 
-| N/A | External message bus (message broker) | A piece of infrastructure that different services use to intercommunicate, via events.((("architecture, summary diagram and table", startref="ix_archsumm")))
+| N/A | External message bus (message broker) | A piece of infrastructure that different services use to intercommunicate, via events.
 |===
-
+((("architecture, summary diagram and table", startref="ix_archsumm")))

@@ -1,10 +1,12 @@
 [[chapter_01_domain_model]]
 == Domain Modeling
 
+((("domain modeling", id="ix_dommod")))
+((("domain driven design (DDD)", seealso="domain model; domain modeling")))
 This chapter looks into how we can model business processes with code, in a way
-that's highly compatible with TDD. ((("domain modeling", id="ix_dommod"))) We'll discuss _why_ domain modeling
+that's highly compatible with TDD.  We'll discuss _why_ domain modeling
 matters, and we'll look at a few key patterns for modeling domains: Entity,
-Value Object, and Domain Service.((("domain driven design (DDD)", seealso="domain model; domain modeling")))
+Value Object, and Domain Service.
 
 <<maps_chapter_01_notext>> is a simple visual placeholder for our Domain
 Model pattern. We'll fill in some details in this chapter, and as we move on to
@@ -18,27 +20,30 @@ image::images/apwp_0101.png[]
 [role="pagebreak-before less_space"]
 === What Is a Domain Model?
 
-In the <<introduction, introduction>>, we used the term _business logic layer_ to describe the
-central layer of a three-layered architecture.((("business logic layer"))) For the rest of the book, we're
-going to use the term _domain model_ instead. This is a term from the DDD
-community that does a better job of capturing our intended meaning (see the
-next sidebar for more on DDD).
+((("business logic layer")))
+In the <<introduction, introduction>>, we used the term _business logic layer_
+to describe the central layer of a three-layered architecture. For the rest of
+the book, we're going to use the term _domain model_ instead. This is a term
+from the DDD community that does a better job of capturing our intended meaning
+(see the next sidebar for more on DDD).
 
-The _domain_ is a fancy way of saying _the problem you're trying to solve._ Your
-authors currently work for an online retailer of furniture.((("domain driven design (DDD)", "domain, defined"))) Depending on which system
-you're talking about, the domain might be purchasing and procurement, or product
-design, or logistics and delivery. Most programmers spend their days trying to
-improve or automate business processes; the domain is the set of activities
-that those processes support.
+((("domain driven design (DDD)", "domain, defined")))
+The _domain_ is a fancy way of saying _the problem you're trying to solve._
+Your authors currently work for an online retailer of furniture.  Depending on
+which system you're talking about, the domain might be purchasing and
+procurement, or product design, or logistics and delivery. Most programmers
+spend their days trying to improve or automate business processes; the domain
+is the set of activities that those processes support.
 
-A _model_ is a map of a process((("model (domain)"))) or phenomenon that captures a useful property.
+((("model (domain)")))
+A _model_ is a map of a process or phenomenon that captures a useful property.
 Humans are exceptionally good at producing models of things in their heads. For
 example, when someone throws a ball toward you, you're able to predict its
-movement almost unconsciously, because you have a model of the way objects move in
-space. Your model isn't perfect by any means. Humans have terrible intuitions
-about how objects behave at near-light speeds or in a vacuum because our model
-was never designed to cover those cases. That doesn't mean the model is wrong,
-but it does mean that some predictions fall outside of its domain.
+movement almost unconsciously, because you have a model of the way objects move
+in space. Your model isn't perfect by any means. Humans have terrible
+intuitions about how objects behave at near-light speeds or in a vacuum because
+our model was never designed to cover those cases. That doesn't mean the model
+is wrong, but it does mean that some predictions fall outside of its domain.
 
 The domain model is the mental map that business owners have of their
 businesses. All business people have these mental maps--they're how humans think
@@ -70,12 +75,14 @@ to build a shared glossary.
 Domain-driven design, or DDD, popularized the concept of domain modeling,footnote:[
 DDD did not originate domain modeling. Eric Evans refers to the 2002 book _Object Design_
 by Rebecca Wirfs-Brock and Alan McKean  (Addison-Wesley Professional), which introduced responsibility-driven
-design, of which DDD is a special case dealing with the domain.((("domain driven design (DDD)"))) But even that is
+design, of which DDD is a special case dealing with the domain. But even that is
 too late, and OO enthusiasts will tell you to look further back to Ivar
-Jacobson and Grady Booch; the term has been around since the mid-1980s.]
+Jacobson and Grady Booch; the term has been around since the
+mid-1980s.((("domain driven design (DDD)")))]
 and it's been a hugely successful movement in transforming the way people
 design software by focusing on the core business domain. Many of the
-architecture patterns that we cover in this book—including Entity, Aggregate, Value Object (see <<chapter_07_aggregate>>), and Repository (in
+architecture patterns that we cover in this book—including Entity, Aggregate,
+Value Object (see <<chapter_07_aggregate>>), and Repository (in
 <<chapter_02_repository,the next chapter>>)—come from the DDD tradition.
 
 In a nutshell, DDD says that the most important thing about software is that it
@@ -167,9 +174,11 @@ Time for some domain modeling.
 
 === Exploring the Domain Language
 
+((("domain language")))
+((("domain modeling", "domain language")))
 Understanding the domain model takes time, and patience, and Post-it notes. We
 have an initial conversation with our business experts and agree on a glossary
-and some rules for the first minimal version of the domain model.((("domain modeling", "domain language")))((("domain language"))) Wherever
+and some rules for the first minimal version of the domain model. Wherever
 possible, we ask for concrete examples to illustrate each rule.
 
 We make sure to express those rules in the business jargon (the _ubiquitous
@@ -213,8 +222,10 @@ Batches have an _ETA_ if they are currently shipping, or they may be in _warehou
 
 === Unit Testing Domain Models
 
+((("unit testing", "of domain models", id="ix_UTDM")))
+((("domain modeling", "unit testing domain models", id="ix_dommodUT")))
 We're not going to show you how TDD works in this book, but we want to show you
-how we would construct a model from this business conversation.((("unit testing", "of domain models", id="ix_UTDM")))((("domain modeling", "unit testing domain models", id="ix_dommodUT")))
+how we would construct a model from this business conversation.
 
 [role="nobreakinside less_space"]
 .Exercise for the Reader
@@ -296,11 +307,11 @@ class Batch:
     its branch (e.g.,
     https://github.com/python-leap/code/tree/chapter_01_domain_model[chapter_01_domain_model]).
 
-<3> Type hints are still a matter of controversy in the Python world.((("type hints"))) For
+<3> Type hints are still a matter of controversy in the Python world. For
     domain models, they can sometimes help to clarify or document what the
     expected arguments are, and people with IDEs are often grateful for them.
     You may decide the price paid in terms of readability is too high.
-
+    ((("type hints")))
 
 Our implementation here is trivial: a `Batch` just wraps an integer
 `available_quantity`, and we decrement that value on allocation. We've written
@@ -499,16 +510,18 @@ warehouse in a different region if we're out of stock in the home region. And
 so on.  A real business in the real world knows how to pile on complexity faster
 than we can show on the page!
 
-But taking this simple domain model as a placeholder for something more complex, we're going to extend our simple domain model in the rest of the book and
-plug it into the real world of APIs and databases and spreadsheets. We'll
+But taking this simple domain model as a placeholder for something more
+complex, we're going to extend our simple domain model in the rest of the book
+and plug it into the real world of APIs and databases and spreadsheets. We'll
 see how sticking rigidly to our principles of encapsulation and careful
-layering will help us to avoid a ball of mud.((("type hints")))
+layering will help us to avoid a ball of mud.
 
 
 [role="nobreakinside"]
 .More Types for More Type Hints
 *******************************************************************************
 
+((("type hints")))
 If you really want to go to town with type hints, you could go so far as
 wrapping primitive types by using `typing.NewType`:
 
@@ -544,8 +557,11 @@ Whether you think this is wonderful or appalling is a matter of debate.footnote:
 
 ==== Dataclasses Are Great for Value Objects
 
+((("value objects", "using dataclasses for")))
+((("dataclasses", "use for value objects")))
+((("domain modeling", "unit testing domain models", "dataclasses for value objects")))
 We've used `line` liberally in the previous code listings, but what is a
-line?((("domain modeling", "unit testing domain models", "dataclasses for value objects")))((("dataclasses", "use for value objects")))((("value objects", "using dataclasses for"))) In our business language, an _order_ has multiple _line_ items, where
+line? In our business language, an _order_ has multiple _line_ items, where
 each line has a SKU and a quantity. We can imagine that a simple YAML file
 containing order information might look like this:
 
@@ -573,10 +589,11 @@ Notice that while an order has a _reference_ that uniquely identifies it, a
 _line_ does not. (Even if we add the order reference to the `OrderLine` class,
 it's not something that uniquely identifies the line itself.)
 
+((("value objects", "defined")))
 Whenever we have a business concept that has data but no identity, we
 often choose to represent it using the _Value Object_ pattern. A _value object_ is any
 domain object that is uniquely identified by the data it holds; we usually
-make them immutable:((("value objects", "defined")))
+make them immutable:
 
 // [SG] seems a bit odd to hear about value objects before any mention of entities.
 
@@ -594,7 +611,8 @@ class OrderLine:
 ----
 ====
 
-One of the nice things ((("namedtuples", seealso="dataclasses")))that dataclasses (or namedtuples) give us is _value
+((("namedtuples", seealso="dataclasses")))
+One of the nice things that dataclasses (or namedtuples) give us is _value
 equality_, which is the fancy way of saying, "Two lines with the same `orderid`,
 `sku`, and `qty` are equal."
 
@@ -627,12 +645,13 @@ def test_equality():
 ----
 ====
 
+((("value objects", "math with")))
 These value objects match our real-world intuition about how their values
 work. It doesn't matter _which_ £10 note we're talking about, because they all
 have the same value. Likewise, two names are equal if both the first and last
 names match; and two lines are equivalent if they have the same customer order,
 product code, and quantity. We can still have complex behavior on a value
-object, though.((("value objects", "math with"))) In fact, it's common to support operations on values; for
+object, though. In fact, it's common to support operations on values; for
 example, mathematical operators:
 
 
@@ -669,14 +688,17 @@ def multiplying_two_money_values_is_an_error():
 
 ==== Value Objects and Entities
 
+((("value objects", "and entities", secondary-sortas="entities")))
+((("domain modeling", "unit testing domain models", "value objects and entities")))
 An order line is uniquely identified by its order ID, SKU, and quantity; if we
-change one of those values, we now have a new line.((("domain modeling", "unit testing domain models", "value objects and entities")))((("value objects", "and entities", secondary-sortas="entities"))) That's the definition of a
+change one of those values, we now have a new line. That's the definition of a
 value object: any object that is identified only by its data and doesn't have a
 long-lived identity. What about a batch, though? That _is_ identified by a
 reference.
 
+((("entities", "defined")))
 We use the term _entity_ to describe a domain object that has long-lived
-identity. ((("entities", "defined")))On the previous page, we introduced a `Name` class as a value object.
+identity. On the previous page, we introduced a `Name` class as a value object.
 If we take the name Harry Percival and change one letter, we have the new
 `Name` object Barry Percival.
 
@@ -725,12 +747,15 @@ def test_barry_is_harry():
 
 
 
-Entities, unlike values, have _identity equality_.((("entities", "identity equality")))((("identity equality (entities)"))) We can change their values,
+((("entities", "identity equality")))
+((("identity equality (entities)")))
+Entities, unlike values, have _identity equality_. We can change their values,
 and they are still recognizably the same thing. Batches, in our example, are
 entities. We can allocate lines to a batch, or change the date that we expect
 it to arrive, and it will still be the same entity.
 
-We usually make this explicit in code ((("equality operators, implementing on entities")))by implementing equality operators on
+((("equality operators, implementing on entities")))
+We usually make this explicit in code by implementing equality operators on
 entities:
 
 
@@ -753,11 +778,16 @@ class Batch:
 ----
 ====
 
+((("magic methods", "&#x5f;&#x5f;eq&#x5f;&#x5f;", secondary-sortas="eq")))
+((("&#x5f;&#x5f;eq&#x5f;&#x5f;magic method", primary-sortas="eq")))
 Python's +++<code>__eq__</code>+++ magic method
-defines((("&#x5f;&#x5f;eq&#x5f;&#x5f;magic method", primary-sortas="eq")))((("magic methods", "&#x5f;&#x5f;eq&#x5f;&#x5f;", secondary-sortas="eq"))) the behavior of the class for the `==` operator.footnote:[The +++<code>__eq__</code>+++ method is pronounced "dunder-EQ." By some, at least.]
+defines the behavior of the class for the `==` operator.footnote:[The
++++<code>__eq__</code>+++ method is pronounced "dunder-EQ." By some, at least.]
 
+((("magic methods", "&#x5f;&#x5f;hash&#x5f;&#x5f;", secondary-sortas="hash")))
+((("&#x5f;&#x5f;hash&#x5f;&#x5f; magic method", primary-sortas="hash")))
 For both entity and value objects, it's also worth thinking through how
-+++<code>__hash__</code>+++ will work. ((("&#x5f;&#x5f;hash&#x5f;&#x5f; magic method", primary-sortas="hash")))((("magic methods", "&#x5f;&#x5f;hash&#x5f;&#x5f;", secondary-sortas="hash"))) It's the magic method Python uses to control the
++++<code>__hash__</code>+++ will work.  It's the magic method Python uses to control the
 behavior of objects when you add them to sets or use them as dict keys;
 you can find more info https://oreil.ly/YUzg5[in the Python docs].
 
@@ -772,34 +802,41 @@ with entities, the hash should be based on the attribute(s), such as
 `.reference`, that defines the entity's unique identity over time. You should
 also try to somehow make _that_ attribute read-only.
 
-WARNING: This is tricky territory; you shouldn't modify +++<code>__hash__</code>+++ without
-    also modifying +++<code>__eq__</code>+++.  If you're not sure what you're doing,
-    further reading is suggested. https://oreil.ly/vxkgX[
-    "Python Hashes and Equality"] by our tech reviewer Hynek Schlawack is a good place to start.((("unit testing", "of domain models", startref="ix_UTDM")))((("domain modeling", "unit testing domain models", startref="ix_dommodUT")))
+WARNING: This is tricky territory; you shouldn't modify +++<code>__hash__</code>+++
+    without also modifying +++<code>__eq__</code>+++.  If you're not sure what
+    you're doing, further reading is suggested.
+    https://oreil.ly/vxkgX["Python Hashes and Equality"] by our tech reviewer
+    Hynek Schlawack is a good place to start.
+    ((("unit testing", "of domain models", startref="ix_UTDM")))
+    ((("domain modeling", "unit testing domain models", startref="ix_dommodUT")))
 
 
 
 === Not Everything Has to Be an Object: A Domain Service Function
 
+((("domain services")))
+((("domain modeling", "functions for domain services", id="ix_dommodfnc")))
 We've made a model to represent batches, but what we actually need
 to do is allocate order lines against a specific set of batches that
-represent all our stock.((("domain modeling", "functions for domain services", id="ix_dommodfnc")))
+represent all our stock.
 
 [quote, Eric Evans, Domain-Driven Design]
 ____
 Sometimes, it just isn't a thing.
 ____
 
+((("service-layer services vs. domain services")))
 Evans discusses the idea of Domain Service
-operations ((("domain services")))((("service-layer services vs. domain services")))that don't have a natural home in an entity or value object.footnote:[Domain services are
-not the same thing as the services from the
-<<chapter_04_service_layer,service layer>>, although they are
+operations that don't have a natural home in an entity or value
+object.footnote:[Domain services are not the same thing as the services from
+the <<chapter_04_service_layer,service layer>>, although they are
 often closely related. A domain service represents a business concept or
 process, whereas a service-layer service represents a use case for your
 application. Often the service layer will call a domain service.] A
 thing that allocates an order line, given a set of batches, sounds a lot like a
 function, and we can take advantage of the fact that Python is a multiparadigm
-language and just make it a function.((("domain services", "function for")))
+language and just make it a function.
+((("domain services", "function for")))
 
 Let's see how we might test-drive such a function:
 
@@ -842,7 +879,8 @@ def test_returns_allocated_batch_ref():
 ----
 ====
 
-And our service((("functions", "for domain services"))) might look like this:
+((("functions", "for domain services")))
+And our service might look like this:
 
 
 [[domain_service]]
@@ -862,9 +900,11 @@ def allocate(line: OrderLine, batches: List[Batch]) -> str:
 
 ==== Python's Magic Methods Let Us Use Our Models with Idiomatic Python
 
+((("&#x5f;&#x5f;gt&#x5f;&#x5f; magic method", primary-sortas="gt")))
+((("magic methods", "allowing use of domain model with idiomatic Python")))
 You may or may not like the use of `next()` in the preceding code, but we're pretty
 sure you'll agree that being able to use `sorted()` on our list of
-batches is nice, idiomatic Python.((("magic methods", "allowing use of domain model with idiomatic Python")))((("&#x5f;&#x5f;gt&#x5f;&#x5f; magic method", primary-sortas="gt")))
+batches is nice, idiomatic Python.
 
 To make it work, we implement +++<code>__gt__</code>+++ on our domain model:
 
@@ -892,11 +932,12 @@ That's lovely.
 
 ==== Exceptions Can Express Domain Concepts Too
 
-We have one final concept to cover: exceptions
-can be used ((("exceptions", "expressing domain concepts")))to express domain concepts too.((("domain exceptions"))) In our conversations
-with domain experts, we've learned about the possibility that
-an order cannot be allocated because we are _out of stock_, and
-we can capture that by using a _domain exception_:
+((("domain exceptions")))
+((("exceptions", "expressing domain concepts")))
+We have one final concept to cover: exceptions can be used to express domain
+concepts too. In our conversations with domain experts, we've learned about the
+possibility that an order cannot be allocated because we are _out of stock_,
+and we can capture that by using a _domain exception_:
 
 
 [[test_out_of_stock]]
@@ -921,26 +962,31 @@ Domain modeling::
     This is the part of your code that is closest to the business,
     the most likely to change, and the place where you deliver the
     most value to the business. Make it easy to understand and modify.
+    ((("domain modeling", startref="ix_dommod")))
 
 Distinguish entities from value objects::
-    A value object is defined by its attributes.((("value objects", "entities versus")))((("entities", "value objects versus"))) It's usually best
+    A value object is defined by its attributes. It's usually best
     implemented as an immutable type. If you change an attribute on
     a Value Object, it represents a different object. In contrast,
     an entity has attributes that may vary over time and it will still be the
     same entity. It's important to define what _does_ uniquely identify
     an entity (usually some sort of name or reference field).
+    ((("entities", "value objects versus")))
+    ((("value objects", "entities versus")))
 
 Not everything has to be an object::
     Python is a multiparadigm language, so let the "verbs" in your
     code be functions. For every `FooManager`, `BarBuilder`, or `BazFactory`,
     there's often a more expressive and readable `manage_foo()`, `build_bar()`,
-    or `get_baz()` waiting to happen.((("functions")))
+    or `get_baz()` waiting to happen.
+    ((("functions")))
 
 This is the time to apply your best OO design principles::
-    Revisit the ((("object-oriented design principles")))SOLID principles and all the other good heuristics like "has a versus is-a,"
+    Revisit the SOLID principles and all the other good heuristics like "has a versus is-a,"
     "prefer composition over inheritance," and so on.
+    ((("object-oriented design principles")))
 
-You'll((("domain modeling", startref="ix_dommod"))) also want to think about consistency boundaries and aggregates::
+You'll also want to think about consistency boundaries and aggregates::
     But that's a topic for <<chapter_07_aggregate>>.
 
 *****************************************************************
@@ -975,6 +1021,6 @@ def allocate(line: OrderLine, batches: List[Batch]) -> str:
 .Our domain model at the end of the chapter
 image::images/apwp_0104.png[]
 
+((("domain modeling", "functions for domain services", startref="ix_dommodfnc")))
 That'll probably do for now! We have a domain service that we can use for our
-first use case.((("domain modeling", "functions for domain services", startref="ix_dommodfnc"))) But first we'll need a database...
-
+first use case. But first we'll need a database...
