@@ -306,7 +306,7 @@ https://oreil.ly/ZucTG[classical mapping]:
 ====
 [source,python]
 ----
-from sqlalchemy.orm import mapper, relationship
+from sqlalchemy.orm import mapper
 
 import model  #<1>
 
