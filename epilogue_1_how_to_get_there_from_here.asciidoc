@@ -432,7 +432,7 @@ tree view of folders and documents.
 This screen was _incredibly_ heavy on the database, because it relied on nested
 `for` loops that triggered a lazy-loaded ORM.
 
-TIP: We use this same technique in <<chapter_11_external_events>>, where we replace a
+TIP: We use this same technique in <<chapter_12_cqrs>>, where we replace a
     nested loop over ORM objects with a simple SQL query. It's the first step
     in a CQRS approach.
 
