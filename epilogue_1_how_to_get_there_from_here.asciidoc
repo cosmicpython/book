@@ -714,10 +714,10 @@ Once you've done that, you can replace uses of the old code with calls to your n
 Do I need to do CQRS? That sounds weird. Can't I just use repositories?::
 Of course you can! The techniques we're presenting in this book are intended to make your life _easier_. They're not some kind of ascetic discipline with which to punish yourself.
 +
-In our first case-study system, we had a lot of _View Builder_ objects that used repositories to fetch data and then performed some transformations to return dumb read models. The advantage is that when you hit a performance problem, it's easy to rewrite a view builder to use custom queries or raw SQL.
+In the workspace/documents case-study system, we had a lot of _View Builder_ objects that used repositories to fetch data and then performed some transformations to return dumb read models. The advantage is that when you hit a performance problem, it's easy to rewrite a view builder to use custom queries or raw SQL.
 
 How should use cases interact across a larger system? Is it a problem for one to call another?::
-This might be an interim step. Again, in the first case study, we had handlers that would need to invoke other handlers. This gets _really_ messy, though, and it's much better to move to using a message bus to separate these concerns.
+This might be an interim step. Again, in the documents case study, we had handlers that would need to invoke other handlers. This gets _really_ messy, though, and it's much better to move to using a message bus to separate these concerns.
 +
 Generally, your system will have a single message bus implementation and a bunch of subdomains that center on a particular aggregate or set of aggregates. When your use case has finished, it can raise an event, and a handler elsewhere can run.
 
