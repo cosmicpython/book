@@ -256,7 +256,7 @@ def test_when_a_file_has_been_renamed_in_the_source():
 ((("coupling", "domain logic coupled with I/O")))
 ((("I/O", "domain logic tightly coupled to")))
 Wowsers, that's a lot of setup for two simple cases! The problem is that
-our domain logic, "figure out the difference between two directories," is tightly
+our domain logic, "figure out the difference between two directories", is tightly
 coupled to the I/O code. We can't run our difference algorithm without calling
 the `pathlib`, `shutil`, and `hashlib` modules.
 
