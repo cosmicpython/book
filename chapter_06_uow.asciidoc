@@ -182,6 +182,8 @@ def get_allocated_batch_ref(session, orderid, sku):
 ----
 ====
 
+// TODO: that double-unpacking is freaking ppl out.  maybe [(orderlineid, )] ?
+
 
 === Unit of Work and Its Context Manager
 
