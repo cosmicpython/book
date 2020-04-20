@@ -579,7 +579,7 @@ class FakeFileSystem(list): #<1>
         self.append(('MOVE', src, dest))
 
     def delete(self, dest):
-        self.append(('DELETE', src, dest))
+        self.append(('DELETE', dest))
 
 
 def test_when_a_file_exists_in_the_source_but_not_the_destination():
