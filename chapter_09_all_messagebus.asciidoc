@@ -926,7 +926,7 @@ class MessageBus(AbstractMessageBus):
 class FakeMessageBus(messagebus.AbstractMessageBus):
     def __init__(self):
         self.events_published = []  # type: List[events.Event]
-        self.handlers = {
+        self.HANDLERS = {
             events.OutOfStock: [lambda e: self.events_published.append(e)]
         }
 ----
