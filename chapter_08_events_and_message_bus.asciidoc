@@ -136,11 +136,6 @@ This email-sending thing is unwelcome _goop_ messing up the nice clean flow
 of our system. What we'd like is to keep our domain model focused on the rule
 "You can't allocate more stuff than is actually available."
 
-The domain model's job is to know that we're out of stock, but the
-responsibility of sending an alert belongs elsewhere. We should be able to turn
-this feature on or off, or to switch to SMS notifications instead, without
-needing to change the rules of our domain model.
-
 
 ==== Or the Service Layer!
 
