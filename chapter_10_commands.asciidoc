@@ -327,9 +327,6 @@ class History:  # Aggregate
     def record_order(self, order_id: str, order_amount: int): #<1>
         entry = HistoryEntry(order_id, order_amount)
 
-        if entry in self.orders:
-            return
-
         self.orders.add(entry)
 
         if len(self.orders) == 3:
