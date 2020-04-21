@@ -321,7 +321,7 @@ events when rules are met. We will structure the code like this:
 class History:  # Aggregate
 
     def __init__(self, customer_id: int):
-        self.orders = set() # Set[HistoryEntry]
+        self.orders = set()  # Set[HistoryEntry]
         self.customer_id = customer_id
 
     def record_order(self, order_id: str, order_amount: int): #<1>
@@ -342,14 +342,14 @@ def create_order_from_basket(uow, cmd: CreateOrder): #<2>
     with uow:
         order = Order.from_basket(cmd.customer_id, cmd.basket_items)
         uow.orders.add(order)
-        uow.commit() # raises OrderCreated
+        uow.commit()  # raises OrderCreated
 
 
 def update_customer_history(uow, event: OrderCreated): #<3>
     with uow:
         history = uow.order_history.get(event.customer_id)
         history.record_order(event.order_id, event.order_amount)
-        uow.commit() # raises CustomerBecameVIP
+        uow.commit()  # raises CustomerBecameVIP
 
 
 def congratulate_vip_customer(uow, event: CustomerBecameVip): #<4>
