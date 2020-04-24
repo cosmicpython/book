@@ -786,7 +786,7 @@ update our view model, we can write a tool that does the following:
 
 * Queries the current state of the write side to work out what's currently
   allocated
-* Calls the `add_allocate_to_read_model` handler for each allocated item
+* Calls the `add_allocation_to_read_model` handler for each allocated item
 
 We can use this technique to create entirely new read models from historical
 data.
