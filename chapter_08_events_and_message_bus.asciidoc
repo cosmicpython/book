@@ -216,14 +216,20 @@ on the database by using a unit of work.
 === All Aboard the Message Bus!
 
 The patterns we're going to introduce here are _Domain Events_ and the _Message Bus_.
-We can implement them in a few ways, so we'll show a couple before settling on the one we like most.
+We can implement them in a few ways, so we'll show a couple before settling on
+the one we like most.
+
+// TODO: at this point the message bus is really just a dispatcher.  could also mention
+// pubsub.  once we get a queue, it's more justifiably a bus
 
 
 ==== The Model Records Events
 
 ((("events and the message bus", "recording events")))
 First, rather than being concerned about emails, our model will be in charge of
-recording _events_—facts about things that have happened. We'll use a message bus to respond to events and invoke a new operation.
+recording _events_—facts about things that have happened. We'll use a message
+bus to respond to events and invoke a new operation.
+
 
 ==== Events Are Simple Dataclasses
 
@@ -391,7 +397,8 @@ NOTE: Note that the message bus as implemented doesn't give us concurrency becau
 _Celery_ is a popular tool in the Python world for deferring self-contained
 chunks of work to an asynchronous task queue.((("Celery tool"))) The message bus we're
 presenting here is very different, so the short answer to the above question is no; our message bus
-has more in common with a Node.js app, a UI event loop, or an actor framework.
+has more in common with a Express.js app, a UI event loop, or an actor framework.
+// TODO: this "more in common with" line is not super-helpful atm.  maybe onclick callbacks in js would be a more helpful example
 
 ((("external events")))
 If you do have a requirement for moving work off the main thread, you

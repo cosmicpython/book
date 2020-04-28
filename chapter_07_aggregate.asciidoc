@@ -236,7 +236,8 @@ that have the same SKU as the order line. Some sort of concept like
 `GlobalSkuStock` could work: a collection of all the batches for a given SKU.
 
 It's an unwieldy name, though, so after some bikeshedding via `SkuStock`, `Stock`,
-`ProductStock`, and so on, we decided to simply call it `Product`—after all, that was the first concept we came across in our exploration of the
+`ProductStock`, and so on, we decided to simply call it `Product`—after all,
+that was the first concept we came across in our exploration of the
 domain language back in <<chapter_01_domain_model>>.
 
 ((("allocate service", "allocating against all batches with")))
