@@ -398,7 +398,7 @@ from allocation import ensure
 def allocate(event, uow):
     line = mode.OrderLine(event.orderid, event.sku, event.qty)
     with uow:
-        ensure.product_exists(uow, event)
+        ensure.product_exists(event, uow)
 
         product = uow.products.get(line.sku)
         product.allocate(line)
