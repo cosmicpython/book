@@ -396,7 +396,7 @@ This keeps the main flow of our logic in the service layer clean and declarative
 from allocation import ensure
 
 def allocate(event, uow):
-    line = mode.OrderLine(event.orderid, event.sku, event.qty)
+    line = model.OrderLine(event.orderid, event.sku, event.qty)
     with uow:
         ensure.product_exists(uow, event)
 
