@@ -100,8 +100,8 @@ declaration of our message types:
 [source,python]
 ----
 def command(name, **fields):  #<1>
-    schema = Schema(And(Use(json.loads), fields), ignore_extra_keys=True)  #<2>
-    cls = make_dataclass(name, fields.keys())
+    schema = Schema(And(Use(json.loads), fields), ignore_extra_keys=True)
+    cls = make_dataclass(name, fields.keys())  #<2>
     cls.from_json = lambda s: cls(**schema.validate(s))  #<3>
     return cls
 
