@@ -1,5 +1,11 @@
 html:
-	asciidoctor -a stylesheet=theme/asciidoctor-clean.custom.css -a source-highlighter=pygments -a pygments-style=friendly -a '!example-caption' *.asciidoc
+	asciidoctor \
+		-a stylesheet=theme/asciidoctor-clean.custom.css \
+		-a source-highlighter=pygments \
+		-a pygments-style=friendly \
+		-a '!example-caption' \
+		-a sectanchors \
+		*.asciidoc
 
 test: html
 	pytest tests.py --tb=short -vv
