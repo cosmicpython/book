@@ -397,7 +397,7 @@ NOTE: Note that the message bus as implemented doesn't give us concurrency becau
 _Celery_ is a popular tool in the Python world for deferring self-contained
 chunks of work to an asynchronous task queue.((("Celery tool"))) The message bus we're
 presenting here is very different, so the short answer to the above question is no; our message bus
-has more in common with a Express.js app, a UI event loop, or an actor framework.
+has more in common with an Express.js app, a UI event loop, or an actor framework.
 // TODO: this "more in common with" line is not super-helpful atm.  maybe onclick callbacks in js would be a more helpful example
 
 ((("external events")))
