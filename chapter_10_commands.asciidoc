@@ -503,7 +503,7 @@ def handle_event(
                     queue.extend(uow.collect_new_events())
         except RetryError as retry_failure:
             logger.error(
-                'Failed to handle event %s times, giving up!,
+                'Failed to handle event %s times, giving up!',
                 retry_failure.last_attempt.attempt_number
             )
             continue
