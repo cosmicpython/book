@@ -200,9 +200,9 @@ to change. When we switch from email to SMS, we shouldn't have to update our
 ((("orchestration", "changing to choreography")))
 To solve the problem, we're going to split the orchestration
 into separate steps so that the different concerns don't get tangled up.footnote:[
-Our tech reviewer Ed Jung likes to say that the move from imperative to event-based
-flow control changes what used to be _orchestration_ into _choreography_.] The
-domain model's job is to know that we're out of stock, but the responsibility
+Our tech reviewer Ed Jung likes to say that when you change from imperative flow control 
+to event-based flow control, you're changing _orchestration_ into _choreography_.]
+The domain model's job is to know that we're out of stock, but the responsibility
 of sending an alert belongs elsewhere. We should be able to turn this feature
 on or off, or to switch to SMS notifications instead, without needing to change
 the rules of our domain model.
