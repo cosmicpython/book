@@ -314,7 +314,9 @@ event classes can be a nice place to do some input validation.
 Our event handlers now need a UoW. In addition, as our message bus becomes
 more central to our application, it makes sense to put it explicitly in charge of
 collecting and processing new events. There was a bit of a circular dependency
-between the UoW and message bus until now, so this will make it one-way:
+between the UoW and message bus until now, so this will make it one-way.  Instead
+of having the UoW _push_ events onto the message bus, we will have the message
+bus _pull_ events from the UoW.
 
 
 [[handle_has_uow_and_queue]]
@@ -377,7 +379,6 @@ In _unit_of_work.py_, `publish_events()` becomes a less active method,
     is keeping track of the event queue instead.
 <3> And the UoW no longer actively puts events on the message bus; it
     just makes them available.
-
 
 //IDEA: we can definitely get rid of _commit() now right?
 // (EJ2) at this point _commit() doesn't serve any purpose, so it could be deleted.
@@ -670,7 +671,7 @@ We realize we'll need a new query type on our repository:
 [[get_by_batchref]]
 .A new query type on our repository (src/allocation/adapters/repository.py)
 ====
-[source,python]
+[source,python,highlight="7,22,32"]
 ----
 class AbstractRepository(abc.ABC):
     ...
