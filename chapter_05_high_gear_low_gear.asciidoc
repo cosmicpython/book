@@ -48,7 +48,7 @@ does to our test pyramid:
 [source,sh]
 [role="skip"]
 ----
-$ grep -c test_ test_*.py
+$ grep -c test_ **/test_*.py
 tests/unit/test_allocate.py:4
 tests/unit/test_batches.py:8
 tests/unit/test_services.py:3
