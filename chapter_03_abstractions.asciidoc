@@ -588,7 +588,7 @@ def test_when_a_file_exists_in_the_source_but_not_the_destination():
     filesystem = FakeFileSystem()
 
     reader = {"/source": source, "/dest": dest}
-    synchronise_dirs(reader.pop, filesystem, "/source", "/dest")
+    sync(reader.pop, filesystem, "/source", "/dest")
 
     assert filesystem == [("COPY", "/source/my-file", "/dest/my-file")]
 
@@ -599,7 +599,7 @@ def test_when_a_file_has_been_renamed_in_the_source():
     filesystem = FakeFileSystem()
 
     reader = {"/source": source, "/dest": dest}
-    synchronise_dirs(reader.pop, filesystem, "/source", "/dest")
+    sync(reader.pop, filesystem, "/source", "/dest")
 
     assert filesystem == [("MOVE", "/dest/original-file", "/dest/renamed-file")]
 ----
