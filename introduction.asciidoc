@@ -115,13 +115,13 @@ want the code to perform for us and using an even higher-level abstraction to ma
 it explicit:
 
 [[ddg_example]]
-.Do a search with the duckduckgo module
+.Do a search with the duckduckgo client library
 ====
 [source,python]
 ----
-import duckduckgo
-for r in duckduckgo.query('Sausages').results:
-    print(r.url + ' - ' + r.text)
+import duckduckpy
+for r in duckduckpy.query('Sausages').related_topics:
+    print(r.first_url, ' - ', r.text)
 ----
 ====
 
