@@ -193,8 +193,13 @@ Both these problems happen because we're returning data in response to a write
 operation. Post/Redirect/Get sidesteps the issue by separating the read and
 write phases of our operation.
 
-This technique is a simple example of command-query separation (CQS). In CQS we
-follow one simple rule: functions should either modify state or answer
+This technique is a simple example of command-query separation (CQS).footnote:[
+We're using the terms somewhat interchangeably, but CQS is normally something you
+apply to a single class or module: functions that read state should be separate from
+those that modify it.  And CQRS is something you apply to your whole application:
+the classes, modules, code paths and even databases that read state can be
+separated from the ones that modify it.]
+We follow one simple rule: functions should either modify state or answer
 questions, but never both. This makes software easier to reason about: we should
 always be able to ask, "Are the lights on?" without flicking the light switch.
 
