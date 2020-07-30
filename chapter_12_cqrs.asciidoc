@@ -209,11 +209,12 @@ NOTE: When building APIs, we can apply the same design technique by returning a
     but the logical separation of work into a write phase and a query phase.
 
 As you'll see, we can use the CQS principle to make our systems faster and more
-scalable, but first, let's fix the CQS violation in our existing code. Ages ago, we introduced an `allocate` endpoint that takes an order and
-calls our service layer to allocate some stock. At the end of the call, we
-return a 200 OK and the batch ID. That's led to some ugly design flaws so that
-we can get the data we need. Let's change it to return a simple OK message and
-instead provide a new read-only endpoint to retrieve allocation state:
+scalable, but first, let's fix the CQS violation in our existing code. Ages
+ago, we introduced an `allocate` endpoint that takes an order and calls our
+service layer to allocate some stock. At the end of the call, we return a 200
+OK and the batch ID. That's led to some ugly design flaws so that we can get
+the data we need. Let's change it to return a simple OK message and instead
+provide a new read-only endpoint to retrieve allocation state:
 
 
 [[api_test_does_get_after_post]]
@@ -913,11 +914,17 @@ model become ever more compelling.
 | Allows reuse of DB configuration and model definitions.
 | Adds another query language with its own quirks and syntax.
 
-| Use hand-rolled SQL
+| Use hand-rolled SQL to query your normal model tables
 | Offers fine control over performance with a standard query syntax.
 | Changes to DB schema have to be made to your hand-rolled queries _and_ your
   ORM definitions. Highly normalized schemas may still have performance
   limitations.
+
+| Add some extra (denormalized) tables to your DB as a read model
+| A denormalized table can be much faster to query. If we update the
+  normalized and denormalized ones in the same transaction, we will
+  still have good guarantees of data consistency
+| It will slow down writes slightly
 
 | Create separate read stores with events
 | Read-only copies are easy to scale out. Views can be constructed when data
