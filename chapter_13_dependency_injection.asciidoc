@@ -233,9 +233,12 @@ entrypoints use the real UoW, and the message bus passes them onto our command
 handlers. If we add real and fake email classes, who will create them and
 pass them on?
 
-That's extra (duplicated) cruft for Flask, Redis, and our tests. Moreover,
-putting all the responsibility for passing dependencies to the right handler
-onto the message bus feels like a violation of the SRP.
+It needs to happen as early as possible in the process lifecycle, so the most
+obvious place is in our entrypoints. That would mean extra (duplicated) cruft
+in Flask and Redis, and in our tests. And we'd also have to add the
+responsibility for passing dependencies around to the message bus, which
+already has a job to do; it feels like a violation of the SRP.
+
 
 ((("bootstrapping", "dependency injection with")))
 ((("composition root")))
@@ -466,7 +469,7 @@ def bootstrap(
 ====
 
 <1> `orm.start_mappers()` is our example of initialization work that needs
-    to be done once at the beginning of an app. We also see things like
+    to be done once at the beginning of an app. Another common example is
     setting up the `logging` module.
     ((("object-relational mappers (ORMs)", "orm.start_mappers function")))
 
@@ -555,11 +558,11 @@ but you can, like this:
 ----
 ====
 
-Harry says he couldn't even imagine writing out that many lines of code
-and having to look up that many function arguments manually.
-This is a perfectly viable solution, though, since it's only one
-line of code or so per handler you add, and thus not a massive maintenance burden
-even if you have dozens of handlers.
+Harry says he couldn't even imagine writing out that many lines of code and
+having to look up that many function arguments manually. It would be a
+perfectly viable solution, though, since it's only one line of code or so per
+handler you add. Even if you have dozens of handlers, it wouldn't be much of
+maintenance burden.
 
 Our app is structured in such a way that we always want to do dependency
 injection in only one place, the handler functions, so this super-manual solution
@@ -575,9 +578,9 @@ framework.
 // IDEA: discuss/define what a DI container is
 
 At MADE, we've used https://pypi.org/project/Inject[Inject] in a few places,
-and it's fine, although it makes Pylint unhappy.  You might also check out
+and it's _fine_ (although it makes Pylint unhappy).  You might also check out
 https://pypi.org/project/punq[Punq], as written by Bob himself, or the
-DRY-Python crew's https://github.com/dry-python/dependencies[dependencies].
+DRY-Python crew's https://github.com/dry-python/dependencies[Dependencies].
 
 *******************************************************************************
 
