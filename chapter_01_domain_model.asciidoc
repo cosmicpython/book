@@ -656,7 +656,7 @@ example, mathematical operators:
 
 
 [[value_object_maths]]
-.Math with value objects
+.Testing Math with value objects
 ====
 [source,python]
 [role="skip"]
@@ -680,6 +680,30 @@ def can_multiply_money_by_a_number():
 def multiplying_two_money_values_is_an_error():
     with pytest.raises(TypeError):
         tenner * fiver
+----
+====
+
+
+((("magic methods", "&#x5f;&#x5f;add&#x5f;&#x5f;", secondary-sortas="add")))
+((("&#x5f;&#x5f;add&#x5f;&#x5f;magic method", primary-sortas="add")))
+To get those tests to actually pass you'll need to start implementing some
+magic methods on our `Money` class:
+
+[[value_object_maths]]
+.Implementing Math with value objects
+====
+[source,python]
+[role="skip"]
+----
+@dataclass(frozen=True)
+class Money:
+    currency: str
+    value: int
+
+    def __add__(self, other) -> Money:
+        if other.currency != self.currency:
+            raise ValueError(f"Cannot add {self.currency} to {other.currency}")
+        return Money(self.currency, self.value + other.value)
 ----
 ====
 
