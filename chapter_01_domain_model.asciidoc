@@ -251,7 +251,7 @@ Here's what one of our first tests might look like:
 ----
 def test_allocating_to_a_batch_reduces_the_available_quantity():
     batch = Batch("batch-001", "SMALL-TABLE", qty=20, eta=date.today())
-    line = OrderLine('order-ref', "SMALL-TABLE", 2)
+    line = OrderLine("order-ref", "SMALL-TABLE", 2)
 
     batch.allocate(line)
 
@@ -636,12 +636,12 @@ class Money(NamedTuple):
     currency: str
     value: int
 
-Line = namedtuple('Line', ['sku', 'qty'])
+Line = namedtuple("Line", ["sku", "qty"])
 
 def test_equality():
-    assert Money('gbp', 10) == Money('gbp', 10)
-    assert Name('Harry', 'Percival') != Name('Bob', 'Gregory')
-    assert Line('RED-CHAIR', 5) == Line('RED-CHAIR', 5)
+    assert Money("gbp", 10) == Money("gbp", 10)
+    assert Name("Harry", "Percival") != Name("Bob", "Gregory")
+    assert Line("RED-CHAIR", 5) == Line("RED-CHAIR", 5)
 ----
 ====
 
@@ -661,8 +661,8 @@ example, mathematical operators:
 [source,python]
 [role="skip"]
 ----
-fiver = Money('gbp', 5)
-tenner = Money('gbp', 10)
+fiver = Money("gbp", 5)
+tenner = Money("gbp", 10)
 
 def can_add_money_values_for_the_same_currency():
     assert fiver + fiver == tenner
@@ -672,10 +672,10 @@ def can_subtract_money_values():
 
 def adding_different_currencies_fails():
     with pytest.raises(ValueError):
-        Money('usd', 10) + Money('gbp', 10)
+        Money("usd", 10) + Money("gbp", 10)
 
 def can_multiply_money_by_a_number():
-    assert fiver * 5 == Money('gbp', 25)
+    assert fiver * 5 == Money("gbp", 25)
 
 def multiplying_two_money_values_is_an_error():
     with pytest.raises(TypeError):
@@ -970,11 +970,11 @@ and we can capture that by using a _domain exception_:
 [source,python]
 ----
 def test_raises_out_of_stock_exception_if_cannot_allocate():
-    batch = Batch('batch1', 'SMALL-FORK', 10, eta=today)
-    allocate(OrderLine('order1', 'SMALL-FORK', 10), [batch])
+    batch = Batch("batch1", "SMALL-FORK", 10, eta=today)
+    allocate(OrderLine("order1", "SMALL-FORK", 10), [batch])
 
-    with pytest.raises(OutOfStock, match='SMALL-FORK'):
-        allocate(OrderLine('order2', 'SMALL-FORK', 1), [batch])
+    with pytest.raises(OutOfStock, match="SMALL-FORK"):
+        allocate(OrderLine("order2", "SMALL-FORK", 1), [batch])
 ----
 ====
 
@@ -1034,7 +1034,7 @@ def allocate(line: OrderLine, batches: List[Batch]) -> str:
         batch = next(
         ...
     except StopIteration:
-        raise OutOfStock(f'Out of stock for sku {line.sku}')
+        raise OutOfStock(f"Out of stock for sku {line.sku}")
 ----
 ====
 
