@@ -127,6 +127,7 @@ enough:
 ----
 BLOCKSIZE = 65536
 
+
 def hash_file(path):
     hasher = hashlib.sha1()
     with path.open("rb") as file:
@@ -166,6 +167,7 @@ import hashlib
 import os
 import shutil
 from pathlib import Path
+
 
 def sync(source, dest):
     # Walk the source folder and build a dict of filenames and their hashes
@@ -216,11 +218,11 @@ def test_when_a_file_exists_in_the_source_but_not_the_destination():
         dest = tempfile.mkdtemp()
 
         content = "I am a very useful file"
-        (Path(source) / 'my-file').write_text(content)
+        (Path(source) / "my-file").write_text(content)
 
         sync(source, dest)
 
-        expected_path = Path(dest) /  'my-file'
+        expected_path = Path(dest) / "my-file"
         assert expected_path.exists()
         assert expected_path.read_text() == content
 
@@ -235,9 +237,9 @@ def test_when_a_file_has_been_renamed_in_the_source():
         dest = tempfile.mkdtemp()
 
         content = "I am a file that was renamed"
-        source_path = Path(source) / 'source-filename'
-        old_dest_path = Path(dest) / 'dest-filename'
-        expected_dest_path = Path(dest) / 'source-filename'
+        source_path = Path(source) / "source-filename"
+        old_dest_path = Path(dest) / "dest-filename"
+        expected_dest_path = Path(dest) / "source-filename"
         source_path.write_text(content)
         old_dest_path.write_text(content)
 
@@ -245,7 +247,6 @@ def test_when_a_file_has_been_renamed_in_the_source():
 
         assert old_dest_path.exists() is False
         assert expected_dest_path.read_text() == content
-
 
     finally:
         shutil.rmtree(source)
@@ -410,11 +411,11 @@ def sync(source, dest):
 
     # imperative shell step 3, apply outputs
     for action, *paths in actions:
-        if action == 'copy':
+        if action == "copy":
             shutil.copyfile(*paths)
-        if action == 'move':
+        if action == "move":
             shutil.move(*paths)
-        if action == 'delete':
+        if action == "delete":
             os.remove(paths[0])
 ----
 ====
@@ -457,16 +458,16 @@ def determine_actions(src_hashes, dst_hashes, src_folder, dst_folder):
         if sha not in dst_hashes:
             sourcepath = Path(src_folder) / filename
             destpath = Path(dst_folder) / filename
-            yield 'copy', sourcepath, destpath
+            yield "copy", sourcepath, destpath
 
         elif dst_hashes[sha] != filename:
             olddestpath = Path(dst_folder) / dst_hashes[sha]
             newdestpath = Path(dst_folder) / filename
-            yield 'move', olddestpath, newdestpath
+            yield "move", olddestpath, newdestpath
 
     for sha, filename in dst_hashes.items():
         if sha not in src_hashes:
-            yield 'delete', dst_folder / filename
+            yield "delete", dst_folder / filename
 ----
 ====
 
@@ -479,16 +480,17 @@ Our tests now act directly on the `determine_actions()` function:
 [source,python]
 ----
 def test_when_a_file_exists_in_the_source_but_not_the_destination():
-    src_hashes = {'hash1': 'fn1'}
+    src_hashes = {"hash1": "fn1"}
     dst_hashes = {}
-    actions = determine_actions(src_hashes, dst_hashes, Path('/src'), Path('/dst'))
-    assert list(actions) == [('copy', Path('/src/fn1'), Path('/dst/fn1'))]
+    actions = determine_actions(src_hashes, dst_hashes, Path("/src"), Path("/dst"))
+    assert list(actions) == [("copy", Path("/src/fn1"), Path("/dst/fn1"))]
+
 
 def test_when_a_file_has_been_renamed_in_the_source():
-    src_hashes = {'hash1': 'fn1'}
-    dst_hashes = {'hash1': 'fn2'}
-    actions = determine_actions(src_hashes, dst_hashes, Path('/src'), Path('/dst'))
-    assert list(actions) == [('move', Path('/dst/fn2'), Path('/dst/fn1'))]
+    src_hashes = {"hash1": "fn1"}
+    dst_hashes = {"hash1": "fn2"}
+    actions = determine_actions(src_hashes, dst_hashes, Path("/src"), Path("/dst"))
+    assert list(actions) == [("move", Path("/dst/fn2"), Path("/dst/fn1"))]
 ----
 ====
 
