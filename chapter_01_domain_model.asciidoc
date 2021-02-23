@@ -251,7 +251,7 @@ Here's what one of our first tests might look like:
 ----
 def test_allocating_to_a_batch_reduces_the_available_quantity():
     batch = Batch("batch-001", "SMALL-TABLE", qty=20, eta=date.today())
-    line = OrderLine('order-ref', "SMALL-TABLE", 2)
+    line = OrderLine("order-ref", "SMALL-TABLE", 2)
 
     batch.allocate(line)
 
@@ -281,9 +281,7 @@ class OrderLine:
 
 
 class Batch:
-    def __init__(
-        self, ref: str, sku: str, qty: int, eta: Optional[date]  #<2>
-    ):
+    def __init__(self, ref: str, sku: str, qty: int, eta: Optional[date]):  #<2>
         self.reference = ref
         self.sku = sku
         self.eta = eta
@@ -313,13 +311,14 @@ class Batch:
     You may decide the price paid in terms of readability is too high.
     ((("type hints")))
 
-Our implementation here is trivial: a `Batch` just wraps an integer
-`available_quantity`, and we decrement that value on allocation. We've written
-quite a lot of code just to subtract one number from another, but we think that modeling our
-domain precisely will pay off.footnote:[
-Or perhaps you think there's not enough code?  What about some sort of check
-that the SKU in the `OrderLine` matches `Batch.sku`?  We saved some thoughts on
-validation for <<appendix_validation>>.]
+Our implementation here is trivial:
+a `Batch` just wraps an integer `available_quantity`,
+and we decrement that value on allocation.
+We've written quite a lot of code just to subtract one number from another,
+but we think that modeling our domain precisely will pay off.footnote:[
+Or perhaps you think there's not enough code?
+What about some sort of check that the SKU in the `OrderLine` matches `Batch.sku`?
+We saved some thoughts on validation for <<appendix_validation>>.]
 
 Let's write some new failing tests:
 
@@ -332,9 +331,8 @@ Let's write some new failing tests:
 def make_batch_and_line(sku, batch_qty, line_qty):
     return (
         Batch("batch-001", sku, batch_qty, eta=date.today()),
-        OrderLine("order-123", sku, line_qty)
+        OrderLine("order-123", sku, line_qty),
     )
-
 
 def test_can_allocate_if_available_greater_than_required():
     large_batch, small_line = make_batch_and_line("ELEGANT-LAMP", 20, 2)
@@ -405,9 +403,7 @@ implementation:
 [role="non-head"]
 ----
 class Batch:
-    def __init__(
-        self, ref: str, sku: str, qty: int, eta: Optional[date]
-    ):
+    def __init__(self, ref: str, sku: str, qty: int, eta: Optional[date]):
         self.reference = ref
         self.sku = sku
         self.eta = eta
@@ -914,9 +910,7 @@ And our service might look like this:
 [role="non-head"]
 ----
 def allocate(line: OrderLine, batches: List[Batch]) -> str:
-    batch = next(
-        b for b in sorted(batches) if b.can_allocate(line)
-    )
+    batch = next(b for b in sorted(batches) if b.can_allocate(line))
     batch.allocate(line)
     return batch.reference
 ----
@@ -970,11 +964,11 @@ and we can capture that by using a _domain exception_:
 [source,python]
 ----
 def test_raises_out_of_stock_exception_if_cannot_allocate():
-    batch = Batch('batch1', 'SMALL-FORK', 10, eta=today)
-    allocate(OrderLine('order1', 'SMALL-FORK', 10), [batch])
+    batch = Batch("batch1", "SMALL-FORK", 10, eta=today)
+    allocate(OrderLine("order1", "SMALL-FORK", 10), [batch])
 
-    with pytest.raises(OutOfStock, match='SMALL-FORK'):
-        allocate(OrderLine('order2', 'SMALL-FORK', 1), [batch])
+    with pytest.raises(OutOfStock, match="SMALL-FORK"):
+        allocate(OrderLine("order2", "SMALL-FORK", 1), [batch])
 ----
 ====
 
@@ -1034,7 +1028,7 @@ def allocate(line: OrderLine, batches: List[Batch]) -> str:
         batch = next(
         ...
     except StopIteration:
-        raise OutOfStock(f'Out of stock for sku {line.sku}')
+        raise OutOfStock(f"Out of stock for sku {line.sku}")
 ----
 ====
 
