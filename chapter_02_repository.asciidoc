@@ -314,11 +314,12 @@ import model  #<1>
 metadata = MetaData()
 
 order_lines = Table(  #<2>
-    'order_lines', metadata,
-    Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('sku', String(255)),
-    Column('qty', Integer, nullable=False),
-    Column('orderid', String(255)),
+    "order_lines",
+    metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("sku", String(255)),
+    Column("qty", Integer, nullable=False),
+    Column("orderid", String(255)),
 )
 
 ...
@@ -364,7 +365,7 @@ tests for it, as in the following example:
 ----
 def test_orderline_mapper_can_load_lines(session):  #<1>
     session.execute(
-        'INSERT INTO order_lines (orderid, sku, qty) VALUES '
+        "INSERT INTO order_lines (orderid, sku, qty) VALUES "
         '("order1", "RED-CHAIR", 12),'
         '("order1", "RED-TABLE", 13),'
         '("order2", "BLUE-LIPSTICK", 14)'
@@ -525,7 +526,6 @@ Here's what an abstract base class (ABC) for our repository would look like:
 [source,python]
 ----
 class AbstractRepository(abc.ABC):
-
     @abc.abstractmethod  #<1>
     def add(self, batch: model.Batch):
         raise NotImplementedError  #<2>
@@ -659,10 +659,10 @@ def test_repository_can_save_a_batch(session):
     repo.add(batch)  #<1>
     session.commit()  #<2>
 
-    rows = list(session.execute(
-        'SELECT reference, sku, _purchased_quantity, eta FROM "batches"'  #<3>
-    ))
-    assert rows == [("batch1", "RUSTY-SOAPDISH", 100, None)]
+    rows = session.execute(  #<3>
+        'SELECT reference, sku, _purchased_quantity, eta FROM "batches"'
+    )
+    assert list(rows) == [("batch1", "RUSTY-SOAPDISH", 100, None)]
 ----
 ====
 
@@ -688,14 +688,15 @@ complex:
 ----
 def insert_order_line(session):
     session.execute(  #<1>
-        'INSERT INTO order_lines (orderid, sku, qty)'
+        "INSERT INTO order_lines (orderid, sku, qty)"
         ' VALUES ("order1", "GENERIC-SOFA", 12)'
     )
     [[orderline_id]] = session.execute(
-        'SELECT id FROM order_lines WHERE orderid=:orderid AND sku=:sku',
-        dict(orderid="order1", sku="GENERIC-SOFA")
+        "SELECT id FROM order_lines WHERE orderid=:orderid AND sku=:sku",
+        dict(orderid="order1", sku="GENERIC-SOFA"),
     )
     return orderline_id
+
 
 def insert_batch(session, batch_id):  #<2>
     ...
@@ -752,7 +753,6 @@ You end up with something like this:
 [source,python]
 ----
 class SqlAlchemyRepository(AbstractRepository):
-
     def __init__(self, session):
         self.session = session
 
