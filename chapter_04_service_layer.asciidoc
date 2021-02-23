@@ -102,22 +102,26 @@ The following shows a first cut:
 [source,python]
 [role="non-head"]
 ----
-@pytest.mark.usefixtures('restart_api')
+@pytest.mark.usefixtures("restart_api")
 def test_api_returns_allocation(add_stock):
-    sku, othersku = random_sku(), random_sku('other')  #<1>
+    sku, othersku = random_sku(), random_sku("other")  #<1>
     earlybatch = random_batchref(1)
     laterbatch = random_batchref(2)
     otherbatch = random_batchref(3)
-    add_stock([  #<2>
-        (laterbatch, sku, 100, '2011-01-02'),
-        (earlybatch, sku, 100, '2011-01-01'),
-        (otherbatch, othersku, 100, None),
-    ])
-    data = {'orderid': random_orderid(), 'sku': sku, 'qty': 3}
+    add_stock(  #<2>
+        [
+            (laterbatch, sku, 100, "2011-01-02"),
+            (earlybatch, sku, 100, "2011-01-01"),
+            (otherbatch, othersku, 100, None),
+        ]
+    )
+    data = {"orderid": random_orderid(), "sku": sku, "qty": 3}
     url = config.get_api_url()  #<3>
-    r = requests.post(f'{url}/allocate', json=data)
+
+    r = requests.post(f"{url}/allocate", json=data)
+
     assert r.status_code == 201
-    assert r.json()['batchref'] == earlybatch
+    assert r.json()["batchref"] == earlybatch
 ----
 ====
 
@@ -152,7 +156,7 @@ Implementing things in the most obvious way, you might get something like this:
 [source,python]
 [role="non-head"]
 ----
-from flask import Flask, jsonify, request
+from flask import Flask, request
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -166,23 +170,20 @@ orm.start_mappers()
 get_session = sessionmaker(bind=create_engine(config.get_postgres_uri()))
 app = Flask(__name__)
 
-@app.route("/allocate", methods=['POST'])
+
+@app.route("/allocate", methods=["POST"])
 def allocate_endpoint():
     session = get_session()
     batches = repository.SqlAlchemyRepository(session).list()
     line = model.OrderLine(
-        request.json['orderid'],
-        request.json['sku'],
-        request.json['qty'],
+        request.json["orderid"], request.json["sku"], request.json["qty"],
     )
 
     batchref = model.allocate(line, batches)
 
-    return jsonify({'batchref': batchref}), 201
+    return {"batchref": batchref}, 201
 ----
 ====
-
-//IDEA (hynek) pretty sure you can drop the jsonify call
 
 So far, so good. No need for too much more of your "architecture astronaut"
 nonsense, Bob and Harry, you may be thinking.
@@ -200,28 +201,27 @@ depleted the batch:
 [source,python]
 [role="non-head"]
 ----
-@pytest.mark.usefixtures('restart_api')
+@pytest.mark.usefixtures("restart_api")
 def test_allocations_are_persisted(add_stock):
     sku = random_sku()
     batch1, batch2 = random_batchref(1), random_batchref(2)
     order1, order2 = random_orderid(1), random_orderid(2)
-    add_stock([
-        (batch1, sku, 10, '2011-01-01'),
-        (batch2, sku, 10, '2011-01-02'),
-    ])
-    line1 = {'orderid': order1, 'sku': sku, 'qty': 10}
-    line2 = {'orderid': order2, 'sku': sku, 'qty': 10}
+    add_stock(
+        [(batch1, sku, 10, "2011-01-01"), (batch2, sku, 10, "2011-01-02"),]
+    )
+    line1 = {"orderid": order1, "sku": sku, "qty": 10}
+    line2 = {"orderid": order2, "sku": sku, "qty": 10}
     url = config.get_api_url()
 
     # first order uses up all stock in batch 1
-    r = requests.post(f'{url}/allocate', json=line1)
+    r = requests.post(f"{url}/allocate", json=line1)
     assert r.status_code == 201
-    assert r.json()['batchref'] == batch1
+    assert r.json()["batchref"] == batch1
 
     # second order should go to batch 2
-    r = requests.post(f'{url}/allocate', json=line2)
+    r = requests.post(f"{url}/allocate", json=line2)
     assert r.status_code == 201
-    assert r.json()['batchref'] == batch2
+    assert r.json()["batchref"] == batch2
 ----
 ====
 
@@ -252,27 +252,27 @@ Now we're looking at two more end-to-end tests:
 [source,python]
 [role="non-head"]
 ----
-@pytest.mark.usefixtures('restart_api')
+@pytest.mark.usefixtures("restart_api")
 def test_400_message_for_out_of_stock(add_stock):  #<1>
     sku, smalL_batch, large_order = random_sku(), random_batchref(), random_orderid()
-    add_stock([
-        (smalL_batch, sku, 10, '2011-01-01'),
-    ])
-    data = {'orderid': large_order, 'sku': sku, 'qty': 20}
+    add_stock(
+        [(smalL_batch, sku, 10, "2011-01-01"),]
+    )
+    data = {"orderid": large_order, "sku": sku, "qty": 20}
     url = config.get_api_url()
-    r = requests.post(f'{url}/allocate', json=data)
+    r = requests.post(f"{url}/allocate", json=data)
     assert r.status_code == 400
-    assert r.json()['message'] == f'Out of stock for sku {sku}'
+    assert r.json()["message"] == f"Out of stock for sku {sku}"
 
 
-@pytest.mark.usefixtures('restart_api')
+@pytest.mark.usefixtures("restart_api")
 def test_400_message_for_invalid_sku():  #<2>
     unknown_sku, orderid = random_sku(), random_orderid()
-    data = {'orderid': orderid, 'sku': unknown_sku, 'qty': 20}
+    data = {"orderid": orderid, "sku": unknown_sku, "qty": 20}
     url = config.get_api_url()
-    r = requests.post(f'{url}/allocate', json=data)
+    r = requests.post(f"{url}/allocate", json=data)
     assert r.status_code == 400
-    assert r.json()['message'] == f'Invalid sku {unknown_sku}'
+    assert r.json()["message"] == f"Invalid sku {unknown_sku}"
 ----
 ====
 
@@ -293,26 +293,25 @@ And sure, we could implement it in the Flask app too:
 def is_valid_sku(sku, batches):
     return sku in {b.sku for b in batches}
 
-@app.route("/allocate", methods=['POST'])
+
+@app.route("/allocate", methods=["POST"])
 def allocate_endpoint():
     session = get_session()
     batches = repository.SqlAlchemyRepository(session).list()
     line = model.OrderLine(
-        request.json['orderid'],
-        request.json['sku'],
-        request.json['qty'],
+        request.json["orderid"], request.json["sku"], request.json["qty"],
     )
 
     if not is_valid_sku(line.sku, batches):
-        return jsonify({'message': f'Invalid sku {line.sku}'}), 400
+        return {"message": f"Invalid sku {line.sku}"}, 400
 
     try:
         batchref = model.allocate(line, batches)
     except model.OutOfStock as e:
-        return jsonify({'message': str(e)}), 400
+        return {"message": str(e)}, 400
 
     session.commit()
-    return jsonify({'batchref': batchref}), 201
+    return {"batchref": batchref}, 201
 ----
 ====
 
@@ -348,7 +347,6 @@ Do you remember the `FakeRepository` that we prepared in <<chapter_03_abstractio
 [source,python]
 ----
 class FakeRepository(repository.AbstractRepository):
-
     def __init__(self, batches):
         self._batches = set(batches)
 
@@ -416,7 +414,7 @@ def test_error_for_invalid_sku():
 ====
 [source,python]
 ----
-class FakeSession():
+class FakeSession:
     committed = False
 
     def commit(self):
@@ -436,8 +434,8 @@ the fake `.commit()` lets us migrate a third test from the E2E layer:
 [role="non-head"]
 ----
 def test_commits():
-    line = model.OrderLine('o1', 'OMINOUS-MIRROR', 10)
-    batch = model.Batch('b1', 'OMINOUS-MIRROR', 100, eta=None)
+    line = model.OrderLine("o1", "OMINOUS-MIRROR", 10)
+    batch = model.Batch("b1", "OMINOUS-MIRROR", 100, eta=None)
     repo = FakeRepository([batch])
     session = FakeSession()
 
@@ -468,10 +466,11 @@ class InvalidSku(Exception):
 def is_valid_sku(sku, batches):
     return sku in {b.sku for b in batches}
 
+
 def allocate(line: OrderLine, repo: AbstractRepository, session) -> str:
     batches = repo.list()  #<1>
     if not is_valid_sku(line.sku, batches):  #<2>
-        raise InvalidSku(f'Invalid sku {line.sku}')
+        raise InvalidSku(f"Invalid sku {line.sku}")
     batchref = model.allocate(line, batches)  #<3>
     session.commit()  #<4>
     return batchref
@@ -540,21 +539,20 @@ app now looks a lot cleaner:
 [source,python]
 [role="non-head"]
 ----
-@app.route("/allocate", methods=['POST'])
+@app.route("/allocate", methods=["POST"])
 def allocate_endpoint():
     session = get_session()  #<1>
     repo = repository.SqlAlchemyRepository(session)  #<1>
     line = model.OrderLine(
-        request.json['orderid'],  #<2>
-        request.json['sku'],  #<2>
-        request.json['qty'],  #<2>
+        request.json["orderid"], request.json["sku"], request.json["qty"],  #<2>
     )
+
     try:
         batchref = services.allocate(line, repo, session)  #<2>
     except (model.OutOfStock, services.InvalidSku) as e:
-        return jsonify({'message': str(e)}), 400  <3>
+        return {"message": str(e)}, 400  <3>
 
-    return jsonify({'batchref': batchref}), 201  <3>
+    return {"batchref": batchref}, 201  <3>
 ----
 ====
 
@@ -580,32 +578,36 @@ the happy path and one for the unhappy path:
 [source,python]
 [role="non-head"]
 ----
-@pytest.mark.usefixtures('restart_api')
+@pytest.mark.usefixtures("restart_api")
 def test_happy_path_returns_201_and_allocated_batch(add_stock):
-    sku, othersku = random_sku(), random_sku('other')
+    sku, othersku = random_sku(), random_sku("other")
     earlybatch = random_batchref(1)
     laterbatch = random_batchref(2)
     otherbatch = random_batchref(3)
-    add_stock([
-        (laterbatch, sku, 100, '2011-01-02'),
-        (earlybatch, sku, 100, '2011-01-01'),
-        (otherbatch, othersku, 100, None),
-    ])
-    data = {'orderid': random_orderid(), 'sku': sku, 'qty': 3}
+    add_stock(
+        [
+            (laterbatch, sku, 100, "2011-01-02"),
+            (earlybatch, sku, 100, "2011-01-01"),
+            (otherbatch, othersku, 100, None),
+        ]
+    )
+    data = {"orderid": random_orderid(), "sku": sku, "qty": 3}
     url = config.get_api_url()
-    r = requests.post(f'{url}/allocate', json=data)
+
+    r = requests.post(f"{url}/allocate", json=data)
+
     assert r.status_code == 201
-    assert r.json()['batchref'] == earlybatch
+    assert r.json()["batchref"] == earlybatch
 
 
-@pytest.mark.usefixtures('restart_api')
+@pytest.mark.usefixtures("restart_api")
 def test_unhappy_path_returns_400_and_error_message():
     unknown_sku, orderid = random_sku(), random_orderid()
-    data = {'orderid': orderid, 'sku': unknown_sku, 'qty': 20}
+    data = {"orderid": orderid, "sku": unknown_sku, "qty": 20}
     url = config.get_api_url()
-    r = requests.post(f'{url}/allocate', json=data)
+    r = requests.post(f"{url}/allocate", json=data)
     assert r.status_code == 400
-    assert r.json()['message'] == f'Invalid sku {unknown_sku}'
+    assert r.json()["message"] == f"Invalid sku {unknown_sku}"
 ----
 ====
 
