@@ -265,7 +265,8 @@ How would it look if its parameters were all primitive types?
 [source,python]
 ----
 def allocate(
-        orderid: str, sku: str, qty: int, repo: AbstractRepository, session
+    orderid: str, sku: str, qty: int,
+    repo: AbstractRepository, session
 ) -> str:
 ----
 ====
@@ -368,17 +369,17 @@ And the implementation is just two lines:
 [source,python]
 ----
 def add_batch(
-        ref: str, sku: str, qty: int, eta: Optional[date],
-        repo: AbstractRepository, session,
-):
+    ref: str, sku: str, qty: int, eta: Optional[date],
+    repo: AbstractRepository, session,
+) -> None:
     repo.add(model.Batch(ref, sku, qty, eta))
     session.commit()
 
 
 def allocate(
-        orderid: str, sku: str, qty: int, repo: AbstractRepository, session
+    orderid: str, sku: str, qty: int,
+    repo: AbstractRepository, session
 ) -> str:
-    ...
 ----
 ====
 
@@ -442,18 +443,22 @@ JSON wrangling and a single function call required:
 ====
 [source,python]
 ----
-@app.route("/add_batch", methods=['POST'])
+@app.route("/add_batch", methods=["POST"])
 def add_batch():
     session = get_session()
     repo = repository.SqlAlchemyRepository(session)
-    eta = request.json['eta']
+    eta = request.json["eta"]
     if eta is not None:
         eta = datetime.fromisoformat(eta).date()
     services.add_batch(
-        request.json['ref'], request.json['sku'], request.json['qty'], eta,
-        repo, session
+        request.json["ref"],
+        request.json["sku"],
+        request.json["qty"],
+        eta,
+        repo,
+        session,
     )
-    return 'OK', 201
+    return "OK", 201
 ----
 ====
 
@@ -475,27 +480,28 @@ which is also nice:
 def post_to_add_batch(ref, sku, qty, eta):
     url = config.get_api_url()
     r = requests.post(
-        f'{url}/add_batch',
-        json={'ref': ref, 'sku': sku, 'qty': qty, 'eta': eta}
+        f"{url}/add_batch", json={"ref": ref, "sku": sku, "qty": qty, "eta": eta}
     )
     assert r.status_code == 201
 
 
-@pytest.mark.usefixtures('postgres_db')
-@pytest.mark.usefixtures('restart_api')
+@pytest.mark.usefixtures("postgres_db")
+@pytest.mark.usefixtures("restart_api")
 def test_happy_path_returns_201_and_allocated_batch():
-    sku, othersku = random_sku(), random_sku('other')
+    sku, othersku = random_sku(), random_sku("other")
     earlybatch = random_batchref(1)
     laterbatch = random_batchref(2)
     otherbatch = random_batchref(3)
-    post_to_add_batch(laterbatch, sku, 100, '2011-01-02')
-    post_to_add_batch(earlybatch, sku, 100, '2011-01-01')
+    post_to_add_batch(laterbatch, sku, 100, "2011-01-02")
+    post_to_add_batch(earlybatch, sku, 100, "2011-01-01")
     post_to_add_batch(otherbatch, othersku, 100, None)
-    data = {'orderid': random_orderid(), 'sku': sku, 'qty': 3}
+    data = {"orderid": random_orderid(), "sku": sku, "qty": 3}
+
     url = config.get_api_url()
-    r = requests.post(f'{url}/allocate', json=data)
+    r = requests.post(f"{url}/allocate", json=data)
+
     assert r.status_code == 201
-    assert r.json()['batchref'] == earlybatch
+    assert r.json()["batchref"] == earlybatch
 ----
 ====
 
