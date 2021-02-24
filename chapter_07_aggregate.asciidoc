@@ -865,6 +865,7 @@ def test_concurrent_updates_to_version_are_not_allowed(postgres_session_factory)
 
 <4> And we double-check that only one allocation has gotten through.
 
+// TODO: use """ syntax for sql literal above?
 
 
 ==== Enforcing Concurrency Rules by Using Database Transaction [.keep-together]#Isolation Levels#

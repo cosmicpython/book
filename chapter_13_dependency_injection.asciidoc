@@ -75,7 +75,8 @@ functions declare an explicit dependency on the UoW:
 [role="existing"]
 ----
 def allocate(
-        cmd: commands.Allocate, uow: unit_of_work.AbstractUnitOfWork
+    cmd: commands.Allocate,
+    uow: unit_of_work.AbstractUnitOfWork,
 ):
 ----
 ====
@@ -105,7 +106,6 @@ The UoW itself declares an explicit dependency on the session factory:
 [role="existing"]
 ----
 class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
-
     def __init__(self, session_factory=DEFAULT_SESSION_FACTORY):
         self.session_factory = session_factory
         ...
@@ -152,11 +152,12 @@ from allocation.adapters import email, redis_eventpublisher  #<1>
 ...
 
 def send_out_of_stock_notification(
-        event: events.OutOfStock, uow: unit_of_work.AbstractUnitOfWork,
+    event: events.OutOfStock,
+    uow: unit_of_work.AbstractUnitOfWork,
 ):
     email.send(  #<2>
-        'stock@made.com',
-        f'Out of stock for {event.sku}',
+        "stock@made.com",
+        f"Out of stock for {event.sku}",
     )
 ----
 ====
@@ -217,11 +218,12 @@ ____
 [role="non-head"]
 ----
 def send_out_of_stock_notification(
-        event: events.OutOfStock, send_mail: Callable,
+    event: events.OutOfStock,
+    send_mail: Callable,
 ):
     send_mail(
-        'stock@made.com',
-        f'Out of stock for {event.sku}',
+        "stock@made.com",
+        f"Out of stock for {event.sku}",
     )
 ----
 ====
@@ -301,7 +303,8 @@ partial functions to compose the function with its dependencies:
 ----
 # existing allocate function, with abstract uow dependency
 def allocate(
-        cmd: commands.Allocate, uow: unit_of_work.AbstractUnitOfWork
+    cmd: commands.Allocate,
+    uow: unit_of_work.AbstractUnitOfWork,
 ):
     line = OrderLine(cmd.orderid, cmd.sku, cmd.qty)
     with uow:
@@ -346,10 +349,11 @@ which has different dependencies:
 [role="skip"]
 ----
 def send_out_of_stock_notification(
-        event: events.OutOfStock, send_mail: Callable,
+    event: events.OutOfStock,
+    send_mail: Callable,
 ):
     send_mail(
-        'stock@made.com',
+        "stock@made.com",
         ...
 
 
@@ -381,7 +385,6 @@ classes, though:
 # we replace the old `def allocate(cmd, uow)` with:
 
 class AllocateHandler:
-
     def __init__(self, uow: unit_of_work.AbstractUnitOfWork):  #<2>
         self.uow = uow
 
@@ -447,7 +450,7 @@ def bootstrap(
     if start_orm:
         orm.start_mappers()  #<1>
 
-    dependencies = {'uow': uow, 'send_mail': send_mail, 'publish': publish}
+    dependencies = {"uow": uow, "send_mail": send_mail, "publish": publish}
     injected_event_handlers = {  #<3>
         event_type: [
             inject_dependencies(handler, dependencies)
@@ -546,12 +549,11 @@ but you can, like this:
         ],
         events.OutOfStock: [
             lambda e: handlers.send_out_of_stock_notification(e, send_mail)
-        ]
+        ],
     }
     injected_command_handlers = {
         commands.Allocate: lambda c: handlers.allocate(c, uow),
-        commands.CreateBatch: \
-            lambda c: handlers.add_batch(c, uow),
+        commands.CreateBatch: lambda c: handlers.add_batch(c, uow),
         commands.ChangeBatchQuantity: \
             lambda c: handlers.change_batch_quantity(c, uow),
     }
@@ -600,7 +602,6 @@ class:
 [role="non-head"]
 ----
 class MessageBus:  #<1>
-
     def __init__(
         self,
         uow: unit_of_work.AbstractUnitOfWork,
@@ -620,7 +621,7 @@ class MessageBus:  #<1>
             elif isinstance(message, commands.Command):
                 self.handle_command(message)
             else:
-                raise Exception(f'{message} was not an Event or Command')
+                raise Exception(f"{message} was not an Event or Command")
 ----
 ====
 
@@ -646,22 +647,21 @@ What else changes in the bus?
     def handle_event(self, event: events.Event):
         for handler in self.event_handlers[type(event)]:  #<1>
             try:
-                logger.debug('handling event %s with handler %s', event, handler)
+                logger.debug("handling event %s with handler %s", event, handler)
                 handler(event)  #<2>
                 self.queue.extend(self.uow.collect_new_events())
             except Exception:
-                logger.exception('Exception handling event %s', event)
+                logger.exception("Exception handling event %s", event)
                 continue
 
-
     def handle_command(self, command: commands.Command):
-        logger.debug('handling command %s', command)
+        logger.debug("handling command %s", command)
         try:
             handler = self.command_handlers[type(command)]  #<1>
             handler(command)  #<2>
             self.queue.extend(self.uow.collect_new_events())
         except Exception:
-            logger.exception('Exception handling command %s', command)
+            logger.exception("Exception handling command %s", command)
             raise
 ----
 ====
@@ -696,15 +696,15 @@ rest of it:
 +bus = bootstrap.bootstrap()
 
 
- @app.route("/add_batch", methods=['POST'])
+ @app.route("/add_batch", methods=["POST"])
 @@ -19,8 +16,7 @@ def add_batch():
      cmd = commands.CreateBatch(
-         request.json['ref'], request.json['sku'], request.json['qty'], eta,
+         request.json["ref"], request.json["sku"], request.json["qty"], eta
      )
 -    uow = unit_of_work.SqlAlchemyUnitOfWork()  #<2>
 -    messagebus.handle(cmd, uow)
 +    bus.handle(cmd)  #<3>
-     return 'OK', 201
+     return "OK", 201
 
 ----
 ====
@@ -749,13 +749,14 @@ def sqlite_bus(sqlite_session_factory):
     yield bus
     clear_mappers()
 
+
 def test_allocations_view(sqlite_bus):
-    sqlite_bus.handle(commands.CreateBatch('sku1batch', 'sku1', 50, None))
-    sqlite_bus.handle(commands.CreateBatch('sku2batch', 'sku2', 50, today))
+    sqlite_bus.handle(commands.CreateBatch("sku1batch", "sku1", 50, None))
+    sqlite_bus.handle(commands.CreateBatch("sku2batch", "sku2", 50, today))
     ...
-    assert views.allocations('order1', sqlite_bus.uow) == [
-        {'sku': 'sku1', 'batchref': 'sku1batch'},
-        {'sku': 'sku2', 'batchref': 'sku2batch'},
+    assert views.allocations("order1", sqlite_bus.uow) == [
+        {"sku": "sku1", "batchref": "sku1batch"},
+        {"sku": "sku2", "batchref": "sku2batch"},
     ]
 ----
 ====
@@ -856,7 +857,6 @@ email, could be SMS, could be Slack posts one day.
 [source,python]
 ----
 class AbstractNotifications(abc.ABC):
-
     @abc.abstractmethod
     def send(self, destination, message):
         raise NotImplementedError
@@ -864,17 +864,16 @@ class AbstractNotifications(abc.ABC):
 ...
 
 class EmailNotifications(AbstractNotifications):
-
     def __init__(self, smtp_host=DEFAULT_HOST, port=DEFAULT_PORT):
         self.server = smtplib.SMTP(smtp_host, port=port)
         self.server.noop()
 
     def send(self, destination, message):
-        msg = f'Subject: allocation service notification\n{message}'
+        msg = f"Subject: allocation service notification\n{message}"
         self.server.sendmail(
-            from_addr='allocations@example.com',
+            from_addr="allocations@example.com",
             to_addrs=[destination],
-            msg=msg
+            msg=msg,
         )
 ----
 ====
@@ -912,7 +911,6 @@ We work through and define a fake version for unit testing:
 [source,python]
 ----
 class FakeNotifications(notifications.AbstractNotifications):
-
     def __init__(self):
         self.sent = defaultdict(list)  # type: Dict[str, List[str]]
 
@@ -939,7 +937,7 @@ And we use it in our tests:
         )
         bus.handle(commands.CreateBatch("b1", "POPULAR-CURTAINS", 9, None))
         bus.handle(commands.Allocate("o1", "POPULAR-CURTAINS", 10))
-        assert fake_notifs.sent['stock@made.com'] == [
+        assert fake_notifs.sent["stock@made.com"] == [
             f"Out of stock for POPULAR-CURTAINS",
         ]
 ----
@@ -1014,19 +1012,19 @@ def bus(sqlite_session_factory):
 
 
 def get_email_from_mailhog(sku):  #<2>
-    host, port = map(config.get_email_host_and_port().get, ['host', 'http_port'])
-    all_emails = requests.get(f'http://{host}:{port}/api/v2/messages').json()
-    return next(m for m in all_emails['items'] if sku in str(m))
+    host, port = map(config.get_email_host_and_port().get, ["host", "http_port"])
+    all_emails = requests.get(f"http://{host}:{port}/api/v2/messages").json()
+    return next(m for m in all_emails["items"] if sku in str(m))
 
 
 def test_out_of_stock_email(bus):
     sku = random_sku()
-    bus.handle(commands.CreateBatch('batch1', sku, 9, None))  #<3>
-    bus.handle(commands.Allocate('order1', sku, 10))
+    bus.handle(commands.CreateBatch("batch1", sku, 9, None))  #<3>
+    bus.handle(commands.Allocate("order1", sku, 10))
     email = get_email_from_mailhog(sku)
-    assert email['Raw']['From'] == 'allocations@example.com'  #<4>
-    assert email['Raw']['To'] == ['stock@made.com']
-    assert f'Out of stock for {sku}' in email['Raw']['Data']
+    assert email["Raw"]["From"] == "allocations@example.com"  #<4>
+    assert email["Raw"]["To"] == ["stock@made.com"]
+    assert f"Out of stock for {sku}" in email["Raw"]["Data"]
 ----
 ====
 

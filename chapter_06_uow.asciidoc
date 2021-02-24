@@ -558,7 +558,10 @@ Suppose we want to be able to deallocate and then reallocate orders:
 [source,python]
 [role="skip"]
 ----
-def reallocate(line: OrderLine, uow: AbstractUnitOfWork) -> str:
+def reallocate(
+    line: OrderLine,
+    uow: AbstractUnitOfWork,
+) -> str:
     with uow:
         batch = uow.batches.get(sku=line.sku)
         if batch is None:
@@ -587,7 +590,10 @@ opened, and half our sofas have fallen into the Indian Ocean. Oops!
 [source,python]
 [role="skip"]
 ----
-def change_batch_quantity(batchref: str, new_qty: int, uow: AbstractUnitOfWork):
+def change_batch_quantity(
+    batchref: str, new_qty: int,
+    uow: AbstractUnitOfWork,
+):
     with uow:
         batch = uow.batches.get(reference=batchref)
         batch.change_purchased_quantity(new_qty)
