@@ -207,7 +207,8 @@ handlers so that they have the same inputs, an event and a UoW:
 [source,python]
 ----
 def add_batch(
-        event: events.BatchCreated, uow: unit_of_work.AbstractUnitOfWork
+    event: events.BatchCreated,
+    uow: unit_of_work.AbstractUnitOfWork,
 ):
     with uow:
         product = uow.products.get(sku=event.sku)
@@ -215,18 +216,20 @@ def add_batch(
 
 
 def allocate(
-        event: events.AllocationRequired, uow: unit_of_work.AbstractUnitOfWork
+    event: events.AllocationRequired,
+    uow: unit_of_work.AbstractUnitOfWork,
 ) -> str:
     line = OrderLine(event.orderid, event.sku, event.qty)
     ...
 
 
 def send_out_of_stock_notification(
-        event: events.OutOfStock, uow: unit_of_work.AbstractUnitOfWork,
+    event: events.OutOfStock,
+    uow: unit_of_work.AbstractUnitOfWork,
 ):
     email.send(
-        'stock@made.com',
-        f'Out of stock for {event.sku}',
+        "stock@made.com",
+        f"Out of stock for {event.sku}",
     )
 ----
 ====
@@ -240,9 +243,9 @@ The change might be clearer as a diff:
 [source,diff]
 ----
  def add_batch(
--        ref: str, sku: str, qty: int, eta: Optional[date],
--        uow: unit_of_work.AbstractUnitOfWork
-+        event: events.BatchCreated, uow: unit_of_work.AbstractUnitOfWork
+-    ref: str, sku: str, qty: int, eta: Optional[date],
++    event: events.BatchCreated,
+     uow: unit_of_work.AbstractUnitOfWork,
  ):
      with uow:
 -        product = uow.products.get(sku=sku)
@@ -251,9 +254,9 @@ The change might be clearer as a diff:
 
 
  def allocate(
--        orderid: str, sku: str, qty: int,
--        uow: unit_of_work.AbstractUnitOfWork
-+        event: events.AllocationRequired, uow: unit_of_work.AbstractUnitOfWork
+-    orderid: str, sku: str, qty: int,
++    event: events.AllocationRequired,
+     uow: unit_of_work.AbstractUnitOfWork,
  ) -> str:
 -    line = OrderLine(orderid, sku, qty)
 +    line = OrderLine(event.orderid, event.sku, event.qty)
@@ -261,7 +264,8 @@ The change might be clearer as a diff:
 
 +
 +def send_out_of_stock_notification(
-+        event: events.OutOfStock, uow: unit_of_work.AbstractUnitOfWork,
++    event: events.OutOfStock,
++    uow: unit_of_work.AbstractUnitOfWork,
 +):
 +    email.send(
      ...
@@ -325,7 +329,10 @@ bus _pull_ events from the UoW.
 [source,python]
 [role="non-head"]
 ----
-def handle(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):  #<1>
+def handle(
+    event: events.Event,
+    uow: unit_of_work.AbstractUnitOfWork,  #<1>
+):
     queue = [event]  #<2>
     while queue:
         event = queue.pop(0)  #<3>
@@ -353,11 +360,10 @@ In _unit_of_work.py_, `publish_events()` becomes a less active method,
 [source,diff]
 ----
 -from . import messagebus  #<1>
--
 
 
  class AbstractUnitOfWork(abc.ABC):
-@@ -23,13 +21,11 @@ class AbstractUnitOfWork(abc.ABC):
+@@ -22,13 +21,11 @@ class AbstractUnitOfWork(abc.ABC):
 
      def commit(self):
          self._commit()
@@ -399,7 +405,6 @@ message bus, rather than invoking service-layer functions directly:
 [source,diff]
 ----
 class TestAddBatch:
-
      def test_for_new_product(self):
          uow = FakeUnitOfWork()
 -        services.add_batch("b1", "CRUNCHY-ARMCHAIR", 100, None, uow)
@@ -412,7 +417,6 @@ class TestAddBatch:
 ...
 
  class TestAllocate:
-
      def test_returns_allocation(self):
          uow = FakeUnitOfWork()
 -        services.add_batch("batch1", "COMPLICATED-LAMP", 100, None, uow)
@@ -442,7 +446,10 @@ a temporary hack on our message bus to let it return events:
 ====
 [source,diff]
 ----
- def handle(event: events.Event, uow: unit_of_work.AbstractUnitOfWork):
+ def handle(
+     event: events.Event,
+     uow: unit_of_work.AbstractUnitOfWork,
+ ):
 +    results = []
      queue = [event]
      while queue:
@@ -471,16 +478,16 @@ We'll come back to fix this wart in <<chapter_12_cqrs>>.
 ====
 [source,diff]
 ----
- @app.route("/allocate", methods=['POST'])
+ @app.route("/allocate", methods=["POST"])
  def allocate_endpoint():
      try:
 -        batchref = services.allocate(
--            request.json['orderid'],  #<1>
--            request.json['sku'],
--            request.json['qty'],
+-            request.json["orderid"],  #<1>
+-            request.json["sku"],
+-            request.json["qty"],
 -            unit_of_work.SqlAlchemyUnitOfWork(),
 +        event = events.AllocationRequired(  #<2>
-+            request.json['orderid'], request.json['sku'], request.json['qty'],
++            request.json["orderid"], request.json["sku"], request.json["qty"]
          )
 +        results = messagebus.handle(event, unit_of_work.SqlAlchemyUnitOfWork())  #<3>
 +        batchref = results.pop(0)
@@ -596,7 +603,6 @@ look like:
 [source,python]
 ----
 class TestChangeBatchQuantity:
-
     def test_changes_available_quantity(self):
         uow = FakeUnitOfWork()
         messagebus.handle(
@@ -608,7 +614,6 @@ class TestChangeBatchQuantity:
         messagebus.handle(events.BatchQuantityChanged("batch1", 50), uow)
 
         assert batch.available_quantity == 50  #<1>
-
 
     def test_reallocates_if_necessary(self):
         uow = FakeUnitOfWork()
@@ -653,7 +658,8 @@ Our new handler is very simple:
 [source,python]
 ----
 def change_batch_quantity(
-        event: events.BatchQuantityChanged, uow: unit_of_work.AbstractUnitOfWork
+    event: events.BatchQuantityChanged,
+    uow: unit_of_work.AbstractUnitOfWork,
 ):
     with uow:
         product = uow.products.get_by_batchref(batchref=event.ref)
@@ -705,9 +711,12 @@ class SqlAlchemyRepository(AbstractRepository):
         return self.session.query(model.Product).filter_by(sku=sku).first()
 
     def _get_by_batchref(self, batchref):
-        return self.session.query(model.Product).join(model.Batch).filter(
-            orm.batches.c.reference == batchref,
-        ).first()
+        return (
+            self.session.query(model.Product)
+            .join(model.Batch)
+            .filter(orm.batches.c.reference == batchref)
+            .first()
+        )
 
 ----
 ====
@@ -728,10 +737,10 @@ class FakeRepository(repository.AbstractRepository):
         return next((p for p in self._products if p.sku == sku), None)
 
     def _get_by_batchref(self, batchref):
-        return next((
-            p for p in self._products for b in p.batches
-            if b.reference == batchref
-        ), None)
+        return next(
+            (p for p in self._products for b in p.batches if b.reference == batchref),
+            None,
+        )
 ----
 ====
 
@@ -746,12 +755,14 @@ NOTE: We're adding a query to our repository to make this use case easier to
     on managing complex queries.
     ((("aggregates", "query on repository returning single aggregate")))
 
+
 ==== A New Method on the Domain Model
 
 ((("domain model", "new method on, change_batch_quantity")))
-We add the new method to the model, which does the quantity change and
-deallocation(s) inline and publishes a new event.  We also modify the existing
-allocate function to publish an event:
+We add the new method to the model,
+which does the quantity change and deallocation(s) inline
+and publishes a new event.
+We also modify the existing allocate function to publish an event:
 
 
 [[change_batch_model_layer]]
@@ -794,7 +805,6 @@ HANDLERS = {
     events.BatchQuantityChanged: [handlers.change_batch_quantity],
     events.AllocationRequired: [handlers.allocate],
     events.OutOfStock: [handlers.send_out_of_stock_notification],
-
 }  # type: Dict[Type[events.Event], List[Callable]]
 ----
 ====
@@ -831,7 +841,6 @@ it record what events it sees:
 [role="non-head"]
 ----
 class FakeUnitOfWorkWithFakeMessageBus(FakeUnitOfWork):
-
     def __init__(self):
         super().__init__()
         self.events_published = []  # type: List[events.Event]
@@ -878,8 +887,8 @@ def test_reallocates_if_necessary_isolated():
     # assert on new events emitted rather than downstream side-effects
     [reallocation_event] = uow.events_published
     assert isinstance(reallocation_event, events.AllocationRequired)
-    assert reallocation_event.orderid in {'order1', 'order2'}
-    assert reallocation_event.sku == 'INDIFFERENT-TABLE'
+    assert reallocation_event.orderid in {"order1", "order2"}
+    assert reallocation_event.sku == "INDIFFERENT-TABLE"
 ----
 ====
 
@@ -1000,4 +1009,3 @@ a|
 Now, you may be wondering, where are those `BatchQuantityChanged` events
 going to come from? The answer is revealed in a couple chapters' time.  But
 first, let's talk about <<chapter_10_commands,events versus commands>>.
-
