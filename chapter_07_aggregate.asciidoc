@@ -358,20 +358,17 @@ Let's see how that looks in code form:
 [role="non-head"]
 ----
 class Product:
-
     def __init__(self, sku: str, batches: List[Batch]):
         self.sku = sku  #<1>
         self.batches = batches  #<2>
 
     def allocate(self, line: OrderLine) -> str:  #<3>
         try:
-            batch = next(
-                b for b in sorted(self.batches) if b.can_allocate(line)
-            )
+            batch = next(b for b in sorted(self.batches) if b.can_allocate(line))
             batch.allocate(line)
             return batch.reference
         except StopIteration:
-            raise OutOfStock(f'Out of stock for sku {line.sku}')
+            raise OutOfStock(f"Out of stock for sku {line.sku}")
 ----
 ====
 
@@ -499,8 +496,8 @@ layer to see how it looks with `Product` as its main entrypoint:
 [source,python]
 ----
 def add_batch(
-        ref: str, sku: str, qty: int, eta: Optional[date],
-        uow: unit_of_work.AbstractUnitOfWork
+    ref: str, sku: str, qty: int, eta: Optional[date],
+    uow: unit_of_work.AbstractUnitOfWork,
 ):
     with uow:
         product = uow.products.get(sku=sku)
@@ -512,14 +509,14 @@ def add_batch(
 
 
 def allocate(
-        orderid: str, sku: str, qty: int,
-        uow: unit_of_work.AbstractUnitOfWork
+    orderid: str, sku: str, qty: int,
+    uow: unit_of_work.AbstractUnitOfWork,
 ) -> str:
     line = OrderLine(orderid, sku, qty)
     with uow:
         product = uow.products.get(sku=line.sku)
         if product is None:
-            raise InvalidSku(f'Invalid sku {line.sku}')
+            raise InvalidSku(f"Invalid sku {line.sku}")
         batchref = product.allocate(line)
         uow.commit()
     return batchref
@@ -743,7 +740,6 @@ you might decide the cleanest trade-off is to put them in the domain:
 [source,python]
 ----
 class Product:
-
     def __init__(self, sku: str, batches: List[Batch], version_number: int = 0):  #<1>
         self.sku = sku
         self.batches = batches
@@ -751,14 +747,12 @@ class Product:
 
     def allocate(self, line: OrderLine) -> str:
         try:
-            batch = next(
-                b for b in sorted(self.batches) if b.can_allocate(line)
-            )
+            batch = next(b for b in sorted(self.batches) if b.can_allocate(line))
             batch.allocate(line)
             self.version_number += 1  #<1>
             return batch.reference
         except StopIteration:
-            raise OutOfStock(f'Out of stock for sku {line.sku}')
+            raise OutOfStock(f"Out of stock for sku {line.sku}")
 ----
 ====
 
@@ -847,18 +841,18 @@ def test_concurrent_updates_to_version_are_not_allowed(postgres_session_factory)
     )
     assert version == 2  #<2>
     [exception] = exceptions
-    assert 'could not serialize access due to concurrent update' in str(exception)  #<3>
+    assert "could not serialize access due to concurrent update" in str(exception)  #<3>
 
-    orders = list(session.execute(
+    orders = session.execute(
         "SELECT orderid FROM allocations"
         " JOIN batches ON allocations.batch_id = batches.id"
         " JOIN order_lines ON allocations.orderline_id = order_lines.id"
         " WHERE order_lines.sku=:sku",
         dict(sku=sku),
-    ))
-    assert len(orders) == 1  #<4>
+    )
+    assert orders.rowcount == 1  #<4>
     with unit_of_work.SqlAlchemyUnitOfWork() as uow:
-        uow.session.execute('select 1')
+        uow.session.execute("select 1")
 ----
 ====
 
@@ -885,10 +879,12 @@ on our session:
 ====
 [source,python]
 ----
-DEFAULT_SESSION_FACTORY = sessionmaker(bind=create_engine(
-    config.get_postgres_uri(),
-    isolation_level="REPEATABLE READ",
-))
+DEFAULT_SESSION_FACTORY = sessionmaker(
+    bind=create_engine(
+        config.get_postgres_uri(),
+        isolation_level="REPEATABLE READ",
+    )
+)
 ----
 ====
 
@@ -927,10 +923,12 @@ query time:
 [role="non-head"]
 ----
     def get(self, sku):
-        return self.session.query(model.Product) \
-                           .filter_by(sku=sku) \
-                           .with_for_update() \
-                           .first()
+        return (
+            self.session.query(model.Product)
+            .filter_by(sku=sku)
+            .with_for_update()
+            .first()
+        )
 ----
 ====
 
