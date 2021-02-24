@@ -76,25 +76,25 @@ As a one-off hack, this _might_ be OK:
 [source,python]
 [role="skip"]
 ----
-@app.route("/allocate", methods=['POST'])
+@app.route("/allocate", methods=["POST"])
 def allocate_endpoint():
     line = model.OrderLine(
-        request.json['orderid'],
-        request.json['sku'],
-        request.json['qty'],
+        request.json["orderid"],
+        request.json["sku"],
+        request.json["qty"],
     )
     try:
         uow = unit_of_work.SqlAlchemyUnitOfWork()
         batchref = services.allocate(line, uow)
     except (model.OutOfStock, services.InvalidSku) as e:
         send_mail(
-            'out of stock',
-            'stock_admin@made.com',
-            f'{line.orderid} - {line.sku}'
+            "out of stock",
+            "stock_admin@made.com",
+            f"{line.orderid} - {line.sku}"
         )
-        return jsonify({'message': str(e)}), 400
+        return {"message": str(e)}, 400
 
-    return jsonify({'batchref': batchref}), 201
+    return {"batchref": batchref}, 201
 ----
 ====
 
@@ -119,13 +119,11 @@ the source, in the model:
 ----
     def allocate(self, line: OrderLine) -> str:
         try:
-            batch = next(
-                b for b in sorted(self.batches) if b.can_allocate(line)
-            )
+            batch = next(b for b in sorted(self.batches) if b.can_allocate(line))
             #...
         except StopIteration:
-            email.send_mail('stock@made.com', f'Out of stock for {line.sku}')
-            raise OutOfStock(f'Out of stock for sku {line.sku}')
+            email.send_mail("stock@made.com", f"Out of stock for {line.sku}")
+            raise OutOfStock(f"Out of stock for sku {line.sku}")
 ----
 ====
 
@@ -155,20 +153,20 @@ the feature feels out of place:
 [role="non-head"]
 ----
 def allocate(
-        orderid: str, sku: str, qty: int,
-        uow: unit_of_work.AbstractUnitOfWork
+    orderid: str, sku: str, qty: int,
+    uow: unit_of_work.AbstractUnitOfWork,
 ) -> str:
     line = OrderLine(orderid, sku, qty)
     with uow:
         product = uow.products.get(sku=line.sku)
         if product is None:
-            raise InvalidSku(f'Invalid sku {line.sku}')
+            raise InvalidSku(f"Invalid sku {line.sku}")
         try:
             batchref = product.allocate(line)
             uow.commit()
             return batchref
         except model.OutOfStock:
-            email.send_mail('stock@made.com', f'Out of stock for {line.sku}')
+            email.send_mail("stock@made.com", f"Out of stock for {line.sku}")
             raise
 ----
 ====
@@ -251,8 +249,10 @@ _domain_ so that we have _domain/model.py_ and _domain/events.py_):
 ----
 from dataclasses import dataclass
 
+
 class Event:  #<1>
     pass
+
 
 @dataclass
 class OutOfStock(Event):  #<2>
@@ -286,11 +286,11 @@ but it can't, it should _raise_ an event:
 [source,python]
 ----
 def test_records_out_of_stock_event_if_cannot_allocate():
-    batch = Batch('batch1', 'SMALL-FORK', 10, eta=today)
+    batch = Batch("batch1", "SMALL-FORK", 10, eta=today)
     product = Product(sku="SMALL-FORK", batches=[batch])
-    product.allocate(OrderLine('order1', 'SMALL-FORK', 10))
+    product.allocate(OrderLine("order1", "SMALL-FORK", 10))
 
-    allocation = product.allocate(OrderLine('order2', 'SMALL-FORK', 1))
+    allocation = product.allocate(OrderLine("order2", "SMALL-FORK", 1))
     assert product.events[-1] == events.OutOfStock(sku="SMALL-FORK")  #<1>
     assert allocation is None
 ----
@@ -309,7 +309,6 @@ Here's what the model looks like on the inside:
 [role="non-head"]
 ----
 class Product:
-
     def __init__(self, sku: str, batches: List[Batch], version_number: int = 0):
         self.sku = sku
         self.batches = batches
@@ -321,7 +320,7 @@ class Product:
             #...
         except StopIteration:
             self.events.append(events.OutOfStock(line.sku))  #<2>
-            # raise OutOfStock(f'Out of stock for sku {line.sku}')  #<3>
+            # raise OutOfStock(f"Out of stock for sku {line.sku}")  #<3>
             return None
 ----
 ====
@@ -369,14 +368,13 @@ def handle(event: events.Event):
 
 def send_out_of_stock_notification(event: events.OutOfStock):
     email.send_mail(
-        'stock@made.com',
-        f'Out of stock for {event.sku}',
+        "stock@made.com",
+        f"Out of stock for {event.sku}",
     )
 
 
 HANDLERS = {
     events.OutOfStock: [send_out_of_stock_notification],
-
 }  # type: Dict[Type[events.Event], List[Callable]]
 ----
 ====
@@ -446,14 +444,14 @@ from . import messagebus
 ...
 
 def allocate(
-        orderid: str, sku: str, qty: int,
-        uow: unit_of_work.AbstractUnitOfWork
+    orderid: str, sku: str, qty: int,
+    uow: unit_of_work.AbstractUnitOfWork,
 ) -> str:
     line = OrderLine(orderid, sku, qty)
     with uow:
         product = uow.products.get(sku=line.sku)
         if product is None:
-            raise InvalidSku(f'Invalid sku {line.sku}')
+            raise InvalidSku(f"Invalid sku {line.sku}")
         try:  #<1>
             batchref = product.allocate(line)
             uow.commit()
@@ -493,14 +491,14 @@ raised by the domain model:
 [role="skip"]
 ----
 def allocate(
-        orderid: str, sku: str, qty: int,
-        uow: unit_of_work.AbstractUnitOfWork
+    orderid: str, sku: str, qty: int,
+    uow: unit_of_work.AbstractUnitOfWork,
 ) -> str:
     line = OrderLine(orderid, sku, qty)
     with uow:
         product = uow.products.get(sku=line.sku)
         if product is None:
-            raise InvalidSku(f'Invalid sku {line.sku}')
+            raise InvalidSku(f"Invalid sku {line.sku}")
         batchref = product.allocate(line)
         uow.commit() #<1>
 
@@ -587,7 +585,6 @@ NOTE: Are you wondering what happens if one of the
 [source,python]
 ----
 class AbstractRepository(abc.ABC):
-
     def __init__(self):
         self.seen = set()  # type: Set[model.Product]  #<1>
 
@@ -610,9 +607,7 @@ class AbstractRepository(abc.ABC):
         raise NotImplementedError
 
 
-
 class SqlAlchemyRepository(AbstractRepository):
-
     def __init__(self, session):
         super().__init__()
         self.session = session
@@ -654,14 +649,14 @@ totally free of event-handling concerns:
 [source,python]
 ----
 def allocate(
-        orderid: str, sku: str, qty: int,
-        uow: unit_of_work.AbstractUnitOfWork
+    orderid: str, sku: str, qty: int,
+    uow: unit_of_work.AbstractUnitOfWork,
 ) -> str:
     line = OrderLine(orderid, sku, qty)
     with uow:
         product = uow.products.get(sku=line.sku)
         if product is None:
-            raise InvalidSku(f'Invalid sku {line.sku}')
+            raise InvalidSku(f"Invalid sku {line.sku}")
         batchref = product.allocate(line)
         uow.commit()
         return batchref
@@ -683,7 +678,6 @@ changes are minimal:
 [source,python]
 ----
 class FakeRepository(repository.AbstractRepository):
-
     def __init__(self, products):
         super().__init__()
         self._products = set(products)
