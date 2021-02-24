@@ -412,18 +412,19 @@ API to create batches, and then we'll test both inbound and outbound messages:
 def test_change_batch_quantity_leading_to_reallocation():
     # start with two batches and an order allocated to one of them  #<1>
     orderid, sku = random_orderid(), random_sku()
-    earlier_batch, later_batch = random_batchref('old'), random_batchref('newer')
-    api_client.post_to_add_batch(earlier_batch, sku, qty=10, eta='2011-01-01')  #<2>
-    api_client.post_to_add_batch(later_batch, sku, qty=10, eta='2011-01-02')
+    earlier_batch, later_batch = random_batchref("old"), random_batchref("newer")
+    api_client.post_to_add_batch(earlier_batch, sku, qty=10, eta="2011-01-01")  #<2>
+    api_client.post_to_add_batch(later_batch, sku, qty=10, eta="2011-01-02")
     response = api_client.post_to_allocate(orderid, sku, 10)  #<2>
-    assert response.json()['batchref'] == earlier_batch
+    assert response.json()["batchref"] == earlier_batch
 
-    subscription = redis_client.subscribe_to('line_allocated')  #<3>
+    subscription = redis_client.subscribe_to("line_allocated")  #<3>
 
     # change quantity on allocated batch so it's less than our order  #<1>
-    redis_client.publish_message('change_batch_quantity', {  #<3>
-        'batchref': earlier_batch, 'qty': 5
-    })
+    redis_client.publish_message(  #<3>
+        "change_batch_quantity",
+        {"batchref": earlier_batch, "qty": 5},
+    )
 
     # wait until we see a message saying the order has been reallocated  #<1>
     messages = []
@@ -433,9 +434,9 @@ def test_change_batch_quantity_leading_to_reallocation():
             if message:
                 messages.append(message)
                 print(messages)
-            data = json.loads(messages[-1]['data'])
-            assert data['orderid'] == orderid
-            assert data['batchref'] == later_batch
+            data = json.loads(messages[-1]["data"])
+            assert data["orderid"] == orderid
+            assert data["batchref"] == later_batch
 ----
 ====
 
@@ -487,16 +488,16 @@ r = redis.Redis(**config.get_redis_host_and_port())
 def main():
     orm.start_mappers()
     pubsub = r.pubsub(ignore_subscribe_messages=True)
-    pubsub.subscribe('change_batch_quantity')  #<1>
+    pubsub.subscribe("change_batch_quantity")  #<1>
 
     for m in pubsub.listen():
         handle_change_batch_quantity(m)
 
 
 def handle_change_batch_quantity(m):
-    logging.debug('handling %s', m)
-    data = json.loads(m['data'])  #<2>
-    cmd = commands.ChangeBatchQuantity(ref=data['batchref'], qty=data['qty'])  #<2>
+    logging.debug("handling %s", m)
+    data = json.loads(m["data"])  #<2>
+    cmd = commands.ChangeBatchQuantity(ref=data["batchref"], qty=data["qty"])  #<2>
     messagebus.handle(cmd, uow=unit_of_work.SqlAlchemyUnitOfWork())
 ----
 ====
@@ -519,7 +520,7 @@ r = redis.Redis(**config.get_redis_host_and_port())
 
 
 def publish(channel, event: events.Event):  #<1>
-    logging.debug('publishing: channel=%s, event=%s', channel, event)
+    logging.debug("publishing: channel=%s, event=%s", channel, event)
     r.publish(channel, json.dumps(asdict(event)))
 ----
 ====
@@ -566,10 +567,14 @@ class Product:
 
             batch.allocate(line)
             self.version_number += 1
-            self.events.append(events.Allocated(
-                orderid=line.orderid, sku=line.sku, qty=line.qty,
-                batchref=batch.reference,
-            ))
+            self.events.append(
+                events.Allocated(
+                    orderid=line.orderid,
+                    sku=line.sku,
+                    qty=line.qty,
+                    batchref=batch.reference,
+                )
+            )
             return batch.reference
 ----
 ====
@@ -601,9 +606,10 @@ Publishing the event uses our helper function from the Redis wrapper:
 [source,python]
 ----
 def publish_allocated_event(
-        event: events.Allocated, uow: unit_of_work.AbstractUnitOfWork,
+    event: events.Allocated,
+    uow: unit_of_work.AbstractUnitOfWork,
 ):
-    redis_eventpublisher.publish('line_allocated', event)
+    redis_eventpublisher.publish("line_allocated", event)
 ----
 ====
 
