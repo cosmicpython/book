@@ -139,7 +139,6 @@ Here's how the actual repository ends up looking:
 [source,python]
 ----
 class DjangoRepository(AbstractRepository):
-
     def add(self, batch):
         super().add(batch)
         self.update(batch)
@@ -148,9 +147,11 @@ class DjangoRepository(AbstractRepository):
         django_models.Batch.update_from_domain(batch)
 
     def _get(self, reference):
-        return django_models.Batch.objects.filter(
-            reference=reference
-        ).first().to_domain()
+        return (
+            django_models.Batch.objects.filter(reference=reference)
+            .first()
+            .to_domain()
+        )
 
     def list(self):
         return [b.to_domain() for b in django_models.Batch.objects.all()]
@@ -178,6 +179,7 @@ Those custom methods look something like this:
 ----
 from django.db import models
 from allocation.domain import model as domain_model
+
 
 class Batch(models.Model):
     reference = models.CharField(max_length=255)
@@ -250,6 +252,7 @@ The tests don't change too much:
 def insert_batch(ref, sku, qty, eta):  #<1>
     django_models.Batch.objects.create(reference=ref, sku=sku, qty=qty, eta=eta)
 
+
 def get_allocated_batch_ref(orderid, sku):  #<1>
     return django_models.Allocation.objects.get(
         line__orderid=orderid, line__sku=sku
@@ -258,17 +261,17 @@ def get_allocated_batch_ref(orderid, sku):  #<1>
 
 @pytest.mark.django_db(transaction=True)
 def test_uow_can_retrieve_a_batch_and_allocate_to_it():
-    insert_batch('batch1', 'HIPSTER-WORKBENCH', 100, None)
+    insert_batch("batch1", "HIPSTER-WORKBENCH", 100, None)
 
     uow = unit_of_work.DjangoUnitOfWork()
     with uow:
-        batch = uow.batches.get(reference='batch1')
-        line = model.OrderLine('o1', 'HIPSTER-WORKBENCH', 10)
+        batch = uow.batches.get(reference="batch1")
+        line = model.OrderLine("o1", "HIPSTER-WORKBENCH", 10)
         batch.allocate(line)
         uow.commit()
 
-    batchref = get_allocated_batch_ref('o1', 'HIPSTER-WORKBENCH')
-    assert batchref == 'batch1'
+    batchref = get_allocated_batch_ref("o1", "HIPSTER-WORKBENCH")
+    assert batchref == "batch1"
 
 
 @pytest.mark.django_db(transaction=True)  #<2>
@@ -301,7 +304,6 @@ would work:
 [source,python]
 ----
 class DjangoUnitOfWork(AbstractUnitOfWork):
-
     def __enter__(self):
         self.batches = repository.DjangoRepository()
         transaction.set_autocommit(False)  #<1>
@@ -353,35 +355,37 @@ thin wrapper around our service layer (which didn't change at all, by the way):
 ====
 [source,python]
 ----
-os.environ['DJANGO_SETTINGS_MODULE'] = 'djangoproject.django_project.settings'
+os.environ["DJANGO_SETTINGS_MODULE"] = "djangoproject.django_project.settings"
 django.setup()
+
 
 @csrf_exempt
 def add_batch(request):
     data = json.loads(request.body)
-    eta = data['eta']
+    eta = data["eta"]
     if eta is not None:
         eta = datetime.fromisoformat(eta).date()
     services.add_batch(
-        data['ref'], data['sku'], data['qty'], eta,
+        data["ref"], data["sku"], data["qty"], eta,
         unit_of_work.DjangoUnitOfWork(),
     )
-    return HttpResponse('OK', status=201)
+    return HttpResponse("OK", status=201)
+
 
 @csrf_exempt
 def allocate(request):
     data = json.loads(request.body)
     try:
         batchref = services.allocate(
-            data['orderid'],
-            data['sku'],
-            data['qty'],
+            data["orderid"],
+            data["sku"],
+            data["qty"],
             unit_of_work.DjangoUnitOfWork(),
         )
     except (model.OutOfStock, services.InvalidSku) as e:
-        return JsonResponse({'message': str(e)}, status=400)
+        return JsonResponse({"message": str(e)}, status=400)
 
-    return JsonResponse({'batchref': batchref}, status=201)
+    return JsonResponse({"batchref": batchref}, status=201)
 ----
 ====
 
