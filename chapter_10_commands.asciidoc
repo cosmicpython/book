@@ -83,11 +83,13 @@ What kinds of commands do we have in our system right now?
 class Command:
     pass
 
+
 @dataclass
 class Allocate(Command):  #<1>
     orderid: str
     sku: str
     qty: int
+
 
 @dataclass
 class CreateBatch(Command):  #<2>
@@ -95,6 +97,7 @@ class CreateBatch(Command):  #<2>
     sku: str
     qty: int
     eta: Optional[date] = None
+
 
 @dataclass
 class ChangeBatchQuantity(Command):  #<3>
@@ -126,7 +129,10 @@ but not exactly the same.  Let's see how our message bus changes:
 Message = Union[commands.Command, events.Event]
 
 
-def handle(message: Message, uow: unit_of_work.AbstractUnitOfWork):  #<1>
+def handle(  #<1>
+    message: Message,
+    uow: unit_of_work.AbstractUnitOfWork,
+):
     results = []
     queue = [message]
     while queue:
@@ -137,7 +143,7 @@ def handle(message: Message, uow: unit_of_work.AbstractUnitOfWork):  #<1>
             cmd_result = handle_command(message, queue, uow)  #<2>
             results.append(cmd_result)
         else:
-            raise Exception(f'{message} was not an Event or Command')
+            raise Exception(f"{message} was not an Event or Command")
     return results
 ----
 ====
@@ -158,15 +164,15 @@ Here's how we handle events:
 def handle_event(
     event: events.Event,
     queue: List[Message],
-    uow: unit_of_work.AbstractUnitOfWork
+    uow: unit_of_work.AbstractUnitOfWork,
 ):
     for handler in EVENT_HANDLERS[type(event)]:  #<1>
         try:
-            logger.debug('handling event %s with handler %s', event, handler)
+            logger.debug("handling event %s with handler %s", event, handler)
             handler(event, uow=uow)
             queue.extend(uow.collect_new_events())
         except Exception:
-            logger.exception('Exception handling event %s', event)
+            logger.exception("Exception handling event %s", event)
             continue  #<2>
 ----
 ====
@@ -188,16 +194,16 @@ And here's how we do commands:
 def handle_command(
     command: commands.Command,
     queue: List[Message],
-    uow: unit_of_work.AbstractUnitOfWork
+    uow: unit_of_work.AbstractUnitOfWork,
 ):
-    logger.debug('handling command %s', command)
+    logger.debug("handling command %s", command)
     try:
         handler = COMMAND_HANDLERS[type(command)]  #<1>
         result = handler(command, uow=uow)
         queue.extend(uow.collect_new_events())
         return result  #<3>
     except Exception:
-        logger.exception('Exception handling command %s', command)
+        logger.exception("Exception handling command %s", command)
         raise  #<2>
 ----
 ====
@@ -433,15 +439,15 @@ Let's look again at the `handle_event` method from our message bus:
 def handle_event(
     event: events.Event,
     queue: List[Message],
-    uow: unit_of_work.AbstractUnitOfWork
+    uow: unit_of_work.AbstractUnitOfWork,
 ):
     for handler in EVENT_HANDLERS[type(event)]:
         try:
-            logger.debug('handling event %s with handler %s', event, handler)
+            logger.debug("handling event %s with handler %s", event, handler)
             handler(event, uow=uow)
             queue.extend(uow.collect_new_events())
         except Exception:
-            logger.exception('Exception handling event %s', event)
+            logger.exception("Exception handling event %s", event)
             continue
 ----
 ====
@@ -487,9 +493,8 @@ from tenacity import Retrying, RetryError, stop_after_attempt, wait_exponential 
 def handle_event(
     event: events.Event,
     queue: List[Message],
-    uow: unit_of_work.AbstractUnitOfWork
+    uow: unit_of_work.AbstractUnitOfWork,
 ):
-
     for handler in EVENT_HANDLERS[type(event)]:
         try:
             for attempt in Retrying(  #<2>
@@ -498,12 +503,12 @@ def handle_event(
             ):
 
                 with attempt:
-                    logger.debug('handling event %s with handler %s', event, handler)
+                    logger.debug("handling event %s with handler %s", event, handler)
                     handler(event, uow=uow)
                     queue.extend(uow.collect_new_events())
         except RetryError as retry_failure:
             logger.error(
-                'Failed to handle event %s times, giving up!',
+                "Failed to handle event %s times, giving up!",
                 retry_failure.last_attempt.attempt_number
             )
             continue
