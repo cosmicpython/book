@@ -56,7 +56,7 @@ We wrote down these rules as unit tests at the beginning of the book:
 ----
 def test_allocating_to_a_batch_reduces_the_available_quantity():
     batch = Batch("batch-001", "SMALL-TABLE", qty=20, eta=date.today())
-    line = OrderLine('order-ref', "SMALL-TABLE", 2)
+    line = OrderLine("order-ref", "SMALL-TABLE", 2)
 
     batch.allocate(line)
 
@@ -222,16 +222,16 @@ provide a new read-only endpoint to retrieve allocation state:
 ====
 [source,python]
 ----
-@pytest.mark.usefixtures('postgres_db')
-@pytest.mark.usefixtures('restart_api')
+@pytest.mark.usefixtures("postgres_db")
+@pytest.mark.usefixtures("restart_api")
 def test_happy_path_returns_202_and_batch_is_allocated():
     orderid = random_orderid()
-    sku, othersku = random_sku(), random_sku('other')
+    sku, othersku = random_sku(), random_sku("other")
     earlybatch = random_batchref(1)
     laterbatch = random_batchref(2)
     otherbatch = random_batchref(3)
-    api_client.post_to_add_batch(laterbatch, sku, 100, '2011-01-02')
-    api_client.post_to_add_batch(earlybatch, sku, 100, '2011-01-01')
+    api_client.post_to_add_batch(laterbatch, sku, 100, "2011-01-02")
+    api_client.post_to_add_batch(earlybatch, sku, 100, "2011-01-01")
     api_client.post_to_add_batch(otherbatch, othersku, 100, None)
 
     r = api_client.post_to_allocate(orderid, sku, qty=3)
@@ -240,19 +240,19 @@ def test_happy_path_returns_202_and_batch_is_allocated():
     r = api_client.get_allocation(orderid)
     assert r.ok
     assert r.json() == [
-        {'sku': sku, 'batchref': earlybatch},
+        {"sku": sku, "batchref": earlybatch},
     ]
 
 
-@pytest.mark.usefixtures('postgres_db')
-@pytest.mark.usefixtures('restart_api')
+@pytest.mark.usefixtures("postgres_db")
+@pytest.mark.usefixtures("restart_api")
 def test_unhappy_path_returns_400_and_error_message():
     unknown_sku, orderid = random_sku(), random_orderid()
     r = api_client.post_to_allocate(
-        orderid, unknown_sku, qty=20, expect_success=False,
+        orderid, unknown_sku, qty=20, expect_success=False
     )
     assert r.status_code == 400
-    assert r.json()['message'] == f'Invalid sku {unknown_sku}'
+    assert r.json()["message"] == f"Invalid sku {unknown_sku}"
 
     r = api_client.get_allocation(orderid)
     assert r.status_code == 404
@@ -272,12 +272,12 @@ OK, what might the Flask app look like?
 from allocation import views
 ...
 
-@app.route("/allocations/<orderid>", methods=['GET'])
+@app.route("/allocations/<orderid>", methods=["GET"])
 def allocations_view_endpoint(orderid):
     uow = unit_of_work.SqlAlchemyUnitOfWork()
     result = views.allocations(orderid, uow)  #<1>
     if not result:
-        return 'not found', 404
+        return "not found", 404
     return jsonify(result), 200
 ----
 ====
@@ -304,17 +304,20 @@ object:
 ----
 from allocation.service_layer import unit_of_work
 
+
 def allocations(orderid: str, uow: unit_of_work.SqlAlchemyUnitOfWork):
     with uow:
-        results = list(uow.session.execute(
-            'SELECT ol.sku, b.reference'
-            ' FROM allocations AS a'
-            ' JOIN batches AS b ON a.batch_id = b.id'
-            ' JOIN order_lines AS ol ON a.orderline_id = ol.id'
-            ' WHERE ol.orderid = :orderid',
-            dict(orderid=orderid)
-        ))
-    return [{'sku': sku, 'batchref': batchref} for sku, batchref in results]
+        results = uow.session.execute(
+            """
+            SELECT ol.sku, b.reference
+            FROM allocations AS a
+            JOIN batches AS b ON a.batch_id = b.id
+            JOIN order_lines AS ol ON a.orderline_id = ol.id
+            WHERE ol.orderid = :orderid
+            """,
+            dict(orderid=orderid),
+        )
+    return [{"sku": sku, "batchref": batchref} for sku, batchref in results]
 ----
 ====
 
@@ -359,18 +362,18 @@ at least one integration test.  Something like this:
 ----
 def test_allocations_view(sqlite_session_factory):
     uow = unit_of_work.SqlAlchemyUnitOfWork(sqlite_session_factory)
-    messagebus.handle(commands.CreateBatch('sku1batch', 'sku1', 50, None), uow)  #<1>
-    messagebus.handle(commands.CreateBatch('sku2batch', 'sku2', 50, today), uow)
-    messagebus.handle(commands.Allocate('order1', 'sku1', 20), uow)
-    messagebus.handle(commands.Allocate('order1', 'sku2', 20), uow)
+    messagebus.handle(commands.CreateBatch("sku1batch", "sku1", 50, None), uow)  #<1>
+    messagebus.handle(commands.CreateBatch("sku2batch", "sku2", 50, today), uow)
+    messagebus.handle(commands.Allocate("order1", "sku1", 20), uow)
+    messagebus.handle(commands.Allocate("order1", "sku2", 20), uow)
     # add a spurious batch and order to make sure we're getting the right ones
-    messagebus.handle(commands.CreateBatch('sku1batch-later', 'sku1', 50, today), uow)
-    messagebus.handle(commands.Allocate('otherorder', 'sku1', 30), uow)
-    messagebus.handle(commands.Allocate('otherorder', 'sku2', 10), uow)
+    messagebus.handle(commands.CreateBatch("sku1batch-later", "sku1", 50, today), uow)
+    messagebus.handle(commands.Allocate("otherorder", "sku1", 30), uow)
+    messagebus.handle(commands.Allocate("otherorder", "sku2", 10), uow)
 
-    assert views.allocations('order1', uow) == [
-        {'sku': 'sku1', 'batchref': 'sku1batch'},
-        {'sku': 'sku2', 'batchref': 'sku2batch'},
+    assert views.allocations("order1", uow) == [
+        {"sku": "sku1", "batchref": "sku1batch"},
+        {"sku": "sku2", "batchref": "sku2batch"},
     ]
 ----
 ====
@@ -534,7 +537,7 @@ def allocations(orderid: str, uow: unit_of_work.AbstractUnitOfWork):
             model.OrderLine.orderid == orderid
         )
         return [
-            {'sku': b.sku, 'batchref': b.batchref}
+            {"sku": b.sku, "batchref": b.batchref}
             for b in batches
         ]
 ----
@@ -599,10 +602,12 @@ we made it nicer...
 ----
 def allocations(orderid: str, uow: unit_of_work.SqlAlchemyUnitOfWork):
     with uow:
-        results = list(uow.session.execute(
-            'SELECT sku, batchref FROM allocations_view WHERE orderid = :orderid',
-            dict(orderid=orderid)
-        ))
+        results = uow.session.execute(
+            """
+            SELECT sku, batchref FROM allocations_view WHERE orderid = :orderid
+            """,
+            dict(orderid=orderid),
+        )
         ...
 ----
 ====
@@ -615,10 +620,11 @@ def allocations(orderid: str, uow: unit_of_work.SqlAlchemyUnitOfWork):
 [source,python]
 ----
 allocations_view = Table(
-    'allocations_view', metadata,
-    Column('orderid', String(255)),
-    Column('sku', String(255)),
-    Column('batchref', String(255)),
+    "allocations_view",
+    metadata,
+    Column("orderid", String(255)),
+    Column("sku", String(255)),
+    Column("batchref", String(255)),
 )
 ----
 ====
@@ -666,7 +672,7 @@ We add a second handler to the `Allocated` event:
 EVENT_HANDLERS = {
     events.Allocated: [
         handlers.publish_allocated_event,
-        handlers.add_allocation_to_read_model
+        handlers.add_allocation_to_read_model,
     ],
 ----
 ====
@@ -681,13 +687,16 @@ Here's what our update-view-model code looks like:
 ----
 
 def add_allocation_to_read_model(
-        event: events.Allocated, uow: unit_of_work.SqlAlchemyUnitOfWork,
+    event: events.Allocated,
+    uow: unit_of_work.SqlAlchemyUnitOfWork,
 ):
     with uow:
         uow.session.execute(
-            'INSERT INTO allocations_view (orderid, sku, batchref)'
-            ' VALUES (:orderid, :sku, :batchref)',
-            dict(orderid=event.orderid, sku=event.sku, batchref=event.batchref)
+            """
+            INSERT INTO allocations_view (orderid, sku, batchref)
+            VALUES (:orderid, :sku, :batchref)
+            """,
+            dict(orderid=event.orderid, sku=event.sku, batchref=event.batchref),
         )
         uow.commit()
 ----
@@ -713,12 +722,15 @@ events.Deallocated: [
 ...
 
 def remove_allocation_from_read_model(
-        event: events.Deallocated, uow: unit_of_work.SqlAlchemyUnitOfWork,
+    event: events.Deallocated,
+    uow: unit_of_work.SqlAlchemyUnitOfWork,
 ):
     with uow:
         uow.session.execute(
-            'DELETE FROM allocations_view '
-            ' WHERE orderid = :orderid AND sku = :sku',
+            """
+            DELETE FROM allocations_view
+            WHERE orderid = :orderid AND sku = :sku
+            ...
 ----
 ====
 
@@ -818,6 +830,7 @@ Just watch:
 def add_allocation_to_read_model(event: events.Allocated, _):
     redis_eventpublisher.update_readmodel(event.orderid, event.sku, event.batchref)
 
+
 def remove_allocation_from_read_model(event: events.Deallocated, _):
     redis_eventpublisher.update_readmodel(event.orderid, event.sku, None)
 ----
@@ -851,10 +864,10 @@ And the view itself changes very slightly to adapt to its new backend:
 [source,python]
 [role="non-head"]
 ----
-def allocations(orderid):
+def allocations(orderid: str):
     batches = redis_eventpublisher.get_readmodel(orderid)
     return [
-        {'batchref': b.decode(), 'sku': s.decode()}
+        {"batchref": b.decode(), "sku": s.decode()}
         for s, b in batches.items()
     ]
 ----
