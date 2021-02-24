@@ -68,8 +68,8 @@ Let's see the unit of work (or UoW, which we pronounce "you-wow") in action. Her
 [source,python]
 ----
 def allocate(
-        orderid: str, sku: str, qty: int,
-        uow: unit_of_work.AbstractUnitOfWork
+    orderid: str, sku: str, qty: int,
+    uow: unit_of_work.AbstractUnitOfWork,
 ) -> str:
     line = OrderLine(orderid, sku, qty)
     with uow:  #<1>
@@ -128,18 +128,18 @@ Here are our integration tests for the UOW:
 ----
 def test_uow_can_retrieve_a_batch_and_allocate_to_it(session_factory):
     session = session_factory()
-    insert_batch(session, 'batch1', 'HIPSTER-WORKBENCH', 100, None)
+    insert_batch(session, "batch1", "HIPSTER-WORKBENCH", 100, None)
     session.commit()
 
     uow = unit_of_work.SqlAlchemyUnitOfWork(session_factory)  #<1>
     with uow:
-        batch = uow.batches.get(reference='batch1')  #<2>
-        line = model.OrderLine('o1', 'HIPSTER-WORKBENCH', 10)
+        batch = uow.batches.get(reference="batch1")  #<2>
+        line = model.OrderLine("o1", "HIPSTER-WORKBENCH", 10)
         batch.allocate(line)
         uow.commit()  #<3>
 
-    batchref = get_allocated_batch_ref(session, 'o1', 'HIPSTER-WORKBENCH')
-    assert batchref == 'batch1'
+    batchref = get_allocated_batch_ref(session, "o1", "HIPSTER-WORKBENCH")
+    assert batchref == "batch1"
 ----
 ====
 
@@ -162,21 +162,21 @@ like this:
 ----
 def insert_batch(session, ref, sku, qty, eta):
     session.execute(
-        'INSERT INTO batches (reference, sku, _purchased_quantity, eta)'
-        ' VALUES (:ref, :sku, :qty, :eta)',
-        dict(ref=ref, sku=sku, qty=qty, eta=eta)
+        "INSERT INTO batches (reference, sku, _purchased_quantity, eta)"
+        " VALUES (:ref, :sku, :qty, :eta)",
+        dict(ref=ref, sku=sku, qty=qty, eta=eta),
     )
 
 
 def get_allocated_batch_ref(session, orderid, sku):
     [[orderlineid]] = session.execute(
-        'SELECT id FROM order_lines WHERE orderid=:orderid AND sku=:sku',
-        dict(orderid=orderid, sku=sku)
+        "SELECT id FROM order_lines WHERE orderid=:orderid AND sku=:sku",
+        dict(orderid=orderid, sku=sku),
     )
     [[batchref]] = session.execute(
-        'SELECT b.reference FROM allocations JOIN batches AS b ON batch_id = b.id'
-        ' WHERE orderline_id=:orderlineid',
-        dict(orderlineid=orderlineid)
+        "SELECT b.reference FROM allocations JOIN batches AS b ON batch_id = b.id"
+        " WHERE orderline_id=:orderlineid",
+        dict(orderlineid=orderlineid),
     )
     return batchref
 ----
@@ -248,12 +248,14 @@ database session:
 ====
 [source,python]
 ----
-DEFAULT_SESSION_FACTORY = sessionmaker(bind=create_engine(  #<1>
-    config.get_postgres_uri(),
-))
+DEFAULT_SESSION_FACTORY = sessionmaker(  #<1>
+    bind=create_engine(
+        config.get_postgres_uri(),
+    )
+)
+
 
 class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
-
     def __init__(self, session_factory=DEFAULT_SESSION_FACTORY):
         self.session_factory = session_factory  #<1>
 
@@ -271,7 +273,6 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 
     def rollback(self):  #<4>
         self.session.rollback()
-
 ----
 ====
 
@@ -313,7 +314,6 @@ Here's how we use a fake UoW in our service-layer tests:
 [source,python]
 ----
 class FakeUnitOfWork(unit_of_work.AbstractUnitOfWork):
-
     def __init__(self):
         self.batches = FakeRepository([])  #<1>
         self.committed = False  #<2>
@@ -323,7 +323,6 @@ class FakeUnitOfWork(unit_of_work.AbstractUnitOfWork):
 
     def rollback(self):
         pass
-
 
 
 def test_add_batch():
@@ -400,8 +399,8 @@ Here's what our new service layer looks like:
 [source,python]
 ----
 def add_batch(
-        ref: str, sku: str, qty: int, eta: Optional[date],
-        uow: unit_of_work.AbstractUnitOfWork  #<1>
+    ref: str, sku: str, qty: int, eta: Optional[date],
+    uow: unit_of_work.AbstractUnitOfWork,  #<1>
 ):
     with uow:
         uow.batches.add(model.Batch(ref, sku, qty, eta))
@@ -409,22 +408,22 @@ def add_batch(
 
 
 def allocate(
-        orderid: str, sku: str, qty: int,
-        uow: unit_of_work.AbstractUnitOfWork  #<1>
+    orderid: str, sku: str, qty: int,
+    uow: unit_of_work.AbstractUnitOfWork,  #<1>
 ) -> str:
     line = OrderLine(orderid, sku, qty)
     with uow:
         batches = uow.batches.list()
         if not is_valid_sku(line.sku, batches):
-            raise InvalidSku(f'Invalid sku {line.sku}')
+            raise InvalidSku(f"Invalid sku {line.sku}")
         batchref = model.allocate(line, batches)
         uow.commit()
     return batchref
 ----
 ====
 
-<1> Our service layer now has only the one dependency, once again
-    on an _abstract_ UoW.
+<1> Our service layer now has only the one dependency,
+    once again on an _abstract_ UoW.
     ((("dependencies", "service layer dependency on abstract UoW")))
 
 
@@ -445,7 +444,7 @@ a couple of tests:
 def test_rolls_back_uncommitted_work_by_default(session_factory):
     uow = unit_of_work.SqlAlchemyUnitOfWork(session_factory)
     with uow:
-        insert_batch(uow.session, 'batch1', 'MEDIUM-PLINTH', 100, None)
+        insert_batch(uow.session, "batch1", "MEDIUM-PLINTH", 100, None)
 
     new_session = session_factory()
     rows = list(new_session.execute('SELECT * FROM "batches"'))
@@ -459,7 +458,7 @@ def test_rolls_back_on_error(session_factory):
     uow = unit_of_work.SqlAlchemyUnitOfWork(session_factory)
     with pytest.raises(MyException):
         with uow:
-            insert_batch(uow.session, 'batch1', 'LARGE-FORK', 100, None)
+            insert_batch(uow.session, "batch1", "LARGE-FORK", 100, None)
             raise MyException()
 
     new_session = session_factory()
