@@ -141,17 +141,18 @@ app:
 ----
 import os
 
+
 def get_postgres_uri():  #<1>
-    host = os.environ.get('DB_HOST', 'localhost')  #<2>
-    port = 54321 if host == 'localhost' else 5432
-    password = os.environ.get('DB_PASSWORD', 'abc123')
-    user, db_name = 'allocation', 'allocation'
+    host = os.environ.get("DB_HOST", "localhost")  #<2>
+    port = 54321 if host == "localhost" else 5432
+    password = os.environ.get("DB_PASSWORD", "abc123")
+    user, db_name = "allocation", "allocation"
     return f"postgresql://{user}:{password}@{host}:{port}/{db_name}"
 
 
 def get_api_url():
-    host = os.environ.get('API_HOST', 'localhost')
-    port = 5005 if host == 'localhost' else 80
+    host = os.environ.get("API_HOST", "localhost")
+    port = 5005 if host == "localhost" else 80
     return f"http://{host}:{port}"
 ----
 ====
@@ -290,9 +291,7 @@ _src_ folder:
 from setuptools import setup
 
 setup(
-    name='allocation',
-    version='0.1',
-    packages=['allocation'],
+    name="allocation", version="0.1", packages=["allocation"],
 )
 ----
 ====
@@ -314,17 +313,14 @@ you'll expect to see:
 ====
 [source,dockerfile]
 ----
-FROM python:3.8-alpine
+FROM python:3.9-slim-buster
 
 <1>
-RUN apk add --no-cache --virtual .build-deps gcc postgresql-dev musl-dev python3-dev
-RUN apk add libpq
+# RUN apt install gcc libpq (no longer needed bc we use psycopg2-binary)
 
 <2>
 COPY requirements.txt /tmp/
 RUN pip install -r /tmp/requirements.txt
-
-RUN apk del --no-cache .build-deps
 
 <3>
 RUN mkdir -p /src
