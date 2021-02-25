@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 CHAPTERS = [
     'chapter_01_domain_model',
     'chapter_02_repository',
@@ -37,3 +39,6 @@ NO_EXERCISE = [
     "chapter_12_cqrs",
     "chapter_13_dependency_injection",
 ]
+
+if __name__ == "__main__":
+    print("\n".join(CHAPTERS + STANDALONE))
