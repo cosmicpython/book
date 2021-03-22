@@ -98,7 +98,10 @@ In order of notoriety, we know of three tools for managing complexity:
    obvious how to make them fit with the established tools of
    the Python world--Flask, Django, Celery, and so on.
 
-NOTE: Don't be put off if you're not working with (or interested in) microservices.  The vast majority of the patterns we discuss, including much of the event-driven architecture material, is absolutely applicable in a monolithic architecture.
+NOTE: Don't be put off if you're not working with (or interested in) microservices.
+    The vast majority of the patterns we discuss,
+    including much of the event-driven architecture material,
+    is absolutely applicable in a monolithic architecture.
 
 Our aim with this book is to introduce several classic architectural patterns
 and show how they support TDD, DDD, and event-driven services.  We hope
@@ -173,16 +176,20 @@ Some thoughts on testing and abstractions (Chapter <<chapter_03_abstractions,3>>
 ==== pass:[<a data-type="xref" data-xrefstyle="chap-num-title" href="#part2">#part2</a>]
 
 Event-driven architecture (Chapters <<chapter_08_events_and_message_bus,8>>-<<chapter_11_external_events,11>>)::
-    We introduce three more mutually reinforcing patterns: the Domain Events, Message Bus, and Handler patterns. _Domain events_ are a vehicle for capturing the idea that some
-    interactions with a system are triggers for others. We use  a _message
-    bus_ to allow actions to trigger events and call appropriate _handlers_.
-    We move on to discuss how events can be used as a pattern for integration
-    between services in a microservices architecture. Finally, we distinguish between _commands_ and _events_. Our application is now
-    fundamentally a message-processing system.
+    We introduce three more mutually reinforcing patterns:
+    the Domain Events, Message Bus, and Handler patterns.
+    _Domain events_ are a vehicle for capturing the idea that
+    some interactions with a system are triggers for others.
+    We use  a _message bus_ to allow actions to trigger events
+    and call appropriate _handlers_.
+    We move on to discuss how events can be used as a pattern
+    for integration between services in a microservices architecture.
+    Finally, we distinguish between _commands_ and _events_.
+    Our application is now fundamentally a message-processing system.
 
 Command-query responsibility segregation (<<chapter_12_cqrs>>)::
-    We present an example of _command-query responsibility segregation_, with and without
-    events.
+    We present an example of _command-query responsibility segregation_,
+    with and without events.
 
 Dependency injection (<<chapter_13_dependency_injection>>)::
     We tidy up our explicit and implicit dependencies and implement a
