@@ -196,8 +196,8 @@ def sync(source, dest):
 
     # for every file that appears in source but not target, copy the file to
     # the target
-    for src_hash, fn in source_hashes.items():
-        if src_hash not in seen:
+    for source_hash, fn in source_hashes.items():
+        if source_hash not in seen:
             shutil.copy(Path(source) / fn, Path(dest) / fn)
 ----
 ====
@@ -353,14 +353,14 @@ what _abstraction_ of filesystem actions will happen?"
 [role="skip"]
 ----
     def test_when_a_file_exists_in_the_source_but_not_the_destination():
-        src_hashes = {'hash1': 'fn1'}
-        dst_hashes = {}
+        source_hashes = {'hash1': 'fn1'}
+        dest_hashes = {}
         expected_actions = [('COPY', '/src/fn1', '/dst/fn1')]
         ...
 
     def test_when_a_file_has_been_renamed_in_the_source():
-        src_hashes = {'hash1': 'fn1'}
-        dst_hashes = {'hash1': 'fn2'}
+        source_hashes = {'hash1': 'fn1'}
+        dest_hashes = {'hash1': 'fn2'}
         expected_actions == [('MOVE', '/dst/fn2', '/dst/fn1')]
         ...
 ----
@@ -411,11 +411,11 @@ def sync(source, dest):
 
     # imperative shell step 3, apply outputs
     for action, *paths in actions:
-        if action == "copy":
+        if action == "COPY":
             shutil.copyfile(*paths)
-        if action == "move":
+        if action == "MOVE":
             shutil.move(*paths)
-        if action == "delete":
+        if action == "DELETE":
             os.remove(paths[0])
 ----
 ====
@@ -453,21 +453,21 @@ structures:
 ====
 [source,python]
 ----
-def determine_actions(src_hashes, dst_hashes, src_folder, dst_folder):
-    for sha, filename in src_hashes.items():
-        if sha not in dst_hashes:
-            sourcepath = Path(src_folder) / filename
-            destpath = Path(dst_folder) / filename
-            yield "copy", sourcepath, destpath
+def determine_actions(source_hashes, dest_hashes, source_folder, dest_folder):
+    for sha, filename in source_hashes.items():
+        if sha not in dest_hashes:
+            sourcepath = Path(source_folder) / filename
+            destpath = Path(dest_folder) / filename
+            yield "COPY", sourcepath, destpath
 
-        elif dst_hashes[sha] != filename:
-            olddestpath = Path(dst_folder) / dst_hashes[sha]
-            newdestpath = Path(dst_folder) / filename
-            yield "move", olddestpath, newdestpath
+        elif dest_hashes[sha] != filename:
+            olddestpath = Path(dest_folder) / dest_hashes[sha]
+            newdestpath = Path(dest_folder) / filename
+            yield "MOVE", olddestpath, newdestpath
 
-    for sha, filename in dst_hashes.items():
-        if sha not in src_hashes:
-            yield "delete", dst_folder / filename
+    for sha, filename in dest_hashes.items():
+        if sha not in source_hashes:
+            yield "DELETE", dest_folder / filename
 ----
 ====
 
@@ -480,16 +480,16 @@ Our tests now act directly on the `determine_actions()` function:
 [source,python]
 ----
 def test_when_a_file_exists_in_the_source_but_not_the_destination():
-    src_hashes = {"hash1": "fn1"}
-    dst_hashes = {}
-    actions = determine_actions(src_hashes, dst_hashes, Path("/src"), Path("/dst"))
+    source_hashes = {"hash1": "fn1"}
+    dest_hashes = {}
+    actions = determine_actions(source_hashes, dest_hashes, Path("/src"), Path("/dst"))
     assert list(actions) == [("copy", Path("/src/fn1"), Path("/dst/fn1"))]
 
 
 def test_when_a_file_has_been_renamed_in_the_source():
-    src_hashes = {"hash1": "fn1"}
-    dst_hashes = {"hash1": "fn2"}
-    actions = determine_actions(src_hashes, dst_hashes, Path("/src"), Path("/dst"))
+    source_hashes = {"hash1": "fn1"}
+    dest_hashes = {"hash1": "fn2"}
+    actions = determine_actions(source_hashes, dest_hashes, Path("/src"), Path("/dst"))
     assert list(actions) == [("move", Path("/dst/fn2"), Path("/dst/fn1"))]
 ----
 ====
@@ -529,34 +529,33 @@ system together but fake the I/O, sort of _edge to edge_:
 [source,python]
 [role="skip"]
 ----
-def sync(reader, filesystem, source_root, dest_root): #<1>
+def sync(source, dest, filesystem=FileSystem()):  #<1>
+    source_hashes = filesystem.read(source)  #<2>
+    dest_hashes = filesystem.read(dest)  #<2>
 
-    source_hashes = reader(source_root) #<2>
-    dest_hashes = reader(dest_root)
-
-    for sha, filename in src_hashes.items():
+    for sha, filename in source_hashes.items():
         if sha not in dest_hashes:
-            sourcepath = source_root / filename
-            destpath = dest_root / filename
-            filesystem.copy(destpath, sourcepath) #<3>
+            sourcepath = Path(source) / filename
+            destpath = Path(dest) / filename
+            filesystem.copy(sourcepath, destpath)  #<3>
 
         elif dest_hashes[sha] != filename:
-            olddestpath = dest_root / dest_hashes[sha]
-            newdestpath = dest_root / filename
-            filesystem.move(olddestpath, newdestpath)
+            olddestpath = Path(dest) / dest_hashes[sha]
+            newdestpath = Path(dest) / filename
+            filesystem.move(olddestpath, newdestpath)  #<3>
 
-    for sha, filename in dst_hashes.items():
+    for sha, filename in dest_hashes.items():
         if sha not in source_hashes:
-            filesystem.delete(dest_root/filename)
+            filesystem.delete(dest / filename)  #<3>
 ----
 ====
 
-<1> Our top-level function now exposes two new dependencies, a `reader` and a
-    `filesystem`.
+<1> Our top-level function now exposes a new dependency, a `FileSystem`.
 
-<2> We invoke the `reader` to produce our files dict.
+<2> We invoke `filesystem.read()` to produce our files dict.
 
-<3> We invoke the `filesystem` to apply the changes we detect.
+<3> We invoke the ++FileSystem++'s `.copy()`, `.move()` and `.delete()` methods
+    to apply the changes we detect.
 
 TIP: Although we're using dependency injection, there is no need
     to define an abstract base class or any kind of explicit interface. In this
@@ -566,24 +565,81 @@ TIP: Although we're using dependency injection, there is no need
 
 // IDEA [KP] Again, one could mention PEP544 protocols here. For some reason, I like them.
 
+The real (default) implementation of our FileSystem abstraction does real I/O:
+
+[[real_filesystem_wrapper]]
+.The real dependency (sync.py)
+====
+[source,python]
+[role="skip"]
+----
+class FileSystem:
+
+    def read(self, path):
+        return read_paths_and_hashes(path)
+
+    def copy(self, source, dest):
+        shutil.copyfile(source, dest)
+
+    def move(self, source, dest):
+        shutil.move(source, dest)
+
+    def delete(self, dest):
+        os.remove(dest)
+----
+====
+
+But the fake one is a wrapper around our chosen abstractions,
+rather than doing real I/O:
+
+[[fake_filesystem]]
+.Tests using DI
+====
+[source,python]
+[role="skip"]
+----
+class FakeFilesystem:
+    def __init__(self, path_hashes):  #<1>
+        self.path_hashes = path_hashes
+        self.actions = []  #<2>
+
+    def read(self, path):
+        return self.path_hashes[path]  #<1>
+
+    def copy(self, source, dest):
+        self.actions.append(('COPY', source, dest))  #<2>
+
+    def move(self, source, dest):
+        self.actions.append(('MOVE', source, dest))  #<2>
+
+    def delete(self, dest):
+        self.actions.append(('DELETE', dest))  #<2>
+----
+====
+
+<1> We initialize our fake filesysem using the abstraction we chose to
+    represent filesystem state: dictionaries of hashes to paths.
+
+<2> The action methods in our `FakeFileSystem` just appends a record to an list
+    of `.actions` so we can inspect it later. This means our test double is both
+    a "fake" and a "spy".
+    ((("test doubles")))
+    ((("fake objects")))
+    ((("spy objects")))
+
+So now our tests can act on the real, top-level `sync()` entrypoint,
+but they do so using the `FakeFilesystem()`.  In terms of their
+setup and assertions, they end up looking quite similar to the ones
+we wrote when testing directly against the functional core `determine_actions()`
+function:
+
+
 [[bob_tests]]
 .Tests using DI
 ====
 [source,python]
 [role="skip"]
 ----
-class FakeFileSystem(list): #<1>
-
-    def copy(self, src, dest): #<2>
-        self.append(('COPY', src, dest))
-
-    def move(self, src, dest):
-        self.append(('MOVE', src, dest))
-
-    def delete(self, dest):
-        self.append(('DELETE', dest))
-
-
 def test_when_a_file_exists_in_the_source_but_not_the_destination():
     source = {"sha1": "my-file" }
     dest = {}
@@ -606,15 +662,6 @@ def test_when_a_file_has_been_renamed_in_the_source():
     assert filesystem == [("MOVE", "/dest/original-file", "/dest/renamed-file")]
 ----
 ====
-
-<1> Bob _loves_ using lists to build simple test doubles, even though his
-    coworkers get mad. It means we can write tests like
-    ++assert 'foo' not in database++.
-    ((("test doubles", "using lists to build")))
-
-<2> Each method in our `FakeFileSystem` just appends something to the list so we
-    can inspect it later. This is an example of a spy object.
-    ((("spy objects")))
 
 
 The advantage of this approach is that our tests act on the exact same function
@@ -743,9 +790,12 @@ Steve Freeman has a great example of overmocked tests in his talk
 https://oreil.ly/jAmtr["Test-Driven Development"].
 You should also check out this PyCon talk, https://oreil.ly/s3e05["Mocking and Patching Pitfalls"],
 by our esteemed tech reviewer, Ed Jung, which also addresses mocking and its
-alternatives. And while we're recommending talks, don't miss Brandon Rhodes talking about
-https://oreil.ly/oiXJM["Hoisting Your I/O"],
-which really nicely covers the issues we're talking about, using another simple example.
+alternatives.
+
+And while we're recommending talks, check out the wonderful Brandon Rhodes
+in https://oreil.ly/oiXJM["Hoisting Your I/O"].  It's not actually about mocks,
+but is instead about the general issue of decoupling business logic from I/O,
+in which he uses a wonderfully simple illustrative example.
 ((("hoisting I/O")))
 ((("Rhodes, Brandon")))
 
@@ -792,12 +842,17 @@ a few heuristics and questions to ask yourself:
   messy system and then try to imagine a single function that can return that
   state?
 
-* Where can I draw a line between my systems, where can I carve out a
-  https://oreil.ly/zNUGG[seam] to stick that abstraction in?
+* Separate the _what_ from the _how_:
+  can I use a data structure or DSL to represent the external effects I want to happen,
+  independently of _how_ I plan to make them happen?
+
+* Where can I draw a line between my systems,
+  where can I carve out a https://oreil.ly/zNUGG[seam]
+  to stick that abstraction in?
   ((("seams")))
 
-* What is a sensible way of dividing things into components with different
-  responsibilities?  What implicit concepts can I make explicit?
+* What is a sensible way of dividing things into components with different responsibilities?
+  What implicit concepts can I make explicit?
 
 * What are the dependencies, and what is the core business logic?
 
