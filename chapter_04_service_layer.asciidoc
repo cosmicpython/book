@@ -550,9 +550,9 @@ def allocate_endpoint():
     try:
         batchref = services.allocate(line, repo, session)  #<2>
     except (model.OutOfStock, services.InvalidSku) as e:
-        return {"message": str(e)}, 400  <3>
+        return {"message": str(e)}, 400  #<3>
 
-    return {"batchref": batchref}, 201  <3>
+    return {"batchref": batchref}, 201  #<3>
 ----
 ====
 
