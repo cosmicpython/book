@@ -254,9 +254,9 @@ Now we're looking at two more end-to-end tests:
 ----
 @pytest.mark.usefixtures("restart_api")
 def test_400_message_for_out_of_stock(add_stock):  #<1>
-    sku, smalL_batch, large_order = random_sku(), random_batchref(), random_orderid()
+    sku, small_batch, large_order = random_sku(), random_batchref(), random_orderid()
     add_stock(
-        [(smalL_batch, sku, 10, "2011-01-01"),]
+        [(small_batch, sku, 10, "2011-01-01"),]
     )
     data = {"orderid": large_order, "sku": sku, "qty": 20}
     url = config.get_api_url()
