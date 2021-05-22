@@ -306,30 +306,25 @@ would work:
 class DjangoUnitOfWork(AbstractUnitOfWork):
     def __enter__(self):
         self.batches = repository.DjangoRepository()
-        transaction.set_autocommit(False)  #<1>
         return super().__enter__()
 
     def __exit__(self, *args):
         super().__exit__(*args)
-        transaction.set_autocommit(True)
 
     def commit(self):
-        for batch in self.batches.seen:  #<3>
-            self.batches.update(batch)  #<3>
-        transaction.commit()  #<2>
+        with transaction.atomic():  #<1>
+            for batch in self.batches.seen:  #<2>
+                self.batches.update(batch)  #<2>
 
     def rollback(self):
-        transaction.rollback()  #<2>
+        pass
 ----
 ====
 
-<1> `set_autocommit(False)` was the best way to tell Django to stop
-    automatically committing each ORM operation immediately, and to
-    begin a transaction.
+<1> Override global Django's auto-commit behavior by creating
+    a local transaction context.
 
-<2> Then we use the explicit rollback and commits.
-
-<3> One difficulty: because, unlike with SQLAlchemy, we're not
+<2> One difficulty: because, unlike with SQLAlchemy, we're not
     instrumenting the domain model instances themselves, the
     `commit()` command needs to explicitly go through all the
     objects that have been touched by every repository and manually
