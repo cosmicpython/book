@@ -641,25 +641,21 @@ function:
 [role="skip"]
 ----
 def test_when_a_file_exists_in_the_source_but_not_the_destination():
-    source = {"sha1": "my-file" }
-    dest = {}
-    filesystem = FakeFileSystem()
-
-    reader = {"/source": source, "/dest": dest}
-    sync(reader.pop, filesystem, "/source", "/dest")
-
-    assert filesystem == [("COPY", "/source/my-file", "/dest/my-file")]
+    fakefs = FakeFilesystem({
+        '/src': {"hash1": "fn1"},
+        '/dst': {},
+    })
+    sync('/src', '/dst', filesystem=fakefs)
+    assert fakefs.actions == [("COPY", Path("/src/fn1"), Path("/dst/fn1"))]
 
 
 def test_when_a_file_has_been_renamed_in_the_source():
-    source = {"sha1": "renamed-file" }
-    dest = {"sha1": "original-file" }
-    filesystem = FakeFileSystem()
-
-    reader = {"/source": source, "/dest": dest}
-    sync(reader.pop, filesystem, "/source", "/dest")
-
-    assert filesystem == [("MOVE", "/dest/original-file", "/dest/renamed-file")]
+    fakefs = FakeFilesystem({
+        '/src': {"hash1": "fn1"},
+        '/dst': {"hash1": "fn2"},
+    })
+    sync('/src', '/dst', filesystem=fakefs)
+    assert fakefs.actions == [("MOVE", Path("/dst/fn2"), Path("/dst/fn1"))]
 ----
 ====
 
