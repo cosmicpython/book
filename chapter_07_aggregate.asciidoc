@@ -228,7 +228,7 @@ could use `Warehouse` as our boundary: each warehouse contains many batches,
 and counting all the stock at the same time could make sense.
 
 Neither of these concepts really satisfies us, though. We should be able to
-allocate `DEADLY-SPOONs` and `FLIMSY-DESKs` at the same time, even if they're in the
+allocate `DEADLY-SPOONs` or `FLIMSY-DESKs` in one go, even if they're not in the
 same warehouse or the same shipment. These concepts have the wrong granularity.
 
 When we allocate an order line, we're interested only in batches
