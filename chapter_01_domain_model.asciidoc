@@ -287,8 +287,8 @@ class Batch:
         self.eta = eta
         self.available_quantity = qty
 
-    def allocate(self, line: OrderLine):
-        self.available_quantity -= line.qty  #<3>
+    def allocate(self, line: OrderLine):  #<3>
+        self.available_quantity -= line.qty
 ----
 ====
 
