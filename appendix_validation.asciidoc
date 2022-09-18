@@ -111,12 +111,14 @@ def greater_than_zero(x):
 quantity = And(Use(int), greater_than_zero)  #<4>
 
 Allocate = command(  #<5>
+    'Allocate',
     orderid=int,
     sku=str,
     qty=quantity
 )
 
 AddStock = command(
+    'AddStock',
     sku=str,
     qty=quantity
 ----
