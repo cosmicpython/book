@@ -65,7 +65,7 @@ class Allocate(Command):
     _schema = Schema({  #<1>
         'orderid': str,
         'sku': str,
-        'qty'': And(Use(int), lambda n: n > 0)
+        'qty': And(Use(int), lambda n: n > 0)
      }, ignore_extra_keys=True)
 
     orderid: str
