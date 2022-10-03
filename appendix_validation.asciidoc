@@ -63,9 +63,9 @@ from schema import And, Schema, Use
 class Allocate(Command):
 
     _schema = Schema({  #<1>
-        'orderid': int,
-         sku: str,
-         qty: And(Use(int), lambda n: n > 0)
+        'orderid': str,
+        'sku': str,
+        'qty': And(Use(int), lambda n: n > 0)
      }, ignore_extra_keys=True)
 
     orderid: str
@@ -111,12 +111,14 @@ def greater_than_zero(x):
 quantity = And(Use(int), greater_than_zero)  #<4>
 
 Allocate = command(  #<5>
+    'Allocate',
     orderid=int,
     sku=str,
     qty=quantity
 )
 
 AddStock = command(
+    'AddStock',
     sku=str,
     qty=quantity
 ----
