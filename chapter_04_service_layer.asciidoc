@@ -558,7 +558,7 @@ def allocate_endpoint():
 
 <1> We instantiate a database session and some repository objects.
 <2> We extract the user's commands from the web request and pass them
-    to a domain service.
+    to the service layer.
 <3> We return some JSON responses with the appropriate status codes.
 
 The responsibilities of the Flask app are just standard web stuff: per-request
