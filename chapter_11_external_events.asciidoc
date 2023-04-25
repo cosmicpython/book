@@ -313,7 +313,7 @@ NOTE: If this sounds familiar, it should!  Segregating responsibilities is
 
 ((("Distributed Ball of Mud antipattern", "avoiding")))
 ((("consistency boundaries", "microservices as")))
-Like aggregates, microservices should be _consistency boundaries_. Between two
+Like aggregates, microservices should have _consistency boundaries_. Between two
 services, we can accept eventual consistency, and that means we don't need to
 rely on synchronous calls. Each service accepts commands from the outside world
 and raises events to record the result. Other services can listen to those
