@@ -169,11 +169,11 @@ def insert_batch(session, ref, sku, qty, eta):
 
 
 def get_allocated_batch_ref(session, orderid, sku):
-    [[orderlineid]] = session.execute(
+    [[orderlineid]] = session.execute(  #<1>
         "SELECT id FROM order_lines WHERE orderid=:orderid AND sku=:sku",
         dict(orderid=orderid, sku=sku),
     )
-    [[batchref]] = session.execute(
+    [[batchref]] = session.execute(  #<1>
         "SELECT b.reference FROM allocations JOIN batches AS b ON batch_id = b.id"
         " WHERE orderline_id=:orderlineid",
         dict(orderlineid=orderlineid),
@@ -182,7 +182,15 @@ def get_allocated_batch_ref(session, orderid, sku):
 ----
 ====
 
-// TODO: that double-unpacking is freaking ppl out.  maybe [(orderlineid, )] ?
+<1> The `[[orderlineid]] =` syntax is a little too-clever-by-half, apologies.
+    What's happening is that `session.execute` returns a list of rows,
+    where each row is a tuple of column values;
+    in our specific case, it's a list of one row,
+    which is a tuple with one column value in.
+    The double-square-bracket on the left hand side
+    is doing (double) assignment-unpacking to get the single value 
+    back out of these two nested sequences.
+    It becomes readable once you've used it a few times!
 
 
 === Unit of Work and Its Context Manager
