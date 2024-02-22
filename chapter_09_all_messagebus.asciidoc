@@ -845,10 +845,9 @@ class FakeUnitOfWorkWithFakeMessageBus(FakeUnitOfWork):
         super().__init__()
         self.events_published = []  # type: List[events.Event]
 
-    def publish_events(self):
-        for product in self.products.seen:
-            while product.events:
-                self.events_published.append(product.events.pop(0))
+    def collect_new_events(self):
+        self.events_published += super().collect_new_events()
+        return []
 ----
 ====
 
