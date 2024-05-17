@@ -1,5 +1,8 @@
 pytopt?=
 
+fetch_all_branches:
+	git branch -r | grep -v '\->' | sed "s,\x1B\[[0-9;]*[a-zA-Z],,g" | while read remote; do git branch --track "$${remote#origin/}" "$$remote"; done
+
 
 tdd:
 	git ls-files | entr make test pytopt=-x
