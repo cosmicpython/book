@@ -1,3 +1,10 @@
+pytopt?=
+
+
+tdd:
+	git ls-files | entr make test pytopt=-x
+
+
 html:
 	asciidoctor \
 		-a stylesheet=theme/asciidoctor-clean.custom.css \
@@ -8,7 +15,7 @@ html:
 		*.asciidoc
 
 test: html
-	pytest tests.py --tb=short -vv
+	pytest tests.py --tb=short -vv $(pytopt)
 
 update-code:
 	# git submodule update --init --recursive
