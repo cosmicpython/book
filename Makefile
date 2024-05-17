@@ -5,7 +5,7 @@ fetch_all_branches:
 
 
 tdd:
-	git ls-files | entr make test pytopt=-x
+	git ls-files | entr make test pytopt='-x --lf'
 
 
 html:
