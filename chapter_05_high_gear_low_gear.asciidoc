@@ -310,7 +310,7 @@ function on `FakeRepository`:
 [source,python]
 [role="skip"]
 ----
-class FakeRepository(set):
+class FakeRepository(repository.AbstractRepository):
 
     @staticmethod
     def for_batch(ref, sku, qty, eta=None):
